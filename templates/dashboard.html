@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="h1">Welcome, {{ user.email }}</h1>
+
+<!-- Quick links -->
+<div class="grid grid-3 quick-links">
+  <a class="btn ghost" href="/entries/">➕ Add / View / Edit Entries</a>
+  <a class="btn ghost" href="/categories/">🏷️ Manage Categories</a>
+  <a class="btn ghost" title="Coming soon" href="#">📅 Calendar</a>
+</div>
+
+<!-- Filters -->
+<div class="row mt-6">
+  <div>
+    <label class="muted" for="start">Start date</label><br>
+    <input id="start" name="start" type="date" class="input" value="{{ start or '' }}">
+  </div>
+  <div>
+    <label class="muted" for="end">End date</label><br>
+    <input id="end" name="end" type="date" class="input" value="{{ end or '' }}">
+  </div>
+
+  <div class="actions" style="margin-left:auto">
+    <button class="btn purple"
+            type="button"
+            hx-get="/metrics/chart/pie"
+            hx-include="[name=start],[name=end]"
+            hx-target="#chart-area"
+            hx-swap="innerHTML">Pie chart</button>
+
+    <button class="btn blue"
+            type="button"
+            hx-get="/metrics/chart/bar"
+            hx-include="[name=start],[name=end]"
+            hx-target="#chart-area"
+            hx-swap="innerHTML">Bar chart</button>
+
+    <button class="btn green"
+            type="button"
+            hx-get="/metrics/chart/daily"
+            hx-include="[name=start],[name=end]"
+            hx-target="#chart-area"
+            hx-swap="innerHTML">Daily chart</button>
+
+    <button class="btn ghost"
+            type="button"
+            hx-on:click="document.querySelector('#chart-area').innerHTML = '<div class=&quot;muted&quot;>Choose a chart</div>'">Close chart</button>
+  </div>
+</div>
+
+<!-- KPIs -->
+<div id="totals"
+     class="kpis mt-4"
+     hx-get="/dashboard/summary"
+     hx-include="[name=start],[name=end]"
+     hx-trigger="load, change from:#start, change from:#end delay:150ms"
+     hx-swap="innerHTML">
+  <div class="muted">Loading totals…</div>
+</div>
+
+<!-- Incomes + Expenses -->
+<div class="grid grid-2 mt-4">
+  <section class="card pad">
+    <h2 class="h2">Income(s)</h2>
+
+    <div id="income-list"
+         hx-get="/dashboard/incomes"
+         hx-include="[name=start],[name=end]"
+         hx-trigger="load, change from:#start, change from:#end delay:150ms"
+         hx-swap="innerHTML">
+      <div class="muted">Loading incomes…</div>
+    </div>
+  </section>
+
+  <section class="card pad">
+    <h2 class="h2">Expenses</h2>
+
+    <div id="expense-list"
+         hx-get="/dashboard/expenses"
+         hx-include="[name=start],[name=end]"
+         hx-trigger="load, change from:#start, change from:#end delay:150ms"
+         hx-swap="innerHTML">
+      <div class="muted">Loading expenses…</div>
+    </div>
+  </section>
+</div>
+
+<!-- Chart area -->
+<section class="card pad mt-6 chart-area center" id="chart-area">
+  <div class="muted">Choose a chart</div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,24 @@
+<form class="flex items-center justify-between bg-white rounded-xl shadow px-3 py-2 gap-2"
+      hx-post="/categories/update/{{ c.id }}"
+      hx-target="#cat-item-{{ c.id }}"
+      hx-swap="outerHTML"
+      hx-disabled-elt="button">
+  <input type="text"
+         name="name"
+         value="{{ c.name | e }}"
+         required
+         maxlength="80"
+         autofocus
+         class="border rounded px-2 py-1 flex-1">
+
+  <div class="flex items-center gap-2">
+    <span class="htmx-indicator text-gray-400 text-sm">Saving…</span>
+
+    <button type="submit" class="text-emerald-700">Save</button>
+
+    <button type="button"
+            hx-get="/categories/item/{{ c.id }}"
+            hx-target="#cat-item-{{ c.id }}"
+            hx-swap="outerHTML">Cancel</button>
+  </div>
+</form>
