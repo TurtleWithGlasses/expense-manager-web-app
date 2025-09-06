@@ -21,6 +21,7 @@ async def page(request=Request, user=Depends(current_user), db: Session = Depend
 
 @router.post("/create", response_class=HTMLResponse)
 async def add(
+    request: Request,
     type: str = Form(...),
     amount: float = Form(...),
     category_id: int | None = Form(None),
@@ -39,14 +40,14 @@ async def add(
                 )
     entries = list_entries(db, user_id=user["id"])
     cats = list_categories(db, user_id=user["id"])
-    return render("entries/_list.html", {"entries": entries})
+    return render(request, "entries/_list.html", {"entries": entries})
 
 
 @router.post("/delete/{entry_id}", response_class=HTMLResponse)
-async def remove(entry_id: int, user=Depends(current_user), db: Session = Depends(get_db)):
+async def remove(request:Request, entry_id: int, user=Depends(current_user), db: Session = Depends(get_db)):
     delete_entry(db, user_id=user["id"], entry_id=entry_id)
     entries = list_entries(db, user_id=user["id"])
-    return render("entries/_list.html", {"entries": entries})
+    return render(request, "entries/_list.html", {"entries": entries})
 
 
 @router.get("/edit_amount/{entry_id}", response_class=HTMLResponse)

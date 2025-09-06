@@ -11,21 +11,21 @@ from app.models.category import Category
 router = APIRouter(prefix="/categories", tags=["categories"])
 
 @router.get("/", response_class=HTMLResponse)
-async def page_me(user=Depends(current_user), db: Session = Depends(get_db)):
+async def page_me(request:Request, user=Depends(current_user), db: Session = Depends(get_db)):
     cats = list_categories(db, user_id=user["id"])
-    return render("categories/index.html", {"categories": cats})
+    return render(request, "categories/index.html", {"categories": cats})
 
 @router.post("/create", response_class=HTMLResponse)
-async def add(name: str = Form(...), user=Depends(current_user), db: Session = Depends(get_db)):
+async def add(request:Request, name: str = Form(...), user=Depends(current_user), db: Session = Depends(get_db)):
     create_category(db, user_id=user["id"], name=name)
     cats = list_categories(db, user_id=user["id"])
-    return render("categories/_list.html", {"categories": cats})
+    return render(request, "categories/_list.html", {"categories": cats})
 
 @router.post("/delete/{category_id}")
-async def remove(category_id: int, user=Depends(current_user), db: Session = Depends(get_db)):
+async def remove(request:Request, category_id: int, user=Depends(current_user), db: Session = Depends(get_db)):
     delete_category(db, user_id=user["id"], category_id=category_id)
     cats = list_categories(db, user_id=user["id"])
-    return render("categories/_list.html", {"categories": cats})
+    return render(request, "categories/_list.html", {"categories": cats})
 
 @router.get("/item/{category_id}", response_class=HTMLResponse)
 async def item_view(request: Request, category_id: int, user=Depends(current_user), db: Session = Depends(get_db)):
