@@ -1,0 +1,15 @@
+<div class="kpi income">
+  <div class="label">Total Income</div>
+  <div class="value">{{ '%.2f'|format(totals.income) }}</div>
+</div>
+<div class="kpi expense">
+  <div class="label">Total Expenses</div>
+  <div class="value">{{ '%.2f'|format(totals.expense) }}</div>
+</div>
+<div class="kpi balance">
+  <div class="label">Balance</div>
+  <div class="value"
+       style="color: {{ '#28c081' if totals.balance >= 0 else '#ff6b6b' }};">
+    {{ '%.2f'|format(totals.balance) }}
+  </div>
+</div>

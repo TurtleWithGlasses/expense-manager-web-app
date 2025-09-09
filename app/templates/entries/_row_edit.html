@@ -1,0 +1,48 @@
+{# Inline edit form row. This fragment REPLACES the whole <tr>. #}
+<form
+  class="row"
+  hx-post="/entries/update/{{ e.id }}"
+  hx-target="#entry-row-{{ e.id }}"
+  hx-swap="outerHTML"
+  hx-disabled-elt="button">
+
+  <td>
+    <input name="date" type="date" class="input" value="{{ e.date }}">
+  </td>
+
+  <td>
+    <select name="type" class="input" required>
+      <option value="expense" {{ 'selected' if e.type == 'expense' else '' }}>Expense</option>
+      <option value="income"  {{ 'selected' if e.type == 'income'  else '' }}>Income</option>
+    </select>
+  </td>
+
+  <td>
+    <input name="amount" type="number" step="0.01" class="input" required value="{{ '%.2f'|format(e.amount) }}">
+  </td>
+
+  <td>
+    <select name="category_id" class="input">
+      <option value="">(No category)</option>
+      {% for c in categories %}
+        <option value="{{ c.id }}" {{ 'selected' if e.category and e.category.id == c.id else '' }}>
+          {{ c.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </td>
+
+  <td>
+    <input name="note" type="text" class="input" value="{{ e.note or '' }}">
+  </td>
+
+  <td class="actions">
+    <button type="submit" class="btn green">Save</button>
+    <button type="button"
+            class="btn ghost"
+            hx-get="/entries/row/{{ e.id }}"
+            hx-target="#entry-row-{{ e.id }}"
+            hx-swap="outerHTML">Cancel</button>
+    <span class="htmx-indicator muted">Saving…</span>
+  </td>
+</form>

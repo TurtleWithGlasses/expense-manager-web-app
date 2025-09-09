@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="h1">Categories</h1>
+
+<!-- Add new category row -->
+<div class="card pad mt-4">
+  <form
+    id="cat-add-form"
+    class="row gap-3"
+    hx-post="/categories/create"
+    hx-target="#cat-list"
+    hx-swap="innerHTML"
+    hx-disabled-elt="button">
+
+    <div class="flex-1" style="min-width:280px">
+      <input type="text"
+             name="name"
+             required
+             maxlength="80"
+             placeholder="Add new category…"
+             class="input w-full">
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn green">Add</button>
+      <span class="htmx-indicator muted">Saving…</span>
+    </div>
+  </form>
+</div>
+
+<!-- List -->
+<div class="card pad mt-4">
+  <ul id="cat-list" class="stack gap-3">
+    {% include "categories/_list.html" %}
+  </ul>
+</div>
+
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-4">Login</h1>
+{% if error %}<p class="text-red-600 mb-3">{{ error }}</p>{% endif %}
+<form method="post" action="/login" class="space-y-3 max-w-sm">
+  <input name="email" type="email" placeholder="Email" class="w-full border px-3 py-2 rounded" required />
+  <input name="password" type="password" placeholder="Password" class="w-full border px-3 py-2 rounded" required />
+  <button class="px-4 py-2 bg-blue-600 text-white rounded">Sign In</button>
+  <a class="ml-2 text-sm text-gray-600" href="/register">Create an account</a>
+</form>
+{% endblock %}

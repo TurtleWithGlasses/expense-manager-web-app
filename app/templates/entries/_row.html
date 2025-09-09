@@ -1,0 +1,30 @@
+{# Display row. This fragment is included inside <tr id="entry-row-..."> #}
+
+<td>{{ e.date }}</td>
+<td style="text-transform: capitalize">{{ e.type }}</td>
+
+<td style="color: {{ '#28c081' if e.type == 'income' else '#ff6b6b' }}">
+  {{ '%.2f'|format(e.amount) }}
+</td>
+
+<td>{{ e.category.name if e.category else '' }}</td>
+<td>{{ e.note or '' }}</td>
+
+<td class="actions">
+  <button
+    type="button"
+    class="btn ghost"
+    hx-get="/entries/edit/{{ e.id }}"
+    hx-target="#entry-row-{{ e.id }}"
+    hx-swap="outerHTML"
+  >Edit</button>
+
+  <button
+    type="button"
+    class="btn red"
+    hx-post="/entries/delete/{{ e.id }}"
+    hx-target="#entries-list"
+    hx-swap="innerHTML"
+    hx-confirm="Delete this entry?"
+  >Delete</button>
+</td>

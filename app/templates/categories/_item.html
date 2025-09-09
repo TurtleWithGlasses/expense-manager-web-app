@@ -1,0 +1,32 @@
+{% if wrap %}<li id="cat-item-{{ c.id }}">{% endif %}
+
+  <div class="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+    <!-- Category name -->
+    <span class="truncate text-gray-200" title="{{ c.name }}">{{ c.name }}</span>
+
+    <!-- Actions -->
+    <div class="flex gap-2 items-center">
+      <span class="htmx-indicator text-gray-400 text-sm">Saving…</span>
+
+      <button
+        type="button"
+        class="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm"
+        hx-get="/categories/edit/{{ c.id }}"
+        hx-target="#cat-item-{{ c.id }}"
+        hx-swap="outerHTML">
+        Edit
+      </button>
+
+      <button
+        type="button"
+        class="px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-sm"
+        hx-post="/categories/delete/{{ c.id }}"
+        hx-target="#cat-list"
+        hx-swap="innerHTML"
+        hx-confirm="Delete '{{ c.name }}'?">
+        Delete
+      </button>
+    </div>
+  </div>
+
+{% if wrap %}</li>{% endif %}

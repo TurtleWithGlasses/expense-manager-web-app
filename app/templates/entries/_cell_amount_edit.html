@@ -1,0 +1,18 @@
+<form class="flex items-center gap-2"
+      hx-post="/entries/update_amount/{{ e.id }}"
+      hx-target="#entry-amt-{{ e.id }}"
+      hx-swap="outerHTML"
+      hx-disabled-elt="button">
+  <input type="number"
+         step="0.01"
+         name="amount"
+         value="{{ '%.2f'|format(e.amount) }}"
+         required
+         class="border rounded px-2 py-1 w-28">
+  <span class="htmx-indicator text-gray-400 text-sm">Saving…</span>
+  <button type="submit" class="text-emerald-700">Save</button>
+  <button type="button"
+          hx-get="/entries/cell_amount/{{ e.id }}"
+          hx-target="#entry-amt-{{ e.id }}"
+          hx-swap="outerHTML">Cancel</button>
+</form>

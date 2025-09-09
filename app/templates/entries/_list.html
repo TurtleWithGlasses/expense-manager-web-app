@@ -1,0 +1,10 @@
+{# Re-renders only the rows (tbody content). #}
+{% for e in entries %}
+  <tr id="entry-row-{{ e.id }}">
+    {% include "entries/_row.html" %}
+  </tr>
+{% else %}
+  <tr>
+    <td class="muted" colspan="6">No entries yet.</td>
+  </tr>
+{% endfor %}

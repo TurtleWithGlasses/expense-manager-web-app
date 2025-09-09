@@ -1,0 +1,19 @@
+<canvas id="chartDaily" height="140"></canvas>
+<script>
+(() => {
+  const ctx = document.getElementById('chartDaily').getContext('2d');
+  const labels = {{ labels | tojson }};
+  const values = {{ values | tojson }};
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{ label: 'Daily Expenses', data: values, tension: 0.25, fill: false }]
+    },
+    options: {
+      scales: { y: { beginAtZero: true } },
+      plugins: { legend: { display: false } }
+    }
+  });
+})();
+</script>
