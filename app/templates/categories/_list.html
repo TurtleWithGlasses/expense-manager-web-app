@@ -1,7 +1,7 @@
 {% for c in categories %}
-  <li id="cat-item-{{ c.id }}">
+  <li id="cat-item-{{ c.id }}" class="cat-row">
     {% include "categories/_item.html" %}
   </li>
 {% else %}
-  <li class="muted">No categories yet.</li>
+  <li class="cat-empty muted">No categories yet.</li>
 {% endfor %}

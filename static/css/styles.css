@@ -71,3 +71,96 @@ a:hover{text-decoration:underline}
 
 .chart-area{min-height:320px}
 .muted{color:var(--muted)}
+
+/* Categories layout */
+.cat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.cat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04); /* dark theme friendly */
+}
+
+.cat-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #e5e7eb;         /* text-gray-200 */
+  font-weight: 500;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Fixed actions column so buttons line up in the same vertical column */
+.cat-actions {
+  flex: 0 0 180px;        /* adjust width if needed */
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Add row */
+.cat-add-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cat-input {
+  flex: 1 1 320px;
+  min-width: 240px;
+  background: #0f172a;    /* slate-900-ish */
+  color: #e5e7eb;
+  border: 1px solid #334155; /* slate-700 */
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.cat-input--inline {
+  flex: 1 1 auto;
+  min-width: 220px;
+}
+
+/* Buttons (reuse across the app) */
+.btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: filter .15s ease;
+}
+.btn:hover { filter: brightness(1.1); }
+
+.btn-primary {
+  background: #10b981;  /* emerald-500 */
+  color: #fff;
+}
+.btn-danger {
+  background: #ef4444;  /* red-500 */
+  color: #fff;
+}
+.btn-ghost {
+  background: #1f2937;  /* gray-800 */
+  color: #e5e7eb;
+}
+
+.muted { color: #9ca3af; }
+
+/* Optional: nicer empty state */
+.cat-empty {
+  padding: 16px 0;
+  text-align: center;
+}

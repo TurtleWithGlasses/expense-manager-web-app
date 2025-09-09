@@ -3,35 +3,31 @@
 
 <h1 class="h1">Categories</h1>
 
-<!-- Add new category row -->
+<!-- Add new category -->
 <div class="card pad mt-4">
   <form
     id="cat-add-form"
-    class="row gap-3"
+    class="cat-add-row"
     hx-post="/categories/create"
     hx-target="#cat-list"
     hx-swap="innerHTML"
     hx-disabled-elt="button">
 
-    <div class="flex-1" style="min-width:280px">
-      <input type="text"
-             name="name"
-             required
-             maxlength="80"
-             placeholder="Add new category…"
-             class="input w-full">
-    </div>
+    <input type="text"
+           name="name"
+           required
+           maxlength="80"
+           placeholder="Add new category…"
+           class="cat-input">
 
-    <div class="actions">
-      <button type="submit" class="btn green">Add</button>
-      <span class="htmx-indicator muted">Saving…</span>
-    </div>
+    <button type="submit" class="btn btn-primary">Add</button>
+    <span class="htmx-indicator muted">Saving…</span>
   </form>
 </div>
 
 <!-- List -->
 <div class="card pad mt-4">
-  <ul id="cat-list" class="stack gap-3">
+  <ul id="cat-list" class="cat-list">
     {% include "categories/_list.html" %}
   </ul>
 </div>

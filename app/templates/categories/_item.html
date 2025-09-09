@@ -1,32 +1,31 @@
-{% if wrap %}<li id="cat-item-{{ c.id }}">{% endif %}
+{# If returned from HTMX endpoints, allow optional wrapper #}
+{% if wrap %}<li id="cat-item-{{ c.id }}" class="cat-row">{% endif %}
 
-  <div class="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
-    <!-- Category name -->
-    <span class="truncate text-gray-200" title="{{ c.name }}">{{ c.name }}</span>
+  <!-- Left: name -->
+  <div class="cat-name" title="{{ c.name }}">{{ c.name }}</div>
 
-    <!-- Actions -->
-    <div class="flex gap-2 items-center">
-      <span class="htmx-indicator text-gray-400 text-sm">Saving…</span>
+  <!-- Right: actions (fixed width so every row lines up) -->
+  <div class="cat-actions">
+    <span class="htmx-indicator muted">Saving…</span>
 
-      <button
-        type="button"
-        class="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm"
-        hx-get="/categories/edit/{{ c.id }}"
-        hx-target="#cat-item-{{ c.id }}"
-        hx-swap="outerHTML">
-        Edit
-      </button>
+    <button
+      type="button"
+      class="btn btn-ghost"
+      hx-get="/categories/edit/{{ c.id }}"
+      hx-target="#cat-item-{{ c.id }}"
+      hx-swap="outerHTML"
+      aria-label="Edit {{ c.name }}"
+    >Edit</button>
 
-      <button
-        type="button"
-        class="px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-sm"
-        hx-post="/categories/delete/{{ c.id }}"
-        hx-target="#cat-list"
-        hx-swap="innerHTML"
-        hx-confirm="Delete '{{ c.name }}'?">
-        Delete
-      </button>
-    </div>
+    <button
+      type="button"
+      class="btn btn-danger"
+      hx-post="/categories/delete/{{ c.id }}"
+      hx-target="#cat-list"
+      hx-swap="innerHTML"
+      hx-confirm="Delete '{{ c.name }}'?"
+      aria-label="Delete {{ c.name }}"
+    >Delete</button>
   </div>
 
 {% if wrap %}</li>{% endif %}

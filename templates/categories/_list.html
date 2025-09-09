@@ -1,9 +1,0 @@
-<ul class="grid md:grid-cols-3 gap-3">
-  {% for c in categories %}
-    <li id="cat-item-{{ c.id }}">
-      {% include "categories/_item.html" %}
-    </li>
-  {% else %}
-    <li class="text-gray-500">No categories yet.</li>
-  {% endfor %}
-</ul>

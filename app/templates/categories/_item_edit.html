@@ -1,36 +1,30 @@
-{% if wrap %}<li id="cat-item-{{ c.id }}">{% endif %}
+{% if wrap %}<li id="cat-item-{{ c.id }}" class="cat-row">{% endif %}
 
   <form
-    class="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2 gap-2"
+    class="cat-edit-form"
     hx-post="/categories/update/{{ c.id }}"
     hx-target="#cat-item-{{ c.id }}"
     hx-swap="outerHTML"
     hx-disabled-elt="button">
 
-    <input
-      type="text"
-      name="name"
-      value="{{ c.name | e }}"
-      required
-      maxlength="80"
-      autofocus
-      class="flex-1 bg-gray-800 text-gray-100 border border-gray-600 rounded px-2 py-1">
+    <input type="text"
+           name="name"
+           value="{{ c.name | e }}"
+           required
+           maxlength="80"
+           autofocus
+           class="cat-input cat-input--inline">
 
-    <div class="flex gap-2 items-center">
-      <span class="htmx-indicator text-gray-400 text-sm">Saving…</span>
+    <div class="cat-actions">
+      <span class="htmx-indicator muted">Saving…</span>
 
-      <button type="submit"
-              class="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-sm">
-        Save
-      </button>
+      <button type="submit" class="btn btn-primary">Save</button>
 
       <button type="button"
-              class="px-3 py-1 rounded bg-gray-500 hover:bg-gray-600 text-white text-sm"
+              class="btn btn-ghost"
               hx-get="/categories/item/{{ c.id }}"
               hx-target="#cat-item-{{ c.id }}"
-              hx-swap="outerHTML">
-        Cancel
-      </button>
+              hx-swap="outerHTML">Cancel</button>
     </div>
   </form>
 
