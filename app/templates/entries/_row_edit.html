@@ -1,48 +1,47 @@
-{# Inline edit form row. This fragment REPLACES the whole <tr>. #}
-<form
-  class="row"
-  hx-post="/entries/update/{{ e.id }}"
-  hx-target="#entry-row-{{ e.id }}"
-  hx-swap="outerHTML"
-  hx-disabled-elt="button">
+<tr id="entry-row-{{ e.id }}">
+  <form
+    class="w-100"
+    hx-post="/entries/update/{{ e.id }}"
+    hx-target="#entry-row-{{ e.id }}"
+    hx-swap="outerHTML"
+    hx-disabled-elt="button">
 
-  <td>
-    <input name="date" type="date" class="input" value="{{ e.date }}">
-  </td>
+    <td style="width:14%">
+      <input type="date" name="date" value="{{ e.date.isoformat() }}" class="form-control form-control-sm">
+    </td>
 
-  <td>
-    <select name="type" class="input" required>
-      <option value="expense" {{ 'selected' if e.type == 'expense' else '' }}>Expense</option>
-      <option value="income"  {{ 'selected' if e.type == 'income'  else '' }}>Income</option>
-    </select>
-  </td>
+    <td style="width:14%">
+      <select name="type" class="form-select form-select-sm">
+        <option value="expense" {{ 'selected' if e.type == 'expense' else '' }}>Expense</option>
+        <option value="income"  {{ 'selected' if e.type == 'income'  else '' }}>Income</option>
+      </select>
+    </td>
 
-  <td>
-    <input name="amount" type="number" step="0.01" class="input" required value="{{ '%.2f'|format(e.amount) }}">
-  </td>
+    <td style="width:14%">
+      <input type="number" step="0.01" name="amount" value="{{ '%.2f'|format(e.amount) }}" class="form-control form-control-sm" required>
+    </td>
 
-  <td>
-    <select name="category_id" class="input">
-      <option value="">(No category)</option>
-      {% for c in categories %}
-        <option value="{{ c.id }}" {{ 'selected' if e.category and e.category.id == c.id else '' }}>
-          {{ c.name }}
-        </option>
-      {% endfor %}
-    </select>
-  </td>
+    <td style="width:18%">
+      <select name="category_id" class="form-select form-select-sm">
+        <option value="">(No category)</option>
+        {% for c in categories %}
+          <option value="{{ c.id }}" {{ 'selected' if e.category_id == c.id else '' }}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </td>
 
-  <td>
-    <input name="note" type="text" class="input" value="{{ e.note or '' }}">
-  </td>
+    <td>
+      <input type="text" name="note" value="{{ e.note or '' }}" class="form-control form-control-sm" placeholder="Note">
+    </td>
 
-  <td class="actions">
-    <button type="submit" class="btn green">Save</button>
-    <button type="button"
-            class="btn ghost"
-            hx-get="/entries/row/{{ e.id }}"
-            hx-target="#entry-row-{{ e.id }}"
-            hx-swap="outerHTML">Cancel</button>
-    <span class="htmx-indicator muted">Saving…</span>
-  </td>
-</form>
+    <td class="text-end" style="width:18%">
+      <small class="htmx-indicator text-secondary me-2">Saving…</small>
+      <button type="submit" class="btn btn-primary btn-sm me-2">Save</button>
+      <button type="button"
+              class="btn btn-outline-light btn-sm"
+              hx-get="/entries/row/{{ e.id }}"
+              hx-target="#entry-row-{{ e.id }}"
+              hx-swap="outerHTML">Cancel</button>
+    </td>
+  </form>
+</tr>

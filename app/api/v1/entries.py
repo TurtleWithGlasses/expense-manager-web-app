@@ -28,7 +28,8 @@ async def page(
 ) -> HTMLResponse:
     entries = list_entries(db, user_id=user["id"])
     cats = list_categories(db, user_id=user["id"])
-    return render(request, "entries/index.html", {"entries": entries, "categories": cats})
+    return render(request, "entries/index.html",
+                  {"entries": entries, "categories": cats, "today": _date.today().isoformat()})
 
 
 # ---------- Create ----------
@@ -36,30 +37,27 @@ async def page(
 @router.post("/create", response_class=HTMLResponse)
 async def add(
     request: Request,
-    type: str = Form(...),                       # "expense" | "income"
+    type: str = Form(...),
     amount: float = Form(...),
-    category_id: int | None = Form(None),        # may be empty
+    category_id: int | None = Form(None),
     note: str | None = Form(None),
-    date: _date = Form(...),                     # HTML <input type="date"> sends ISO; FastAPI parses to date
+    date_str: str | None = Form(None),   # <- make optional
     user=Depends(current_user),
     db: Session = Depends(get_db),
-) -> HTMLResponse:
-    # Normalize optional category_id (empty string -> None)
-    if category_id == "":
-        category_id = None
+):
+    # default to today if the field is missing/blank
+    d = _date.fromisoformat(date_str) if date_str else _date.today()
 
-    # Persist
     create_entry(
         db,
         user_id=user["id"],
         type=type,
         amount=float(amount),
-        category_id=category_id,
+        category_id=category_id if category_id else None,
         note=note,
-        date=date,
+        date=d,
     )
 
-    # Re-render the table body
     entries = list_entries(db, user_id=user["id"])
     return render(request, "entries/_list.html", {"entries": entries})
 
@@ -124,3 +122,66 @@ async def amount_cell_display(
     if not e:
         raise HTTPException(status_code=404, detail="Entry not found")
     return render(request, "entries/_cell_amount.html", {"e": e})
+
+# === Row display (used for Cancel) ===
+@router.get("/row/{entry_id}", response_class=HTMLResponse)
+async def row_display(
+    request: Request,
+    entry_id: int,
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    e = db.query(Entry).filter(Entry.user_id == user["id"], Entry.id == entry_id).first()
+    if not e:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    cats = list_categories(db, user_id=user["id"])
+    return render(request, "entries/_row.html", {"e": e, "categories": cats, "wrap": True})
+
+# === Row edit (GET) ===
+@router.get("/edit/{entry_id}", response_class=HTMLResponse)
+async def row_edit(
+    request: Request,
+    entry_id: int,
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    e = db.query(Entry).filter(Entry.user_id == user["id"], Entry.id == entry_id).first()
+    if not e:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    cats = list_categories(db, user_id=user["id"])
+    return render(request, "entries/_row_edit.html", {"e": e, "categories": cats, "wrap": True})
+
+# === Row update (POST) ===
+@router.post("/update/{entry_id}", response_class=HTMLResponse)
+async def row_update(
+    request: Request,
+    entry_id: int,
+    type: str = Form(...),                # "expense" | "income"
+    amount: float = Form(...),
+    category_id: int | None = Form(None),
+    note: str | None = Form(None),
+    date: _date = Form(...),              # HTML date input -> auto-parsed
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    e = db.query(Entry).filter(Entry.user_id == user["id"], Entry.id == entry_id).first()
+    if not e:
+        raise HTTPException(status_code=404, detail="Entry not found")
+
+    # normalize optional
+    if category_id == "":
+        category_id = None
+
+    # update fields
+    e.type = type
+    e.amount = float(amount)
+    e.category_id = category_id
+    e.note = note
+    e.date = date
+    db.add(e)
+    db.commit()
+    db.refresh(e)
+
+    cats = list_categories(db, user_id=user["id"])
+    # return the display row (so HTMX swaps the row back)
+    return render(request, "entries/_row.html", {"e": e, "categories": cats, "wrap": True})

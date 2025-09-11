@@ -1,30 +1,40 @@
-{# Display row. This fragment is included inside <tr id="entry-row-..."> #}
+<tr id="entry-row-{{ e.id }}">
+  <!-- Date -->
+  <td class="text-body">{{ e.date.isoformat() }}</td>
 
-<td>{{ e.date }}</td>
-<td style="text-transform: capitalize">{{ e.type }}</td>
+  <!-- Type -->
+  <td class="text-capitalize">{{ e.type }}</td>
 
-<td style="color: {{ '#28c081' if e.type == 'income' else '#ff6b6b' }}">
-  {{ '%.2f'|format(e.amount) }}
-</td>
+  <!-- Amount -->
+  <td class="{{ 'text-success' if e.type == 'income' else 'text-danger' }}">
+    {{ '%.2f'|format(e.amount) }}
+  </td>
 
-<td>{{ e.category.name if e.category else '' }}</td>
-<td>{{ e.note or '' }}</td>
+  <!-- Category -->
+  <td class="text-body">{{ e.category.name if e.category else '—' }}</td>
 
-<td class="actions">
-  <button
-    type="button"
-    class="btn ghost"
-    hx-get="/entries/edit/{{ e.id }}"
-    hx-target="#entry-row-{{ e.id }}"
-    hx-swap="outerHTML"
-  >Edit</button>
+  <!-- Note -->
+  <td class="text-secondary">
+    <span title="{{ e.note or '' }}">{{ e.note or "" }}</span>
+  </td>
 
-  <button
-    type="button"
-    class="btn red"
-    hx-post="/entries/delete/{{ e.id }}"
-    hx-target="#entries-list"
-    hx-swap="innerHTML"
-    hx-confirm="Delete this entry?"
-  >Delete</button>
-</td>
+  <!-- Actions -->
+  <td class="text-end">
+    <button
+      class="btn btn-outline-light btn-sm me-2"
+      hx-get="/entries/edit/{{ e.id }}"
+      hx-target="#entry-row-{{ e.id }}"
+      hx-swap="outerHTML">
+      Edit
+    </button>
+
+    <button
+      class="btn btn-danger btn-sm"
+      hx-post="/entries/delete/{{ e.id }}"
+      hx-target="#entries-tbody"
+      hx-swap="innerHTML"
+      hx-confirm="Delete this entry?">
+      Delete
+    </button>
+  </td>
+</tr>
