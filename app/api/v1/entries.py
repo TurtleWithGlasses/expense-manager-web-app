@@ -156,11 +156,11 @@ async def row_edit(
 async def row_update(
     request: Request,
     entry_id: int,
-    type: str = Form(...),                # "expense" | "income"
+    type: str = Form(...),
     amount: float = Form(...),
     category_id: int | None = Form(None),
     note: str | None = Form(None),
-    date: _date = Form(...),              # HTML date input -> auto-parsed
+    date: str = Form(...),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
@@ -177,7 +177,7 @@ async def row_update(
     e.amount = float(amount)
     e.category_id = category_id
     e.note = note
-    e.date = date
+    e.date = _date.fromisoformat(date)
     db.add(e)
     db.commit()
     db.refresh(e)
