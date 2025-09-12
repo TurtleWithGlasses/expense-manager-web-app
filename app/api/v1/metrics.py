@@ -10,6 +10,7 @@ from app.templates import render
 
 router = APIRouter(prefix="/metrics", tags=["metrics"])
 
+
 def _parsed_dates(start: str | None, end: str | None):
     # fallback to current month if not provided
     today = date.today()

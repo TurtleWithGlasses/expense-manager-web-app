@@ -9,90 +9,261 @@
   <a class="btn ghost" title="Coming soon" href="#">📅 Calendar</a>
 </div>
 
-<!-- Wrap filters in a form so HTMX can include both values every time -->
-<form id="filters" class="row mt-6" onsubmit="return false">
-  <div>
-    <label class="muted" for="start">Start date</label><br>
-    <input id="start" name="start" type="date" class="input" value="{{ start or '' }}">
+<!-- Horizontal date filters -->
+<form id="filters" class="date-filters mt-6" onsubmit="return false">
+  <div class="date-inputs">
+    <div class="date-field">
+      <label class="muted" for="start">Start date</label>
+      <input id="start" name="start" type="date" class="input" value="{{ start or '' }}">
+    </div>
+    <div class="date-field">
+      <label class="muted" for="end">End date</label>
+      <input id="end" name="end" type="date" class="input" value="{{ end or '' }}">
+    </div>
   </div>
-  <div>
-    <label class="muted" for="end">End date</label><br>
-    <input id="end" name="end" type="date" class="input" value="{{ end or '' }}">
-  </div>
 
-  <div class="actions" style="margin-left:auto">
-    <button class="btn purple"
-            type="button"
-            hx-get="/metrics/chart/pie"
-            hx-include="[name=start],[name=end]"
-            hx-target="#chart-area"
-            hx-swap="innerHTML">Pie chart</button>
-
-    <button class="btn blue"
-            type="button"
-            hx-get="/metrics/chart/bar"
-            hx-include="[name=start],[name=end]"
-            hx-target="#chart-area"
-            hx-swap="innerHTML">Bar chart</button>
-
-    <button class="btn green"
-            type="button"
-            hx-get="/metrics/chart/daily"
-            hx-include="[name=start],[name=end]"
-            hx-target="#chart-area"
-            hx-swap="innerHTML">Daily chart</button>
-
-    <button class="btn ghost"
-            type="button"
-            hx-on:click="document.querySelector('#chart-area').innerHTML =
-                        '<h2 class=&quot;h2 text-center mb-3&quot;>Charts</h2><div class=&quot;muted text-center&quot;>Choose a chart above to see visualization</div>'">
-      Close chart
-    </button>
+  <div class="chart-actions">
+    <button class="btn purple" type="button" hx-get="/metrics/chart/pie" hx-include="[name=start],[name=end]" hx-target="#chart-area" hx-swap="innerHTML">Pie chart</button>
+    <button class="btn blue" type="button" hx-get="/metrics/chart/bar" hx-include="[name=start],[name=end]" hx-target="#chart-area" hx-swap="innerHTML">Bar chart</button>
+    <button class="btn green" type="button" hx-get="/metrics/chart/daily" hx-include="[name=start],[name=end]" hx-target="#chart-area" hx-swap="innerHTML">Daily chart</button>
+    <button class="btn ghost" type="button" hx-on:click="document.querySelector('#chart-area').innerHTML = '<h2 class=&quot;h2 text-center mb-3&quot;>Charts</h2><div class=&quot;muted text-center&quot;>Choose a chart above to see visualization</div>'">Close chart</button>
   </div>
 </form>
 
+<!-- Color Picker Controls -->
+<div class="color-controls mt-4">
+  <div class="color-picker-group">
+    <label for="income-color">Income Text Color:</label>
+    <input type="color" id="income-color" value="#28a745" onchange="updateIncomeColor(this.value)">
+  </div>
+  <div class="color-picker-group">
+    <label for="expense-color">Expense Text Color:</label>
+    <input type="color" id="expense-color" value="#dc3545" onchange="updateExpenseColor(this.value)">
+  </div>
+  <button class="btn ghost small" onclick="resetColors()">Reset Colors</button>
+</div>
+
 <!-- KPIs -->
-<div id="totals"
-     class="kpis mt-4"
-     hx-get="/dashboard/summary"
-     hx-include="#filters"
-     hx-trigger="load, change from:#filters delay:150ms"
-     hx-swap="innerHTML">
+<div id="totals" class="kpis mt-4" hx-get="/dashboard/summary" hx-include="#filters" hx-trigger="load, change from:#filters delay:150ms" hx-swap="innerHTML">
   <div class="muted">Loading totals…</div>
 </div>
 
 <!-- Incomes + Expenses -->
 <div class="grid grid-2 mt-4">
-  <section class="card pad">
+  <section class="data-section income-section">
     <h2 class="h2">Income(s)</h2>
-    <div id="income-list"
-         hx-get="/dashboard/incomes"
-         hx-include="#filters"
-         hx-trigger="load, change from:#filters delay:150ms"
-         hx-swap="innerHTML">
+    <div id="income-list" hx-get="/dashboard/incomes" hx-include="#filters" hx-trigger="load, change from:#filters delay:150ms" hx-swap="innerHTML">
       <div class="muted">Loading incomes…</div>
     </div>
   </section>
 
-  <section class="card pad">
+  <section class="data-section expense-section">
     <h2 class="h2">Expenses</h2>
-    <div id="expense-list"
-         hx-get="/dashboard/expenses"
-         hx-include="#filters"
-         hx-trigger="load, change from:#filters delay:150ms"
-         hx-swap="innerHTML">
+    <div id="expense-list" hx-get="/dashboard/expenses" hx-include="#filters" hx-trigger="load, change from:#filters delay:150ms" hx-swap="innerHTML">
       <div class="muted">Loading expenses…</div>
     </div>
   </section>
 </div>
 
-
 <!-- Chart area -->
-<section class="card pad mt-6 chart-area" id="chart-area"
-         hx-target="this"
-         hx-swap="innerHTML">
+<section class="card pad mt-6 chart-area" id="chart-area" hx-target="this" hx-swap="innerHTML">
   <h2 class="h2 text-center mb-3">Charts</h2>
   <div class="muted text-center">Choose a chart above to see visualization</div>
 </section>
+
+<style>
+/* CSS Custom Properties for Dynamic Colors */
+:root {
+  --income-color: #28a745;
+  --expense-color: #dc3545;
+}
+
+/* Horizontal date filters layout */
+.date-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.date-inputs {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.date-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-field label {
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.chart-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Color picker controls */
+.color-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.color-picker-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-picker-group label {
+  font-size: 0.875rem;
+  color: #ccc;
+  white-space: nowrap;
+}
+
+.color-picker-group input[type="color"] {
+  width: 40px;
+  height: 30px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn.small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Data sections styling */
+.data-section {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.data-section h2 {
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+/* Apply colors to income and expense content */
+.income-section td,
+.income-section .amount,
+.income-section .total-amount,
+.income-section table tbody tr td {
+  color: var(--income-color) !important;
+}
+
+.expense-section td,
+.expense-section .amount,
+.expense-section .total-amount,
+.expense-section table tbody tr td {
+  color: var(--expense-color) !important;
+}
+
+/* Table styling */
+.data-section table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+.data-section th,
+.data-section td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+}
+
+.data-section th {
+  font-weight: 600;
+  color: #ccc !important;
+  font-size: 0.875rem;
+}
+
+.data-section .total-row {
+  font-weight: 600;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .date-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .date-inputs {
+    justify-content: center;
+  }
+  
+  .chart-actions {
+    justify-content: center;
+  }
+  
+  .color-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+}
+</style>
+
+<script>
+function updateIncomeColor(color) {
+  document.documentElement.style.setProperty('--income-color', color);
+  localStorage.setItem('income-color', color);
+}
+
+function updateExpenseColor(color) {
+  document.documentElement.style.setProperty('--expense-color', color);
+  localStorage.setItem('expense-color', color);
+}
+
+function resetColors() {
+  const defaultIncome = '#28a745';
+  const defaultExpense = '#dc3545';
+  
+  document.getElementById('income-color').value = defaultIncome;
+  document.getElementById('expense-color').value = defaultExpense;
+  
+  updateIncomeColor(defaultIncome);
+  updateExpenseColor(defaultExpense);
+  
+  localStorage.removeItem('income-color');
+  localStorage.removeItem('expense-color');
+}
+
+// Load saved colors on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const savedIncome = localStorage.getItem('income-color');
+  const savedExpense = localStorage.getItem('expense-color');
+  
+  if (savedIncome) {
+    document.getElementById('income-color').value = savedIncome;
+    updateIncomeColor(savedIncome);
+  }
+  
+  if (savedExpense) {
+    document.getElementById('expense-color').value = savedExpense;
+    updateExpenseColor(savedExpense);
+  }
+});
+</script>
 
 {% endblock %}

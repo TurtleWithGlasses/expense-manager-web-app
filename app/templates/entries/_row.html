@@ -2,12 +2,22 @@
   <!-- Date -->
   <td class="text-body">{{ e.date.isoformat() }}</td>
 
-  <!-- Type -->
-  <td class="text-capitalize">{{ e.type }}</td>
+  <!-- Type with color badge -->
+  <td>
+    <span class="type-badge {{ e.type }}">
+      {% if e.type == 'income' %}
+        <i class="bi bi-arrow-up-circle"></i>
+      {% else %}
+        <i class="bi bi-arrow-down-circle"></i>
+      {% endif %}
+      {{ e.type|capitalize }}
+    </span>
+  </td>
 
-  <!-- Amount -->
-  <td class="{{ 'text-success' if e.type == 'income' else 'text-danger' }}">
-    {{ '%.2f'|format(e.amount) }}
+  <!-- Amount with color coding -->
+  <td class="{{ 'income-amount' if e.type == 'income' else 'expense-amount' }}">
+    {% if e.type == 'income' %}+{% else %}-{% endif %}
+    ${{ '%.2f'|format(e.amount) }}
   </td>
 
   <!-- Category -->
@@ -21,20 +31,20 @@
   <!-- Actions -->
   <td class="text-end">
     <button
-      class="btn btn-outline-light btn-sm me-2"
+      class="btn btn-outline-primary btn-sm me-2"
       hx-get="/entries/edit/{{ e.id }}"
       hx-target="#entry-row-{{ e.id }}"
       hx-swap="outerHTML">
-      Edit
+      <i class="bi bi-pencil"></i> Edit
     </button>
 
     <button
-      class="btn btn-danger btn-sm"
+      class="btn btn-outline-danger btn-sm"
       hx-post="/entries/delete/{{ e.id }}"
       hx-target="#entries-tbody"
       hx-swap="innerHTML"
       hx-confirm="Delete this entry?">
-      Delete
+      <i class="bi bi-trash"></i> Delete
     </button>
   </td>
 </tr>
