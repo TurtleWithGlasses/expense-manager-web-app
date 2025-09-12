@@ -1,4 +1,4 @@
-from datetime import date as _date
+from datetime import date
 from sqlalchemy.orm import Session
 from app.models.entry import Entry
 
@@ -16,7 +16,7 @@ def create_entry(db: Session,
                  amount: float,
                  category_id: int | None,
                  note: str | None,
-                 date: _date
+                 date: date
     ) -> Entry:
     e = Entry(user_id=user_id,
               type=type,
