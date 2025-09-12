@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
@@ -14,17 +14,18 @@ from app.services.metrics import range_summary
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
-def _parse_dates(start: date | None, end: date | None) -> tuple[date, date]:
-    """If no start/end provided, default to the current month range."""
+def _parse_dates(start: str | None, end: str | None) -> tuple[date, date]:
     today = date.today()
     if not start or not end:
         month_start = today.replace(day=1)
-        # last day of month
         next_month = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
         month_end = next_month - timedelta(days=1)
         return month_start, month_end
-    return start, end
 
+    # Parse strings into actual date objects
+    s = datetime.fromisoformat(start).date() if isinstance(start, str) else start
+    e = datetime.fromisoformat(end).date() if isinstance(end, str) else end
+    return s, e
 
 def _sum_amount(rows) -> Decimal:
     total = Decimal("0")

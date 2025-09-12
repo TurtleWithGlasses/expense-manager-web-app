@@ -153,35 +153,37 @@ async def row_edit(
 
 # === Row update (POST) ===
 @router.post("/update/{entry_id}", response_class=HTMLResponse)
-async def row_update(
+async def update_entry(
     request: Request,
     entry_id: int,
     type: str = Form(...),
     amount: float = Form(...),
     category_id: int | None = Form(None),
     note: str | None = Form(None),
-    date: str = Form(...),
+    date: str = Form(...),  # accept as string
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    e = db.query(Entry).filter(Entry.user_id == user["id"], Entry.id == entry_id).first()
+    e = db.query(Entry).filter(
+        Entry.user_id == user["id"], Entry.id == entry_id
+    ).first()
     if not e:
         raise HTTPException(status_code=404, detail="Entry not found")
-
-    # normalize optional
-    if category_id == "":
-        category_id = None
 
     # update fields
     e.type = type
     e.amount = float(amount)
-    e.category_id = category_id
+    e.category_id = category_id or None
     e.note = note
     e.date = _date.fromisoformat(date)
+
     db.add(e)
     db.commit()
     db.refresh(e)
 
     cats = list_categories(db, user_id=user["id"])
-    # return the display row (so HTMX swaps the row back)
-    return render(request, "entries/_row.html", {"e": e, "categories": cats, "wrap": True})
+    return render(
+        request,
+        "entries/_row.html",
+        {"e": e, "categories": cats, "wrap": True}
+    )

@@ -24,27 +24,30 @@
     <button class="btn purple"
             type="button"
             hx-get="/metrics/chart/pie"
-            hx-include="#filters"
+            hx-include="[name=start],[name=end]"
             hx-target="#chart-area"
             hx-swap="innerHTML">Pie chart</button>
 
     <button class="btn blue"
             type="button"
             hx-get="/metrics/chart/bar"
-            hx-include="#filters"
+            hx-include="[name=start],[name=end]"
             hx-target="#chart-area"
             hx-swap="innerHTML">Bar chart</button>
 
     <button class="btn green"
             type="button"
             hx-get="/metrics/chart/daily"
-            hx-include="#filters"
+            hx-include="[name=start],[name=end]"
             hx-target="#chart-area"
             hx-swap="innerHTML">Daily chart</button>
 
     <button class="btn ghost"
             type="button"
-            hx-on:click="document.querySelector('#chart-area').innerHTML = '<div class=&quot;muted&quot;>Choose a chart</div>'">Close chart</button>
+            hx-on:click="document.querySelector('#chart-area').innerHTML =
+                        '<h2 class=&quot;h2 text-center mb-3&quot;>Charts</h2><div class=&quot;muted text-center&quot;>Choose a chart above to see visualization</div>'">
+      Close chart
+    </button>
   </div>
 </form>
 
@@ -83,8 +86,13 @@
   </section>
 </div>
 
-<section class="card pad mt-6 chart-area center" id="chart-area">
-  <div class="muted">Choose a chart</div>
+
+<!-- Chart area -->
+<section class="card pad mt-6 chart-area" id="chart-area"
+         hx-target="this"
+         hx-swap="innerHTML">
+  <h2 class="h2 text-center mb-3">Charts</h2>
+  <div class="muted text-center">Choose a chart above to see visualization</div>
 </section>
 
 {% endblock %}

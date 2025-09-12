@@ -5,12 +5,19 @@ from app.models.category import Category
 from sqlalchemy.orm import Session
 
 def range_summary(db, user_id: int, start, end):
+    # make end exclusive for consistency
+    e_next = end + timedelta(days=1)
+
     q = (
         db.query(
             func.sum(case((Entry.type == "income", Entry.amount), else_=0)).label("income"),
             func.sum(case((Entry.type == "expense", Entry.amount), else_=0)).label("expense"),
         )
-        .filter(Entry.user_id == user_id, Entry.date.between(start, end))
+        .filter(
+            Entry.user_id == user_id,
+            Entry.date >= start,
+            Entry.date < e_next,   # use exclusive bound like in dashboard.py
+        )
     )
     income, expense = q.one()
     return {
