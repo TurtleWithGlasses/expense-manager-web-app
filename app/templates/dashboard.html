@@ -21,13 +21,6 @@
       <input id="end" name="end" type="date" class="input" value="{{ end or '' }}">
     </div>
   </div>
-
-  <div class="chart-actions">
-    <button class="btn purple" type="button" hx-get="/metrics/chart/pie" hx-include="[name=start],[name=end]" hx-target="#chart-area" hx-swap="innerHTML">Pie chart</button>
-    <button class="btn blue" type="button" hx-get="/metrics/chart/bar" hx-include="[name=start],[name=end]" hx-target="#chart-area" hx-swap="innerHTML">Bar chart</button>
-    <button class="btn green" type="button" hx-get="/metrics/chart/daily" hx-include="[name=start],[name=end]" hx-target="#chart-area" hx-swap="innerHTML">Daily chart</button>
-    <button class="btn ghost" type="button" hx-on:click="document.querySelector('#chart-area').innerHTML = '<h2 class=&quot;h2 text-center mb-3&quot;>Charts</h2><div class=&quot;muted text-center&quot;>Choose a chart above to see visualization</div>'">Close chart</button>
-  </div>
 </form>
 
 <!-- Color Picker Controls -->
@@ -65,10 +58,23 @@
   </section>
 </div>
 
-<!-- Chart area -->
-<section class="card pad mt-6 chart-area" id="chart-area" hx-target="this" hx-swap="innerHTML">
-  <h2 class="h2 text-center mb-3">Charts</h2>
-  <div class="muted text-center">Choose a chart above to see visualization</div>
+<!-- Chart area with buttons moved to top -->
+<section class="chart-section mt-6">
+  <!-- Chart control buttons -->
+  <div class="chart-header">
+    <h2 class="h2">Charts</h2>
+    <div class="chart-actions">
+      <button class="btn purple" type="button" hx-get="/metrics/chart/pie" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">Pie chart</button>
+      <button class="btn blue" type="button" hx-get="/metrics/chart/bar" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">Bar chart</button>
+      <button class="btn green" type="button" hx-get="/metrics/chart/daily" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">Daily chart</button>
+      <button class="btn ghost" type="button" hx-on:click="document.querySelector('#chart-area').innerHTML = '<div class=&quot;muted text-center&quot;>Choose a chart above to see visualization</div>'">Close chart</button>
+    </div>
+  </div>
+  
+  <!-- Chart display area -->
+  <div class="chart-display" id="chart-area">
+    <div class="muted text-center">Choose a chart above to see visualization</div>
+  </div>
 </section>
 
 <style>
@@ -81,7 +87,7 @@
 /* Horizontal date filters layout */
 .date-filters {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-end;
   gap: 2rem;
   flex-wrap: wrap;
@@ -101,12 +107,6 @@
 .date-field label {
   margin-bottom: 0.25rem;
   font-size: 0.875rem;
-}
-
-.chart-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
 /* Color picker controls */
@@ -201,6 +201,48 @@
   border-top: 2px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Chart section styling */
+.chart-section {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.chart-header {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.chart-header h2 {
+  color: #fff;
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.chart-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chart-display {
+  padding: 2rem;
+  min-height: 300px;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .date-filters {
@@ -212,14 +254,20 @@
     justify-content: center;
   }
   
-  .chart-actions {
-    justify-content: center;
-  }
-  
   .color-controls {
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
+  }
+  
+  .chart-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .chart-actions {
+    justify-content: center;
   }
 }
 </style>
