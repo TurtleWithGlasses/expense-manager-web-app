@@ -1,0 +1,49 @@
+<div class="exchange-rates-table">
+    <h4>Current Exchange Rates (Base: {{ base_currency }})</h4>
+    <div class="rates-grid">
+        {% for currency_code, rate in rates.items() %}
+            {% if currency_code in currencies %}
+                <div class="rate-item">
+                    <span class="currency-symbol">{{ currencies[currency_code].symbol }}</span>
+                    <span class="currency-name">{{ currencies[currency_code].name }}</span>
+                    <span class="rate-value">1 {{ base_currency }} = {{ "%.4f"|format(rate) }} {{ currency_code }}</span>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.rates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.rate-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.currency-symbol {
+    font-weight: bold;
+    color: #10b981;
+    min-width: 30px;
+}
+
+.currency-name {
+    flex: 1;
+    color: #e2e8f0;
+}
+
+.rate-value {
+    color: #9ca3af;
+    font-family: monospace;
+}
+</style>

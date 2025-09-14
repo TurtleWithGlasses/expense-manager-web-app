@@ -20,6 +20,7 @@ class Entry(Base):
     amount: Mapped[float] = mapped_column(Numeric(12, 2))
     note: Mapped[str | None] = mapped_column(String(255))
     date: Mapped[date] = mapped_column(Date)
+    description: Mapped[str | None] = mapped_column(String, nullable=True)
 
     owner = relationship("User", back_populates="entries")
     category = relationship("Category", back_populates="entries")

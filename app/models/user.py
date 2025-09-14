@@ -11,3 +11,4 @@ class User(Base):
 
     categories = relationship("Category", back_populates="owner", cascade="all, delete-orphan")
     entries = relationship("Entry", back_populates="owner", cascade="all, delete-orphan")
+    preferences = relationship("UserPreferences", back_populates="user", uselist=False)

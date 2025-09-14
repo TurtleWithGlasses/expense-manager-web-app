@@ -3,9 +3,11 @@
 
 <h1 class="h1">Welcome, {{ user.email }}</h1>
 
-<div class="grid grid-3 quick-links">
+<!-- Navigation Links - Fixed with proper horizontal layout -->
+<div class="quick-links-horizontal">
   <a class="btn ghost" href="/entries/">➕ Add / View / Edit Entries</a>
   <a class="btn ghost" href="/categories/">🏷️ Manage Categories</a>
+  <a class="btn ghost" href="/currency/settings">💱 Currency</a>
   <a class="btn ghost" title="Coming soon" href="#">📅 Calendar</a>
 </div>
 
@@ -23,17 +25,33 @@
   </div>
 </form>
 
-<!-- Color Picker Controls -->
-<div class="color-controls mt-4">
-  <div class="color-picker-group">
-    <label for="income-color">Income Text Color:</label>
-    <input type="color" id="income-color" value="#28a745" onchange="updateIncomeColor(this.value)">
+<!-- Currency Display and Color Controls -->
+<div class="controls-section mt-4">
+  <!-- Currency Display -->
+  <div class="currency-display">
+    <span class="currency-label">Currency:</span>
+    <span class="currency-value">
+      {% if user_currency %}
+        {{ user_currency.name }} ({{ user_currency.symbol }})
+      {% else %}
+        US Dollar ($)
+      {% endif %}
+    </span>
+    <a href="/currency/settings" class="btn ghost mini">Change</a>
   </div>
-  <div class="color-picker-group">
-    <label for="expense-color">Expense Text Color:</label>
-    <input type="color" id="expense-color" value="#dc3545" onchange="updateExpenseColor(this.value)">
+
+  <!-- Color Picker Controls -->
+  <div class="color-controls">
+    <div class="color-picker-group">
+      <label for="income-color">Income Color:</label>
+      <input type="color" id="income-color" value="#28a745" onchange="updateIncomeColor(this.value)">
+    </div>
+    <div class="color-picker-group">
+      <label for="expense-color">Expense Color:</label>
+      <input type="color" id="expense-color" value="#dc3545" onchange="updateExpenseColor(this.value)">
+    </div>
+    <button class="btn ghost small" onclick="resetColors()">Reset Colors</button>
   </div>
-  <button class="btn ghost small" onclick="resetColors()">Reset Colors</button>
 </div>
 
 <!-- KPIs -->
@@ -84,6 +102,25 @@
   --expense-color: #dc3545;
 }
 
+/* Navigation Links - Extended Horizontal Layout */
+.quick-links-horizontal {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin: 2rem 0;
+  width: 100%;
+}
+
+.quick-links-horizontal .btn {
+  text-align: center;
+  white-space: nowrap;
+  padding: 12px 16px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Horizontal date filters layout */
 .date-filters {
   display: flex;
@@ -109,16 +146,50 @@
   font-size: 0.875rem;
 }
 
+/* Controls section styling */
+.controls-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Currency display styling */
+.currency-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 200px;
+}
+
+.currency-label {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.currency-value {
+  font-size: 1rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.btn.mini {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+}
+
 /* Color picker controls */
 .color-controls {
   display: flex;
   align-items: center;
   gap: 1.5rem;
   flex-wrap: wrap;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .color-picker-group {
@@ -245,6 +316,10 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
+  .quick-links-horizontal {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
   .date-filters {
     flex-direction: column;
     align-items: stretch;
@@ -254,10 +329,18 @@
     justify-content: center;
   }
   
-  .color-controls {
+  .controls-section {
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
+  }
+  
+  .currency-display {
+    justify-content: center;
+  }
+  
+  .color-controls {
+    justify-content: center;
   }
   
   .chart-header {
@@ -268,6 +351,12 @@
   
   .chart-actions {
     justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-links-horizontal {
+    grid-template-columns: 1fr;
   }
 }
 </style>
