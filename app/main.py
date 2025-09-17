@@ -1,3 +1,4 @@
+import os
 from datetime import date
 from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
@@ -58,3 +59,9 @@ async def healthz():
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
         return {"ok": True}
+    
+    
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port)
