@@ -1,0 +1,11 @@
+{
+    "name": "expense-manager-web",
+    "private": true,
+    "scripts": {
+        "dev": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/styles.css --watch",
+        "build": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/styles.css --minify"
+    },
+    "devDependencies": {
+        "tailwindcss": "^3.4.10"
+    }
+}
