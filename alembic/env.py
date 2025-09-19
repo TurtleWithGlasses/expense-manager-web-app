@@ -1,4 +1,3 @@
-# alembic/env.py
 from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
@@ -11,9 +10,7 @@ from app.db.base import Base
 from app.models.user import User
 from app.models.category import Category
 from app.models.entry import Entry
-
-# --- add these lines at very top of alembic/env.py, before importing app.*
-
+from app.models.user_preferences import UserPreferences
 
 
 # this is the Alembic Config object, which provides access to the values within the .ini file in use.
