@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="h1">Welcome, {{ user.email }}</h1>
+
+<!-- Navigation Links - Fixed with proper horizontal layout -->
+<div class="quick-links-horizontal">
+  <a class="btn ghost" href="/entries/">➕ Add / View / Edit Entries</a>
+  <a class="btn ghost" href="/categories/">🏷️ Manage Categories</a>
+  <a class="btn ghost" href="/currency/settings">💱 Currency</a>
+  <a class="btn ghost" title="Coming soon" href="#">📅 Calendar</a>
+</div>
+
+<!-- Horizontal date filters -->
+<form id="filters" class="date-filters mt-6" onsubmit="return false">
+  <div class="date-inputs">
+    <div class="date-field">
+      <label class="muted" for="start">Start date</label>
+      <input id="start" name="start" type="date" class="input" value="{{ start or '' }}">
+    </div>
+    <div class="date-field">
+      <label class="muted" for="end">End date</label>
+      <input id="end" name="end" type="date" class="input" value="{{ end or '' }}">
+    </div>
+  </div>
+</form>
+
+<!-- Currency Display and Color Controls -->
+<div class="controls-section mt-4">
+  <!-- Currency Display -->
+  <div class="currency-display">
+    <span class="currency-label">Currency:</span>
+    <span class="currency-value">
+      {% if user_currency %}
+        {{ user_currency.name }} ({{ user_currency.symbol }})
+      {% else %}
+        US Dollar ($)
+      {% endif %}
+    </span>
+    <a href="/currency/settings" class="btn ghost mini">Change</a>
+  </div>
+
+  <!-- Color Picker Controls -->
+  <div class="color-controls">
+    <div class="color-picker-group">
+      <label for="income-color">Income Color:</label>
+      <input type="color" id="income-color" value="#28a745" onchange="updateIncomeColor(this.value)">
+    </div>
+    <div class="color-picker-group">
+      <label for="expense-color">Expense Color:</label>
+      <input type="color" id="expense-color" value="#dc3545" onchange="updateExpenseColor(this.value)">
+    </div>
+    <button class="btn ghost small" onclick="resetColors()">Reset Colors</button>
+  </div>
+</div>
+
+<!-- KPIs -->
+<div id="totals" class="kpis mt-4" hx-get="/dashboard/summary" hx-include="#filters" hx-trigger="load, change from:#filters delay:150ms" hx-swap="innerHTML">
+  <div class="muted">Loading totals…</div>
+</div>
+
+<!-- Incomes + Expenses -->
+<div class="grid grid-2 mt-4">
+  <section class="data-section income-section">
+    <h2 class="h2">Income(s)</h2>
+    <div id="income-list" hx-get="/dashboard/incomes" hx-include="#filters" hx-trigger="load, change from:#filters delay:150ms" hx-swap="innerHTML">
+      <div class="muted">Loading incomes…</div>
+    </div>
+  </section>
+
+  <section class="data-section expense-section">
+    <h2 class="h2">Expenses</h2>
+    <div id="expense-list" hx-get="/dashboard/expenses" hx-include="#filters" hx-trigger="load, change from:#filters delay:150ms" hx-swap="innerHTML">
+      <div class="muted">Loading expenses…</div>
+    </div>
+  </section>
+</div>
+
+<!-- Chart area with buttons moved to top -->
+<section class="chart-section mt-6">
+  <!-- Chart control buttons -->
+  <div class="chart-header">
+    <h2 class="h2">Charts</h2>
+    <div class="chart-actions">
+      <button class="btn purple" type="button" hx-get="/metrics/chart/pie" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">Pie chart</button>
+      <button class="btn blue" type="button" hx-get="/metrics/chart/bar" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">Bar chart</button>
+      <button class="btn green" type="button" hx-get="/metrics/chart/daily" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">Daily chart</button>
+      <button class="btn ghost" type="button" hx-on:click="document.querySelector('#chart-area').innerHTML = '<div class=&quot;muted text-center&quot;>Choose a chart above to see visualization</div>'">Close chart</button>
+    </div>
+  </div>
+  
+  <!-- Chart display area -->
+  <div class="chart-display" id="chart-area">
+    <div class="muted text-center">Choose a chart above to see visualization</div>
+  </div>
+</section>
+
+<style>
+/* CSS Custom Properties for Dynamic Colors */
+:root {
+  --income-color: #28a745;
+  --expense-color: #dc3545;
+}
+
+/* Navigation Links - Extended Horizontal Layout */
+.quick-links-horizontal {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin: 2rem 0;
+  width: 100%;
+}
+
+.quick-links-horizontal .btn {
+  text-align: center;
+  white-space: nowrap;
+  padding: 12px 16px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Horizontal date filters layout */
+.date-filters {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.date-inputs {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.date-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-field label {
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+}
+
+/* Controls section styling */
+.controls-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Currency display styling */
+.currency-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 200px;
+}
+
+.currency-label {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.currency-value {
+  font-size: 1rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.btn.mini {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+/* Color picker controls */
+.color-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.color-picker-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-picker-group label {
+  font-size: 0.875rem;
+  color: #ccc;
+  white-space: nowrap;
+}
+
+.color-picker-group input[type="color"] {
+  width: 40px;
+  height: 30px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn.small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Data sections styling */
+.data-section {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.data-section h2 {
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+/* Apply colors to income and expense content */
+.income-section td,
+.income-section .amount,
+.income-section .total-amount,
+.income-section table tbody tr td {
+  color: var(--income-color) !important;
+}
+
+.expense-section td,
+.expense-section .amount,
+.expense-section .total-amount,
+.expense-section table tbody tr td {
+  color: var(--expense-color) !important;
+}
+
+/* Table styling */
+.data-section table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+.data-section th,
+.data-section td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+}
+
+.data-section th {
+  font-weight: 600;
+  color: #ccc !important;
+  font-size: 0.875rem;
+}
+
+.data-section .total-row {
+  font-weight: 600;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Chart section styling */
+.chart-section {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.chart-header {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.chart-header h2 {
+  color: #fff;
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.chart-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chart-display {
+  padding: 2rem;
+  min-height: 300px;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .quick-links-horizontal {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .date-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .date-inputs {
+    justify-content: center;
+  }
+  
+  .controls-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .currency-display {
+    justify-content: center;
+  }
+  
+  .color-controls {
+    justify-content: center;
+  }
+  
+  .chart-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .chart-actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-links-horizontal {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+function updateIncomeColor(color) {
+  document.documentElement.style.setProperty('--income-color', color);
+  localStorage.setItem('income-color', color);
+}
+
+function updateExpenseColor(color) {
+  document.documentElement.style.setProperty('--expense-color', color);
+  localStorage.setItem('expense-color', color);
+}
+
+function resetColors() {
+  const defaultIncome = '#28a745';
+  const defaultExpense = '#dc3545';
+  
+  document.getElementById('income-color').value = defaultIncome;
+  document.getElementById('expense-color').value = defaultExpense;
+  
+  updateIncomeColor(defaultIncome);
+  updateExpenseColor(defaultExpense);
+  
+  localStorage.removeItem('income-color');
+  localStorage.removeItem('expense-color');
+}
+
+// Load saved colors on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const savedIncome = localStorage.getItem('income-color');
+  const savedExpense = localStorage.getItem('expense-color');
+  
+  if (savedIncome) {
+    document.getElementById('income-color').value = savedIncome;
+    updateIncomeColor(savedIncome);
+  }
+  
+  if (savedExpense) {
+    document.getElementById('expense-color').value = savedExpense;
+    updateExpenseColor(savedExpense);
+  }
+});
+</script>
+
+{% endblock %}

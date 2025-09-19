@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="settings-container">
+  <div class="settings-header">
+    <h1 class="h1">Currency Settings</h1>
+    <p class="subtitle">Choose your preferred currency for displaying amounts throughout the application.</p>
+  </div>
+
+  <div class="currency-selection-card">
+    <form id="currency-form" hx-post="/currency/update" hx-target="#currency-feedback" hx-swap="innerHTML">
+      <div class="current-currency">
+        <h3>Current Currency: <span class="currency-display">{{ currencies[current_currency].name }} ({{ currencies[current_currency].symbol }})</span></h3>
+      </div>
+
+      <div class="currency-grid">
+        {% for code, info in currencies.items() %}
+        <label class="currency-option {% if code == current_currency %}selected{% endif %}">
+          <input type="radio" name="currency_code" value="{{ code }}" {% if code == current_currency %}checked{% endif %}>
+          <div class="currency-card">
+            <div class="currency-symbol">{{ info.symbol }}</div>
+            <div class="currency-details">
+              <div class="currency-name">{{ info.name }}</div>
+              <div class="currency-code">{{ code }}</div>
+            </div>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn primary">Update Currency</button>
+        <a href="/" class="btn ghost">Back to Dashboard</a>
+      </div>
+    </form>
+
+    <div id="currency-feedback" class="feedback-area"></div>
+  </div>
+
+  <div class="currency-info">
+    <h3>Exchange Rate Information</h3>
+    <p>Exchange rates are updated regularly and may vary slightly from real-time rates. All your existing data will be converted and displayed in your selected currency.</p>
+    <div id="exchange-rates" hx-get="/currency/rates-display" hx-trigger="load" hx-swap="innerHTML">
+        <div class="muted">Loading exchange rates...</div>
+    </div>
+  </div>
+</div>
+
+<style>
+.settings-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.settings-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.settings-header h1 {
+  color: #e2e8f0;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #9ca3af;
+  font-size: 1.1rem;
+}
+
+.currency-selection-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.current-currency {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.current-currency h3 {
+  color: #e2e8f0;
+  font-size: 1.2rem;
+}
+
+.currency-display {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.currency-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.currency-option {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.currency-option input[type="radio"] {
+  display: none;
+}
+
+.currency-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  height: 80px;
+}
+
+.currency-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.currency-option.selected .currency-card,
+.currency-option input[type="radio"]:checked + .currency-card {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+}
+
+.currency-symbol {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #10b981;
+  min-width: 30px;
+  text-align: center;
+}
+
+.currency-details {
+  flex: 1;
+}
+
+.currency-name {
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.currency-code {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.875rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.btn.primary:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+}
+
+.btn.ghost {
+  background: transparent;
+  color: #9ca3af;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn.ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+}
+
+.feedback-area {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.currency-info {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.currency-info h3 {
+  color: #e2e8f0;
+  margin-bottom: 1rem;
+}
+
+.currency-info p {
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+@media (max-width: 768px) {
+  .settings-container {
+    padding: 1rem;
+  }
+  
+  .currency-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+}
+</style>
+
+<script>
+// Handle currency selection
+document.addEventListener('change', function(e) {
+  if (e.target.name === 'currency_code') {
+    // Update visual selection
+    document.querySelectorAll('.currency-option').forEach(option => {
+      option.classList.remove('selected');
+    });
+    e.target.closest('.currency-option').classList.add('selected');
+  }
+});
+
+// Handle form submission response
+document.body.addEventListener('htmx:afterRequest', function(evt) {
+  if (evt.detail.target.id === 'currency-feedback') {
+    const response = JSON.parse(evt.detail.xhr.responseText);
+    if (response.success) {
+      document.getElementById('currency-feedback').innerHTML = 
+        `<div class="success-message">${response.message}</div>`;
+      
+      // Optionally reload the page after a short delay to reflect changes
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } else {
+      document.getElementById('currency-feedback').innerHTML = 
+        `<div class="error-message">Error: ${response.detail || 'Failed to update currency'}</div>`;
+    }
+  }
+});
+</script>
+
+{% endblock %}

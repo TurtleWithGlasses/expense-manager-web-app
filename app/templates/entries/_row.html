@@ -1,0 +1,50 @@
+<tr id="entry-row-{{ e.id }}">
+  <!-- Date -->
+  <td class="text-body">{{ e.date.isoformat() }}</td>
+
+  <!-- Type with color badge -->
+  <td>
+    <span class="type-badge {{ e.type }}">
+      {% if e.type == 'income' %}
+        <i class="bi bi-arrow-up-circle"></i>
+      {% else %}
+        <i class="bi bi-arrow-down-circle"></i>
+      {% endif %}
+      {{ e.type|capitalize }}
+    </span>
+  </td>
+
+  <!-- Amount with color coding -->
+  <td class="{{ 'income-amount' if e.type == 'income' else 'expense-amount' }}">
+    {% if e.type == 'income' %}+{% else %}-{% endif %}
+    ${{ '%.2f'|format(e.amount) }}
+  </td>
+
+  <!-- Category -->
+  <td class="text-body">{{ e.category.name if e.category else '—' }}</td>
+
+  <!-- Note -->
+  <td class="text-secondary">
+    <span title="{{ e.note or '' }}">{{ e.note or "" }}</span>
+  </td>
+
+  <!-- Actions -->
+  <td class="text-end">
+    <button
+      class="btn btn-outline-primary btn-sm me-2"
+      hx-get="/entries/edit/{{ e.id }}"
+      hx-target="#entry-row-{{ e.id }}"
+      hx-swap="outerHTML">
+      <i class="bi bi-pencil"></i> Edit
+    </button>
+
+    <button
+      class="btn btn-outline-danger btn-sm"
+      hx-post="/entries/delete/{{ e.id }}"
+      hx-target="#entries-tbody"
+      hx-swap="innerHTML"
+      hx-confirm="Delete this entry?">
+      <i class="bi bi-trash"></i> Delete
+    </button>
+  </td>
+</tr>

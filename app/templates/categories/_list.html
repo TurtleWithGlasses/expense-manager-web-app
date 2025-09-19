@@ -1,0 +1,11 @@
+{% for c in categories %}
+  <li id="cat-item-{{ c.id }}" class="list-group-item cat-item">
+    {% include "categories/_item.html" %}
+  </li>
+{% else %}
+  <li class="list-group-item cat-empty">
+    <i class="bi bi-inbox" style="font-size: 3rem; color: #6b7280;"></i>
+    <p class="mt-3 mb-0">No categories yet.</p>
+    <small class="text-muted">Add your first category above to get started!</small>
+  </li>
+{% endfor %}

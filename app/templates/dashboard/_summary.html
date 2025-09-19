@@ -1,0 +1,17 @@
+<div class="kpi income">
+    <div class="label">Total Income</div>
+    <div class="value">{{ totals.income_formatted }}</div>
+</div>
+
+<div class="kpi">
+    <div class="label">Total Expenses</div>
+    <div class="value">{{ totals.expense_formatted }}</div>
+</div>
+
+<div class="kpi">
+    <div class="label">Balance</div>
+    <div class="value" 
+         style="color: {{ '#28c081' if totals.balance >= 0 else '#ff6b6b' }};">
+        {{ totals.balance_formatted }}
+    </div>
+</div>

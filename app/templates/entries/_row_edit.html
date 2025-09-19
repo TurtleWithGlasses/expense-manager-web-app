@@ -1,0 +1,51 @@
+{% if wrap %}<div id="entry-row-{{ e.id }}">{% endif %}
+<tr id="entry-row-{{ e.id }}" class="bg-dark-subtle">
+  <td colspan="6">
+    <form
+      class="d-flex align-items-center gap-3 py-2"
+      hx-post="/entries/update/{{ e.id }}"
+      hx-target="#entry-row-{{ e.id }}"
+      hx-swap="outerHTML"
+      hx-disabled-elt="button">
+
+      <input type="date" name="date" value="{{ e.date.isoformat() }}" 
+             class="form-control form-control-sm" style="width: 140px;">
+
+      <select name="type" class="form-select form-select-sm" style="width: 120px;">
+        <option value="expense" {{ 'selected' if e.type == 'expense' else '' }}>Expense</option>
+        <option value="income"  {{ 'selected' if e.type == 'income'  else '' }}>Income</option>
+      </select>
+
+      <input type="number" step="0.01" name="amount"
+             value="{{ '%.2f'|format(e.amount) }}" 
+             class="form-control form-control-sm" style="width: 120px;" required>
+
+      <select name="category_id" class="form-select form-select-sm" style="width: 180px;">
+        <option value="">(No category)</option>
+        {% for c in categories %}
+          <option value="{{ c.id }}" {{ 'selected' if e.category_id == c.id else '' }}>
+            {{ c.name }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <input type="text" name="note" value="{{ e.note or '' }}" 
+             class="form-control form-control-sm flex-grow-1" placeholder="Note">
+
+      <div class="d-flex align-items-center gap-2">
+        <span class="htmx-indicator text-muted small">Saving…</span>
+        <button type="submit" class="btn btn-success btn-sm">
+          <i class="bi bi-check-lg"></i> Save
+        </button>
+        <button type="button"
+                class="btn btn-secondary btn-sm"
+                hx-get="/entries/row/{{ e.id }}"
+                hx-target="#entry-row-{{ e.id }}"
+                hx-swap="outerHTML">
+          <i class="bi bi-x-lg"></i> Cancel
+        </button>
+      </div>
+    </form>
+  </td>
+</tr>
+{% if wrap %}</div>{% endif %}

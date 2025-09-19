@@ -1,0 +1,7 @@
+{% for e in entries %}
+  {% include "entries/_row.html" %}
+{% else %}
+  <tr>
+    <td colspan="6" class="text-secondary py-4">No entries yet.</td>
+  </tr>
+{% endfor %}
