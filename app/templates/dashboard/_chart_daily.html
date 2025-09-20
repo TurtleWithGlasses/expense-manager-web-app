@@ -4,12 +4,20 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
 <script>
-const ctx = document.getElementById('dailyChart').getContext('2d');
+// Destroy existing chart if it exists
+if (window.dailyChartInstance) {
+    window.dailyChartInstance.destroy();
+}
 
-// Chart data passed from the backend
-const chartData = {{ chart_data | safe }};
+// Small delay to ensure canvas is properly rendered
+setTimeout(() => {
+    const ctx = document.getElementById('dailyChart').getContext('2d');
 
-const chart = new Chart(ctx, {
+    // Chart data passed from the backend
+    const chartData = {{ chart_data | safe }};
+
+    // Create new chart instance
+    const chart = new Chart(ctx, {
     type: 'line',
     data: chartData,
     options: {
@@ -153,7 +161,11 @@ const chart = new Chart(ctx, {
             }
         }
     }
-});
+    });
+
+    // Store the chart instance globally for cleanup
+    window.dailyChartInstance = chart;
+}, 100);
 </script>
 
 <style>
