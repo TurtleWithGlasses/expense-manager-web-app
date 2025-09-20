@@ -1,29 +1,34 @@
 {% if wrap %}<div id="entry-row-{{ e.id }}">{% endif %}
+<form
+  hx-post="/entries/update/{{ e.id }}"
+  hx-target="#entry-row-{{ e.id }}"
+  hx-swap="outerHTML"
+  hx-disabled-elt="button">
 <tr id="entry-row-{{ e.id }}" class="bg-dark-subtle">
-  <!-- Date column -->
-  <td style="width:14%">
+  <!-- Date column - matches table header exactly -->
+  <td style="width:14%; padding: 8px;">
     <input type="date" name="date" value="{{ e.date.isoformat() }}" 
-           class="form-control form-control-sm">
+           class="form-control form-control-sm edit-input">
   </td>
 
-  <!-- Type column -->
-  <td style="width:14%">
-    <select name="type" class="form-select form-select-sm">
+  <!-- Type column - matches table header exactly -->
+  <td style="width:14%; padding: 8px;">
+    <select name="type" class="form-select form-select-sm edit-select">
       <option value="expense" {{ 'selected' if e.type == 'expense' else '' }}>Expense</option>
       <option value="income"  {{ 'selected' if e.type == 'income'  else '' }}>Income</option>
     </select>
   </td>
 
-  <!-- Amount column -->
-  <td style="width:14%">
+  <!-- Amount column - matches table header exactly -->
+  <td style="width:14%; padding: 8px;">
     <input type="number" step="0.01" name="amount"
            value="{{ '%.2f'|format(e.amount) }}" 
-           class="form-control form-control-sm" required>
+           class="form-control form-control-sm edit-input" required>
   </td>
 
-  <!-- Category column -->
-  <td style="width:18%">
-    <select name="category_id" class="form-select form-select-sm">
+  <!-- Category column - matches table header exactly -->
+  <td style="width:18%; padding: 8px;">
+    <select name="category_id" class="form-select form-select-sm edit-select">
       <option value="">(No category)</option>
       {% for c in categories %}
         <option value="{{ c.id }}" {{ 'selected' if e.category_id == c.id else '' }}>
@@ -33,21 +38,15 @@
     </select>
   </td>
 
-  <!-- Note column -->
-  <td>
+  <!-- Note column - matches table header exactly -->
+  <td style="padding: 8px;">
     <input type="text" name="note" value="{{ e.note or '' }}" 
-           class="form-control form-control-sm" placeholder="Note">
+           class="form-control form-control-sm edit-input" placeholder="Note">
   </td>
 
-  <!-- Actions column -->
-  <td class="text-end" style="width:18%">
-    <form
-      hx-post="/entries/update/{{ e.id }}"
-      hx-target="#entry-row-{{ e.id }}"
-      hx-swap="outerHTML"
-      hx-disabled-elt="button"
-      class="d-flex align-items-center gap-2">
-      
+  <!-- Actions column - matches table header exactly -->
+  <td class="text-end" style="width:18%; padding: 8px;">
+    <div class="d-flex align-items-center gap-1 justify-content-end">
       <span class="htmx-indicator text-muted small">Saving…</span>
       <button type="submit" class="btn btn-success btn-sm">
         <i class="bi bi-check-lg"></i> Save
@@ -59,7 +58,8 @@
               hx-swap="outerHTML">
         <i class="bi bi-x-lg"></i> Cancel
       </button>
-    </form>
+    </div>
   </td>
 </tr>
+</form>
 {% if wrap %}</div>{% endif %}

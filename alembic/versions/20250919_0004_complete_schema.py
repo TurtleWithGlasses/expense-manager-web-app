@@ -8,9 +8,10 @@ depends_on = None
 
 def upgrade() -> None:
     # Drop existing tables if they exist (to start fresh)
-    op.execute("DROP TABLE IF EXISTS entries CASCADE")
-    op.execute("DROP TABLE IF EXISTS categories CASCADE") 
-    op.execute("DROP TABLE IF EXISTS users CASCADE")
+    # SQLite doesn't support CASCADE, so we drop in reverse order
+    op.execute("DROP TABLE IF EXISTS entries")
+    op.execute("DROP TABLE IF EXISTS categories") 
+    op.execute("DROP TABLE IF EXISTS users")
     
     # Create users table
     op.create_table(
@@ -26,15 +27,15 @@ def upgrade() -> None:
         'categories',
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('name', sa.String(100), nullable=False, index=True),
-        sa.Column('user_id', sa.Integer, sa.ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
+        sa.Column('user_id', sa.Integer, sa.ForeignKey('users.id'), nullable=False),
     )
 
     # Create entries table with ALL columns
     op.create_table(
         'entries',
         sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('user_id', sa.Integer, sa.ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
-        sa.Column('category_id', sa.Integer, sa.ForeignKey('categories.id', ondelete='SET NULL'), nullable=True),
+        sa.Column('user_id', sa.Integer, sa.ForeignKey('users.id'), nullable=False),
+        sa.Column('category_id', sa.Integer, sa.ForeignKey('categories.id'), nullable=True),
         sa.Column('type', sa.String(16), nullable=False),
         sa.Column('amount', sa.Numeric(12, 2), nullable=False),
         sa.Column('note', sa.String(255), nullable=True),

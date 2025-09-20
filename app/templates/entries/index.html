@@ -185,23 +185,126 @@
     background-color: rgba(255, 255, 255, 0.05) !important;
   }
   
-  .bg-dark-subtle .form-control,
-  .bg-dark-subtle .form-select {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e2e8f0;
+  .bg-dark-subtle .edit-input,
+  .bg-dark-subtle .edit-select {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #e2e8f0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
   }
   
-  .bg-dark-subtle .form-control:focus,
-  .bg-dark-subtle .form-select:focus {
-    background-color: rgba(255, 255, 255, 0.15);
-    border-color: #10b981;
-    box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
-    color: #e2e8f0;
+  .bg-dark-subtle .edit-input:focus,
+  .bg-dark-subtle .edit-select:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25) !important;
+    color: #e2e8f0 !important;
   }
   
-  .bg-dark-subtle .form-control::placeholder {
-    color: #9ca3af;
+  .bg-dark-subtle .edit-input::placeholder {
+    color: #9ca3af !important;
+  }
+  
+  /* Fix dropdown options styling - this won't work in most browsers */
+  /* We need to use a different approach for dropdown styling */
+  .bg-dark-subtle .edit-select {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23e2e8f0' d='m4.427 9.427 3.396 3.396a.25.25 0 0 0 .354 0l3.396-3.396A.25.25 0 0 0 11.396 9H4.604a.25.25 0 0 0-.177.427Z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.75rem center !important;
+    background-size: 16px 12px !important;
+  }
+  
+  /* Fix for when dropdown is active/opened */
+  .bg-dark-subtle .edit-select:active,
+  .bg-dark-subtle .edit-select:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: #e2e8f0 !important;
+  }
+  
+  /* Table cell padding for edit rows */
+  .bg-dark-subtle td {
+    padding: 8px !important;
+    vertical-align: middle !important;
+  }
+  
+  /* Button spacing in edit row */
+  .bg-dark-subtle .btn {
+    margin: 0 2px;
+  }
+  
+  /* Additional dropdown fixes for better consistency */
+  .bg-dark-subtle .edit-select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+  }
+  
+  /* Ensure dropdown doesn't turn white on any interaction */
+  .bg-dark-subtle .edit-select:hover,
+  .bg-dark-subtle .edit-select:active,
+  .bg-dark-subtle .edit-select:visited {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #e2e8f0 !important;
+  }
+  
+  /* Fix for dropdown arrow */
+  .bg-dark-subtle .edit-select::after {
+    color: #e2e8f0 !important;
+  }
+  
+  /* Ensure form elements don't overflow their containers */
+  .bg-dark-subtle .edit-input,
+  .bg-dark-subtle .edit-select {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Edit form layout improvements */
+  .bg-dark-subtle form {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  
+  .bg-dark-subtle form > div {
+    flex-shrink: 0 !important;
+  }
+  
+  /* Better spacing for edit form */
+  .bg-dark-subtle .py-2 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  
+  .bg-dark-subtle .px-3 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  /* Ensure dropdown doesn't turn white on any state */
+  .bg-dark-subtle .edit-select,
+  .bg-dark-subtle .edit-select:focus,
+  .bg-dark-subtle .edit-select:active,
+  .bg-dark-subtle .edit-select:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #e2e8f0 !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  /* Force dark theme for all form elements */
+  .bg-dark-subtle input,
+  .bg-dark-subtle select {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #e2e8f0 !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  .bg-dark-subtle input:focus,
+  .bg-dark-subtle select:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: #e2e8f0 !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25) !important;
   }
 </style>
 
