@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.deps import current_user
 from app.db.session import get_db
 from app.services.user_preferences import user_preferences_service
+from app.services.entries import bulk_update_entry_currencies
 from app.core.currency import CURRENCIES, currency_service
 from app.templates import render
 
@@ -29,16 +30,45 @@ async def update_currency(
     user = Depends(current_user),
     db: Session = Depends(get_db)
 ):
-    """Update user's preferred currency"""
+    """Update user's preferred currency and convert all existing entries"""
     try:
+        # Get current currency to check if it's actually changing
+        current_currency = user_preferences_service.get_user_currency(db, user["id"])
+        
+        # Update user's preferred currency
         user_preferences_service.update_currency(db, user["id"], currency_code)
-        return JSONResponse({
-            "success": True,
-            "message": f"Currency updated to {CURRENCIES.get(currency_code, {}).get('name', currency_code)}",
-            "currency": currency_code
-        })
+        
+        # If currency is actually changing, update all entries
+        if current_currency != currency_code:
+            update_result = await bulk_update_entry_currencies(db, user["id"], currency_code)
+            
+            return JSONResponse({
+                "success": True,
+                "message": f"Currency updated to {CURRENCIES.get(currency_code, {}).get('name', currency_code)}. {update_result['message']}",
+                "currency": currency_code,
+                "entries_updated": update_result["updated_count"],
+                "total_entries": update_result["total_entries"]
+            })
+        else:
+            return JSONResponse({
+                "success": True,
+                "message": f"Currency is already set to {CURRENCIES.get(currency_code, {}).get('name', currency_code)}",
+                "currency": currency_code,
+                "entries_updated": 0,
+                "total_entries": 0
+            })
+            
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        # If entry update fails, we should still keep the currency preference change
+        # but inform the user about the partial failure
+        return JSONResponse({
+            "success": True,
+            "message": f"Currency updated to {CURRENCIES.get(currency_code, {}).get('name', currency_code)}, but some entries may not have been converted due to an error.",
+            "currency": currency_code,
+            "warning": str(e)
+        })
 
 @router.get("/rates")
 async def get_exchange_rates():

@@ -21,6 +21,7 @@ class Entry(Base):
     note: Mapped[str | None] = mapped_column(String(255))
     date: Mapped[date] = mapped_column(Date)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
+    currency_code: Mapped[str] = mapped_column(String(3), default='USD')
 
     owner = relationship("User", back_populates="entries")
     category = relationship("Category", back_populates="entries")

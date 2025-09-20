@@ -9,7 +9,7 @@ from app.db.session import get_db
 from app.deps import current_user
 from app.models.entry import Entry
 from app.templates import render
-from app.services.metrics import range_summary
+from app.services.metrics import range_summary, range_summary_multi_currency
 from app.services.user_preferences import user_preferences_service
 from app.core.currency import CURRENCIES, currency_service
 
@@ -59,10 +59,20 @@ async def summary_panel(
     db: Session = Depends(get_db),
 ):
     s, e = _parse_dates(start, end)
-    totals = range_summary(db, user_id=user["id"], start=s, end=e)
+    user_currency = user_preferences_service.get_user_currency(db, user["id"])
     
-    # Convert amounts to user's preferred currency
-    converted_totals = await _convert_and_format_amounts(db, user["id"], totals)
+    # Use multi-currency summary that properly converts each entry
+    totals = await range_summary_multi_currency(db, user["id"], s, e, user_currency)
+    
+    # Format the amounts
+    converted_totals = {
+        "income": totals["income"],
+        "expense": totals["expense"],
+        "balance": totals["balance"],
+        "income_formatted": currency_service.format_amount(totals["income"], user_currency),
+        "expense_formatted": currency_service.format_amount(totals["expense"], user_currency),
+        "balance_formatted": currency_service.format_amount(totals["balance"], user_currency),
+    }
     
     return render(request, "dashboard/_summary.html", {"totals": converted_totals})
 
@@ -96,7 +106,7 @@ async def expenses_panel(
     
     for row in rows:
         converted_amount = await currency_service.convert_amount(
-            float(row.amount), 'USD', user_currency
+            float(row.amount), row.currency_code, user_currency
         )
         
         # Create a new object with converted amount
@@ -152,7 +162,7 @@ async def incomes_panel(
     
     for row in rows:
         converted_amount = await currency_service.convert_amount(
-            float(row.amount), 'USD', user_currency
+            float(row.amount), row.currency_code, user_currency
         )
         
         # Create a new object with converted amount

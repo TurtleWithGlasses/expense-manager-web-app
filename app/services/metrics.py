@@ -3,6 +3,7 @@ from sqlalchemy import func, case, select
 from app.models.entry import Entry
 from app.models.category import Category
 from sqlalchemy.orm import Session
+from app.core.currency import currency_service
 
 
 def _ensure_date(d):
@@ -32,6 +33,43 @@ def range_summary(db, user_id: int, start, end):
         "income": float(income or 0),
         "expense": float(expense or 0),
         "balance": float((income or 0) - (expense or 0)),
+    }
+
+async def range_summary_multi_currency(db, user_id: int, start, end, target_currency: str):
+    """Calculate range summary with proper multi-currency conversion"""
+    start = _ensure_date(start)
+    end = _ensure_date(end)
+    e_next = end + timedelta(days=1)
+
+    # Get all entries in the range
+    entries = (
+        db.query(Entry)
+        .filter(
+            Entry.user_id == user_id,
+            Entry.date >= start,
+            Entry.date < e_next,
+        )
+        .all()
+    )
+    
+    total_income = 0.0
+    total_expense = 0.0
+    
+    for entry in entries:
+        # Convert each entry to target currency
+        converted_amount = await currency_service.convert_amount(
+            float(entry.amount), entry.currency_code, target_currency
+        )
+        
+        if entry.type.lower() == "income":
+            total_income += converted_amount
+        else:
+            total_expense += converted_amount
+    
+    return {
+        "income": total_income,
+        "expense": total_expense,
+        "balance": total_income - total_expense,
     }
 
 def by_category(db, user_id: int, start, end):

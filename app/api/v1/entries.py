@@ -12,6 +12,7 @@ from app.services.entries import (
     update_entry_amount,
 )
 from app.services.categories import list_categories
+from app.services.user_preferences import user_preferences_service
 from app.templates import render
 from app.models.entry import Entry
 
@@ -28,8 +29,12 @@ async def page(
 ) -> HTMLResponse:
     entries = list_entries(db, user_id=user["id"])
     cats = list_categories(db, user_id=user["id"])
+    user_currency = user_preferences_service.get_user_currency(db, user["id"])
     return render(request, "entries/index.html",
-                  {"entries": entries, "categories": cats, "today": _date.today().isoformat()})
+                  {"entries": entries,
+                   "categories": cats,
+                   "today": _date.today().isoformat(),
+                   "user_currency": user_currency})
 
 
 # ---------- Create ----------
@@ -38,28 +43,35 @@ async def page(
 async def add(
     request: Request,
     type: str = Form(...),
-    amount: float = Form(...),
+    amount: float = Form(...),  # This amount is already in user's currency
     category_id: int | None = Form(None),
     note: str | None = Form(None),
-    date_str: str | None = Form(None),   # <- make optional
+    date_str: str | None = Form(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    # default to today if the field is missing/blank
+    from app.services.user_preferences import user_preferences_service
+    
+    # Get user's preferred currency
+    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    
     d = _date.fromisoformat(date_str) if date_str else _date.today()
 
+    # Store the amount AS-IS in the user's currency (no conversion)
     create_entry(
         db,
         user_id=user["id"],
         type=type,
-        amount=float(amount),
+        amount=float(amount),  # Raw amount in user's currency
         category_id=category_id if category_id else None,
         note=note,
         date=d,
+        currency_code=user_currency
     )
 
     entries = list_entries(db, user_id=user["id"])
-    return render(request, "entries/_list.html", {"entries": entries})
+    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    return render(request, "entries/_list.html", {"entries": entries, "user_currency": user_currency})
 
 
 # ---------- Delete ----------
@@ -73,7 +85,8 @@ async def remove(
 ) -> HTMLResponse:
     delete_entry(db, user_id=user["id"], entry_id=entry_id)
     entries = list_entries(db, user_id=user["id"])
-    return render(request, "entries/_list.html", {"entries": entries})
+    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    return render(request, "entries/_list.html", {"entries": entries, "user_currency": user_currency})
 
 
 # ---------- Inline edit: amount cell ----------
@@ -151,6 +164,21 @@ async def row_edit(
     cats = list_categories(db, user_id=user["id"])
     return render(request, "entries/_row_edit.html", {"e": e, "categories": cats, "wrap": True})
 
+@router.get("/row/{entry_id}", response_class=HTMLResponse)
+async def row_view(
+    request: Request,
+    entry_id: int,
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Return the normal row view (for cancel button)"""
+    e = db.query(Entry).filter(Entry.user_id == user["id"], Entry.id == entry_id).first()
+    if not e:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    cats = list_categories(db, user_id=user["id"])
+    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    return render(request, "entries/_row.html", {"e": e, "categories": cats, "user_currency": user_currency, "wrap": True})
+
 # === Row update (POST) ===
 @router.post("/update/{entry_id}", response_class=HTMLResponse)
 async def update_entry(
@@ -170,20 +198,22 @@ async def update_entry(
     if not e:
         raise HTTPException(status_code=404, detail="Entry not found")
 
-    # update fields
+    # update fields (preserve currency_code)
     e.type = type
     e.amount = float(amount)
     e.category_id = category_id or None
     e.note = note
     e.date = _date.fromisoformat(date)
+    # Note: currency_code is preserved from the original entry
 
     db.add(e)
     db.commit()
     db.refresh(e)
 
     cats = list_categories(db, user_id=user["id"])
+    user_currency = user_preferences_service.get_user_currency(db, user["id"])
     return render(
         request,
         "entries/_row.html",
-        {"e": e, "categories": cats, "wrap": True}
+        {"e": e, "categories": cats, "user_currency": user_currency, "wrap": True}
     )

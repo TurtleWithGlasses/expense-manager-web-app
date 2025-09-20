@@ -29,7 +29,7 @@
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn primary">Update Currency</button>
+        <button type="submit" class="btn primary" onclick="return confirmCurrencyChange()">Update Currency</button>
         <a href="/" class="btn ghost">Back to Dashboard</a>
       </div>
     </form>
@@ -258,18 +258,55 @@ document.addEventListener('change', function(e) {
   }
 });
 
+// Confirmation dialog for currency change
+function confirmCurrencyChange() {
+  const selectedCurrency = document.querySelector('input[name="currency_code"]:checked');
+  if (!selectedCurrency) {
+    alert('Please select a currency first.');
+    return false;
+  }
+  
+  const currencyName = selectedCurrency.closest('.currency-option').querySelector('.currency-name').textContent;
+  const currentCurrency = '{{ current_currency }}';
+  
+  if (selectedCurrency.value === currentCurrency) {
+    alert('This currency is already selected.');
+    return false;
+  }
+  
+  return confirm(
+    `Are you sure you want to change your currency to ${currencyName}?\n\n` +
+    `This will convert all your existing entries to the new currency using current exchange rates. ` +
+    `This action cannot be undone.`
+  );
+}
+
 // Handle form submission response
 document.body.addEventListener('htmx:afterRequest', function(evt) {
   if (evt.detail.target.id === 'currency-feedback') {
     const response = JSON.parse(evt.detail.xhr.responseText);
     if (response.success) {
+      let message = response.message;
+      
+      // Add entry update statistics if available
+      if (response.entries_updated !== undefined && response.total_entries !== undefined) {
+        if (response.entries_updated > 0) {
+          message += `<br><small>Converted ${response.entries_updated} out of ${response.total_entries} entries to the new currency.</small>`;
+        }
+      }
+      
+      // Add warning if present
+      if (response.warning) {
+        message += `<br><small style="color: #f59e0b;">Warning: ${response.warning}</small>`;
+      }
+      
       document.getElementById('currency-feedback').innerHTML = 
-        `<div class="success-message">${response.message}</div>`;
+        `<div class="success-message">${message}</div>`;
       
       // Optionally reload the page after a short delay to reflect changes
       setTimeout(() => {
         window.location.reload();
-      }, 1500);
+      }, 2000);
     } else {
       document.getElementById('currency-feedback').innerHTML = 
         `<div class="error-message">Error: ${response.detail || 'Failed to update currency'}</div>`;

@@ -17,7 +17,33 @@
   <!-- Amount with color coding -->
   <td class="{{ 'income-amount' if e.type == 'income' else 'expense-amount' }}">
     {% if e.type == 'income' %}+{% else %}-{% endif %}
-    ${{ '%.2f'|format(e.amount) }}
+    {% if e.currency_code == 'TRY' %}
+      ₺{{ '%.2f'|format(e.amount) }}
+    {% elif e.currency_code == 'EUR' %}
+      €{{ '%.2f'|format(e.amount) }}
+    {% elif e.currency_code == 'GBP' %}
+      £{{ '%.2f'|format(e.amount) }}
+    {% elif e.currency_code == 'JPY' %}
+      ¥{{ '%.0f'|format(e.amount) }}
+    {% elif e.currency_code == 'CAD' %}
+      C${{ '%.2f'|format(e.amount) }}
+    {% elif e.currency_code == 'AUD' %}
+      A${{ '%.2f'|format(e.amount) }}
+    {% elif e.currency_code == 'CHF' %}
+      Fr{{ '%.2f'|format(e.amount) }}
+    {% elif e.currency_code == 'CNY' %}
+      ¥{{ '%.2f'|format(e.amount) }}
+    {% elif e.currency_code == 'INR' %}
+      ₹{{ '%.2f'|format(e.amount) }}
+    {% elif e.currency_code == 'BRL' %}
+      R${{ '%.2f'|format(e.amount) }}
+    {% elif e.currency_code == 'MXN' %}
+      ${{ '%.2f'|format(e.amount) }}
+    {% elif e.currency_code == 'KRW' %}
+      ₩{{ '%.0f'|format(e.amount) }}
+    {% else %}
+      ${{ '%.2f'|format(e.amount) }}
+    {% endif %}
   </td>
 
   <!-- Category -->

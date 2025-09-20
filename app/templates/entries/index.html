@@ -115,6 +115,19 @@
     border-color: #667eea;
   }
 
+  /* Table text improvements for better readability */
+  .table-dark td {
+    color: #e2e8f0 !important;
+  }
+  
+  .table-dark .text-body {
+    color: #e2e8f0 !important;
+  }
+  
+  .table-dark .text-secondary {
+    color: #9ca3af !important;
+  }
+  
   /* Expense/Income color coding */
   .expense-type {
     color: #ef4444 !important;
@@ -165,6 +178,30 @@
     background: linear-gradient(135deg, #059669 0%, #047857 100%);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+  }
+
+  /* Edit row styling */
+  .bg-dark-subtle {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+  
+  .bg-dark-subtle .form-control,
+  .bg-dark-subtle .form-select {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e2e8f0;
+  }
+  
+  .bg-dark-subtle .form-control:focus,
+  .bg-dark-subtle .form-select:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: #10b981;
+    box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
+    color: #e2e8f0;
+  }
+  
+  .bg-dark-subtle .form-control::placeholder {
+    color: #9ca3af;
   }
 </style>
 
