@@ -11,19 +11,30 @@ from app.core.currency import CURRENCIES
 from app.core.session import get_session
 from app.db.engine import engine
 from app.db.session import get_db
+from app.db.base import Base
 from app.templates import render
 from app.models.entry import Entry
 from app.services.user_preferences import user_preferences_service
-from app.api.currency import router as currency_router
 
 app = FastAPI(title="Expense Manager Web")
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database tables on startup"""
+    try:
+        # Create all tables if they don't exist
+        Base.metadata.create_all(bind=engine)
+        print("✅ Database tables initialized successfully")
+    except Exception as e:
+        print(f"❌ Database initialization failed: {e}")
+        # Don't raise the exception to allow the app to start
+        # The health check endpoint will catch database issues
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include routers
 app.include_router(api_router)
-app.include_router(currency_router)  # Add this line
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request, db: Session = Depends(get_db)):

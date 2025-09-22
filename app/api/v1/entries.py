@@ -148,7 +148,8 @@ async def row_display(
     if not e:
         raise HTTPException(status_code=404, detail="Entry not found")
     cats = list_categories(db, user_id=user["id"])
-    return render(request, "entries/_row.html", {"e": e, "categories": cats, "wrap": True})
+    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    return render(request, "entries/_row.html", {"e": e, "categories": cats, "user_currency": user_currency, "wrap": True})
 
 # === Row edit (GET) ===
 @router.get("/edit/{entry_id}", response_class=HTMLResponse)
@@ -163,21 +164,6 @@ async def row_edit(
         raise HTTPException(status_code=404, detail="Entry not found")
     cats = list_categories(db, user_id=user["id"])
     return render(request, "entries/_row_edit.html", {"e": e, "categories": cats, "wrap": True})
-
-@router.get("/row/{entry_id}", response_class=HTMLResponse)
-async def row_view(
-    request: Request,
-    entry_id: int,
-    user=Depends(current_user),
-    db: Session = Depends(get_db),
-):
-    """Return the normal row view (for cancel button)"""
-    e = db.query(Entry).filter(Entry.user_id == user["id"], Entry.id == entry_id).first()
-    if not e:
-        raise HTTPException(status_code=404, detail="Entry not found")
-    cats = list_categories(db, user_id=user["id"])
-    user_currency = user_preferences_service.get_user_currency(db, user["id"])
-    return render(request, "entries/_row.html", {"e": e, "categories": cats, "user_currency": user_currency, "wrap": True})
 
 # === Row update (POST) ===
 @router.post("/update/{entry_id}", response_class=HTMLResponse)

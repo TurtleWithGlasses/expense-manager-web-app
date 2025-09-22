@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, Request, Form
+from fastapi import APIRouter, Depends, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
-from app.services.auth import create_user, authenticate_user
+from app.services.auth import create_user, authenticate_user, verify_email, resend_verification_email
 from app.db.session import get_db
 from app.core.session import set_session, clear_session
 from app.templates import render
@@ -74,3 +74,33 @@ async def logout_get():
     resp = RedirectResponse(url="/login", status_code=303)
     clear_session(resp)
     return resp
+
+@router.get("/confirm-email/{token}", response_class=HTMLResponse)
+async def confirm_email_page(request: Request, token: str, db: Session = Depends(get_db)):
+    """Email confirmation page"""
+    user = verify_email(db, token)
+    if user:
+        return render(request, "auth/email_confirmed.html", {"user": user})
+    else:
+        return render(request, "auth/email_confirmed.html", {"error": "Invalid or expired confirmation link"})
+
+@router.get("/verification-sent", response_class=HTMLResponse)
+async def verification_sent_page(request: Request):
+    """Verification email sent confirmation page"""
+    return render(request, "auth/verification_sent.html")
+
+@router.post("/resend-verification", response_class=HTMLResponse)
+async def resend_verification(
+    request: Request,
+    email: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Resend verification email"""
+    try:
+        success = await resend_verification_email(db, email)
+        if success:
+            return render(request, "auth/verification_sent.html", {"email": email})
+        else:
+            return render(request, "auth/login.html", {"error": "Email not found or already verified"})
+    except Exception as e:
+        return render(request, "auth/login.html", {"error": "Failed to resend verification email"})

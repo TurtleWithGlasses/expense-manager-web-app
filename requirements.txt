@@ -6,14 +6,10 @@ pydantic==2.8.2
 pydantic-settings==2.3.4
 sqlalchemy==2.0.35
 alembic==1.13.2
-psycopg2-binary==2.9.9
 passlib[bcrypt]==1.7.4
 itsdangerous==2.2.0
 httpx==0.27.0
-email-validator>=2.1.0
-gunicorn==21.2.0
-python-dotenv
-# fastapi-mail==1.4.1
-aiosmtplib==3.0.0
 email-validator==2.1.1
-# htmx
+gunicorn==21.2.0
+python-dotenv==1.0.0
+aiosmtplib==3.0.0

@@ -1,40 +1,34 @@
 #!/usr/bin/env python3
 """
-Local development runner for the Expense Manager app.
-This script sets up the environment for local development with SQLite.
+Local development runner for the expense manager app.
+This ensures SQLite is used instead of PostgreSQL.
 """
 
 import os
-import subprocess
 import sys
+import uvicorn
 
-def main():
-    # Set environment variables for local development
-    os.environ["DATABASE_URL"] = "sqlite:///./app.db"
-    os.environ["SECRET_KEY"] = "mysecretkey"
-    os.environ["SESSION_COOKIE_NAME"] = "em_session"
-    os.environ["SESSION_MAX_AGE_SECONDS"] = "2592000"
-    os.environ["ENV"] = "dev"
-    
-    print("🚀 Starting Expense Manager in local development mode...")
-    print("📊 Using SQLite database: app.db")
-    print("🌐 Server will be available at: http://localhost:8000")
-    print("🔄 Auto-reload enabled")
-    print("-" * 50)
-    
-    try:
-        # Run the application
-        subprocess.run([
-            sys.executable, "-m", "uvicorn", 
-            "app.main:app", 
-            "--reload", 
-            "--host", "0.0.0.0", 
-            "--port", "8000"
-        ])
-    except KeyboardInterrupt:
-        print("\n👋 Shutting down...")
-    except Exception as e:
-        print(f"❌ Error: {e}")
+# Force SQLite for local development
+os.environ["DATABASE_URL"] = "sqlite:///./app.db"
+os.environ["ENV"] = "dev"
 
 if __name__ == "__main__":
-    main()
+    print("🚀 Starting Expense Manager Web App locally...")
+    print("📊 Using SQLite database: app.db")
+    print("🌐 Server will be available at: http://127.0.0.1:8000")
+    print("=" * 50)
+    
+    try:
+        uvicorn.run(
+            "app.main:app",
+            host="127.0.0.1",
+            port=8000,
+            reload=True,
+            log_level="info"
+        )
+    except KeyboardInterrupt:
+        print("\n👋 Shutting down...")
+        sys.exit(0)
+    except Exception as e:
+        print(f"❌ Error starting server: {e}")
+        sys.exit(1)
