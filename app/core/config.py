@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     # Add these email settings to the main Settings class
     SMTP_SERVER: str = "mail.talivio.com"
     SMTP_PORT: int = 587
-    SMTP_USERNAME: str = "info@yourbudgetpulse.online"
+    SMTP_USERNAME: str = "info"
     SMTP_PASSWORD: str = "123456"
     FROM_EMAIL: str = "info@yourbudgetpulse.online"  # Use authenticated email as sender
     FROM_NAME: str = "Budget Pulse"
