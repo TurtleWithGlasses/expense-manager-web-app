@@ -7,23 +7,25 @@ class Settings(BaseSettings):
     SESSION_MAX_AGE_SECONDS: int = 60 * 60 * 24 * 30
     ENV: str = "production"  # Default to production
     
-    # Only force SQLite for local development (when ENV=dev)
+    # Only force SQLite for local development
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # Debug: Print the DATABASE_URL being used
         print(f"🔍 DATABASE_URL from environment: {self.DATABASE_URL}")
         print(f"🔍 ENV: {self.ENV}")
         
-        # Only override to SQLite for local development
-        # Check if we're in a local development environment
-        is_local_dev = (
-            self.ENV.lower() == "dev" or 
-            self.ENV.lower() == "development" or
-            "localhost" in self.DATABASE_URL.lower() or
-            "127.0.0.1" in self.DATABASE_URL.lower()
+        # Check if we're in a production environment (Railway, Heroku, etc.)
+        is_production = (
+            "railway" in self.DATABASE_URL.lower() or
+            "heroku" in self.DATABASE_URL.lower() or
+            "render" in self.DATABASE_URL.lower() or
+            "vercel" in self.DATABASE_URL.lower() or
+            "fly.io" in self.DATABASE_URL.lower() or
+            "postgresql" in self.DATABASE_URL.lower() and "localhost" not in self.DATABASE_URL.lower()
         )
         
-        if is_local_dev and ("postgres" in self.DATABASE_URL.lower() or "railway" in self.DATABASE_URL.lower()):
+        # Only override to SQLite for local development (not production)
+        if not is_production and ("postgres" in self.DATABASE_URL.lower() or "railway" in self.DATABASE_URL.lower()):
             print("🔄 Overriding PostgreSQL URL with SQLite for local development")
             self.DATABASE_URL = "sqlite:///./app.db"
         else:

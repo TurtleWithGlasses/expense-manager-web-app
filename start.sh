@@ -3,8 +3,14 @@ set -e  # Exit on any error
 
 echo "🚀 Starting Expense Manager Web App..."
 
-# Set production environment
+# Force production environment and unset any dev environment variables
 export ENV=production
+unset ENVIRONMENT
+unset NODE_ENV
+
+echo "🔧 Environment variables set:"
+echo "  ENV=$ENV"
+echo "  DATABASE_URL=$DATABASE_URL"
 
 # Wait for database to be ready (with timeout)
 echo "⏳ Waiting for database connection..."
