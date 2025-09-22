@@ -195,3 +195,18 @@ async def reset_password_submit(
     except Exception as e:
         print(f"❌ Password reset failed: {e}")
         return render(request, "auth/reset_password.html", {"token": token, "error": "Password reset failed. Please try again."})
+
+@router.get("/test-email")
+async def test_email():
+    """Test email sending functionality"""
+    from app.services.email import email_service
+    try:
+        result = await email_service.send_email(
+            to_email="mhmtsoylu1928@gmail.com",
+            subject="Test Email from Budget Pulse",
+            html_content="<h1>Test Email</h1><p>This is a test email to verify SMTP configuration.</p>",
+            text_content="Test Email\n\nThis is a test email to verify SMTP configuration."
+        )
+        return {"status": "success" if result else "failed", "message": "Email test completed"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}

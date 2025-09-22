@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     FROM_EMAIL: str = "info@yourbudgetpulse.online"  # Use authenticated email as sender
     FROM_NAME: str = "Budget Pulse"
     BASE_URL: str = "https://www.yourbudgetpulse.online"
+    
+    # Alternative SMTP settings for fallback
+    SMTP_SERVER_ALT: str = "smtp.talivio.com"  # Alternative server
+    SMTP_PORT_ALT: int = 465  # SSL port
 
     # ✅ Pydantic v2 way to load .env
     model_config = SettingsConfigDict(

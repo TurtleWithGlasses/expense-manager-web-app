@@ -16,53 +16,97 @@ class EmailService:
         self.password = settings.SMTP_PASSWORD
         self.from_email = settings.FROM_EMAIL
         self.from_name = settings.FROM_NAME
+        
+        # Alternative SMTP settings
+        self.smtp_server_alt = getattr(settings, 'SMTP_SERVER_ALT', 'smtp.talivio.com')
+        self.smtp_port_alt = getattr(settings, 'SMTP_PORT_ALT', 465)
 
     async def send_email(self, to_email: str, subject: str, html_content: str, text_content: str = None):
-        """Send email using SMTP"""
-        try:
-            print(f"📧 Attempting to send email to {to_email}")
-            print(f"📧 SMTP Server: {self.smtp_server}:{self.smtp_port}")
-            print(f"📧 From: {self.from_name} <{self.from_email}>")
-            print(f"📧 Subject: {subject}")
-            
-            # Create message
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From'] = f"{self.from_name} <{self.from_email}>"
-            msg['To'] = to_email
-
-            # Add text and HTML parts
-            if text_content:
-                text_part = MIMEText(text_content, 'plain')
-                msg.attach(text_part)
-            
-            html_part = MIMEText(html_content, 'html')
-            msg.attach(html_part)
-
-            # Send email in thread to avoid blocking
-            def send_smtp():
-                print(f"🔌 Connecting to SMTP server...")
-                with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                    print(f"🔐 Starting TLS...")
-                    server.starttls()
-                    print(f"🔑 Logging in with {self.username}...")
-                    server.login(self.username, self.password)
-                    print(f"📤 Sending message...")
-                    server.send_message(msg)
-                    print(f"✅ Message sent successfully!")
-            
-            # Run in executor to avoid blocking
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, send_smtp)
-            
-            print(f"✅ Email sent successfully to {to_email}")
+        """Send email using SMTP with retry logic and fallback servers"""
+        # Try primary SMTP server first
+        result = await self._try_send_email(to_email, subject, html_content, text_content, 
+                                          self.smtp_server, self.smtp_port, use_ssl=False)
+        if result:
             return True
-        except Exception as e:
-            print(f"❌ Email sending failed to {to_email}: {e}")
-            print(f"❌ Error type: {type(e).__name__}")
-            import traceback
-            print(f"❌ Traceback: {traceback.format_exc()}")
-            return False
+            
+        # Try alternative SMTP server
+        print(f"🔄 Trying alternative SMTP server...")
+        result = await self._try_send_email(to_email, subject, html_content, text_content, 
+                                          self.smtp_server_alt, self.smtp_port_alt, use_ssl=True)
+        return result
+
+    async def _try_send_email(self, to_email: str, subject: str, html_content: str, text_content: str, 
+                            smtp_server: str, smtp_port: int, use_ssl: bool = False):
+        """Try sending email with specific SMTP settings"""
+        max_retries = 2
+        retry_delay = 3  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                print(f"📧 Attempting to send email to {to_email} (attempt {attempt + 1}/{max_retries})")
+                print(f"📧 SMTP Server: {smtp_server}:{smtp_port} (SSL: {use_ssl})")
+                print(f"📧 From: {self.from_name} <{self.from_email}>")
+                print(f"📧 Subject: {subject}")
+                
+                # Create message
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = subject
+                msg['From'] = f"{self.from_name} <{self.from_email}>"
+                msg['To'] = to_email
+
+                # Add text and HTML parts
+                if text_content:
+                    text_part = MIMEText(text_content, 'plain')
+                    msg.attach(text_part)
+                
+                html_part = MIMEText(html_content, 'html')
+                msg.attach(html_part)
+
+                # Send email in thread to avoid blocking
+                def send_smtp():
+                    print(f"🔌 Connecting to SMTP server...")
+                    try:
+                        if use_ssl:
+                            # Use SSL connection
+                            server = smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=30)
+                            print(f"🔌 Connected via SSL to {smtp_server}:{smtp_port}")
+                        else:
+                            # Use TLS connection
+                            server = smtplib.SMTP(timeout=30)
+                            print(f"🔌 Connecting to {smtp_server}:{smtp_port}...")
+                            server.connect(smtp_server, smtp_port)
+                            print(f"🔐 Starting TLS...")
+                            server.starttls()
+                        
+                        print(f"🔑 Logging in with {self.username}...")
+                        server.login(self.username, self.password)
+                        print(f"📤 Sending message...")
+                        server.send_message(msg)
+                        print(f"✅ Message sent successfully!")
+                        server.quit()
+                    except Exception as e:
+                        print(f"❌ SMTP error: {e}")
+                        raise
+                
+                # Run in executor to avoid blocking
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(None, send_smtp)
+                
+                print(f"✅ Email sent successfully to {to_email}")
+                return True
+                
+            except Exception as e:
+                print(f"❌ Email sending failed to {to_email} (attempt {attempt + 1}): {e}")
+                print(f"❌ Error type: {type(e).__name__}")
+                
+                if attempt < max_retries - 1:
+                    print(f"⏳ Retrying in {retry_delay} seconds...")
+                    await asyncio.sleep(retry_delay)
+                else:
+                    print(f"❌ All {max_retries} attempts failed for {smtp_server}")
+                    import traceback
+                    print(f"❌ Final traceback: {traceback.format_exc()}")
+                    return False
 
     async def send_confirmation_email(self, user_email: str, confirmation_token: str):
         """Send email confirmation"""
