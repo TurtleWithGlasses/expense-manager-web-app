@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USERNAME: str = "info@yourbudgetpulse.online"
     SMTP_PASSWORD: str = "123456"
-    FROM_EMAIL: str = "noreply@yourbudgetpulse.online"
+    FROM_EMAIL: str = "info@yourbudgetpulse.online"  # Use authenticated email as sender
     FROM_NAME: str = "Budget Pulse"
     BASE_URL: str = "http://localhost:8000"
 
