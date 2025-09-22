@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = "123456"
     FROM_EMAIL: str = "info@yourbudgetpulse.online"  # Use authenticated email as sender
     FROM_NAME: str = "Budget Pulse"
-    BASE_URL: str = "http://localhost:8000"
+    BASE_URL: str = "https://www.yourbudgetpulse.online"
 
     # ✅ Pydantic v2 way to load .env
     model_config = SettingsConfigDict(

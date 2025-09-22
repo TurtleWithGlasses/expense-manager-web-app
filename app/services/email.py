@@ -20,6 +20,11 @@ class EmailService:
     async def send_email(self, to_email: str, subject: str, html_content: str, text_content: str = None):
         """Send email using SMTP"""
         try:
+            print(f"📧 Attempting to send email to {to_email}")
+            print(f"📧 SMTP Server: {self.smtp_server}:{self.smtp_port}")
+            print(f"📧 From: {self.from_name} <{self.from_email}>")
+            print(f"📧 Subject: {subject}")
+            
             # Create message
             msg = MIMEMultipart('alternative')
             msg['Subject'] = subject
@@ -36,10 +41,15 @@ class EmailService:
 
             # Send email in thread to avoid blocking
             def send_smtp():
+                print(f"🔌 Connecting to SMTP server...")
                 with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                    print(f"🔐 Starting TLS...")
                     server.starttls()
+                    print(f"🔑 Logging in with {self.username}...")
                     server.login(self.username, self.password)
+                    print(f"📤 Sending message...")
                     server.send_message(msg)
+                    print(f"✅ Message sent successfully!")
             
             # Run in executor to avoid blocking
             loop = asyncio.get_event_loop()
@@ -49,6 +59,9 @@ class EmailService:
             return True
         except Exception as e:
             print(f"❌ Email sending failed to {to_email}: {e}")
+            print(f"❌ Error type: {type(e).__name__}")
+            import traceback
+            print(f"❌ Traceback: {traceback.format_exc()}")
             return False
 
     async def send_confirmation_email(self, user_email: str, confirmation_token: str):
