@@ -24,16 +24,19 @@ echo "🔧 Checking and fixing database schema..."
 if python fix_production_schema.py; then
     echo "✅ Database schema fix completed"
 else
-    echo "⚠️  Database schema fix failed, but continuing with startup..."
+    echo "⚠️  Database schema fix failed, trying SQL approach..."
+    # Try running the SQL fix directly
+    if command -v psql >/dev/null 2>&1; then
+        echo "🔧 Running SQL schema fix..."
+        psql $DATABASE_URL -f fix_schema.sql || echo "⚠️  SQL schema fix failed"
+    else
+        echo "⚠️  psql not available, skipping SQL schema fix"
+    fi
 fi
 
-# Run migrations with error handling
-echo "📊 Running database migrations..."
-if alembic upgrade head; then
-    echo "✅ Database migrations completed successfully"
-else
-    echo "⚠️  Database migration failed, but continuing with startup..."
-fi
+# Skip migrations for now due to broken migration chain
+echo "⚠️  Skipping migrations due to broken migration chain"
+echo "🔧 Schema will be fixed by the Python script above"
 
 # Start the application
 echo "🌐 Starting application server..."
