@@ -7,14 +7,15 @@ class Settings(BaseSettings):
     SESSION_MAX_AGE_SECONDS: int = 60 * 60 * 24 * 30
     ENV: str = "dev"
     
-    # Force SQLite for local development
+    # Only force SQLite for local development (when ENV=dev)
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # Debug: Print the DATABASE_URL being used
         print(f"🔍 DATABASE_URL from environment: {self.DATABASE_URL}")
+        print(f"🔍 ENV: {self.ENV}")
         
-        # Override DATABASE_URL to ensure SQLite is used locally
-        if "postgres" in self.DATABASE_URL.lower() or "railway" in self.DATABASE_URL.lower():
+        # Only override to SQLite for local development
+        if self.ENV.lower() == "dev" and ("postgres" in self.DATABASE_URL.lower() or "railway" in self.DATABASE_URL.lower()):
             print("🔄 Overriding PostgreSQL URL with SQLite for local development")
             self.DATABASE_URL = "sqlite:///./app.db"
         
