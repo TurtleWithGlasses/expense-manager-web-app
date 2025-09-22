@@ -59,10 +59,10 @@ async def summary_panel(
     db: Session = Depends(get_db),
 ):
     s, e = _parse_dates(start, end)
-    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
     
     # Use multi-currency summary that properly converts each entry
-    totals = await range_summary_multi_currency(db, user["id"], s, e, user_currency)
+    totals = await range_summary_multi_currency(db, user.id, s, e, user_currency)
     
     # Format the amounts
     converted_totals = {
@@ -86,12 +86,12 @@ async def expenses_panel(
 ):
     s, e = _parse_dates(start, end)
     e_next = e + timedelta(days=1)
-    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
 
     rows = (
         db.query(Entry)
         .filter(
-            Entry.user_id == user["id"],
+            Entry.user_id == user.id,
             func.lower(Entry.type) == "expense", 
             Entry.date >= s,
             Entry.date < e_next,
@@ -142,12 +142,12 @@ async def incomes_panel(
 ):
     s, e = _parse_dates(start, end)
     e_next = e + timedelta(days=1)
-    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
 
     rows = (
         db.query(Entry)
         .filter(
-            Entry.user_id == user["id"],
+            Entry.user_id == user.id,
             func.lower(Entry.type) == "income", 
             Entry.date >= s,
             Entry.date < e_next,

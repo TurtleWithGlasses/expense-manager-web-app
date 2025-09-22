@@ -27,9 +27,9 @@ async def page(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    entries = list_entries(db, user_id=user["id"])
-    cats = list_categories(db, user_id=user["id"])
-    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    entries = list_entries(db, user_id=user.id)
+    cats = list_categories(db, user_id=user.id)
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
     return render(request, "entries/index.html",
                   {"entries": entries,
                    "categories": cats,
@@ -53,14 +53,14 @@ async def add(
     from app.services.user_preferences import user_preferences_service
     
     # Get user's preferred currency
-    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
     
     d = _date.fromisoformat(date_str) if date_str else _date.today()
 
     # Store the amount AS-IS in the user's currency (no conversion)
     create_entry(
         db,
-        user_id=user["id"],
+        user_id=user.id,
         type=type,
         amount=float(amount),  # Raw amount in user's currency
         category_id=category_id if category_id else None,
@@ -69,8 +69,8 @@ async def add(
         currency_code=user_currency
     )
 
-    entries = list_entries(db, user_id=user["id"])
-    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    entries = list_entries(db, user_id=user.id)
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
     return render(request, "entries/_list.html", {"entries": entries, "user_currency": user_currency})
 
 
@@ -83,9 +83,9 @@ async def remove(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    delete_entry(db, user_id=user["id"], entry_id=entry_id)
-    entries = list_entries(db, user_id=user["id"])
-    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    delete_entry(db, user_id=user.id, entry_id=entry_id)
+    entries = list_entries(db, user_id=user.id)
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
     return render(request, "entries/_list.html", {"entries": entries, "user_currency": user_currency})
 
 
@@ -99,7 +99,7 @@ async def edit_amount_cell(
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
     e = db.query(Entry).filter(
-        Entry.user_id == user["id"], Entry.id == entry_id
+        Entry.user_id == user.id, Entry.id == entry_id
     ).first()
     if not e:
         raise HTTPException(status_code=404, detail="Entry not found")
@@ -115,7 +115,7 @@ async def update_amount_cell(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    e = update_entry_amount(db, user_id=user["id"], entry_id=entry_id, new_amount=amount)
+    e = update_entry_amount(db, user_id=user.id, entry_id=entry_id, new_amount=amount)
     if not e:
         raise HTTPException(status_code=404, detail="Entry not found")
     # return the display cell (amount) only
@@ -130,7 +130,7 @@ async def amount_cell_display(
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
     e = db.query(Entry).filter(
-        Entry.user_id == user["id"], Entry.id == entry_id
+        Entry.user_id == user.id, Entry.id == entry_id
     ).first()
     if not e:
         raise HTTPException(status_code=404, detail="Entry not found")
@@ -144,11 +144,11 @@ async def row_display(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    e = db.query(Entry).filter(Entry.user_id == user["id"], Entry.id == entry_id).first()
+    e = db.query(Entry).filter(Entry.user_id == user.id, Entry.id == entry_id).first()
     if not e:
         raise HTTPException(status_code=404, detail="Entry not found")
-    cats = list_categories(db, user_id=user["id"])
-    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    cats = list_categories(db, user_id=user.id)
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
     return render(request, "entries/_row.html", {"e": e, "categories": cats, "user_currency": user_currency, "wrap": True})
 
 # === Row edit (GET) ===
@@ -159,10 +159,10 @@ async def row_edit(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    e = db.query(Entry).filter(Entry.user_id == user["id"], Entry.id == entry_id).first()
+    e = db.query(Entry).filter(Entry.user_id == user.id, Entry.id == entry_id).first()
     if not e:
         raise HTTPException(status_code=404, detail="Entry not found")
-    cats = list_categories(db, user_id=user["id"])
+    cats = list_categories(db, user_id=user.id)
     return render(request, "entries/_row_edit.html", {"e": e, "categories": cats, "wrap": True})
 
 # === Row update (POST) ===
@@ -179,7 +179,7 @@ async def update_entry(
     db: Session = Depends(get_db),
 ):
     e = db.query(Entry).filter(
-        Entry.user_id == user["id"], Entry.id == entry_id
+        Entry.user_id == user.id, Entry.id == entry_id
     ).first()
     if not e:
         raise HTTPException(status_code=404, detail="Entry not found")
@@ -196,8 +196,8 @@ async def update_entry(
     db.commit()
     db.refresh(e)
 
-    cats = list_categories(db, user_id=user["id"])
-    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    cats = list_categories(db, user_id=user.id)
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
     return render(
         request,
         "entries/_row.html",

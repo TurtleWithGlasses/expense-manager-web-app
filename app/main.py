@@ -54,11 +54,11 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
 
     # calculate totals for user
     income_total = db.query(func.sum(Entry.amount))\
-        .filter(Entry.user_id == user["id"], Entry.type == "income").scalar() or 0
+        .filter(Entry.user_id == user.id, Entry.type == "income").scalar() or 0
     expense_total = db.query(func.sum(Entry.amount))\
-        .filter(Entry.user_id == user["id"], Entry.type == "expense").scalar() or 0
+        .filter(Entry.user_id == user.id, Entry.type == "expense").scalar() or 0
     
-    user_currency_code = user_preferences_service.get_user_currency(db, user["id"])
+    user_currency_code = user_preferences_service.get_user_currency(db, user.id)
     user_currency_info = CURRENCIES.get(user_currency_code, CURRENCIES['USD'])
 
     return render(request, "dashboard.html", {

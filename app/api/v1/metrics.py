@@ -89,7 +89,7 @@ async def chart_pie(
     db: Session = Depends(get_db)
 ):
     s, e = _parsed_dates(start, end)
-    data = expenses_by_category(db, user_id=user["id"], start=s, end=e)
+    data = expenses_by_category(db, user_id=user.id, start=s, end=e)
     labels = [n for n, _ in data]
     values = [v for _, v in data]
     return render(request, "dashboard/_chart_pie.html", {"labels": labels, "values": values})
@@ -104,7 +104,7 @@ async def chart_bar(
     db: Session = Depends(get_db),
 ):
     s, e = _parsed_dates(start, end)
-    data = expenses_by_category(db, user_id=user["id"], start=s, end=e)
+    data = expenses_by_category(db, user_id=user.id, start=s, end=e)
     labels = [n for n, _ in data]
     values = [v for _, v in data]
     return render(request, "dashboard/_chart_bar.html", {"labels": labels, "values": values})
@@ -121,7 +121,7 @@ async def chart_daily(
     s, e = _parsed_dates(start, end)
     
     # Get enhanced data with category breakdown
-    data = daily_expenses_with_categories(db, user_id=user["id"], start=s, end=e)
+    data = daily_expenses_with_categories(db, user_id=user.id, start=s, end=e)
     
     # Prepare chart data for Chart.js with category information
     chart_data = {

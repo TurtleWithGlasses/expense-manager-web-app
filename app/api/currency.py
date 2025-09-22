@@ -17,7 +17,7 @@ async def currency_settings_page(
     db: Session = Depends(get_db)
 ):
     """Currency settings page"""
-    current_currency = user_preferences_service.get_user_currency(db, user["id"])
+    current_currency = user_preferences_service.get_user_currency(db, user.id)
     return render(request, "settings/currency_settings.html", {
         "currencies": CURRENCIES,
         "current_currency": current_currency,
@@ -33,14 +33,14 @@ async def update_currency(
     """Update user's preferred currency and convert all existing entries"""
     try:
         # Get current currency to check if it's actually changing
-        current_currency = user_preferences_service.get_user_currency(db, user["id"])
+        current_currency = user_preferences_service.get_user_currency(db, user.id)
         
         # Update user's preferred currency
-        user_preferences_service.update_currency(db, user["id"], currency_code)
+        user_preferences_service.update_currency(db, user.id, currency_code)
         
         # If currency is actually changing, update all entries
         if current_currency != currency_code:
-            update_result = await bulk_update_entry_currencies(db, user["id"], currency_code)
+            update_result = await bulk_update_entry_currencies(db, user.id, currency_code)
             
             return JSONResponse({
                 "success": True,
@@ -87,7 +87,7 @@ async def convert_amount(
     db: Session = Depends(get_db)
 ):
     """Convert amounts for HTMX requests"""
-    user_currency = user_preferences_service.get_user_currency(db, user["id"])
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
     return JSONResponse({
         "currency": user_currency,
         "symbol": CURRENCIES.get(user_currency, {}).get('symbol', '$')
