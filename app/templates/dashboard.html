@@ -5,10 +5,10 @@
 
 <!-- Navigation Links - Fixed with proper horizontal layout -->
 <div class="quick-links-horizontal">
-  <a class="btn ghost" href="/entries/">➕ Add / View / Edit Entries</a>
-  <a class="btn ghost" href="/categories/">🏷️ Manage Categories</a>
-  <a class="btn ghost" href="/currency/settings">💱 Currency</a>
-  <a class="btn ghost" title="Coming soon" href="#">📅 Calendar</a>
+  <a class="btn ghost" href="/entries/"><i class="bi bi-plus-circle"></i> Add / View / Edit Entries</a>
+  <a class="btn ghost" href="/categories/"><i class="bi bi-tags"></i> Manage Categories</a>
+  <a class="btn ghost" href="/currency/settings"><i class="bi bi-currency-exchange"></i> Currency</a>
+  <a class="btn ghost" title="Coming soon" href="#"><i class="bi bi-calendar"></i> Calendar</a>
 </div>
 
 <!-- Horizontal date filters -->
@@ -56,7 +56,7 @@
 
 <!-- KPIs -->
 <div id="totals" class="kpis mt-4" hx-get="/dashboard/summary" hx-include="#filters" hx-trigger="load, change from:#filters delay:150ms" hx-swap="innerHTML">
-  <div class="muted">Loading totals…</div>
+  <div class="muted">Loading totals...</div>
 </div>
 
 <!-- Incomes + Expenses -->
@@ -64,14 +64,14 @@
   <section class="data-section income-section">
     <h2 class="h2">Income(s)</h2>
     <div id="income-list" hx-get="/dashboard/incomes" hx-include="#filters" hx-trigger="load, change from:#filters delay:150ms" hx-swap="innerHTML">
-      <div class="muted">Loading incomes…</div>
+      <div class="muted">Loading incomes...</div>
     </div>
   </section>
 
   <section class="data-section expense-section">
     <h2 class="h2">Expenses</h2>
     <div id="expense-list" hx-get="/dashboard/expenses" hx-include="#filters" hx-trigger="load, change from:#filters delay:150ms" hx-swap="innerHTML">
-      <div class="muted">Loading expenses…</div>
+      <div class="muted">Loading expenses...</div>
     </div>
   </section>
 </div>
@@ -119,6 +119,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
 }
 
 /* Horizontal date filters layout */
