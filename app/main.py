@@ -38,25 +38,31 @@ app.include_router(api_router)
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request, db: Session = Depends(get_db)):
+    # Check if user is authenticated
     sess = get_session(request)
     if not sess:
         return RedirectResponse(url="/login")
-
+    
+    # Get user from database
+    from app.models.user import User
+    user = db.query(User).filter(User.id == sess["id"]).first()
+    if not user:
+        return RedirectResponse(url="/login")
     today = date.today()
     start = today.replace(day=1)
     end = today
 
     # calculate totals for user
     income_total = db.query(func.sum(Entry.amount))\
-        .filter(Entry.user_id == sess["id"], Entry.type == "income").scalar() or 0
+        .filter(Entry.user_id == user["id"], Entry.type == "income").scalar() or 0
     expense_total = db.query(func.sum(Entry.amount))\
-        .filter(Entry.user_id == sess["id"], Entry.type == "expense").scalar() or 0
+        .filter(Entry.user_id == user["id"], Entry.type == "expense").scalar() or 0
     
-    user_currency_code = user_preferences_service.get_user_currency(db, sess["id"])
+    user_currency_code = user_preferences_service.get_user_currency(db, user["id"])
     user_currency_info = CURRENCIES.get(user_currency_code, CURRENCIES['USD'])
 
     return render(request, "dashboard.html", {
-        "user": sess,
+        "user": user,
         "start": start.isoformat(),
         "end": end.isoformat(),
         "income_total": income_total,

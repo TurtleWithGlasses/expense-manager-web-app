@@ -35,9 +35,14 @@ async def create_user(db: Session, email: str, password: str, full_name: str = N
     db.commit()
     db.refresh(user)
     
-    # Send confirmation email
+    # Send confirmation email (don't fail registration if email fails)
     if send_confirmation:
-        await email_service.send_confirmation_email(email, verification_token)
+        try:
+            await email_service.send_confirmation_email(email, verification_token)
+            print(f"✅ Confirmation email sent to {email}")
+        except Exception as e:
+            print(f"⚠️  Failed to send confirmation email to {email}: {e}")
+            # Don't fail registration if email sending fails
     
     return user
 
