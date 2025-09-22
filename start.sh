@@ -3,6 +3,9 @@ set -e  # Exit on any error
 
 echo "🚀 Starting Expense Manager Web App..."
 
+# Set production environment
+export ENV=production
+
 # Wait for database to be ready (with timeout)
 echo "⏳ Waiting for database connection..."
 timeout 30 bash -c 'until alembic current > /dev/null 2>&1; do sleep 2; done' || {

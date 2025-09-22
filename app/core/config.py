@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "mysecretkey"
     SESSION_COOKIE_NAME: str = "em_session"
     SESSION_MAX_AGE_SECONDS: int = 60 * 60 * 24 * 30
-    ENV: str = "dev"
+    ENV: str = "production"  # Default to production
     
     # Only force SQLite for local development (when ENV=dev)
     def __init__(self, **kwargs):
@@ -15,9 +15,19 @@ class Settings(BaseSettings):
         print(f"🔍 ENV: {self.ENV}")
         
         # Only override to SQLite for local development
-        if self.ENV.lower() == "dev" and ("postgres" in self.DATABASE_URL.lower() or "railway" in self.DATABASE_URL.lower()):
+        # Check if we're in a local development environment
+        is_local_dev = (
+            self.ENV.lower() == "dev" or 
+            self.ENV.lower() == "development" or
+            "localhost" in self.DATABASE_URL.lower() or
+            "127.0.0.1" in self.DATABASE_URL.lower()
+        )
+        
+        if is_local_dev and ("postgres" in self.DATABASE_URL.lower() or "railway" in self.DATABASE_URL.lower()):
             print("🔄 Overriding PostgreSQL URL with SQLite for local development")
             self.DATABASE_URL = "sqlite:///./app.db"
+        else:
+            print("🌐 Using production database configuration")
         
         print(f"✅ Final DATABASE_URL: {self.DATABASE_URL}")
     
