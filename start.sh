@@ -19,6 +19,14 @@ timeout 30 bash -c 'until alembic current > /dev/null 2>&1; do sleep 2; done' ||
     echo "🔄 Proceeding with application startup anyway..."
 }
 
+# Fix database schema if needed
+echo "🔧 Checking and fixing database schema..."
+if python fix_production_schema.py; then
+    echo "✅ Database schema fix completed"
+else
+    echo "⚠️  Database schema fix failed, but continuing with startup..."
+fi
+
 # Run migrations with error handling
 echo "📊 Running database migrations..."
 if alembic upgrade head; then
