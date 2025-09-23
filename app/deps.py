@@ -24,7 +24,7 @@ def current_user(request: Request, db: Session = Depends(get_db)):
     if not user.is_verified:
         raise HTTPException(status_code=403, detail="Please verify your email address")
     
-    return {"id": user.id, "email": user.email}
+    return user
 
 def optional_user(request: Request, db: Session = Depends(get_db)):
     """Get current user if authenticated, None otherwise"""
@@ -47,4 +47,4 @@ def current_user_allow_unverified(request: Request, db: Session = Depends(get_db
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     
-    return {"id": user.id, "email": user.email, "is_verified": user.is_verified}
+    return user
