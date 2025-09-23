@@ -1,6 +1,7 @@
 import smtplib
 import secrets
 import asyncio
+import httpx
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
@@ -20,9 +21,23 @@ class EmailService:
         # Alternative SMTP settings
         self.smtp_server_alt = getattr(settings, 'SMTP_SERVER_ALT', 'smtp.talivio.com')
         self.smtp_port_alt = getattr(settings, 'SMTP_PORT_ALT', 465)
+        
+        # SendGrid settings for production
+        self.sendgrid_api_key = getattr(settings, 'SENDGRID_API_KEY', None)
+        self.sendgrid_from_email = getattr(settings, 'SENDGRID_FROM_EMAIL', self.from_email)
+        self.sendgrid_from_name = getattr(settings, 'SENDGRID_FROM_NAME', self.from_name)
 
     async def send_email(self, to_email: str, subject: str, html_content: str, text_content: str = None):
-        """Send email using SMTP with retry logic and fallback servers"""
+        """Send email using SendGrid API in production, SMTP in development"""
+        
+        # Use SendGrid for production environments
+        if settings.ENV == "production" and self.sendgrid_api_key:
+            print(f"📧 Using SendGrid API for production email...")
+            return await self._send_email_sendgrid(to_email, subject, html_content, text_content)
+        
+        # Fallback to SMTP for development
+        print(f"📧 Using SMTP for development email...")
+        
         # Try primary SMTP server first (Google SMTP with TLS)
         result = await self._try_send_email(to_email, subject, html_content, text_content, 
                                           self.smtp_server, self.smtp_port, use_ssl=False)
@@ -34,6 +49,64 @@ class EmailService:
         result = await self._try_send_email(to_email, subject, html_content, text_content, 
                                           self.smtp_server_alt, self.smtp_port_alt, use_ssl=True)
         return result
+
+    async def _send_email_sendgrid(self, to_email: str, subject: str, html_content: str, text_content: str = None):
+        """Send email using SendGrid API"""
+        try:
+            print(f"📧 Sending email via SendGrid to {to_email}")
+            print(f"📧 From: {self.sendgrid_from_name} <{self.sendgrid_from_email}>")
+            print(f"📧 Subject: {subject}")
+            
+            # Prepare email data for SendGrid API
+            email_data = {
+                "personalizations": [
+                    {
+                        "to": [{"email": to_email}]
+                    }
+                ],
+                "from": {
+                    "email": self.sendgrid_from_email,
+                    "name": self.sendgrid_from_name
+                },
+                "subject": subject,
+                "content": [
+                    {
+                        "type": "text/html",
+                        "value": html_content
+                    }
+                ]
+            }
+            
+            # Add text content if provided
+            if text_content:
+                email_data["content"].insert(0, {
+                    "type": "text/plain",
+                    "value": text_content
+                })
+            
+            # Send via SendGrid API
+            headers = {
+                "Authorization": f"Bearer {self.sendgrid_api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    "https://api.sendgrid.com/v3/mail/send",
+                    headers=headers,
+                    json=email_data
+                )
+                
+                if response.status_code == 202:
+                    print(f"✅ Email sent successfully via SendGrid to {to_email}")
+                    return True
+                else:
+                    print(f"❌ SendGrid API error: {response.status_code} - {response.text}")
+                    return False
+                    
+        except Exception as e:
+            print(f"❌ SendGrid email sending failed to {to_email}: {e}")
+            return False
 
     async def _try_send_email(self, to_email: str, subject: str, html_content: str, text_content: str, 
                             smtp_server: str, smtp_port: int, use_ssl: bool = False):
