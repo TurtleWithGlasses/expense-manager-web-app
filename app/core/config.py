@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     SESSION_COOKIE_NAME: str = "em_session"
     SESSION_MAX_AGE_SECONDS: int = 60 * 60 * 24 * 30
     ENV: str = "production"  # Default to production
+    SENDGRID_API_KEY: str = ""
     
     # Only force SQLite for local development
     def __init__(self, **kwargs):
