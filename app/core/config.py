@@ -33,17 +33,17 @@ class Settings(BaseSettings):
         
         print(f"✅ Final DATABASE_URL: {self.DATABASE_URL}")
     
-    # Add these email settings to the main Settings class
-    SMTP_SERVER: str = "mail.talivio.com"
+    # Email settings for Google Workspace/Gmail
+    SMTP_SERVER: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
     SMTP_USERNAME: str = "info@yourbudgetpulse.online"
-    SMTP_PASSWORD: str = "123456"
+    SMTP_PASSWORD: str = "aify lxiz krxq ncyf"
     FROM_EMAIL: str = "info@yourbudgetpulse.online"  # Use authenticated email as sender
     FROM_NAME: str = "Budget Pulse"
     BASE_URL: str = "https://www.yourbudgetpulse.online"
     
-    # Alternative SMTP settings for fallback
-    SMTP_SERVER_ALT: str = "smtp.talivio.com"  # Alternative server
+    # Alternative SMTP settings for fallback (Google SMTP with SSL)
+    SMTP_SERVER_ALT: str = "smtp.gmail.com"  # Alternative server
     SMTP_PORT_ALT: int = 465  # SSL port
 
     # ✅ Pydantic v2 way to load .env

@@ -23,14 +23,14 @@ class EmailService:
 
     async def send_email(self, to_email: str, subject: str, html_content: str, text_content: str = None):
         """Send email using SMTP with retry logic and fallback servers"""
-        # Try primary SMTP server first
+        # Try primary SMTP server first (Google SMTP with TLS)
         result = await self._try_send_email(to_email, subject, html_content, text_content, 
                                           self.smtp_server, self.smtp_port, use_ssl=False)
         if result:
             return True
             
-        # Try alternative SMTP server
-        print(f"🔄 Trying alternative SMTP server...")
+        # Try alternative SMTP server (Google SMTP with SSL)
+        print(f"🔄 Trying alternative SMTP server (SSL)...")
         result = await self._try_send_email(to_email, subject, html_content, text_content, 
                                           self.smtp_server_alt, self.smtp_port_alt, use_ssl=True)
         return result
@@ -72,9 +72,8 @@ class EmailService:
                             print(f"🔌 Connected via SSL to {smtp_server}:{smtp_port}")
                         else:
                             # Use TLS connection
-                            server = smtplib.SMTP(timeout=30)
-                            print(f"🔌 Connecting to {smtp_server}:{smtp_port}...")
-                            server.connect(smtp_server, smtp_port)
+                            server = smtplib.SMTP(smtp_server, smtp_port, timeout=30)
+                            print(f"🔌 Connected to {smtp_server}:{smtp_port}")
                             print(f"🔐 Starting TLS...")
                             server.starttls()
                         
