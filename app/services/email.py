@@ -22,18 +22,18 @@ class EmailService:
         self.smtp_server_alt = getattr(settings, 'SMTP_SERVER_ALT', 'smtp.talivio.com')
         self.smtp_port_alt = getattr(settings, 'SMTP_PORT_ALT', 465)
         
-        # SendGrid settings for production
-        self.sendgrid_api_key = getattr(settings, 'SENDGRID_API_KEY', None)
-        self.sendgrid_from_email = getattr(settings, 'SENDGRID_FROM_EMAIL', None) or self.from_email
-        self.sendgrid_from_name = getattr(settings, 'SENDGRID_FROM_NAME', None) or self.from_name
+        # Resend settings for production
+        self.resend_api_key = getattr(settings, 'RESEND_API_KEY', None)
+        self.resend_from_email = getattr(settings, 'RESEND_FROM_EMAIL', None) or self.from_email
+        self.resend_from_name = getattr(settings, 'RESEND_FROM_NAME', None) or self.from_name
 
     async def send_email(self, to_email: str, subject: str, html_content: str, text_content: str = None):
-        """Send email using SendGrid API in production, SMTP in development"""
+        """Send email using Resend API in production, SMTP in development"""
         
-        # Use SendGrid for production environments
-        if settings.ENV == "production" and self.sendgrid_api_key:
-            print(f"📧 Using SendGrid API for production email...")
-            return await self._send_email_sendgrid(to_email, subject, html_content, text_content)
+        # Use Resend for production environments
+        if settings.ENV == "production" and self.resend_api_key:
+            print(f"📧 Using Resend API for production email...")
+            return await self._send_email_resend(to_email, subject, html_content, text_content)
         
         # Fallback to SMTP for development
         print(f"📧 Using SMTP for development email...")
@@ -50,62 +50,47 @@ class EmailService:
                                           self.smtp_server_alt, self.smtp_port_alt, use_ssl=True)
         return result
 
-    async def _send_email_sendgrid(self, to_email: str, subject: str, html_content: str, text_content: str = None):
-        """Send email using SendGrid API"""
+    async def _send_email_resend(self, to_email: str, subject: str, html_content: str, text_content: str = None):
+        """Send email using Resend API"""
         try:
-            print(f"📧 Sending email via SendGrid to {to_email}")
-            print(f"📧 From: {self.sendgrid_from_name} <{self.sendgrid_from_email}>")
+            print(f"📧 Sending email via Resend to {to_email}")
+            print(f"📧 From: {self.resend_from_name} <{self.resend_from_email}>")
             print(f"📧 Subject: {subject}")
             
-            # Prepare email data for SendGrid API
+            # Prepare email data for Resend API
             email_data = {
-                "personalizations": [
-                    {
-                        "to": [{"email": to_email}]
-                    }
-                ],
-                "from": {
-                    "email": self.sendgrid_from_email,
-                    "name": self.sendgrid_from_name
-                },
+                "from": f"{self.resend_from_name} <{self.resend_from_email}>",
+                "to": [to_email],
                 "subject": subject,
-                "content": [
-                    {
-                        "type": "text/html",
-                        "value": html_content
-                    }
-                ]
+                "html": html_content
             }
             
             # Add text content if provided
             if text_content:
-                email_data["content"].insert(0, {
-                    "type": "text/plain",
-                    "value": text_content
-                })
+                email_data["text"] = text_content
             
-            # Send via SendGrid API
+            # Send via Resend API
             headers = {
-                "Authorization": f"Bearer {self.sendgrid_api_key}",
+                "Authorization": f"Bearer {self.resend_api_key}",
                 "Content-Type": "application/json"
             }
             
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
-                    "https://api.sendgrid.com/v3/mail/send",
+                    "https://api.resend.com/emails",
                     headers=headers,
                     json=email_data
                 )
                 
-                if response.status_code == 202:
-                    print(f"✅ Email sent successfully via SendGrid to {to_email}")
+                if response.status_code == 200:
+                    print(f"✅ Email sent successfully via Resend to {to_email}")
                     return True
                 else:
-                    print(f"❌ SendGrid API error: {response.status_code} - {response.text}")
+                    print(f"❌ Resend API error: {response.status_code} - {response.text}")
                     return False
                     
         except Exception as e:
-            print(f"❌ SendGrid email sending failed to {to_email}: {e}")
+            print(f"❌ Resend email sending failed to {to_email}: {e}")
             return False
 
     async def _try_send_email(self, to_email: str, subject: str, html_content: str, text_content: str, 

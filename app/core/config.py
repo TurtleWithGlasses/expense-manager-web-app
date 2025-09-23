@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     SESSION_COOKIE_NAME: str = "em_session"
     SESSION_MAX_AGE_SECONDS: int = 60 * 60 * 24 * 30
     ENV: str = "production"  # Default to production
-    SENDGRID_API_KEY: str = ""
+    RESEND_API_KEY: str = "re_XWEw3J25_EkNSTcGKLvNErCd8AVpBhvTP"
     
     # Only force SQLite for local development
     def __init__(self, **kwargs):
@@ -47,10 +47,9 @@ class Settings(BaseSettings):
     SMTP_SERVER_ALT: str = "smtp.gmail.com"  # Alternative server
     SMTP_PORT_ALT: int = 465  # SSL port
     
-    # SendGrid settings for production (when SMTP is blocked)
-    SENDGRID_API_KEY: str | None = None  # Set this in production environment
-    SENDGRID_FROM_EMAIL: str | None = None
-    SENDGRID_FROM_NAME: str | None = None
+    # Resend settings for production (when SMTP is blocked)
+    RESEND_FROM_EMAIL: str = "info@yourbudgetpulse.online"
+    RESEND_FROM_NAME: str = "Budget Pulse"
 
     # ✅ Pydantic v2 way to load .env
     model_config = SettingsConfigDict(
