@@ -60,6 +60,7 @@
       hx-target="#cat-list"
       hx-swap="innerHTML"
       hx-confirm="Are you sure you want to delete '{{ c.name }}'? This cannot be undone."
+      hx-on::after-request="updateCategoryCount()"
       aria-label="Delete {{ c.name }}"
     >
       <i class="bi bi-trash"></i> Delete

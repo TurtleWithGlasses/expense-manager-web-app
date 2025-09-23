@@ -15,6 +15,8 @@
       hx-post="/categories/create"
       hx-target="#cat-list"
       hx-swap="innerHTML"
+      hx-trigger="submit"
+      hx-on::after-request="updateCategoryCount()"
       hx-disabled-elt="button">
 
       <input type="text"
@@ -43,7 +45,7 @@
       </span>
     </h5>
   </div>
-  <div class="card-body p-0">
+  <div class="card-body p-0" id="categories-container">
     <ul id="cat-list" class="list-group list-group-flush">
       {% include "categories/_list.html" %}
     </ul>
@@ -176,5 +178,24 @@
     }
   }
 </style>
+
+<script>
+function updateCategoryCount() {
+  // Count the number of category items (excluding empty state)
+  const categoryItems = document.querySelectorAll('#cat-list .cat-item:not(.cat-empty)');
+  const count = categoryItems.length;
+  
+  // Update the counter
+  const counter = document.getElementById('cat-count');
+  if (counter) {
+    counter.textContent = count + ' Categories';
+  }
+}
+
+// Initialize counter on page load
+document.addEventListener('DOMContentLoaded', function() {
+  updateCategoryCount();
+});
+</script>
 
 {% endblock %}
