@@ -24,8 +24,8 @@ class EmailService:
         
         # SendGrid settings for production
         self.sendgrid_api_key = getattr(settings, 'SENDGRID_API_KEY', None)
-        self.sendgrid_from_email = getattr(settings, 'SENDGRID_FROM_EMAIL', self.from_email)
-        self.sendgrid_from_name = getattr(settings, 'SENDGRID_FROM_NAME', self.from_name)
+        self.sendgrid_from_email = getattr(settings, 'SENDGRID_FROM_EMAIL', None) or self.from_email
+        self.sendgrid_from_name = getattr(settings, 'SENDGRID_FROM_NAME', None) or self.from_name
 
     async def send_email(self, to_email: str, subject: str, html_content: str, text_content: str = None):
         """Send email using SendGrid API in production, SMTP in development"""

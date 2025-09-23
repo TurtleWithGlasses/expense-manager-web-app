@@ -47,9 +47,9 @@ class Settings(BaseSettings):
     SMTP_PORT_ALT: int = 465  # SSL port
     
     # SendGrid settings for production (when SMTP is blocked)
-    SENDGRID_API_KEY: str = None  # Set this in production environment
-    SENDGRID_FROM_EMAIL: str = "info@yourbudgetpulse.online"
-    SENDGRID_FROM_NAME: str = "Budget Pulse"
+    SENDGRID_API_KEY: str | None = None  # Set this in production environment
+    SENDGRID_FROM_EMAIL: str | None = None
+    SENDGRID_FROM_NAME: str | None = None
 
     # ✅ Pydantic v2 way to load .env
     model_config = SettingsConfigDict(
