@@ -1,40 +1,57 @@
 {% extends "base.html" %}
 
-{% block title %}Email Confirmed{% endblock %}
+{% block title %}{% if error %}Verification Failed{% else %}Email Confirmed{% endif %}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
-        <div>
+        <div class="text-center">
             {% if error %}
-            <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-red-100">
-                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-red-100 mb-6">
+                <svg class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
             </div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            <h2 class="text-3xl font-extrabold text-gray-900 mb-4">
                 Verification Failed
             </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
-                {{ error }}
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">
+                            Invalid Confirmation Link
+                        </h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>{{ error }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="text-sm text-gray-600 mb-6">
+                The confirmation link may have expired or already been used. Please request a new verification email.
             </p>
             {% else %}
-            <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-green-100">
-                <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-green-100 mb-6">
+                <svg class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            <h2 class="text-3xl font-extrabold text-gray-900 mb-4">
                 Email Verified!
             </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
+            <p class="text-sm text-gray-600 mb-6">
                 Your email has been successfully verified. You can now access your account.
             </p>
             {% endif %}
         </div>
 
         {% if not error %}
-        <div class="bg-green-50 border border-green-200 rounded-md p-4">
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -52,16 +69,35 @@
             </div>
         </div>
 
-        <div class="text-center">
-            <a href="/" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                Go to Dashboard
-            </a>
+        <div class="space-y-4">
+            <div class="text-center">
+                <a href="/" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
+                    </svg>
+                    Go to Dashboard
+                </a>
+            </div>
         </div>
         {% else %}
-        <div class="text-center">
-            <a href="/login" class="font-medium text-gray-600 hover:text-gray-500">
-                ← Back to Login
-            </a>
+        <div class="space-y-4">
+            <div class="text-center">
+                <a href="/login" class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    Back to Login
+                </a>
+            </div>
+            <div class="text-center">
+                <a href="/resend-verification" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none focus:underline">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    Request New Verification Email
+                </a>
+            </div>
         </div>
         {% endif %}
     </div>

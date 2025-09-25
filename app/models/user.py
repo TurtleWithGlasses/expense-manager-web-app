@@ -25,3 +25,8 @@ class User(Base):
     categories = relationship("Category", back_populates="owner", cascade="all, delete-orphan")
     entries = relationship("Entry", back_populates="owner", cascade="all, delete-orphan")
     preferences = relationship("UserPreferences", back_populates="user", uselist=False)
+    
+    # AI relationships
+    ai_models = relationship("AIModel", back_populates="user", cascade="all, delete-orphan")
+    ai_suggestions = relationship("AISuggestion", back_populates="user", cascade="all, delete-orphan")
+    ai_preferences = relationship("UserAIPreferences", back_populates="user", uselist=False)

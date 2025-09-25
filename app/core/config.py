@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "mysecretkey"
     SESSION_COOKIE_NAME: str = "em_session"
     SESSION_MAX_AGE_SECONDS: int = 60 * 60 * 24 * 30
-    ENV: str = "production"  # Default to production
+    ENV: str = "development"  # Default to development
     RESEND_API_KEY: str = "re_XWEw3J25_EkNSTcGKLvNErCd8AVpBhvTP"
     
     # Only force SQLite for local development
@@ -22,15 +22,24 @@ class Settings(BaseSettings):
             "render" in self.DATABASE_URL.lower() or
             "vercel" in self.DATABASE_URL.lower() or
             "fly.io" in self.DATABASE_URL.lower() or
-            "postgresql" in self.DATABASE_URL.lower() and "localhost" not in self.DATABASE_URL.lower()
+            ("postgresql" in self.DATABASE_URL.lower() and 
+             "localhost" not in self.DATABASE_URL.lower() and 
+             "127.0.0.1" not in self.DATABASE_URL.lower() and
+             "postgres-p" not in self.DATABASE_URL.lower() and  # Railway internal hostname
+             "internal" not in self.DATABASE_URL.lower())  # Internal hostnames
         )
         
-        # Only override to SQLite for local development (not production)
-        if not is_production and ("postgres" in self.DATABASE_URL.lower() or "railway" in self.DATABASE_URL.lower()):
-            print("🔄 Overriding PostgreSQL URL with SQLite for local development")
-            self.DATABASE_URL = "sqlite:///./app.db"
-        else:
+        # Force SQLite for local development
+        if is_production:
             print("🌐 Using production database configuration")
+        else:
+            print("🔄 Using SQLite for local development")
+            self.DATABASE_URL = "sqlite:///./app.db"
+            
+        # Always use SQLite for local development (override any PostgreSQL)
+        if "127.0.0.1" in self.DATABASE_URL or "localhost" in self.DATABASE_URL:
+            print("🔄 Overriding to SQLite for localhost development")
+            self.DATABASE_URL = "sqlite:///./app.db"
         
         print(f"✅ Final DATABASE_URL: {self.DATABASE_URL}")
     
@@ -41,7 +50,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = "aify lxiz krxq ncyf"
     FROM_EMAIL: str = "info@yourbudgetpulse.online"  # Use authenticated email as sender
     FROM_NAME: str = "Budget Pulse"
-    BASE_URL: str = "https://www.yourbudgetpulse.online"
+    BASE_URL: str = "http://localhost:8000"  # Default to localhost for development
     
     # Alternative SMTP settings for fallback (Google SMTP with SSL)
     SMTP_SERVER_ALT: str = "smtp.gmail.com"  # Alternative server

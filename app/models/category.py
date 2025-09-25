@@ -11,4 +11,4 @@ class Category(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
     owner = relationship("User", back_populates="categories")
-    entries = relationship("Entry", back_populates="category")
+    entries = relationship("Entry", back_populates="category", foreign_keys="Entry.category_id")

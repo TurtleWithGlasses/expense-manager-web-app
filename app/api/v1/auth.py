@@ -111,6 +111,11 @@ async def verification_sent_page(request: Request):
     """Verification email sent confirmation page"""
     return render(request, "auth/verification_sent.html")
 
+@router.get("/resend-verification", response_class=HTMLResponse)
+async def resend_verification_page(request: Request):
+    """Resend verification email page"""
+    return render(request, "auth/resend_verification.html")
+
 @router.post("/resend-verification", response_class=HTMLResponse)
 async def resend_verification(
     request: Request,

@@ -57,11 +57,35 @@
         <div class="d-flex gap-2">
           <input name="note" type="text" 
                  class="form-control form-control-lg shadow-sm" 
-                 placeholder="Optional note">
+                 placeholder="Optional note"
+                 id="entry-note"
+                 oninput="getAISuggestion()">
           <button type="submit" class="btn btn-success btn-lg shadow">
             <i class="bi bi-plus-circle"></i> Add
           </button>
         </div>
+        
+        <!-- AI Suggestion Display -->
+        <div id="ai-suggestion" class="mt-2" style="display: none;">
+          <div class="alert alert-info alert-sm py-2 px-3 mb-2">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-robot me-2"></i>
+              <div class="flex-grow-1">
+                <small class="fw-bold">AI Suggestion:</small>
+                <div id="suggestion-text" class="small"></div>
+              </div>
+              <div class="flex-shrink-0">
+                <button type="button" class="btn btn-sm btn-outline-success me-1" onclick="acceptAISuggestion()">
+                  <i class="bi bi-check"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="dismissAISuggestion()">
+                  <i class="bi bi-x"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <small class="htmx-indicator text-white-50">Saving…</small>
       </div>
     </form>
@@ -307,5 +331,146 @@
     box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25) !important;
   }
 </style>
+
+<script>
+let currentSuggestion = null;
+let suggestionTimeout = null;
+
+function getAISuggestion() {
+    const note = document.getElementById('entry-note').value.trim();
+    const amount = document.querySelector('input[name="amount"]').value;
+    const type = document.querySelector('select[name="type"]').value;
+    
+    // Clear previous timeout
+    if (suggestionTimeout) {
+        clearTimeout(suggestionTimeout);
+    }
+    
+    // Only get suggestion if note has at least 3 characters
+    if (note.length < 3) {
+        dismissAISuggestion();
+        return;
+    }
+    
+    // Debounce the request
+    suggestionTimeout = setTimeout(() => {
+        const formData = new FormData();
+        formData.append('note', note);
+        formData.append('amount', amount);
+        formData.append('entry_type', type);
+        
+        fetch('/ai/suggest-category', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.suggestion) {
+                showAISuggestion(data.suggestion);
+            } else {
+                dismissAISuggestion();
+            }
+        })
+        .catch(error => {
+            console.error('AI suggestion error:', error);
+            dismissAISuggestion();
+        });
+    }, 500);
+}
+
+function showAISuggestion(suggestion) {
+    currentSuggestion = suggestion;
+    const suggestionDiv = document.getElementById('ai-suggestion');
+    const suggestionText = document.getElementById('suggestion-text');
+    
+    const confidence = Math.round(suggestion.confidence_score * 100);
+    suggestionText.innerHTML = `
+        <strong>${suggestion.category_name}</strong> 
+        <span class="badge bg-primary">${confidence}% confidence</span>
+    `;
+    
+    suggestionDiv.style.display = 'block';
+}
+
+function acceptAISuggestion() {
+    if (currentSuggestion) {
+        // Set the category in the form
+        const categorySelect = document.querySelector('select[name="category_id"]');
+        categorySelect.value = currentSuggestion.category_id;
+        
+        // Add visual feedback
+        categorySelect.style.borderColor = '#28a745';
+        categorySelect.style.boxShadow = '0 0 0 0.2rem rgba(40, 167, 69, 0.25)';
+        
+        setTimeout(() => {
+            categorySelect.style.borderColor = '';
+            categorySelect.style.boxShadow = '';
+        }, 2000);
+        
+        dismissAISuggestion();
+        
+        // Show success message
+        showToast('AI suggestion applied!', 'success');
+    }
+}
+
+function dismissAISuggestion() {
+    const suggestionDiv = document.getElementById('ai-suggestion');
+    suggestionDiv.style.display = 'none';
+    currentSuggestion = null;
+}
+
+function showToast(message, type = 'info') {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-robot me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    // Add to page
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+    }
+    
+    toastContainer.appendChild(toast);
+    
+    // Initialize and show toast
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Remove from DOM after hiding
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+
+// Initialize AI suggestions when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if AI features are enabled
+    fetch('/ai/insights')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('AI features are available');
+            }
+        })
+        .catch(error => {
+            console.log('AI features not available');
+        });
+});
+</script>
 
 {% endblock %}

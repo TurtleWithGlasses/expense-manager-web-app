@@ -16,6 +16,12 @@ from app.templates import render
 from app.models.entry import Entry
 from app.services.user_preferences import user_preferences_service
 
+# Import all models to ensure they are registered with SQLAlchemy
+from app.models.user import User
+from app.models.category import Category
+from app.models.user_preferences import UserPreferences
+from app.models.ai_model import AIModel, AISuggestion, UserAIPreferences
+
 app = FastAPI(title="Expense Manager Web")
 
 @app.on_event("startup")

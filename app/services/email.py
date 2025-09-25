@@ -17,6 +17,8 @@ class EmailService:
         self.password = settings.SMTP_PASSWORD
         self.from_email = settings.FROM_EMAIL
         self.from_name = settings.FROM_NAME
+        # Skip email sending in development mode
+        self.is_development = settings.ENV == "development" or "localhost" in settings.DATABASE_URL
         
         # Alternative SMTP settings
         self.smtp_server_alt = getattr(settings, 'SMTP_SERVER_ALT', 'smtp.talivio.com')
@@ -30,13 +32,20 @@ class EmailService:
     async def send_email(self, to_email: str, subject: str, html_content: str, text_content: str = None):
         """Send email using Resend API in production, SMTP in development"""
         
-        # Use Resend for production environments
-        if settings.ENV == "production" and self.resend_api_key:
-            print(f"📧 Using Resend API for production email...")
+        # Skip email sending in development mode
+        if self.is_development:
+            print(f"📧 Development mode: Skipping email to {to_email}")
+            print(f"📧 Subject: {subject}")
+            print(f"📧 Content preview: {html_content[:100]}...")
+            return True
+        
+        # Use Resend API if available (preferred method)
+        if self.resend_api_key:
+            print(f"📧 Using Resend API for email...")
             return await self._send_email_resend(to_email, subject, html_content, text_content)
         
-        # Fallback to SMTP for development
-        print(f"📧 Using SMTP for development email...")
+        # Fallback to SMTP if Resend is not configured
+        print(f"📧 Using SMTP for email...")
         
         # Try primary SMTP server first (Google SMTP with TLS)
         result = await self._try_send_email(to_email, subject, html_content, text_content, 
