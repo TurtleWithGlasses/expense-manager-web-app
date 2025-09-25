@@ -8,40 +8,39 @@ class Settings(BaseSettings):
     ENV: str = "development"  # Default to development
     RESEND_API_KEY: str = "re_XWEw3J25_EkNSTcGKLvNErCd8AVpBhvTP"
     
-    # Only force SQLite for local development
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # Debug: Print the DATABASE_URL being used
         print(f"🔍 DATABASE_URL from environment: {self.DATABASE_URL}")
         print(f"🔍 ENV: {self.ENV}")
         
-        # Check if we're in a production environment (Railway, Heroku, etc.)
-        is_production = (
-            "railway" in self.DATABASE_URL.lower() or
-            "heroku" in self.DATABASE_URL.lower() or
-            "render" in self.DATABASE_URL.lower() or
-            "vercel" in self.DATABASE_URL.lower() or
-            "fly.io" in self.DATABASE_URL.lower() or
-            ("postgresql" in self.DATABASE_URL.lower() and 
-             "localhost" not in self.DATABASE_URL.lower() and 
-             "127.0.0.1" not in self.DATABASE_URL.lower() and
-             "postgres-p" not in self.DATABASE_URL.lower() and  # Railway internal hostname
-             "internal" not in self.DATABASE_URL.lower())  # Internal hostnames
+        # Determine environment based on multiple factors
+        is_local_development = (
+            self.ENV.lower() in ["development", "dev", "local"] or
+            "localhost" in self.DATABASE_URL or
+            "127.0.0.1" in self.DATABASE_URL or
+            self.DATABASE_URL == "sqlite:///./app.db" or
+            # Check if we're running locally (not in a cloud environment)
+            not any(cloud_indicator in self.DATABASE_URL.lower() for cloud_indicator in [
+                "railway", "heroku", "render", "vercel", "fly.io", "aws", "azure", "gcp"
+            ])
         )
         
-        # Force SQLite for local development
-        if is_production:
-            print("🌐 Using production database configuration")
+        # Only override to SQLite if we're definitely in local development
+        if is_local_development and not self.DATABASE_URL.startswith("sqlite"):
+            print("🔄 Local development detected - using SQLite")
+            self.DATABASE_URL = "sqlite:///./app.db"
+            # Set BASE_URL for local development
+            self.BASE_URL = "http://localhost:8000"
+        elif "railway" in self.DATABASE_URL.lower() or "heroku" in self.DATABASE_URL.lower():
+            print("🌐 Production environment detected - using provided database")
+            # Set BASE_URL for production
+            self.BASE_URL = "https://www.yourbudgetpulse.online"
         else:
-            print("🔄 Using SQLite for local development")
-            self.DATABASE_URL = "sqlite:///./app.db"
-            
-        # Always use SQLite for local development (override any PostgreSQL)
-        if "127.0.0.1" in self.DATABASE_URL or "localhost" in self.DATABASE_URL:
-            print("🔄 Overriding to SQLite for localhost development")
-            self.DATABASE_URL = "sqlite:///./app.db"
+            print(f"🔧 Using configured database: {self.DATABASE_URL}")
         
         print(f"✅ Final DATABASE_URL: {self.DATABASE_URL}")
+        print(f"✅ Final BASE_URL: {self.BASE_URL}")
     
     # Email settings for Google Workspace/Gmail
     SMTP_SERVER: str = "smtp.gmail.com"
