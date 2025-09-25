@@ -51,7 +51,7 @@
                                                        {% if preferences.auto_categorization_enabled %}checked{% endif %}>
                                                 <label class="form-check-label" for="auto_categorization_enabled">
                                                     <strong>Auto-categorization</strong>
-                                                    <small class="text-muted d-block">Automatically suggest categories for new entries</small>
+                                                    <small class="text-secondary d-block">Automatically suggest categories for new entries</small>
                                                 </label>
                                             </div>
                                         </div>
@@ -63,7 +63,7 @@
                                                        {% if preferences.smart_suggestions_enabled %}checked{% endif %}>
                                                 <label class="form-check-label" for="smart_suggestions_enabled">
                                                     <strong>Smart Suggestions</strong>
-                                                    <small class="text-muted d-block">Provide intelligent suggestions for entries</small>
+                                                    <small class="text-secondary d-block">Provide intelligent suggestions for entries</small>
                                                 </label>
                                             </div>
                                         </div>
@@ -75,7 +75,7 @@
                                                        {% if preferences.spending_insights_enabled %}checked{% endif %}>
                                                 <label class="form-check-label" for="spending_insights_enabled">
                                                     <strong>Spending Insights</strong>
-                                                    <small class="text-muted d-block">Analyze spending patterns and trends</small>
+                                                    <small class="text-secondary d-block">Analyze spending patterns and trends</small>
                                                 </label>
                                             </div>
                                         </div>
@@ -87,7 +87,7 @@
                                                        {% if preferences.budget_predictions_enabled %}checked{% endif %}>
                                                 <label class="form-check-label" for="budget_predictions_enabled">
                                                     <strong>Budget Predictions</strong>
-                                                    <small class="text-muted d-block">Predict future spending based on history</small>
+                                                    <small class="text-secondary d-block">Predict future spending based on history</small>
                                                 </label>
                                             </div>
                                         </div>
@@ -115,11 +115,11 @@
                                                        value="{{ preferences.min_confidence_threshold }}"
                                                        oninput="updateConfidenceDisplay(this, 'min-confidence-display')">
                                                 <div class="d-flex justify-content-between">
-                                                    <small class="text-muted">Low (10%)</small>
-                                                    <span id="min-confidence-display" class="fw-bold">
+                                                    <small class="text-secondary">Low (10%)</small>
+                                                    <span id="min-confidence-display" class="fw-bold text-primary">
                                                         {{ (preferences.min_confidence_threshold * 100)|round(0)|int }}%
                                                     </span>
-                                                    <small class="text-muted">High (100%)</small>
+                                                    <small class="text-secondary">High (100%)</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -135,11 +135,11 @@
                                                        value="{{ preferences.auto_accept_threshold }}"
                                                        oninput="updateConfidenceDisplay(this, 'auto-accept-display')">
                                                 <div class="d-flex justify-content-between">
-                                                    <small class="text-muted">Low (10%)</small>
-                                                    <span id="auto-accept-display" class="fw-bold">
+                                                    <small class="text-secondary">Low (10%)</small>
+                                                    <span id="auto-accept-display" class="fw-bold text-primary">
                                                         {{ (preferences.auto_accept_threshold * 100)|round(0)|int }}%
                                                     </span>
-                                                    <small class="text-muted">High (100%)</small>
+                                                    <small class="text-secondary">High (100%)</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -163,7 +163,7 @@
                                                        {% if preferences.learn_from_feedback %}checked{% endif %}>
                                                 <label class="form-check-label" for="learn_from_feedback">
                                                     <strong>Learn from Feedback</strong>
-                                                    <small class="text-muted d-block">Improve suggestions based on your feedback</small>
+                                                    <small class="text-secondary d-block">Improve suggestions based on your feedback</small>
                                                 </label>
                                             </div>
                                         </div>
@@ -200,7 +200,7 @@
                                                {% if preferences.share_anonymized_data %}checked{% endif %}>
                                         <label class="form-check-label" for="share_anonymized_data">
                                             <strong>Share Anonymized Data</strong>
-                                            <small class="text-muted d-block">Help improve AI models by sharing anonymous usage data</small>
+                                            <small class="text-secondary d-block">Help improve AI models by sharing anonymous usage data</small>
                                         </label>
                                     </div>
                                 </div>
@@ -238,7 +238,7 @@
                                 </div>
                                 <div class="flex-grow-1 ms-3">
                                     <h6 class="mb-0">AI Engine Active</h6>
-                                    <small class="text-muted">Ready to provide smart suggestions</small>
+                                    <small class="text-secondary">Ready to provide smart suggestions</small>
                                 </div>
                             </div>
                             
@@ -246,12 +246,12 @@
                                 <div class="col-6">
                                     <div class="border-end">
                                         <h5 class="text-primary mb-0">4</h5>
-                                        <small class="text-muted">Active Features</small>
+                                        <small class="text-secondary">Active Features</small>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <h5 class="text-success mb-0">95%</h5>
-                                    <small class="text-muted">Accuracy</small>
+                                    <small class="text-secondary">Accuracy</small>
                                 </div>
                             </div>
                         </div>
