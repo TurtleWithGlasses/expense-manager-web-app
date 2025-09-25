@@ -47,13 +47,14 @@ async def add(
     category_id: int | None = Form(None),
     note: str | None = Form(None),
     date_str: str | None = Form(None),
+    currency_code: str | None = Form(None),  # Accept currency from form
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
     from app.services.user_preferences import user_preferences_service
     
-    # Get user's preferred currency
-    user_currency = user_preferences_service.get_user_currency(db, user.id)
+    # Get user's preferred currency (fallback if not provided in form)
+    user_currency = currency_code or user_preferences_service.get_user_currency(db, user.id)
     
     d = _date.fromisoformat(date_str) if date_str else _date.today()
 

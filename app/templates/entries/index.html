@@ -14,6 +14,9 @@
       hx-target="#entries-tbody"
       hx-swap="innerHTML"
       hx-disabled-elt="button">
+      
+      <!-- Hidden field to pass user currency -->
+      <input type="hidden" name="currency_code" value="{{ user_currency }}">
 
       <!-- Type -->
       <div class="col-12 col-md-2">
@@ -26,7 +29,7 @@
 
       <!-- Amount -->
       <div class="col-12 col-md-2">
-        <label class="form-label text-white-50 small">Amount</label>
+        <label class="form-label text-white-50 small">Amount ({{ user_currency }})</label>
         <input name="amount" type="number" step="0.01" 
                class="form-control form-control-lg shadow-sm" 
                placeholder="0.00" required>
