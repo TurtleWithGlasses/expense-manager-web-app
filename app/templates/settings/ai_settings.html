@@ -38,10 +38,51 @@
                             <form action="/ai/settings" method="POST" id="aiSettingsForm">
                                 <!-- Feature Toggles -->
                                 <div class="mb-4">
-                                    <h6 class="text-primary mb-3">
-                                        <i class="bi bi-toggle-on me-2"></i>
-                                        Feature Toggles
-                                    </h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="text-primary mb-0">
+                                            <i class="bi bi-toggle-on me-2"></i>
+                                            Feature Toggles
+                                        </h6>
+                                        <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="collapse" data-bs-target="#featureInfo" aria-expanded="false" aria-controls="featureInfo">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Learn More
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Feature Information Collapse -->
+                                    <div class="collapse mb-4" id="featureInfo">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6 class="text-dark mb-3">AI Feature Explanations</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <h6 class="text-primary">Auto-categorization</h6>
+                                                            <p class="text-dark small mb-2">Automatically suggests the most appropriate category for your transactions based on transaction descriptions, amounts, and your spending patterns.</p>
+                                                            <small class="text-muted">Example: "Coffee at Starbucks" → Food & Dining category</small>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <h6 class="text-primary">Smart Suggestions</h6>
+                                                            <p class="text-dark small mb-2">Provides intelligent recommendations for transaction details, helping you complete entries faster and more accurately.</p>
+                                                            <small class="text-muted">Example: Suggests amounts, notes, or categories based on similar past transactions</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <h6 class="text-primary">Spending Insights</h6>
+                                                            <p class="text-dark small mb-2">Analyzes your spending patterns to identify trends, top categories, and unusual spending behaviors.</p>
+                                                            <small class="text-muted">Example: "You spent 40% more on dining this month"</small>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <h6 class="text-primary">Budget Predictions</h6>
+                                                            <p class="text-dark small mb-2">Uses historical data to predict future spending and help you plan budgets more effectively.</p>
+                                                            <small class="text-muted">Example: "Based on your patterns, expect to spend $800 on groceries next month"</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     
                                     <div class="row">
                                         <div class="col-md-6">
@@ -98,10 +139,45 @@
 
                                 <!-- Confidence Thresholds -->
                                 <div class="mb-4">
-                                    <h6 class="text-primary mb-3">
-                                        <i class="bi bi-speedometer2 me-2"></i>
-                                        Confidence Thresholds
-                                    </h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="text-primary mb-0">
+                                            <i class="bi bi-speedometer2 me-2"></i>
+                                            Confidence Thresholds
+                                        </h6>
+                                        <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="collapse" data-bs-target="#confidenceInfo" aria-expanded="false" aria-controls="confidenceInfo">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Learn More
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Confidence Thresholds Information -->
+                                    <div class="collapse mb-4" id="confidenceInfo">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6 class="text-dark mb-3">Understanding Confidence Thresholds</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <h6 class="text-primary">Minimum Confidence Threshold</h6>
+                                                        <p class="text-dark small mb-2">The minimum confidence level required for AI to show suggestions. Higher values mean more accurate but fewer suggestions.</p>
+                                                        <ul class="text-dark small">
+                                                            <li><strong>Low (10-30%):</strong> More suggestions, some may be less accurate</li>
+                                                            <li><strong>Medium (40-70%):</strong> Balanced suggestions and accuracy</li>
+                                                            <li><strong>High (80-100%):</strong> Fewer but highly accurate suggestions</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <h6 class="text-primary">Auto-accept Threshold</h6>
+                                                        <p class="text-dark small mb-2">The confidence level at which AI suggestions are automatically accepted without your review.</p>
+                                                        <ul class="text-dark small">
+                                                            <li><strong>Low (10-50%):</strong> More auto-acceptance, higher risk of errors</li>
+                                                            <li><strong>Medium (60-80%):</strong> Balanced auto-acceptance</li>
+                                                            <li><strong>High (90-100%):</strong> Very conservative, manual review required</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     
                                     <div class="row">
                                         <div class="col-md-6">
@@ -150,10 +226,45 @@
 
                                 <!-- Learning Preferences -->
                                 <div class="mb-4">
-                                    <h6 class="text-primary mb-3">
-                                        <i class="bi bi-brain me-2"></i>
-                                        Learning Preferences
-                                    </h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="text-primary mb-0">
+                                            <i class="bi bi-brain me-2"></i>
+                                            Learning Preferences
+                                        </h6>
+                                        <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="collapse" data-bs-target="#learningInfo" aria-expanded="false" aria-controls="learningInfo">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Learn More
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Learning Preferences Information -->
+                                    <div class="collapse mb-4" id="learningInfo">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6 class="text-dark mb-3">AI Learning & Adaptation</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <h6 class="text-primary">Learn from Feedback</h6>
+                                                        <p class="text-dark small mb-2">When enabled, the AI learns from your corrections and feedback to improve future suggestions.</p>
+                                                        <ul class="text-dark small">
+                                                            <li>Remembers when you change AI suggestions</li>
+                                                            <li>Adapts to your personal preferences</li>
+                                                            <li>Improves accuracy over time</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <h6 class="text-primary">Retrain Frequency</h6>
+                                                        <p class="text-dark small mb-2">How often the AI model updates itself with your latest data and feedback.</p>
+                                                        <ul class="text-dark small">
+                                                            <li><strong>Daily:</strong> Most responsive, uses more resources</li>
+                                                            <li><strong>Weekly:</strong> Good balance of responsiveness and efficiency</li>
+                                                            <li><strong>Monthly:</strong> Most efficient, less frequent updates</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     
                                     <div class="row">
                                         <div class="col-md-6">
@@ -189,10 +300,43 @@
 
                                 <!-- Privacy Settings -->
                                 <div class="mb-4">
-                                    <h6 class="text-primary mb-3">
-                                        <i class="bi bi-shield-lock me-2"></i>
-                                        Privacy Settings
-                                    </h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="text-primary mb-0">
+                                            <i class="bi bi-shield-lock me-2"></i>
+                                            Privacy Settings
+                                        </h6>
+                                        <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="collapse" data-bs-target="#privacyInfo" aria-expanded="false" aria-controls="privacyInfo">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Learn More
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Privacy Settings Information -->
+                                    <div class="collapse mb-4" id="privacyInfo">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6 class="text-dark mb-3">Privacy & Data Sharing</h6>
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <h6 class="text-primary">Share Anonymized Data</h6>
+                                                        <p class="text-dark small mb-2">When enabled, you help improve AI models by sharing anonymous usage patterns. This data is completely anonymized and cannot be traced back to you.</p>
+                                                        <ul class="text-dark small">
+                                                            <li><strong>What's shared:</strong> Anonymous spending patterns, category preferences, and usage statistics</li>
+                                                            <li><strong>What's NOT shared:</strong> Personal information, transaction amounts, account details, or any identifying data</li>
+                                                            <li><strong>Purpose:</strong> Helps improve AI accuracy for all users while maintaining your privacy</li>
+                                                            <li><strong>Security:</strong> Data is encrypted and processed in compliance with privacy regulations</li>
+                                                        </ul>
+                                                        <div class="alert alert-info mt-3">
+                                                            <small class="text-dark">
+                                                                <i class="bi bi-shield-check me-1"></i>
+                                                                <strong>Your privacy is protected:</strong> All shared data is completely anonymized and aggregated. We never share personal or financial information.
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     
                                     <div class="form-check form-switch mb-3">
                                         <input class="form-check-input" type="checkbox" 
@@ -474,7 +618,7 @@ function viewInsights() {
                                 <div class="card-header bg-primary text-white">
                                     <h6 class="mb-0"><i class="bi bi-trophy me-2"></i>Top Spending Category</h6>
                                 </div>
-                                <div class="card-body">
+                                <div class="card-body bg-white">
                                     <h5 class="text-primary">${category.name}</h5>
                                     <p class="mb-1 text-dark"><strong>Amount:</strong> ${category.amount.toFixed(2)}</p>
                                     <p class="mb-0 text-dark"><strong>Percentage:</strong> ${category.percentage.toFixed(1)}%</p>
@@ -491,7 +635,7 @@ function viewInsights() {
                                 <div class="card-header bg-info text-white">
                                     <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Daily Average</h6>
                                 </div>
-                                <div class="card-body">
+                                <div class="card-body bg-white">
                                     <h5 class="text-info">${data.insights.daily_average.toFixed(2)}</h5>
                                     <p class="mb-0 text-dark">Average daily spending</p>
                                 </div>
