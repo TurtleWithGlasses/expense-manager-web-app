@@ -49,9 +49,9 @@
                                                 <input class="form-check-input" type="checkbox" 
                                                        id="auto_categorization_enabled" name="auto_categorization_enabled"
                                                        {% if preferences.auto_categorization_enabled %}checked{% endif %}>
-                                                <label class="form-check-label" for="auto_categorization_enabled">
+                                                <label class="form-check-label text-white" for="auto_categorization_enabled">
                                                     <strong>Auto-categorization</strong>
-                                                    <small class="text-secondary d-block">Automatically suggest categories for new entries</small>
+                                                    <small class="text-light d-block" style="opacity: 0.8;">Automatically suggest categories for new entries</small>
                                                 </label>
                                             </div>
                                         </div>
@@ -61,9 +61,9 @@
                                                 <input class="form-check-input" type="checkbox" 
                                                        id="smart_suggestions_enabled" name="smart_suggestions_enabled"
                                                        {% if preferences.smart_suggestions_enabled %}checked{% endif %}>
-                                                <label class="form-check-label" for="smart_suggestions_enabled">
+                                                <label class="form-check-label text-white" for="smart_suggestions_enabled">
                                                     <strong>Smart Suggestions</strong>
-                                                    <small class="text-secondary d-block">Provide intelligent suggestions for entries</small>
+                                                    <small class="text-light d-block" style="opacity: 0.8;">Provide intelligent suggestions for entries</small>
                                                 </label>
                                             </div>
                                         </div>
@@ -73,9 +73,9 @@
                                                 <input class="form-check-input" type="checkbox" 
                                                        id="spending_insights_enabled" name="spending_insights_enabled"
                                                        {% if preferences.spending_insights_enabled %}checked{% endif %}>
-                                                <label class="form-check-label" for="spending_insights_enabled">
+                                                <label class="form-check-label text-white" for="spending_insights_enabled">
                                                     <strong>Spending Insights</strong>
-                                                    <small class="text-secondary d-block">Analyze spending patterns and trends</small>
+                                                    <small class="text-light d-block" style="opacity: 0.8;">Analyze spending patterns and trends</small>
                                                 </label>
                                             </div>
                                         </div>
@@ -85,9 +85,9 @@
                                                 <input class="form-check-input" type="checkbox" 
                                                        id="budget_predictions_enabled" name="budget_predictions_enabled"
                                                        {% if preferences.budget_predictions_enabled %}checked{% endif %}>
-                                                <label class="form-check-label" for="budget_predictions_enabled">
+                                                <label class="form-check-label text-white" for="budget_predictions_enabled">
                                                     <strong>Budget Predictions</strong>
-                                                    <small class="text-secondary d-block">Predict future spending based on history</small>
+                                                    <small class="text-light d-block" style="opacity: 0.8;">Predict future spending based on history</small>
                                                 </label>
                                             </div>
                                         </div>
@@ -106,7 +106,7 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label for="min_confidence_threshold" class="form-label">
+                                                <label for="min_confidence_threshold" class="form-label text-white">
                                                     Minimum Confidence Threshold
                                                 </label>
                                                 <input type="range" class="form-range" 
@@ -115,18 +115,18 @@
                                                        value="{{ preferences.min_confidence_threshold }}"
                                                        oninput="updateConfidenceDisplay(this, 'min-confidence-display')">
                                                 <div class="d-flex justify-content-between">
-                                                    <small class="text-secondary">Low (10%)</small>
+                                                    <small class="text-light" style="opacity: 0.7;">Low (10%)</small>
                                                     <span id="min-confidence-display" class="fw-bold text-primary">
                                                         {{ (preferences.min_confidence_threshold * 100)|round(0)|int }}%
                                                     </span>
-                                                    <small class="text-secondary">High (100%)</small>
+                                                    <small class="text-light" style="opacity: 0.7;">High (100%)</small>
                                                 </div>
                                             </div>
                                         </div>
                                         
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label for="auto_accept_threshold" class="form-label">
+                                                <label for="auto_accept_threshold" class="form-label text-white">
                                                     Auto-accept Threshold
                                                 </label>
                                                 <input type="range" class="form-range" 
@@ -135,11 +135,11 @@
                                                        value="{{ preferences.auto_accept_threshold }}"
                                                        oninput="updateConfidenceDisplay(this, 'auto-accept-display')">
                                                 <div class="d-flex justify-content-between">
-                                                    <small class="text-secondary">Low (10%)</small>
+                                                    <small class="text-light" style="opacity: 0.7;">Low (10%)</small>
                                                     <span id="auto-accept-display" class="fw-bold text-primary">
                                                         {{ (preferences.auto_accept_threshold * 100)|round(0)|int }}%
                                                     </span>
-                                                    <small class="text-secondary">High (100%)</small>
+                                                    <small class="text-light" style="opacity: 0.7;">High (100%)</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -161,16 +161,16 @@
                                                 <input class="form-check-input" type="checkbox" 
                                                        id="learn_from_feedback" name="learn_from_feedback"
                                                        {% if preferences.learn_from_feedback %}checked{% endif %}>
-                                                <label class="form-check-label" for="learn_from_feedback">
+                                                <label class="form-check-label text-white" for="learn_from_feedback">
                                                     <strong>Learn from Feedback</strong>
-                                                    <small class="text-secondary d-block">Improve suggestions based on your feedback</small>
+                                                    <small class="text-light d-block" style="opacity: 0.8;">Improve suggestions based on your feedback</small>
                                                 </label>
                                             </div>
                                         </div>
                                         
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label for="retrain_frequency_days" class="form-label">
+                                                <label for="retrain_frequency_days" class="form-label text-white">
                                                     Retrain Frequency (days)
                                                 </label>
                                                 <select class="form-select" id="retrain_frequency_days" name="retrain_frequency_days">
@@ -198,9 +198,9 @@
                                         <input class="form-check-input" type="checkbox" 
                                                id="share_anonymized_data" name="share_anonymized_data"
                                                {% if preferences.share_anonymized_data %}checked{% endif %}>
-                                        <label class="form-check-label" for="share_anonymized_data">
+                                        <label class="form-check-label text-white" for="share_anonymized_data">
                                             <strong>Share Anonymized Data</strong>
-                                            <small class="text-secondary d-block">Help improve AI models by sharing anonymous usage data</small>
+                                            <small class="text-light d-block" style="opacity: 0.8;">Help improve AI models by sharing anonymous usage data</small>
                                         </label>
                                     </div>
                                 </div>
@@ -237,8 +237,8 @@
                                     </div>
                                 </div>
                                 <div class="flex-grow-1 ms-3">
-                                    <h6 class="mb-0">AI Engine Active</h6>
-                                    <small class="text-secondary">Ready to provide smart suggestions</small>
+                                    <h6 class="mb-0 text-white">AI Engine Active</h6>
+                                    <small class="text-light" style="opacity: 0.8;">Ready to provide smart suggestions</small>
                                 </div>
                             </div>
                             
@@ -246,12 +246,12 @@
                                 <div class="col-6">
                                     <div class="border-end">
                                         <h5 class="text-primary mb-0">4</h5>
-                                        <small class="text-secondary">Active Features</small>
+                                        <small class="text-light" style="opacity: 0.8;">Active Features</small>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <h5 class="text-success mb-0">95%</h5>
-                                    <small class="text-secondary">Accuracy</small>
+                                    <small class="text-light" style="opacity: 0.8;">Accuracy</small>
                                 </div>
                             </div>
                         </div>
@@ -304,7 +304,7 @@
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <p class="mt-2">Loading AI insights...</p>
+                    <p class="mt-2 text-dark">Loading AI insights...</p>
                 </div>
             </div>
             <div class="modal-footer">
@@ -328,23 +328,23 @@
             <div class="modal-body">
                 <form id="aiTestForm">
                     <div class="mb-3">
-                        <label for="testNote" class="form-label">Transaction Note</label>
+                        <label for="testNote" class="form-label text-dark">Transaction Note</label>
                         <input type="text" class="form-control" id="testNote" placeholder="e.g., Coffee at Starbucks">
                     </div>
                     <div class="mb-3">
-                        <label for="testAmount" class="form-label">Amount</label>
+                        <label for="testAmount" class="form-label text-dark">Amount</label>
                         <input type="number" class="form-control" id="testAmount" placeholder="e.g., 5.50" step="0.01">
                     </div>
                     <div class="mb-3">
-                        <label for="testType" class="form-label">Transaction Type</label>
+                        <label for="testType" class="form-label text-dark">Transaction Type</label>
                         <select class="form-select" id="testType">
                             <option value="expense">Expense</option>
                             <option value="income">Income</option>
                         </select>
                     </div>
                     <div id="aiSuggestionResult" class="alert alert-info" style="display: none;">
-                        <h6><i class="bi bi-lightbulb me-2"></i>AI Suggestion:</h6>
-                        <div id="suggestionContent"></div>
+                        <h6 class="text-dark"><i class="bi bi-lightbulb me-2"></i>AI Suggestion:</h6>
+                        <div id="suggestionContent" class="text-dark"></div>
                     </div>
                 </form>
             </div>
@@ -476,8 +476,8 @@ function viewInsights() {
                                 </div>
                                 <div class="card-body">
                                     <h5 class="text-primary">${category.name}</h5>
-                                    <p class="mb-1"><strong>Amount:</strong> ${category.amount.toFixed(2)}</p>
-                                    <p class="mb-0"><strong>Percentage:</strong> ${category.percentage.toFixed(1)}%</p>
+                                    <p class="mb-1 text-dark"><strong>Amount:</strong> ${category.amount.toFixed(2)}</p>
+                                    <p class="mb-0 text-dark"><strong>Percentage:</strong> ${category.percentage.toFixed(1)}%</p>
                                 </div>
                             </div>
                         </div>
@@ -493,7 +493,7 @@ function viewInsights() {
                                 </div>
                                 <div class="card-body">
                                     <h5 class="text-info">${data.insights.daily_average.toFixed(2)}</h5>
-                                    <p class="mb-0">Average daily spending</p>
+                                    <p class="mb-0 text-dark">Average daily spending</p>
                                 </div>
                             </div>
                         </div>
@@ -506,8 +506,8 @@ function viewInsights() {
                     html = `
                         <div class="text-center text-muted">
                             <i class="bi bi-info-circle fs-1"></i>
-                            <h5 class="mt-3">No Insights Available</h5>
-                            <p>Add some transactions to get AI insights about your spending patterns.</p>
+                            <h5 class="mt-3 text-dark">No Insights Available</h5>
+                            <p class="text-dark">Add some transactions to get AI insights about your spending patterns.</p>
                         </div>
                     `;
                 }
@@ -517,8 +517,8 @@ function viewInsights() {
                 contentDiv.innerHTML = `
                     <div class="text-center text-muted">
                         <i class="bi bi-exclamation-triangle fs-1"></i>
-                        <h5 class="mt-3">Unable to Load Insights</h5>
-                        <p>There was an error loading your spending insights. Please try again later.</p>
+                        <h5 class="mt-3 text-dark">Unable to Load Insights</h5>
+                        <p class="text-dark">There was an error loading your spending insights. Please try again later.</p>
                     </div>
                 `;
             }
@@ -529,8 +529,8 @@ function viewInsights() {
             contentDiv.innerHTML = `
                 <div class="text-center text-danger">
                     <i class="bi bi-x-circle fs-1"></i>
-                    <h5 class="mt-3">Error Loading Insights</h5>
-                    <p>There was an error loading your spending insights. Please try again later.</p>
+                    <h5 class="mt-3 text-dark">Error Loading Insights</h5>
+                    <p class="text-dark">There was an error loading your spending insights. Please try again later.</p>
                 </div>
             `;
         });
