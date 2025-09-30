@@ -56,7 +56,7 @@
         {% endif %}
         {% endif %}
 
-        <form method="post" action="/login" class="auth-form">
+        <form method="post" action="/login" class="auth-form" id="loginForm">
           <div class="form-group">
             <label for="email">Email Address</label>
             <div class="input-wrapper">
@@ -70,6 +70,10 @@
                 value="{{ email or '' }}"
                 required 
               />
+            </div>
+            <div id="email-error" class="error-message" style="display: none;">
+              <i class="bi bi-exclamation-circle"></i>
+              <span>Please enter a valid email address</span>
             </div>
           </div>
 
@@ -294,7 +298,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  color: #e2e8f0;
+  color: #ffffff;
   font-size: 1rem;
   transition: all 0.3s ease;
 }
@@ -307,7 +311,7 @@
 }
 
 .form-control::placeholder {
-  color: #4b5563;
+  color: #9ca3af;
 }
 
 .toggle-password {
@@ -453,6 +457,24 @@
   color: #764ba2;
 }
 
+/* Error Message Styling */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 6px;
+}
+
+.error-message i {
+  font-size: 1rem;
+}
+
 /* Alert Styling */
 .alert {
   padding: 1rem;
@@ -537,6 +559,83 @@ function togglePassword(inputId) {
     eye.classList.add('bi-eye');
   }
 }
+
+// Email validation function
+function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+// Show error message
+function showEmailError(message) {
+  const errorDiv = document.getElementById('email-error');
+  const errorSpan = errorDiv.querySelector('span');
+  errorSpan.textContent = message;
+  errorDiv.style.display = 'flex';
+  
+  // Add error styling to input
+  const emailInput = document.getElementById('email');
+  emailInput.style.borderColor = '#ef4444';
+  emailInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)';
+}
+
+// Hide error message
+function hideEmailError() {
+  const errorDiv = document.getElementById('email-error');
+  errorDiv.style.display = 'none';
+  
+  // Remove error styling from input
+  const emailInput = document.getElementById('email');
+  emailInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+  emailInput.style.boxShadow = 'none';
+}
+
+// Real-time email validation
+document.addEventListener('DOMContentLoaded', function() {
+  const emailInput = document.getElementById('email');
+  const loginForm = document.getElementById('loginForm');
+  
+  // Validate email on input change
+  emailInput.addEventListener('input', function() {
+    const email = this.value.trim();
+    
+    if (email === '') {
+      hideEmailError();
+    } else if (!validateEmail(email)) {
+      showEmailError('Please enter a valid email address');
+    } else {
+      hideEmailError();
+    }
+  });
+  
+  // Validate email on blur (when user leaves the field)
+  emailInput.addEventListener('blur', function() {
+    const email = this.value.trim();
+    
+    if (email === '') {
+      showEmailError('Email address is required');
+    } else if (!validateEmail(email)) {
+      showEmailError('Please enter a valid email address');
+    } else {
+      hideEmailError();
+    }
+  });
+  
+  // Validate form on submit
+  loginForm.addEventListener('submit', function(e) {
+    const email = emailInput.value.trim();
+    
+    if (email === '') {
+      e.preventDefault();
+      showEmailError('Email address is required');
+      emailInput.focus();
+    } else if (!validateEmail(email)) {
+      e.preventDefault();
+      showEmailError('Please enter a valid email address');
+      emailInput.focus();
+    }
+  });
+});
 </script>
 
 {% endblock %}
