@@ -218,6 +218,61 @@
     color: #cbd5e1;
   }
   
+  /* Date input specific styling */
+  input[type="date"] {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  input[type="date"]:focus {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+  }
+  
+  input[type="date"]:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  /* Date input calendar icon styling */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+  }
+  
+  /* Firefox date input styling */
+  input[type="date"]::-moz-datetime-edit-text {
+    color: #ffffff !important;
+  }
+  
+  input[type="date"]::-moz-datetime-edit-month-field,
+  input[type="date"]::-moz-datetime-edit-day-field,
+  input[type="date"]::-moz-datetime-edit-year-field {
+    color: #ffffff !important;
+  }
+  
+  /* Additional date input styling for better cross-browser support */
+  input[type="date"]::-webkit-datetime-edit-text {
+    color: #ffffff !important;
+  }
+  
+  input[type="date"]::-webkit-datetime-edit-month-field,
+  input[type="date"]::-webkit-datetime-edit-day-field,
+  input[type="date"]::-webkit-datetime-edit-year-field {
+    color: #ffffff !important;
+  }
+  
+  /* Ensure date input text is always visible */
+  input[type="date"] {
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-opacity: 1 !important;
+    opacity: 1 !important;
+  }
+  
   .btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
