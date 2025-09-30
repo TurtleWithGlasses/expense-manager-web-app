@@ -1,7 +1,63 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1 class="h1 mb-3">Entries</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h1 mb-0">Entries</h1>
+    <div class="d-flex gap-2">
+        <a href="/categories" class="btn btn-outline-primary">
+            <i class="bi bi-tags me-1"></i>
+            Manage Categories
+        </a>
+    </div>
+</div>
+
+<!-- Date Filter Section -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h6 class="card-title mb-3">
+            <i class="bi bi-calendar-range me-2"></i>
+            Filter by Date Range
+        </h6>
+        <form method="GET" action="/entries" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" 
+                       class="form-control" 
+                       id="start_date" 
+                       name="start" 
+                       value="{{ start_date or '' }}">
+            </div>
+            <div class="col-md-4">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" 
+                       class="form-control" 
+                       id="end_date" 
+                       name="end" 
+                       value="{{ end_date or '' }}">
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>
+                        Filter
+                    </button>
+                    <a href="/entries" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+        {% if start_date and end_date %}
+        <div class="mt-3">
+            <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                Showing entries from {{ start_date }} to {{ end_date }}
+            </small>
+        </div>
+        {% endif %}
+    </div>
+</div>
 
 <!-- Improved Add form with better styling -->
 <div class="card bg-gradient mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
@@ -120,6 +176,78 @@
 
 <!-- Add custom styles -->
 <style>
+  /* Date filter styling */
+  .card {
+    background: var(--panel);
+    border: 1px solid #1c2440;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  
+  .card-title {
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+  
+  .form-label {
+    color: #9ca3af;
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+  
+  .form-control {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    transition: all 0.3s ease;
+  }
+  
+  .form-control:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    color: #e2e8f0;
+  }
+  
+  .form-control:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    font-weight: 600;
+  }
+  
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+  }
+  
+  .btn-outline-primary {
+    border-color: #667eea;
+    color: #667eea;
+  }
+  
+  .btn-outline-primary:hover {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+  }
+  
+  .btn-outline-secondary {
+    border-color: #6b7280;
+    color: #6b7280;
+  }
+  
+  .btn-outline-secondary:hover {
+    background: #6b7280;
+    border-color: #6b7280;
+    color: white;
+  }
+
   /* Form improvements */
   .bg-gradient {
     border: none;
@@ -473,7 +601,93 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.log('AI features not available');
         });
+    
+    // Date filter enhancements
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    
+    // Set default date range to current month if no dates are set
+    if (!startDateInput.value && !endDateInput.value) {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        
+        startDateInput.value = firstDay.toISOString().split('T')[0];
+        endDateInput.value = lastDay.toISOString().split('T')[0];
+    }
+    
+    // Validate date range
+    function validateDateRange() {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (startDate && endDate && startDate > endDate) {
+            endDateInput.setCustomValidity('End date must be after start date');
+            endDateInput.reportValidity();
+        } else {
+            endDateInput.setCustomValidity('');
+        }
+    }
+    
+    startDateInput.addEventListener('change', validateDateRange);
+    endDateInput.addEventListener('change', validateDateRange);
+    
+    // Quick date range buttons
+    addQuickDateButtons();
 });
+
+function addQuickDateButtons() {
+    const dateFilterCard = document.querySelector('.card .card-body');
+    if (!dateFilterCard) return;
+    
+    const quickButtonsContainer = document.createElement('div');
+    quickButtonsContainer.className = 'mt-3';
+    quickButtonsContainer.innerHTML = `
+        <div class="d-flex flex-wrap gap-2">
+            <small class="text-muted me-2">Quick filters:</small>
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="setDateRange('today')">Today</button>
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="setDateRange('week')">This Week</button>
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="setDateRange('month')">This Month</button>
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="setDateRange('year')">This Year</button>
+        </div>
+    `;
+    
+    dateFilterCard.appendChild(quickButtonsContainer);
+}
+
+function setDateRange(range) {
+    const today = new Date();
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    
+    let startDate, endDate;
+    
+    switch(range) {
+        case 'today':
+            startDate = endDate = today;
+            break;
+        case 'week':
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            startDate = startOfWeek;
+            endDate = today;
+            break;
+        case 'month':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            break;
+        case 'year':
+            startDate = new Date(today.getFullYear(), 0, 1);
+            endDate = new Date(today.getFullYear(), 11, 31);
+            break;
+    }
+    
+    startDateInput.value = startDate.toISOString().split('T')[0];
+    endDateInput.value = endDate.toISOString().split('T')[0];
+    
+    // Auto-submit the form
+    document.querySelector('form[method="GET"]').submit();
+}
 </script>
 
 {% endblock %}

@@ -1,5 +1,5 @@
 from datetime import date as _date
-from fastapi import APIRouter, Depends, Form, Request, HTTPException
+from fastapi import APIRouter, Depends, Form, Query, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
@@ -10,6 +10,7 @@ from app.services.entries import (
     create_entry,
     delete_entry,
     update_entry_amount,
+    search_entries,
 )
 from app.services.categories import list_categories
 from app.services.user_preferences import user_preferences_service
@@ -24,17 +25,34 @@ router = APIRouter(prefix="/entries", tags=["entries"])
 @router.get("/", response_class=HTMLResponse)
 async def page(
     request: Request,
+    start: str | None = Query(None),
+    end: str | None = Query(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    entries = list_entries(db, user_id=user.id)
+    # Parse date parameters
+    start_date = None
+    end_date = None
+    if start:
+        start_date = _date.fromisoformat(start)
+    if end:
+        end_date = _date.fromisoformat(end)
+    
+    # Use search_entries for filtering if dates are provided
+    if start_date and end_date:
+        entries = search_entries(db, user_id=user.id, start=start_date, end=end_date)
+    else:
+        entries = list_entries(db, user_id=user.id)
+    
     cats = list_categories(db, user_id=user.id)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
     return render(request, "entries/index.html",
                   {"entries": entries,
                    "categories": cats,
                    "today": _date.today().isoformat(),
-                   "user_currency": user_currency})
+                   "user_currency": user_currency,
+                   "start_date": start,
+                   "end_date": end})
 
 
 # ---------- Create ----------
