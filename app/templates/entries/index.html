@@ -195,24 +195,6 @@
     font-size: 0.875rem;
   }
   
-  .form-control {
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    transition: all 0.3s ease;
-  }
-  
-  .form-control:focus {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    color: #ffffff;
-  }
-  
-  .form-control:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
   
   .form-control::placeholder {
     color: #cbd5e1;
@@ -220,55 +202,55 @@
   
   /* Date input specific styling */
   input[type="date"] {
-    color: #ffffff !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    color: #374151 !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 2px solid transparent !important;
   }
   
   input[type="date"]:focus {
-    color: #ffffff !important;
-    background: rgba(255, 255, 255, 0.08) !important;
+    color: #374151 !important;
+    background: white !important;
     border-color: #667eea !important;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
   }
   
   input[type="date"]:hover {
-    color: #ffffff !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #374151 !important;
+    background: white !important;
+    border-color: #667eea !important;
   }
   
   /* Date input calendar icon styling */
   input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
+    filter: none;
     cursor: pointer;
   }
   
   /* Firefox date input styling */
   input[type="date"]::-moz-datetime-edit-text {
-    color: #ffffff !important;
+    color: #374151 !important;
   }
   
   input[type="date"]::-moz-datetime-edit-month-field,
   input[type="date"]::-moz-datetime-edit-day-field,
   input[type="date"]::-moz-datetime-edit-year-field {
-    color: #ffffff !important;
+    color: #374151 !important;
   }
   
   /* Additional date input styling for better cross-browser support */
   input[type="date"]::-webkit-datetime-edit-text {
-    color: #ffffff !important;
+    color: #374151 !important;
   }
   
   input[type="date"]::-webkit-datetime-edit-month-field,
   input[type="date"]::-webkit-datetime-edit-day-field,
   input[type="date"]::-webkit-datetime-edit-year-field {
-    color: #ffffff !important;
+    color: #374151 !important;
   }
   
   /* Ensure date input text is always visible */
   input[type="date"] {
-    -webkit-text-fill-color: #ffffff !important;
+    -webkit-text-fill-color: #374151 !important;
     -webkit-opacity: 1 !important;
     opacity: 1 !important;
   }
@@ -322,11 +304,19 @@
     background-color: rgba(255, 255, 255, 0.95);
     border: 2px solid transparent;
     transition: all 0.3s ease;
+    color: #374151 !important;
   }
   
   .form-control:hover, .form-select:hover {
     background-color: white;
     border-color: #667eea;
+    color: #374151 !important;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    background-color: white;
+    border-color: #667eea;
+    color: #374151 !important;
   }
 
   /* Table text improvements for better readability */
