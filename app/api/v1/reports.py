@@ -45,7 +45,7 @@ async def export_entries_excel(
     
     # Generate Excel report
     excel_service = ExcelExportService()
-    excel_buffer = excel_service.export_entries_to_excel(
+    excel_buffer = await excel_service.export_entries_to_excel(
         db=db,
         user_id=user.id,
         start_date=start_date,
@@ -94,7 +94,7 @@ async def export_categories_excel(
     
     # Generate Excel report
     excel_service = ExcelExportService()
-    excel_buffer = excel_service.export_category_summary_to_excel(
+    excel_buffer = await excel_service.export_category_summary_to_excel(
         db=db,
         user_id=user.id,
         start_date=start_date,
@@ -147,7 +147,7 @@ async def export_financial_pdf(
     
     # Generate PDF report
     pdf_service = PDFExportService()
-    pdf_buffer = pdf_service.export_financial_report_to_pdf(
+    pdf_buffer = await pdf_service.export_financial_report_to_pdf(
         db=db,
         user_id=user.id,
         start_date=start_date,

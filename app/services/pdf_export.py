@@ -32,7 +32,7 @@ class PDFExportService:
         plt.style.use('seaborn-v0_8')
         sns.set_palette("husl")
     
-    def export_financial_report_to_pdf(
+    async def export_financial_report_to_pdf(
         self,
         db: Session,
         user_id: int,
@@ -138,7 +138,7 @@ class PDFExportService:
         story.append(Paragraph("Summary", heading_style))
         
         # Calculate totals
-        total_income, total_expense, category_totals = self._calculate_totals(entries, user_currency)
+        total_income, total_expense, category_totals = await self._calculate_totals(entries, user_currency)
         net_balance = total_income - total_expense
         
         summary_data = [
@@ -194,7 +194,7 @@ class PDFExportService:
         if entries:
             # Income vs Expense chart
             if report_type in ["all", "income", "expense"]:
-                chart_img = self._create_income_expense_chart(entries, user_currency)
+                chart_img = await self._create_income_expense_chart(entries, user_currency)
                 if chart_img:
                     story.append(Paragraph("Income vs Expense Overview", heading_style))
                     story.append(Image(chart_img, width=6*inch, height=4*inch))
@@ -210,7 +210,7 @@ class PDFExportService:
             
             # Monthly trend chart
             if len(entries) > 1:
-                chart_img = self._create_monthly_trend_chart(entries, user_currency)
+                chart_img = await self._create_monthly_trend_chart(entries, user_currency)
                 if chart_img:
                     story.append(Paragraph("Monthly Trend", heading_style))
                     story.append(Image(chart_img, width=6*inch, height=4*inch))
@@ -240,14 +240,14 @@ class PDFExportService:
             return category.name if category else "Unknown"
         return "All Categories"
     
-    def _calculate_totals(self, entries: List[Entry], user_currency: str) -> tuple:
+    async def _calculate_totals(self, entries: List[Entry], user_currency: str) -> tuple:
         """Calculate totals from entries"""
         total_income = 0
         total_expense = 0
         category_totals = {}
         
         for entry in entries:
-            converted_amount = self.currency_service.convert_currency(
+            converted_amount = await self.currency_service.convert_amount(
                 entry.amount, entry.currency, user_currency
             )
             
@@ -264,14 +264,14 @@ class PDFExportService:
         
         return total_income, total_expense, category_totals
     
-    def _create_income_expense_chart(self, entries: List[Entry], user_currency: str) -> Optional[io.BytesIO]:
+    async def _create_income_expense_chart(self, entries: List[Entry], user_currency: str) -> Optional[io.BytesIO]:
         """Create income vs expense pie chart"""
         try:
             total_income = 0
             total_expense = 0
             
             for entry in entries:
-                converted_amount = self.currency_service.convert_currency(
+                converted_amount = await self.currency_service.convert_amount(
                     entry.amount, entry.currency, user_currency
                 )
                 
@@ -376,7 +376,7 @@ class PDFExportService:
             print(f"Error creating category chart: {e}")
             return None
     
-    def _create_monthly_trend_chart(self, entries: List[Entry], user_currency: str) -> Optional[io.BytesIO]:
+    async def _create_monthly_trend_chart(self, entries: List[Entry], user_currency: str) -> Optional[io.BytesIO]:
         """Create monthly trend chart"""
         try:
             if len(entries) < 2:
@@ -385,7 +385,7 @@ class PDFExportService:
             # Prepare data
             df_data = []
             for entry in entries:
-                converted_amount = self.currency_service.convert_currency(
+                converted_amount = await self.currency_service.convert_amount(
                     entry.amount, entry.currency, user_currency
                 )
                 df_data.append({

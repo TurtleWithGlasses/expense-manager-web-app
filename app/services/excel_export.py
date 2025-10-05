@@ -20,7 +20,7 @@ class ExcelExportService:
         self.currency_service = CurrencyService()
         self.user_preferences_service = UserPreferencesService()
     
-    def export_entries_to_excel(
+    async def export_entries_to_excel(
         self,
         db: Session,
         user_id: int,
@@ -141,7 +141,7 @@ class ExcelExportService:
         
         for entry in entries:
             # Convert amount to user currency
-            converted_amount = self.currency_service.convert_currency(
+            converted_amount = await self.currency_service.convert_amount(
                 entry.amount, entry.currency, user_currency
             )
             
@@ -206,7 +206,7 @@ class ExcelExportService:
         
         return excel_buffer
     
-    def export_category_summary_to_excel(
+    async def export_category_summary_to_excel(
         self,
         db: Session,
         user_id: int,
@@ -299,7 +299,7 @@ class ExcelExportService:
             if category_name not in category_totals:
                 category_totals[category_name] = {"income": 0, "expense": 0}
             
-            converted_amount = self.currency_service.convert_currency(
+            converted_amount = await self.currency_service.convert_amount(
                 entry.amount, entry.currency, user_currency
             )
             
