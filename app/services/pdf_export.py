@@ -395,6 +395,8 @@ class PDFExportService:
                 })
             
             df = pd.DataFrame(df_data)
+            # Ensure date column is datetime
+            df['date'] = pd.to_datetime(df['date'])
             df['month'] = df['date'].dt.to_period('M')
             
             # Group by month and type

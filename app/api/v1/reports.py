@@ -68,7 +68,7 @@ async def export_entries_excel(
     filename = "_".join(filename_parts) + ".xlsx"
     
     return StreamingResponse(
-        io=excel_buffer,
+        content=excel_buffer,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
@@ -111,7 +111,7 @@ async def export_categories_excel(
     filename = "_".join(filename_parts) + ".xlsx"
     
     return StreamingResponse(
-        io=excel_buffer,
+        content=excel_buffer,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
@@ -170,7 +170,7 @@ async def export_financial_pdf(
     filename = "_".join(filename_parts) + ".pdf"
     
     return StreamingResponse(
-        io=pdf_buffer,
+        content=pdf_buffer,
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
