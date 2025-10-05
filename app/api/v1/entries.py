@@ -27,7 +27,7 @@ async def page(
     request: Request,
     start: str | None = Query(None),
     end: str | None = Query(None),
-    category: int | None = Query(None),
+    category: str | None = Query(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
@@ -39,11 +39,19 @@ async def page(
     if end:
         end_date = _date.fromisoformat(end)
     
+    # Parse category parameter - convert to int if not empty, otherwise None
+    category_id = None
+    if category and category.strip():
+        try:
+            category_id = int(category)
+        except ValueError:
+            category_id = None
+    
     # Use search_entries for filtering if dates or category are provided
     if start_date and end_date:
-        entries = search_entries(db, user_id=user.id, start=start_date, end=end_date, category_id=category)
-    elif category:
-        entries = search_entries(db, user_id=user.id, category_id=category)
+        entries = search_entries(db, user_id=user.id, start=start_date, end=end_date, category_id=category_id)
+    elif category_id:
+        entries = search_entries(db, user_id=user.id, category_id=category_id)
     else:
         entries = list_entries(db, user_id=user.id)
     
@@ -56,7 +64,7 @@ async def page(
                    "user_currency": user_currency,
                    "start_date": start,
                    "end_date": end,
-                   "selected_category": str(category) if category else None})
+                   "selected_category": str(category_id) if category_id else None})
 
 
 # ---------- Create ----------

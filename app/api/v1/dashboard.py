@@ -55,15 +55,23 @@ async def summary_panel(
     request: Request,
     start: date | None = Query(None),
     end: date | None = Query(None),
-    category: int | None = Query(None),
+    category: str | None = Query(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
     s, e = _parse_dates(start, end)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
     
+    # Parse category parameter - convert to int if not empty, otherwise None
+    category_id = None
+    if category and category.strip():
+        try:
+            category_id = int(category)
+        except ValueError:
+            category_id = None
+    
     # Use multi-currency summary that properly converts each entry
-    totals = await range_summary_multi_currency(db, user.id, s, e, user_currency, category)
+    totals = await range_summary_multi_currency(db, user.id, s, e, user_currency, category_id)
     
     # Format the amounts
     converted_totals = {
@@ -82,13 +90,21 @@ async def expenses_panel(
     request: Request,
     start: date | None = Query(None),
     end: date | None = Query(None),
-    category: int | None = Query(None),
+    category: str | None = Query(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
     s, e = _parse_dates(start, end)
     e_next = e + timedelta(days=1)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
+
+    # Parse category parameter - convert to int if not empty, otherwise None
+    category_id = None
+    if category and category.strip():
+        try:
+            category_id = int(category)
+        except ValueError:
+            category_id = None
 
     query = db.query(Entry).filter(
         Entry.user_id == user.id,
@@ -98,8 +114,8 @@ async def expenses_panel(
     )
     
     # Add category filter if specified
-    if category:
-        query = query.filter(Entry.category_id == category)
+    if category_id:
+        query = query.filter(Entry.category_id == category_id)
     
     rows = query.order_by(Entry.date.asc()).all()
     
@@ -140,13 +156,21 @@ async def incomes_panel(
     request: Request,
     start: date | None = Query(None),
     end: date | None = Query(None),
-    category: int | None = Query(None),
+    category: str | None = Query(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
     s, e = _parse_dates(start, end)
     e_next = e + timedelta(days=1)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
+
+    # Parse category parameter - convert to int if not empty, otherwise None
+    category_id = None
+    if category and category.strip():
+        try:
+            category_id = int(category)
+        except ValueError:
+            category_id = None
 
     query = db.query(Entry).filter(
         Entry.user_id == user.id,
@@ -156,8 +180,8 @@ async def incomes_panel(
     )
     
     # Add category filter if specified
-    if category:
-        query = query.filter(Entry.category_id == category)
+    if category_id:
+        query = query.filter(Entry.category_id == category_id)
     
     rows = query.order_by(Entry.date.asc()).all()
     
