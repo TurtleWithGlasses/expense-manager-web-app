@@ -142,7 +142,7 @@ class ExcelExportService:
         for entry in entries:
             # Convert amount to user currency
             converted_amount = await self.currency_service.convert_amount(
-                entry.amount, entry.currency, user_currency
+                entry.amount, entry.currency_code, user_currency
             )
             
             # Add row data
@@ -151,9 +151,9 @@ class ExcelExportService:
             ws.cell(row=row, column=3, value=entry.category.name)
             ws.cell(row=row, column=4, value=entry.description)
             ws.cell(row=row, column=5, value=entry.amount)
-            ws.cell(row=row, column=6, value=entry.currency)
+            ws.cell(row=row, column=6, value=entry.currency_code)
             ws.cell(row=row, column=7, value=round(converted_amount, 2))
-            ws.cell(row=row, column=8, value=entry.notes or "")
+            ws.cell(row=row, column=8, value=entry.note or "")
             
             # Apply borders to all cells in the row
             for col in range(1, 9):
@@ -300,7 +300,7 @@ class ExcelExportService:
                 category_totals[category_name] = {"income": 0, "expense": 0}
             
             converted_amount = await self.currency_service.convert_amount(
-                entry.amount, entry.currency, user_currency
+                entry.amount, entry.currency_code, user_currency
             )
             
             if entry.type.lower() == "income":

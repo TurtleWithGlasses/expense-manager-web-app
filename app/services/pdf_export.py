@@ -248,7 +248,7 @@ class PDFExportService:
         
         for entry in entries:
             converted_amount = await self.currency_service.convert_amount(
-                entry.amount, entry.currency, user_currency
+                entry.amount, entry.currency_code, user_currency
             )
             
             category_name = entry.category.name
@@ -272,7 +272,7 @@ class PDFExportService:
             
             for entry in entries:
                 converted_amount = await self.currency_service.convert_amount(
-                    entry.amount, entry.currency, user_currency
+                    entry.amount, entry.currency_code, user_currency
                 )
                 
                 if entry.type.lower() == "income":
@@ -386,7 +386,7 @@ class PDFExportService:
             df_data = []
             for entry in entries:
                 converted_amount = await self.currency_service.convert_amount(
-                    entry.amount, entry.currency, user_currency
+                    entry.amount, entry.currency_code, user_currency
                 )
                 df_data.append({
                     'date': entry.date,
