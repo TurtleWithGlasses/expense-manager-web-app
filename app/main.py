@@ -50,7 +50,6 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/login")
     
     # Get user from database
-    from app.models.user import User
     user = db.query(User).filter(User.id == sess["id"]).first()
     if not user:
         return RedirectResponse(url="/login")
@@ -66,6 +65,9 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
     
     user_currency_code = user_preferences_service.get_user_currency(db, user.id)
     user_currency_info = CURRENCIES.get(user_currency_code, CURRENCIES['USD'])
+    
+    # Get categories for filtering
+    categories = db.query(Category).filter(Category.user_id == user.id).order_by(Category.name).all()
 
     return render(request, "dashboard.html", {
         "user": user,
@@ -75,6 +77,7 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
         "expense_total": expense_total,
         "user_currency": user_currency_info,
         "user_currency_code": user_currency_code,
+        "categories": categories,
     })
 
 @app.get("/healthz")

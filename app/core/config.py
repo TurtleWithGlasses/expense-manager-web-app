@@ -11,8 +11,8 @@ class Settings(BaseSettings):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # Debug: Print the DATABASE_URL being used
-        print(f"🔍 DATABASE_URL from environment: {self.DATABASE_URL}")
-        print(f"🔍 ENV: {self.ENV}")
+        print(f"DATABASE_URL from environment: {self.DATABASE_URL}")
+        print(f"ENV: {self.ENV}")
         
         # Determine environment based on multiple factors
         is_local_development = (
@@ -28,19 +28,19 @@ class Settings(BaseSettings):
         
         # Only override to SQLite if we're definitely in local development
         if is_local_development and not self.DATABASE_URL.startswith("sqlite"):
-            print("🔄 Local development detected - using SQLite")
+            print("Local development detected - using SQLite")
             self.DATABASE_URL = "sqlite:///./app.db"
             # Set BASE_URL for local development
             self.BASE_URL = "http://localhost:8000"
         elif "railway" in self.DATABASE_URL.lower() or "heroku" in self.DATABASE_URL.lower():
-            print("🌐 Production environment detected - using provided database")
+            print("Production environment detected - using provided database")
             # Set BASE_URL for production
             self.BASE_URL = "https://www.yourbudgetpulse.online"
         else:
-            print(f"🔧 Using configured database: {self.DATABASE_URL}")
+            print(f"Using configured database: {self.DATABASE_URL}")
         
-        print(f"✅ Final DATABASE_URL: {self.DATABASE_URL}")
-        print(f"✅ Final BASE_URL: {self.BASE_URL}")
+        print(f"Final DATABASE_URL: {self.DATABASE_URL}")
+        print(f"Final BASE_URL: {self.BASE_URL}")
     
     # Email settings for Google Workspace/Gmail
     SMTP_SERVER: str = "smtp.gmail.com"

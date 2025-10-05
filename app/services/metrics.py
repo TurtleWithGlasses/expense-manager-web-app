@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from sqlalchemy import func, case, select
+from sqlalchemy import func, case
 from app.models.entry import Entry
 from app.models.category import Category
 from sqlalchemy.orm import Session
@@ -35,22 +35,24 @@ def range_summary(db, user_id: int, start, end):
         "balance": float((income or 0) - (expense or 0)),
     }
 
-async def range_summary_multi_currency(db, user_id: int, start, end, target_currency: str):
+async def range_summary_multi_currency(db, user_id: int, start, end, target_currency: str, category_id: int = None):
     """Calculate range summary with proper multi-currency conversion"""
     start = _ensure_date(start)
     end = _ensure_date(end)
     e_next = end + timedelta(days=1)
 
     # Get all entries in the range
-    entries = (
-        db.query(Entry)
-        .filter(
-            Entry.user_id == user_id,
-            Entry.date >= start,
-            Entry.date < e_next,
-        )
-        .all()
+    query = db.query(Entry).filter(
+        Entry.user_id == user_id,
+        Entry.date >= start,
+        Entry.date < e_next,
     )
+    
+    # Add category filter if specified
+    if category_id:
+        query = query.filter(Entry.category_id == category_id)
+    
+    entries = query.all()
     
     total_income = 0.0
     total_expense = 0.0

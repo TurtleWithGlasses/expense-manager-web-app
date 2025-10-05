@@ -5,7 +5,7 @@ from app.core.config import settings
 # Use the DATABASE_URL from settings (already handled by config.py)
 database_url = settings.DATABASE_URL
 
-print(f"🔧 Creating database engine with URL: {database_url}")
+print(f"Creating database engine with URL: {database_url}")
 
 # Create engine with appropriate settings
 if "sqlite" in database_url:

@@ -9,9 +9,9 @@ from app.db.session import get_db
 from app.deps import current_user
 from app.models.entry import Entry
 from app.templates import render
-from app.services.metrics import range_summary, range_summary_multi_currency
+from app.services.metrics import range_summary_multi_currency
 from app.services.user_preferences import user_preferences_service
-from app.core.currency import CURRENCIES, currency_service
+from app.core.currency import currency_service
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -55,6 +55,7 @@ async def summary_panel(
     request: Request,
     start: date | None = Query(None),
     end: date | None = Query(None),
+    category: int | None = Query(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
@@ -62,7 +63,7 @@ async def summary_panel(
     user_currency = user_preferences_service.get_user_currency(db, user.id)
     
     # Use multi-currency summary that properly converts each entry
-    totals = await range_summary_multi_currency(db, user.id, s, e, user_currency)
+    totals = await range_summary_multi_currency(db, user.id, s, e, user_currency, category)
     
     # Format the amounts
     converted_totals = {
@@ -81,6 +82,7 @@ async def expenses_panel(
     request: Request,
     start: date | None = Query(None),
     end: date | None = Query(None),
+    category: int | None = Query(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
@@ -88,17 +90,18 @@ async def expenses_panel(
     e_next = e + timedelta(days=1)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
 
-    rows = (
-        db.query(Entry)
-        .filter(
-            Entry.user_id == user.id,
-            func.lower(Entry.type) == "expense", 
-            Entry.date >= s,
-            Entry.date < e_next,
-        )
-        .order_by(Entry.date.asc())
-        .all()
+    query = db.query(Entry).filter(
+        Entry.user_id == user.id,
+        func.lower(Entry.type) == "expense", 
+        Entry.date >= s,
+        Entry.date < e_next,
     )
+    
+    # Add category filter if specified
+    if category:
+        query = query.filter(Entry.category_id == category)
+    
+    rows = query.order_by(Entry.date.asc()).all()
     
     # Convert each entry amount to user's currency
     converted_rows = []
@@ -137,6 +140,7 @@ async def incomes_panel(
     request: Request,
     start: date | None = Query(None),
     end: date | None = Query(None),
+    category: int | None = Query(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
@@ -144,17 +148,18 @@ async def incomes_panel(
     e_next = e + timedelta(days=1)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
 
-    rows = (
-        db.query(Entry)
-        .filter(
-            Entry.user_id == user.id,
-            func.lower(Entry.type) == "income", 
-            Entry.date >= s,
-            Entry.date < e_next,
-        )
-        .order_by(Entry.date.asc())
-        .all()
+    query = db.query(Entry).filter(
+        Entry.user_id == user.id,
+        func.lower(Entry.type) == "income", 
+        Entry.date >= s,
+        Entry.date < e_next,
     )
+    
+    # Add category filter if specified
+    if category:
+        query = query.filter(Entry.category_id == category)
+    
+    rows = query.order_by(Entry.date.asc()).all()
     
     # Convert each entry amount to user's currency
     converted_rows = []

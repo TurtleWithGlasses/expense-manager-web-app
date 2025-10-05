@@ -12,7 +12,7 @@
   <a class="btn ghost" title="Coming soon" href="#"><i class="bi bi-calendar"></i> Calendar</a>
 </div>
 
-<!-- Horizontal date filters -->
+<!-- Horizontal date and category filters -->
 <form id="filters" class="date-filters mt-6" onsubmit="return false">
   <div class="date-inputs">
     <div class="date-field">
@@ -22,6 +22,17 @@
     <div class="date-field">
       <label class="muted" for="end">End date</label>
       <input id="end" name="end" type="date" class="input" value="{{ end or '' }}">
+    </div>
+    <div class="date-field">
+      <label class="muted" for="category">Category</label>
+      <select id="category" name="category" class="input">
+        <option value="">All Categories</option>
+        {% for category in categories %}
+          <option value="{{ category.id }}" {% if selected_category and selected_category == category.id|string %}selected{% endif %}>
+            {{ category.name }}
+          </option>
+        {% endfor %}
+      </select>
     </div>
   </div>
 </form>

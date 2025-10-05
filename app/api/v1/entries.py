@@ -27,6 +27,7 @@ async def page(
     request: Request,
     start: str | None = Query(None),
     end: str | None = Query(None),
+    category: int | None = Query(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
@@ -38,9 +39,11 @@ async def page(
     if end:
         end_date = _date.fromisoformat(end)
     
-    # Use search_entries for filtering if dates are provided
+    # Use search_entries for filtering if dates or category are provided
     if start_date and end_date:
-        entries = search_entries(db, user_id=user.id, start=start_date, end=end_date)
+        entries = search_entries(db, user_id=user.id, start=start_date, end=end_date, category_id=category)
+    elif category:
+        entries = search_entries(db, user_id=user.id, category_id=category)
     else:
         entries = list_entries(db, user_id=user.id)
     
@@ -52,7 +55,8 @@ async def page(
                    "today": _date.today().isoformat(),
                    "user_currency": user_currency,
                    "start_date": start,
-                   "end_date": end})
+                   "end_date": end,
+                   "selected_category": str(category) if category else None})
 
 
 # ---------- Create ----------
