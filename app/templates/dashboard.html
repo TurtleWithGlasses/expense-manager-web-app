@@ -64,6 +64,21 @@
     </div>
     <button class="btn ghost small" onclick="resetColors()">Reset Colors</button>
   </div>
+
+  <!-- Export Controls -->
+  <div class="export-controls">
+    <div class="export-buttons">
+      <button class="btn ghost small" onclick="exportToExcel()" title="Export detailed data to Excel">
+        <i class="bi bi-file-earmark-excel"></i> Excel Report
+      </button>
+      <button class="btn ghost small" onclick="exportToPDF()" title="Export charts and summary to PDF">
+        <i class="bi bi-file-earmark-pdf"></i> PDF Report
+      </button>
+      <button class="btn ghost small" onclick="exportCategorySummary()" title="Export category breakdown to Excel">
+        <i class="bi bi-bar-chart"></i> Category Summary
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- KPIs -->
@@ -414,6 +429,38 @@ document.addEventListener('DOMContentLoaded', function() {
     updateExpenseColor(savedExpense);
   }
 });
+
+// Export functions
+function getCurrentFilters() {
+  const start = document.getElementById('start').value;
+  const end = document.getElementById('end').value;
+  const category = document.getElementById('category').value;
+  
+  const params = new URLSearchParams();
+  if (start) params.append('start', start);
+  if (end) params.append('end', end);
+  if (category) params.append('category', category);
+  
+  return params.toString();
+}
+
+function exportToExcel() {
+  const filters = getCurrentFilters();
+  const url = `/reports/excel/entries?${filters}`;
+  window.open(url, '_blank');
+}
+
+function exportToPDF() {
+  const filters = getCurrentFilters();
+  const url = `/reports/pdf/financial?${filters}`;
+  window.open(url, '_blank');
+}
+
+function exportCategorySummary() {
+  const filters = getCurrentFilters();
+  const url = `/reports/excel/categories?${filters}`;
+  window.open(url, '_blank');
+}
 </script>
 
 {% endblock %}

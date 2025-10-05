@@ -49,7 +49,7 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 flex-wrap">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-search me-1"></i>
                         Filter
@@ -58,6 +58,14 @@
                         <i class="bi bi-x-circle me-1"></i>
                         Clear
                     </a>
+                    <button type="button" class="btn btn-outline-success" onclick="exportToExcel()" title="Export to Excel">
+                        <i class="bi bi-file-earmark-excel me-1"></i>
+                        Excel
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="exportToPDF()" title="Export to PDF">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>
+                        PDF
+                    </button>
                 </div>
             </div>
         </form>
@@ -758,6 +766,32 @@ function setDateRange(range) {
     
     // Auto-submit the form
     document.querySelector('form[method="GET"]').submit();
+}
+
+// Export functions
+function getCurrentFilters() {
+    const start = document.getElementById('start_date').value;
+    const end = document.getElementById('end_date').value;
+    const category = document.getElementById('category_filter').value;
+    
+    const params = new URLSearchParams();
+    if (start) params.append('start', start);
+    if (end) params.append('end', end);
+    if (category) params.append('category', category);
+    
+    return params.toString();
+}
+
+function exportToExcel() {
+    const filters = getCurrentFilters();
+    const url = `/reports/excel/entries?${filters}`;
+    window.open(url, '_blank');
+}
+
+function exportToPDF() {
+    const filters = getCurrentFilters();
+    const url = `/reports/pdf/financial?${filters}`;
+    window.open(url, '_blank');
 }
 </script>
 
