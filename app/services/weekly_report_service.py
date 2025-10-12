@@ -305,25 +305,25 @@ class WeeklyReportService:
         expense_change = summary['comparison']['expense_change_pct']
         if abs(expense_change) >= 10:
             if expense_change > 0:
-                insights.append(f"Your expenses increased by {abs(expense_change):.1f}% compared to last week ({user_currency}{summary['comparison']['expense_change_amount']:.2f} more).")
+                insights.append(f"Your expenses increased by {abs(expense_change):.1f}% compared to last week ({summary['comparison']['expense_change_amount']:.2f} more).")
             else:
-                insights.append(f"Great job! Your expenses decreased by {abs(expense_change):.1f}% compared to last week ({user_currency}{abs(summary['comparison']['expense_change_amount']):.2f} saved).")
+                insights.append(f"Great job! Your expenses decreased by {abs(expense_change):.1f}% compared to last week ({abs(summary['comparison']['expense_change_amount']):.2f} saved).")
         else:
             insights.append(f"Your expenses remained stable this week (only {abs(expense_change):.1f}% change).")
         
         # Category insights
         if category_analysis['increased_spending']:
             top_increase = category_analysis['increased_spending'][0]
-            insights.append(f"You spent {top_increase['change_pct']:.0f}% more on {top_increase['name']} ({user_currency}{top_increase['change_amount']:.2f} increase).")
+            insights.append(f"You spent {top_increase['change_pct']:.0f}% more on {top_increase['name']} ({top_increase['change_amount']:.2f} increase).")
         
         if category_analysis['decreased_spending']:
             top_decrease = category_analysis['decreased_spending'][0]
-            insights.append(f"You spent {abs(top_decrease['change_pct']):.0f}% less on {top_decrease['name']} ({user_currency}{abs(top_decrease['change_amount']):.2f} saved).")
+            insights.append(f"You spent {abs(top_decrease['change_pct']):.0f}% less on {top_decrease['name']} ({abs(top_decrease['change_amount']):.2f} saved).")
         
         # Top spending category
         if category_analysis['top_category']:
             top_cat = category_analysis['top_category']
-            insights.append(f"Your biggest spending category was {top_cat['name']} with {user_currency}{top_cat['amount']:.2f} ({top_cat['count']} transactions).")
+            insights.append(f"Your biggest spending category was {top_cat['name']} with {top_cat['amount']:.2f} ({top_cat['count']} transactions).")
         
         # New categories
         if category_analysis['new_spending_categories']:
@@ -344,13 +344,13 @@ class WeeklyReportService:
                 insights.append(f"You didn't spend on {len(category_analysis['no_spending_categories'])} categories this week.")
         
         # Total spending insight
-        insights.append(f"Total spending this week: {user_currency}{summary['total_expenses']:.2f} across {summary['transaction_count']} transactions.")
+        insights.append(f"Total spending this week: {summary['total_expenses']:.2f} across {summary['transaction_count']} transactions.")
         
         # Net savings insight
         if summary['net_savings'] > 0:
-            insights.append(f"You saved {user_currency}{summary['net_savings']:.2f} this week!")
+            insights.append(f"You saved {summary['net_savings']:.2f} this week!")
         elif summary['net_savings'] < 0:
-            insights.append(f"You spent {user_currency}{abs(summary['net_savings']):.2f} more than you earned this week.")
+            insights.append(f"You spent {abs(summary['net_savings']):.2f} more than you earned this week.")
         
         return insights
     
@@ -406,7 +406,7 @@ class WeeklyReportService:
                 achievements.append({
                     'type': 'under_budget',
                     'title': 'Under Budget!',
-                    'description': f'You spent 20% less than your average this week, saving {user_currency}{savings:.2f}!',
+                    'description': f'You spent 20% less than your average this week, saving {savings:.2f}!',
                     'points': 50
                 })
         
@@ -448,7 +448,7 @@ class WeeklyReportService:
                     'priority': 'high',
                     'category': top_cat['name'],
                     'title': f"Consider reducing {top_cat['name']} spending",
-                    'description': f"You spent {user_currency}{top_cat['amount']:.2f} on {top_cat['name']} this week. Could you reduce by 10-20%?",
+                    'description': f"You spent {top_cat['amount']:.2f} on {top_cat['name']} this week. Could you reduce by 10-20%?",
                     'potential_savings': top_cat['amount'] * 0.15  # 15% savings potential
                 })
         
@@ -460,7 +460,7 @@ class WeeklyReportService:
                     'priority': 'medium',
                     'category': cat['name'],
                     'title': f"{cat['name']} spending spiked {cat['change_pct']:.0f}%",
-                    'description': f"You spent {user_currency}{cat['change_amount']:.2f} more on {cat['name']} this week. Is this expected?",
+                    'description': f"You spent {cat['change_amount']:.2f} more on {cat['name']} this week. Is this expected?",
                     'action': 'review'
                 })
         
@@ -474,7 +474,7 @@ class WeeklyReportService:
                 'type': 'increase_savings',
                 'priority': 'high',
                 'title': 'Increase your savings',
-                'description': f"You spent {user_currency}{abs(summary['net_savings']):.2f} more than you earned. Consider setting a weekly budget.",
+                'description': f"You spent {abs(summary['net_savings']):.2f} more than you earned. Consider setting a weekly budget.",
                 'action': 'budget_plan'
             })
         
@@ -486,7 +486,7 @@ class WeeklyReportService:
                     'priority': 'low',
                     'category': cat['name'],
                     'title': f"Great job on {cat['name']}!",
-                    'description': f"You reduced {cat['name']} spending by {abs(cat['change_pct']):.0f}%, saving {user_currency}{abs(cat['change_amount']):.2f}. Keep it up!",
+                    'description': f"You reduced {cat['name']} spending by {abs(cat['change_pct']):.0f}%, saving {abs(cat['change_amount']):.2f}. Keep it up!",
                     'action': 'celebrate'
                 })
         
@@ -539,8 +539,8 @@ class WeeklyReportService:
                     'category': entry.category.name if entry.category else 'Uncategorized',
                     'note': entry.note,
                     'severity': 'high' if amount > mean_amount * 5 else 'medium',
-                    'description': f"{user_currency}{amount:.2f} is {(amount/mean_amount):.1f}x your average transaction.",
-                    'comparison': f"Your typical transaction: {user_currency}{mean_amount:.2f}"
+                    'description': f"{amount:.2f} is {(amount/mean_amount):.1f}x your average transaction.",
+                    'comparison': f"Your typical transaction: {mean_amount:.2f}"
                 })
             
             # Anomaly 2: Unusual category for amount
@@ -559,8 +559,8 @@ class WeeklyReportService:
                             'category': entry.category.name,
                             'note': entry.note,
                             'severity': 'medium',
-                            'description': f"{user_currency}{amount:.2f} is unusually high for {entry.category.name}.",
-                            'comparison': f"Typical {entry.category.name}: {user_currency}{cat_mean:.2f}"
+                            'description': f"{amount:.2f} is unusually high for {entry.category.name}.",
+                            'comparison': f"Typical {entry.category.name}: {cat_mean:.2f}"
                         })
         
         return anomalies
@@ -581,9 +581,9 @@ Week of {period['start']} to {period['end']}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 💰 SUMMARY
-• Total Expenses: {user_currency}{summary['total_expenses']:.2f}
-• Total Income: {user_currency}{summary['total_income']:.2f}
-• Net Savings: {user_currency}{summary['net_savings']:.2f}
+• Total Expenses: {summary['total_expenses']:.2f}
+• Total Income: {summary['total_income']:.2f}
+• Net Savings: {summary['net_savings']:.2f}
 • Transactions: {summary['transaction_count']}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -615,7 +615,7 @@ Week of {period['start']} to {period['end']}
         if report['anomalies']:
             text += "⚠️ UNUSUAL TRANSACTIONS\n\n"
             for anomaly in report['anomalies']:
-                text += f"• {user_currency}{anomaly['amount']:.2f} on {anomaly['date']} - {anomaly['category']}\n"
+                text += f"• {anomaly['amount']:.2f} on {anomaly['date']} - {anomaly['category']}\n"
                 text += f"  {anomaly['description']}\n\n"
         
         text += """
