@@ -256,52 +256,52 @@ class WeeklyReportService:
         expense_change = summary['comparison']['expense_change_pct']
         if abs(expense_change) >= 10:
             if expense_change > 0:
-                insights.append(f"📈 Your expenses increased by {abs(expense_change):.1f}% compared to last week (${summary['comparison']['expense_change_amount']:.2f} more).")
+                insights.append(f"Your expenses increased by {abs(expense_change):.1f}% compared to last week (${summary['comparison']['expense_change_amount']:.2f} more).")
             else:
-                insights.append(f"📉 Great job! Your expenses decreased by {abs(expense_change):.1f}% compared to last week (${abs(summary['comparison']['expense_change_amount']):.2f} saved).")
+                insights.append(f"Great job! Your expenses decreased by {abs(expense_change):.1f}% compared to last week (${abs(summary['comparison']['expense_change_amount']):.2f} saved).")
         else:
-            insights.append(f"📊 Your expenses remained stable this week (only {abs(expense_change):.1f}% change).")
+            insights.append(f"Your expenses remained stable this week (only {abs(expense_change):.1f}% change).")
         
         # Category insights
         if category_analysis['increased_spending']:
             top_increase = category_analysis['increased_spending'][0]
-            insights.append(f"⬆️ You spent {top_increase['change_pct']:.0f}% more on {top_increase['name']} (${top_increase['change_amount']:.2f} increase).")
+            insights.append(f"You spent {top_increase['change_pct']:.0f}% more on {top_increase['name']} (${top_increase['change_amount']:.2f} increase).")
         
         if category_analysis['decreased_spending']:
             top_decrease = category_analysis['decreased_spending'][0]
-            insights.append(f"⬇️ You spent {abs(top_decrease['change_pct']):.0f}% less on {top_decrease['name']} (${abs(top_decrease['change_amount']):.2f} saved).")
+            insights.append(f"You spent {abs(top_decrease['change_pct']):.0f}% less on {top_decrease['name']} (${abs(top_decrease['change_amount']):.2f} saved).")
         
         # Top spending category
         if category_analysis['top_category']:
             top_cat = category_analysis['top_category']
-            insights.append(f"🏆 Your biggest spending category was {top_cat['name']} with ${top_cat['amount']:.2f} ({top_cat['count']} transactions).")
+            insights.append(f"Your biggest spending category was {top_cat['name']} with ${top_cat['amount']:.2f} ({top_cat['count']} transactions).")
         
         # New categories
         if category_analysis['new_spending_categories']:
             new_cats = [c['category'] for c in category_analysis['new_spending_categories']]
             if len(new_cats) == 1:
-                insights.append(f"✨ New category this week: {new_cats[0]}.")
+                insights.append(f"New category this week: {new_cats[0]}.")
             else:
-                insights.append(f"✨ New categories this week: {', '.join(new_cats)}.")
+                insights.append(f"New categories this week: {', '.join(new_cats)}.")
         
         # No spending categories
         if category_analysis['no_spending_categories']:
             no_spend_cats = [c['category'] for c in category_analysis['no_spending_categories'][:3]]
             if len(no_spend_cats) == 1:
-                insights.append(f"💰 You didn't spend on {no_spend_cats[0]} this week.")
+                insights.append(f"You didn't spend on {no_spend_cats[0]} this week.")
             elif len(no_spend_cats) <= 3:
-                insights.append(f"💰 You didn't spend on {', '.join(no_spend_cats)} this week.")
+                insights.append(f"You didn't spend on {', '.join(no_spend_cats)} this week.")
             else:
-                insights.append(f"💰 You didn't spend on {len(category_analysis['no_spending_categories'])} categories this week.")
+                insights.append(f"You didn't spend on {len(category_analysis['no_spending_categories'])} categories this week.")
         
         # Total spending insight
-        insights.append(f"💵 Total spending this week: ${summary['total_expenses']:.2f} across {summary['transaction_count']} transactions.")
+        insights.append(f"Total spending this week: ${summary['total_expenses']:.2f} across {summary['transaction_count']} transactions.")
         
         # Net savings insight
         if summary['net_savings'] > 0:
-            insights.append(f"🎉 You saved ${summary['net_savings']:.2f} this week!")
+            insights.append(f"You saved ${summary['net_savings']:.2f} this week!")
         elif summary['net_savings'] < 0:
-            insights.append(f"⚠️ You spent ${abs(summary['net_savings']):.2f} more than you earned this week.")
+            insights.append(f"You spent ${abs(summary['net_savings']):.2f} more than you earned this week.")
         
         return insights
     
@@ -333,7 +333,7 @@ class WeeklyReportService:
         if no_expense_days >= 2:
             achievements.append({
                 'type': 'no_spend_days',
-                'title': f'🌟 {no_expense_days} No-Spend Days',
+                'title': f'{no_expense_days} No-Spend Days',
                 'description': f'You had {no_expense_days} days without any expenses this week!',
                 'points': no_expense_days * 10
             })
@@ -356,7 +356,7 @@ class WeeklyReportService:
                 savings = (hist_avg - avg_daily_expense) * 7
                 achievements.append({
                     'type': 'under_budget',
-                    'title': '💰 Under Budget!',
+                    'title': 'Under Budget!',
                     'description': f'You spent 20% less than your average this week, saving ${savings:.2f}!',
                     'points': 50
                 })
@@ -365,7 +365,7 @@ class WeeklyReportService:
         if len(current_week) >= 7:
             achievements.append({
                 'type': 'consistent_tracking',
-                'title': '📝 Consistent Tracker',
+                'title': 'Consistent Tracker',
                 'description': 'You tracked at least one transaction every day this week!',
                 'points': 25
             })
@@ -375,7 +375,7 @@ class WeeklyReportService:
         if len(categories_used) >= 5:
             achievements.append({
                 'type': 'balanced_spending',
-                'title': '⚖️ Balanced Spending',
+                'title': 'Balanced Spending',
                 'description': f'You maintained diverse spending across {len(categories_used)} categories.',
                 'points': 30
             })
