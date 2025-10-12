@@ -183,26 +183,8 @@ async def update_report_preferences(
 
 def _get_or_generate_report(db: Session, user_id: int) -> dict:
     """Get existing report or generate new one"""
-    # Calculate current week boundaries
-    today = date.today()
-    week_start = today - timedelta(days=today.weekday())
-    week_end = week_start + timedelta(days=6)
-    
-    # Check if report exists
-    existing_report = db.query(WeeklyReport).filter(
-        WeeklyReport.user_id == user_id,
-        WeeklyReport.week_start == week_start
-    ).first()
-    
-    if existing_report:
-        # Mark as viewed
-        if not existing_report.is_viewed:
-            existing_report.is_viewed = True
-            db.commit()
-        
-        return json.loads(existing_report.report_data)
-    
-    # Generate new report
+    # Always generate fresh report to ensure latest code changes are applied
+    # This prevents cached reports with old currency symbols from being displayed
     report_service = WeeklyReportService(db)
     report = report_service.generate_weekly_report(user_id)
     
