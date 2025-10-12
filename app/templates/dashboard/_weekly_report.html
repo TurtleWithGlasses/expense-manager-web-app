@@ -22,11 +22,11 @@
             <div class="col-6 col-md-3">
                 <div class="summary-mini-card expenses">
                     <div class="label">Expenses</div>
-                    <div class="value">${{ '%.2f'|format(report.summary.total_expenses) }}</div>
+                    <div class="value">{{ report.currency }}{{ '%.2f'|format(report.summary.total_expenses) }}</div>
                     {% if report.summary.comparison.expense_change_pct != 0 %}
                     <div class="change {{ 'up' if report.summary.comparison.expense_change_pct > 0 else 'down' }}">
                         <i class="bi bi-{{ 'arrow-up' if report.summary.comparison.expense_change_pct > 0 else 'arrow-down' }}"></i>
-                        {{ '%.1f'|format(abs(report.summary.comparison.expense_change_pct)) }}%
+                        {{ '%.1f'|format(report.summary.comparison.expense_change_pct|abs) }}%
                     </div>
                     {% endif %}
                 </div>
@@ -34,11 +34,11 @@
             <div class="col-6 col-md-3">
                 <div class="summary-mini-card income">
                     <div class="label">Income</div>
-                    <div class="value">${{ '%.2f'|format(report.summary.total_income) }}</div>
+                    <div class="value">{{ report.currency }}{{ '%.2f'|format(report.summary.total_income) }}</div>
                     {% if report.summary.comparison.income_change_pct != 0 %}
                     <div class="change {{ 'up' if report.summary.comparison.income_change_pct > 0 else 'down' }}">
                         <i class="bi bi-{{ 'arrow-up' if report.summary.comparison.income_change_pct > 0 else 'arrow-down' }}"></i>
-                        {{ '%.1f'|format(abs(report.summary.comparison.income_change_pct)) }}%
+                        {{ '%.1f'|format(report.summary.comparison.income_change_pct|abs) }}%
                     </div>
                     {% endif %}
                 </div>
@@ -46,7 +46,7 @@
             <div class="col-6 col-md-3">
                 <div class="summary-mini-card {{ 'savings' if report.summary.net_savings > 0 else 'deficit' }}">
                     <div class="label">Net</div>
-                    <div class="value">${{ '%.2f'|format(report.summary.net_savings) }}</div>
+                    <div class="value">{{ report.currency }}{{ '%.2f'|format(report.summary.net_savings) }}</div>
                 </div>
             </div>
             <div class="col-6 col-md-3">

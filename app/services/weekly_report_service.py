@@ -11,6 +11,7 @@ from decimal import Decimal
 from app.models.entry import Entry
 from app.models.category import Category
 from app.models.user import User
+from app.models.user_preferences import UserPreferences
 from app.core.currency import CurrencyService
 
 
@@ -20,6 +21,7 @@ class WeeklyReportService:
     def __init__(self, db: Session):
         self.db = db
         self.currency_service = CurrencyService()
+    
     
     def generate_weekly_report(self, user_id: int, week_end_date: Optional[date] = None) -> Dict:
         """
@@ -37,15 +39,26 @@ class WeeklyReportService:
             week_end_date = date.today()
         
         # Calculate week boundaries (Monday to Sunday)
-        week_start = week_end_date - timedelta(days=week_end_date.weekday())  # Monday
-        week_end = week_start + timedelta(days=6)  # Sunday
+        # If week_end_date is provided, use it; otherwise use today
+        if week_end_date:
+            week_start = week_end_date - timedelta(days=week_end_date.weekday())  # Monday
+            week_end = week_start + timedelta(days=6)  # Sunday
+        else:
+            # Use current week based on today
+            today = date.today()
+            week_start = today - timedelta(days=today.weekday())  # Monday
+            week_end = week_start + timedelta(days=6)  # Sunday
         
         # Get previous week for comparison
         prev_week_start = week_start - timedelta(days=7)
         prev_week_end = week_start - timedelta(days=1)
         
-        # Get user for currency
+        # Get user and preferences for currency
         user = self.db.query(User).filter(User.id == user_id).first()
+        user_prefs = self.db.query(UserPreferences).filter(UserPreferences.user_id == user_id).first()
+        
+        # Get user's preferred currency
+        user_currency = user_prefs.currency_code if user_prefs and user_prefs.currency_code else 'USD'
         
         # Generate all report sections
         report = {
@@ -55,6 +68,7 @@ class WeeklyReportService:
                 'week_number': week_start.isocalendar()[1],
                 'year': week_start.year
             },
+            'currency': user_currency,
             'summary': self._generate_summary(user_id, week_start, week_end, prev_week_start, prev_week_end),
             'category_analysis': self._analyze_categories(user_id, week_start, week_end, prev_week_start, prev_week_end),
             'daily_breakdown': self._daily_breakdown(user_id, week_start, week_end),
