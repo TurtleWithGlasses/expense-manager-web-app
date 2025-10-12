@@ -8,13 +8,16 @@ from datetime import datetime
 
 from app.models.entry import Entry
 from app.models.category import Category
+from app.ai.data.temporal_features import TemporalFeatureExtractor
 
 
 class TrainingDataPipeline:
     """Pipeline for preparing training data from user's historical entries"""
     
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, use_temporal_features: bool = True):
         self.db = db
+        self.use_temporal_features = use_temporal_features
+        self.temporal_extractor = TemporalFeatureExtractor(db) if use_temporal_features else None
     
     def prepare_training_data(self, user_id: int, min_samples: int = 50, min_samples_per_category: int = 3) -> Tuple[pd.DataFrame, List[int]]:
         """
@@ -83,11 +86,12 @@ class TrainingDataPipeline:
         
         return features_df, labels
     
-    def extract_features(self, entry: Entry) -> Dict:
+    def extract_features(self, entry: Entry, user_id: Optional[int] = None) -> Dict:
         """
         Extract ML features from a single entry
         
         Features extracted:
+        Basic:
         - text: Combined note and description
         - amount: Raw amount value
         - amount_log: Log-transformed amount (handles large values better)
@@ -100,8 +104,14 @@ class TrainingDataPipeline:
         - is_month_start: Boolean indicator for first week of month
         - is_month_end: Boolean indicator for last week of month
         
+        Temporal (if enabled):
+        - Weekly patterns, monthly patterns, seasonal patterns
+        - Historical context, recurrence detection
+        - Spending trends and anomaly indicators
+        
         Args:
             entry: Entry model instance
+            user_id: Optional user ID for temporal features
         
         Returns:
             Dictionary of extracted features
@@ -140,7 +150,7 @@ class TrainingDataPipeline:
         else:
             amount_range = 'xlarge'  # > $1000
         
-        return {
+        basic_features = {
             'text': text,
             'amount': amount,
             'amount_log': amount_log,
@@ -154,6 +164,20 @@ class TrainingDataPipeline:
             'is_month_start': int(is_month_start),
             'is_month_end': int(is_month_end)
         }
+        
+        # Add temporal features if enabled and user_id provided
+        if self.use_temporal_features and user_id and self.temporal_extractor:
+            try:
+                temporal_features = self.temporal_extractor.extract_temporal_features(
+                    entry, user_id
+                )
+                # Merge temporal features with basic features
+                basic_features.update(temporal_features)
+            except Exception as e:
+                # Fallback to basic features if temporal extraction fails
+                print(f"⚠️  Could not extract temporal features: {e}")
+        
+        return basic_features
     
     def get_training_stats(self, user_id: int) -> Dict:
         """

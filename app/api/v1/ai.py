@@ -8,6 +8,7 @@ from app.db.session import get_db
 from app.templates import render
 from app.services.ai_service import AICategorizationService
 from app.models.ai_model import UserAIPreferences
+from app.ai.data.time_series_analyzer import TimeSeriesAnalyzer
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -216,3 +217,84 @@ async def retrain_model(
     result = ai_service.train_user_model(user.id)
     
     return JSONResponse(result)
+
+
+@router.get("/analytics/weekly")
+async def get_weekly_analytics(
+    weeks_back: int = Query(12, ge=1, le=52),
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get weekly spending analysis
+    
+    Args:
+        weeks_back: Number of weeks to analyze (1-52, default 12)
+    """
+    analyzer = TimeSeriesAnalyzer(db)
+    analysis = analyzer.get_weekly_analysis(user.id, weeks_back)
+    
+    return JSONResponse({
+        "success": True,
+        "data": analysis,
+        "period": f"Last {weeks_back} weeks"
+    })
+
+
+@router.get("/analytics/monthly")
+async def get_monthly_analytics(
+    months_back: int = Query(12, ge=1, le=36),
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get monthly spending analysis
+    
+    Args:
+        months_back: Number of months to analyze (1-36, default 12)
+    """
+    analyzer = TimeSeriesAnalyzer(db)
+    analysis = analyzer.get_monthly_analysis(user.id, months_back)
+    
+    return JSONResponse({
+        "success": True,
+        "data": analysis,
+        "period": f"Last {months_back} months"
+    })
+
+
+@router.get("/analytics/annual")
+async def get_annual_analytics(
+    years_back: int = Query(3, ge=1, le=10),
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get annual spending analysis
+    
+    Args:
+        years_back: Number of years to analyze (1-10, default 3)
+    """
+    analyzer = TimeSeriesAnalyzer(db)
+    analysis = analyzer.get_annual_analysis(user.id, years_back)
+    
+    return JSONResponse({
+        "success": True,
+        "data": analysis,
+        "period": f"Last {years_back} years"
+    })
+
+
+@router.get("/analytics/patterns")
+async def detect_spending_patterns(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Detect comprehensive spending patterns across all time scales"""
+    analyzer = TimeSeriesAnalyzer(db)
+    patterns = analyzer.detect_spending_patterns(user.id)
+    
+    return JSONResponse({
+        "success": True,
+        "patterns": patterns
+    })
