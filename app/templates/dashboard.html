@@ -81,6 +81,11 @@
   </div>
 </div>
 
+<!-- Weekly Report Widget -->
+<div id="weekly-report" class="mt-4" hx-get="/reports/weekly/widget" hx-trigger="load" hx-swap="innerHTML">
+  <div class="muted">Loading weekly report...</div>
+</div>
+
 <!-- KPIs -->
 <div id="totals" class="kpis mt-4" hx-get="/dashboard/summary" hx-include="#filters" hx-trigger="load, change from:#filters delay:150ms" hx-swap="innerHTML">
   <div class="muted">Loading totals...</div>

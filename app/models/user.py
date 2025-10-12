@@ -30,3 +30,7 @@ class User(Base):
     ai_models = relationship("AIModel", back_populates="user", cascade="all, delete-orphan")
     ai_suggestions = relationship("AISuggestion", back_populates="user", cascade="all, delete-orphan")
     ai_preferences = relationship("UserAIPreferences", back_populates="user", uselist=False)
+    
+    # Report relationships
+    weekly_reports = relationship("WeeklyReport", back_populates="user", cascade="all, delete-orphan")
+    report_preferences = relationship("UserReportPreferences", back_populates="user", uselist=False)

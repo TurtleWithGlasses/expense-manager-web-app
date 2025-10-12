@@ -5,6 +5,7 @@ import httpx
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
+from typing import Dict
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.user import User
@@ -289,6 +290,139 @@ class EmailService:
         
         If you didn't request this, please ignore this email.
         """
+        
+        return await self.send_email(user_email, subject, html_content, text_content)
+    
+    async def send_weekly_report_email(self, user_email: str, user_name: str, report: Dict):
+        """Send weekly financial report email"""
+        period = report['period']
+        summary = report['summary']
+        insights = report['insights']
+        achievements = report['achievements']
+        recommendations = report['recommendations']
+        
+        subject = f"📊 Your Weekly Financial Report - Week of {period['start']}"
+        
+        # Build insights HTML
+        insights_html = ""
+        for insight in insights:
+            # Remove emoji for cleaner HTML, then add back with styling
+            insight_text = insight
+            insights_html += f"<li style='margin-bottom: 10px;'>{insight_text}</li>"
+        
+        # Build achievements HTML
+        achievements_html = ""
+        if achievements:
+            for achievement in achievements:
+                achievements_html += f"""
+                <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 15px; margin-bottom: 10px; border-radius: 5px;">
+                    <strong style="color: #10b981;">{achievement['title']}</strong>
+                    <p style="margin: 5px 0 0 0; color: #374151;">{achievement['description']}</p>
+                </div>
+                """
+        
+        # Build recommendations HTML
+        recommendations_html = ""
+        if recommendations:
+            for rec in recommendations[:3]:  # Top 3 recommendations
+                priority_color = {'high': '#ef4444', 'medium': '#f59e0b', 'low': '#10b981'}.get(rec.get('priority', 'low'), '#10b981')
+                recommendations_html += f"""
+                <div style="background: #f9fafb; border-left: 4px solid {priority_color}; padding: 15px; margin-bottom: 10px; border-radius: 5px;">
+                    <strong style="color: {priority_color};">{rec['title']}</strong>
+                    <p style="margin: 5px 0 0 0; color: #374151;">{rec['description']}</p>
+                </div>
+                """
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #1f2937; background: #f3f4f6; }}
+                .container {{ max-width: 650px; margin: 20px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
+                .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }}
+                .header h1 {{ margin: 0; font-size: 28px; font-weight: 700; }}
+                .header p {{ margin: 10px 0 0 0; opacity: 0.9; font-size: 16px; }}
+                .content {{ padding: 30px; }}
+                .summary-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }}
+                .summary-card {{ background: #f9fafb; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #e5e7eb; }}
+                .summary-card .label {{ font-size: 14px; color: #6b7280; margin-bottom: 8px; }}
+                .summary-card .value {{ font-size: 24px; font-weight: 700; color: #1f2937; }}
+                .summary-card.positive .value {{ color: #10b981; }}
+                .summary-card.negative .value {{ color: #ef4444; }}
+                .section {{ margin: 30px 0; }}
+                .section-title {{ font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; }}
+                .insight-list {{ list-style: none; padding: 0; }}
+                .insight-list li {{ background: #f9fafb; padding: 12px 15px; margin-bottom: 8px; border-radius: 6px; border-left: 3px solid #667eea; }}
+                .footer {{ background: #f9fafb; padding: 20px; text-align: center; color: #6b7280; font-size: 14px; }}
+                .cta-button {{ display: inline-block; padding: 14px 28px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 600; }}
+                .cta-button:hover {{ background: #5568d3; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>📊 Your Weekly Financial Report</h1>
+                    <p>Week of {period['start']} to {period['end']}</p>
+                </div>
+                
+                <div class="content">
+                    <!-- Summary Section -->
+                    <div class="section">
+                        <div class="summary-grid">
+                            <div class="summary-card negative">
+                                <div class="label">Total Expenses</div>
+                                <div class="value">${summary['total_expenses']:.2f}</div>
+                            </div>
+                            <div class="summary-card positive">
+                                <div class="label">Total Income</div>
+                                <div class="value">${summary['total_income']:.2f}</div>
+                            </div>
+                            <div class="summary-card {'positive' if summary['net_savings'] > 0 else 'negative'}">
+                                <div class="label">Net Savings</div>
+                                <div class="value">${summary['net_savings']:.2f}</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="label">Transactions</div>
+                                <div class="value">{summary['transaction_count']}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Key Insights -->
+                    <div class="section">
+                        <h2 class="section-title">💡 Key Insights</h2>
+                        <ul class="insight-list">
+                            {insights_html}
+                        </ul>
+                    </div>
+                    
+                    <!-- Achievements -->
+                    {"<div class='section'><h2 class='section-title'>🏆 Achievements</h2>" + achievements_html + "</div>" if achievements else ""}
+                    
+                    <!-- Recommendations -->
+                    {"<div class='section'><h2 class='section-title'>💡 Recommendations</h2>" + recommendations_html + "</div>" if recommendations else ""}
+                    
+                    <!-- CTA -->
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{settings.BASE_URL}/dashboard" class="cta-button">View Full Dashboard</a>
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <p>Keep tracking your finances and stay on top of your goals! 💪</p>
+                    <p style="margin-top: 15px;">
+                        <a href="{settings.BASE_URL}/ai/settings" style="color: #667eea; text-decoration: none;">Manage Report Settings</a>
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Text fallback
+        from app.services.weekly_report_service import WeeklyReportService
+        text_content = WeeklyReportService(self.db).format_report_text(report) if hasattr(self, 'db') else "View your weekly report online."
         
         return await self.send_email(user_email, subject, html_content, text_content)
 

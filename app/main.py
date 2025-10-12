@@ -21,6 +21,7 @@ from app.models.user import User
 from app.models.category import Category
 from app.models.user_preferences import UserPreferences
 from app.models.ai_model import AIModel, AISuggestion, UserAIPreferences
+from app.models.weekly_report import WeeklyReport, UserReportPreferences
 
 app = FastAPI(title="Expense Manager Web")
 
@@ -31,10 +32,31 @@ async def startup_event():
         # Create all tables if they don't exist
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables initialized successfully")
+        
+        # Start report scheduler in production
+        from app.core.config import settings
+        if settings.ENV == "production":
+            from app.services.report_scheduler import report_scheduler
+            report_scheduler.start()
+            print("✅ Report scheduler started")
+        
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")
         # Don't raise the exception to allow the app to start
         # The health check endpoint will catch database issues
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown"""
+    from app.core.config import settings
+    if settings.ENV == "production":
+        try:
+            from app.services.report_scheduler import report_scheduler
+            report_scheduler.stop()
+            print("✅ Report scheduler stopped")
+        except Exception as e:
+            print(f"⚠️  Error stopping scheduler: {e}")
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="static"), name="static")

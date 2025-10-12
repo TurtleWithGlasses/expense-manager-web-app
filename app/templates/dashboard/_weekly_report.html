@@ -1,0 +1,321 @@
+<!-- Weekly Financial Report Widget -->
+{% if report %}
+<div class="card shadow-sm mb-4" style="border-left: 4px solid #667eea;">
+    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 text-white">
+                <i class="bi bi-graph-up-arrow me-2"></i>
+                📊 This Week's Financial Report
+            </h5>
+            <span class="badge bg-light text-dark">
+                Week {{ report.period.week_number }}
+            </span>
+        </div>
+        <small class="text-white" style="opacity: 0.9;">
+            {{ report.period.start }} to {{ report.period.end }}
+        </small>
+    </div>
+    
+    <div class="card-body">
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="summary-mini-card expenses">
+                    <div class="label">Expenses</div>
+                    <div class="value">${{ '%.2f'|format(report.summary.total_expenses) }}</div>
+                    {% if report.summary.comparison.expense_change_pct != 0 %}
+                    <div class="change {{ 'up' if report.summary.comparison.expense_change_pct > 0 else 'down' }}">
+                        <i class="bi bi-{{ 'arrow-up' if report.summary.comparison.expense_change_pct > 0 else 'arrow-down' }}"></i>
+                        {{ '%.1f'|format(abs(report.summary.comparison.expense_change_pct)) }}%
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="summary-mini-card income">
+                    <div class="label">Income</div>
+                    <div class="value">${{ '%.2f'|format(report.summary.total_income) }}</div>
+                    {% if report.summary.comparison.income_change_pct != 0 %}
+                    <div class="change {{ 'up' if report.summary.comparison.income_change_pct > 0 else 'down' }}">
+                        <i class="bi bi-{{ 'arrow-up' if report.summary.comparison.income_change_pct > 0 else 'arrow-down' }}"></i>
+                        {{ '%.1f'|format(abs(report.summary.comparison.income_change_pct)) }}%
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="summary-mini-card {{ 'savings' if report.summary.net_savings > 0 else 'deficit' }}">
+                    <div class="label">Net</div>
+                    <div class="value">${{ '%.2f'|format(report.summary.net_savings) }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="summary-mini-card">
+                    <div class="label">Transactions</div>
+                    <div class="value">{{ report.summary.transaction_count }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Key Insights -->
+        {% if report.insights %}
+        <div class="insights-section mb-3">
+            <h6 class="text-muted mb-3">
+                <i class="bi bi-lightbulb me-2"></i>
+                Key Insights
+            </h6>
+            <ul class="insight-list">
+                {% for insight in report.insights[:5] %}
+                <li class="insight-item">{{ insight }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <!-- Achievements -->
+        {% if report.achievements %}
+        <div class="achievements-section mb-3">
+            <h6 class="text-muted mb-3">
+                <i class="bi bi-trophy me-2"></i>
+                Achievements Unlocked
+            </h6>
+            <div class="row g-2">
+                {% for achievement in report.achievements %}
+                <div class="col-md-6">
+                    <div class="achievement-badge">
+                        <div class="achievement-title">{{ achievement.title }}</div>
+                        <div class="achievement-desc">{{ achievement.description }}</div>
+                        <div class="achievement-points">+{{ achievement.points }} points</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Recommendations -->
+        {% if report.recommendations %}
+        <div class="recommendations-section mb-3">
+            <h6 class="text-muted mb-3">
+                <i class="bi bi-stars me-2"></i>
+                Recommendations
+            </h6>
+            {% for rec in report.recommendations[:3] %}
+            <div class="recommendation-card priority-{{ rec.priority }}">
+                <div class="rec-title">{{ rec.title }}</div>
+                <div class="rec-desc">{{ rec.description }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Anomalies Alert -->
+        {% if report.anomalies %}
+        <div class="alert alert-warning mb-0">
+            <h6 class="alert-heading">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Unusual Transactions Detected
+            </h6>
+            <p class="mb-0">We found {{ report.anomalies|length }} unusual transaction(s) this week.</p>
+            <button class="btn btn-sm btn-warning mt-2" onclick="showAnomalies()">
+                View Details
+            </button>
+        </div>
+        {% endif %}
+        
+        <!-- View Full Report Button -->
+        <div class="text-center mt-3">
+            <button class="btn btn-outline-primary btn-sm" onclick="viewFullReport()">
+                <i class="bi bi-file-text me-1"></i>
+                View Full Report
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="emailReport()">
+                <i class="bi bi-envelope me-1"></i>
+                Email Me This Report
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.summary-mini-card {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+}
+
+.summary-mini-card .label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.summary-mini-card .value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.summary-mini-card .change {
+    font-size: 0.75rem;
+    margin-top: 4px;
+    font-weight: 600;
+}
+
+.summary-mini-card .change.up {
+    color: #ef4444;
+}
+
+.summary-mini-card .change.down {
+    color: #10b981;
+}
+
+.summary-mini-card.expenses .value {
+    color: #ef4444;
+}
+
+.summary-mini-card.income .value {
+    color: #10b981;
+}
+
+.summary-mini-card.savings .value {
+    color: #10b981;
+}
+
+.summary-mini-card.deficit .value {
+    color: #ef4444;
+}
+
+.insight-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.insight-item {
+    background: rgba(102, 126, 234, 0.05);
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    border-left: 3px solid #667eea;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+}
+
+.achievement-badge {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #86efac;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+}
+
+.achievement-title {
+    font-weight: 600;
+    color: #065f46;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.achievement-desc {
+    font-size: 0.8rem;
+    color: #047857;
+}
+
+.achievement-points {
+    font-size: 0.75rem;
+    color: #10b981;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.recommendation-card {
+    background: #f9fafb;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+}
+
+.recommendation-card.priority-high {
+    border-left: 4px solid #ef4444;
+}
+
+.recommendation-card.priority-medium {
+    border-left: 4px solid #f59e0b;
+}
+
+.recommendation-card.priority-low {
+    border-left: 4px solid #10b981;
+}
+
+.rec-title {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.rec-desc {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .summary-mini-card .value {
+        font-size: 1.1rem;
+    }
+    
+    .insight-item {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+}
+</style>
+
+<script>
+function viewFullReport() {
+    // Navigate to full report page
+    window.location.href = '/reports/weekly';
+}
+
+function emailReport() {
+    if (confirm('Send this week\'s report to your email?')) {
+        fetch('/reports/weekly/email', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Weekly report sent to your email!');
+            } else {
+                alert('❌ Failed to send email: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('❌ Error sending email');
+        });
+    }
+}
+
+function showAnomalies() {
+    // Show anomalies modal
+    alert('Anomaly details modal - coming soon!');
+}
+</script>
+{% else %}
+<!-- No report available -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body text-center py-4">
+        <i class="bi bi-graph-up display-4 text-muted mb-3"></i>
+        <h5 class="text-white">Weekly Report</h5>
+        <p class="text-muted mb-3">Add more transactions to generate your weekly financial report!</p>
+        <small class="text-light" style="opacity: 0.7;">Reports are generated automatically every Monday.</small>
+    </div>
+</div>
+{% endif %}
+
