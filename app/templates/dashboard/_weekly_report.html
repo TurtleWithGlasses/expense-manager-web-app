@@ -33,7 +33,7 @@
             </div>
             <div class="col-6 col-md-3">
                 <div class="summary-mini-card income">
-                    <div class="label">Income</div>
+                    <div class="label">Income*</div>
                     <div class="value">{{ report.currency }}{{ '%.2f'|format(report.summary.total_income) }}</div>
                     {% if report.summary.comparison.income_change_pct != 0 %}
                     <div class="change {{ 'up' if report.summary.comparison.income_change_pct > 0 else 'down' }}">
@@ -60,7 +60,7 @@
         <!-- Key Insights -->
         {% if report.insights %}
         <div class="insights-section mb-3">
-            <h6 class="text-muted mb-3">
+            <h6 class="text-white mb-3" style="opacity: 0.8;">
                 <i class="bi bi-lightbulb me-2"></i>
                 Key Insights
             </h6>
@@ -75,7 +75,7 @@
         <!-- Achievements -->
         {% if report.achievements %}
         <div class="achievements-section mb-3">
-            <h6 class="text-muted mb-3">
+            <h6 class="text-white mb-3" style="opacity: 0.8;">
                 <i class="bi bi-trophy me-2"></i>
                 Achievements Unlocked
             </h6>
@@ -96,7 +96,7 @@
         <!-- Recommendations -->
         {% if report.recommendations %}
         <div class="recommendations-section mb-3">
-            <h6 class="text-muted mb-3">
+            <h6 class="text-white mb-3" style="opacity: 0.8;">
                 <i class="bi bi-stars me-2"></i>
                 Recommendations
             </h6>
@@ -133,6 +133,13 @@
                 <i class="bi bi-envelope me-1"></i>
                 Email Me This Report
             </button>
+        </div>
+        
+        <!-- Income Calculation Note -->
+        <div class="text-center mt-2">
+            <small class="text-muted" style="opacity: 0.7;">
+                * Income calculated from monthly earnings (÷ 4.33 weeks)
+            </small>
         </div>
     </div>
 </div>

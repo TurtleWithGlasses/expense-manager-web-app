@@ -73,13 +73,38 @@ class WeeklyReportService:
             'category_analysis': self._analyze_categories(user_id, week_start, week_end, prev_week_start, prev_week_end),
             'daily_breakdown': self._daily_breakdown(user_id, week_start, week_end),
             'insights': self._generate_insights(user_id, week_start, week_end, prev_week_start, prev_week_end),
-            'achievements': self._detect_achievements(user_id, week_start, week_end),
-            'recommendations': self._generate_recommendations(user_id, week_start, week_end),
+            'achievements': self._detect_achievements(user_id, week_start, week_end, user_currency),
+            'recommendations': self._generate_recommendations(user_id, week_start, week_end, user_currency),
             'anomalies': self._detect_anomalies(user_id, week_start, week_end),
             'generated_at': datetime.utcnow().isoformat()
         }
         
         return report
+    
+    def _calculate_weekly_income_from_monthly(self, user_id: int, week_entries: List[Entry]) -> float:
+        """Calculate weekly income based on monthly income patterns"""
+        # Get all income entries for the current month
+        month_start = week_entries[0].date.replace(day=1) if week_entries else date.today().replace(day=1)
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        
+        # Get monthly income
+        monthly_income_entries = self.db.query(Entry).filter(
+            Entry.user_id == user_id,
+            Entry.type == 'income',
+            Entry.date >= month_start,
+            Entry.date <= month_end
+        ).all()
+        
+        total_monthly_income = sum(float(e.amount) for e in monthly_income_entries)
+        
+        if total_monthly_income > 0:
+            # Calculate weekly income as monthly income / 4.33 (average weeks per month)
+            weekly_income = total_monthly_income / 4.33
+            return weekly_income
+        
+        # Fallback: if no monthly income data, use actual weekly income
+        weekly_income_entries = [e for e in week_entries if e.type == 'income']
+        return sum(float(e.amount) for e in weekly_income_entries)
     
     def _generate_summary(self, user_id: int, week_start: date, week_end: date,
                          prev_week_start: date, prev_week_end: date) -> Dict:
@@ -100,10 +125,12 @@ class WeeklyReportService:
         
         # Calculate totals
         current_expenses = sum(float(e.amount) for e in current_week if e.type == 'expense')
-        current_income = sum(float(e.amount) for e in current_week if e.type == 'income')
+        
+        # For income, use monthly income calculation (more realistic for most people)
+        current_income = self._calculate_weekly_income_from_monthly(user_id, current_week)
+        prev_income = self._calculate_weekly_income_from_monthly(user_id, previous_week)
         
         prev_expenses = sum(float(e.amount) for e in previous_week if e.type == 'expense')
-        prev_income = sum(float(e.amount) for e in previous_week if e.type == 'income')
         
         # Calculate changes
         expense_change = ((current_expenses - prev_expenses) / prev_expenses * 100) if prev_expenses > 0 else 0
@@ -266,29 +293,33 @@ class WeeklyReportService:
         summary = self._generate_summary(user_id, week_start, week_end, prev_week_start, prev_week_end)
         category_analysis = self._analyze_categories(user_id, week_start, week_end, prev_week_start, prev_week_end)
         
+        # Get user's currency symbol
+        user_prefs = self.db.query(UserPreferences).filter(UserPreferences.user_id == user_id).first()
+        user_currency = user_prefs.currency_code if user_prefs and user_prefs.currency_code else 'USD'
+        
         # Expense trend insight
         expense_change = summary['comparison']['expense_change_pct']
         if abs(expense_change) >= 10:
             if expense_change > 0:
-                insights.append(f"Your expenses increased by {abs(expense_change):.1f}% compared to last week (${summary['comparison']['expense_change_amount']:.2f} more).")
+                insights.append(f"Your expenses increased by {abs(expense_change):.1f}% compared to last week ({user_currency}{summary['comparison']['expense_change_amount']:.2f} more).")
             else:
-                insights.append(f"Great job! Your expenses decreased by {abs(expense_change):.1f}% compared to last week (${abs(summary['comparison']['expense_change_amount']):.2f} saved).")
+                insights.append(f"Great job! Your expenses decreased by {abs(expense_change):.1f}% compared to last week ({user_currency}{abs(summary['comparison']['expense_change_amount']):.2f} saved).")
         else:
             insights.append(f"Your expenses remained stable this week (only {abs(expense_change):.1f}% change).")
         
         # Category insights
         if category_analysis['increased_spending']:
             top_increase = category_analysis['increased_spending'][0]
-            insights.append(f"You spent {top_increase['change_pct']:.0f}% more on {top_increase['name']} (${top_increase['change_amount']:.2f} increase).")
+            insights.append(f"You spent {top_increase['change_pct']:.0f}% more on {top_increase['name']} ({user_currency}{top_increase['change_amount']:.2f} increase).")
         
         if category_analysis['decreased_spending']:
             top_decrease = category_analysis['decreased_spending'][0]
-            insights.append(f"You spent {abs(top_decrease['change_pct']):.0f}% less on {top_decrease['name']} (${abs(top_decrease['change_amount']):.2f} saved).")
+            insights.append(f"You spent {abs(top_decrease['change_pct']):.0f}% less on {top_decrease['name']} ({user_currency}{abs(top_decrease['change_amount']):.2f} saved).")
         
         # Top spending category
         if category_analysis['top_category']:
             top_cat = category_analysis['top_category']
-            insights.append(f"Your biggest spending category was {top_cat['name']} with ${top_cat['amount']:.2f} ({top_cat['count']} transactions).")
+            insights.append(f"Your biggest spending category was {top_cat['name']} with {user_currency}{top_cat['amount']:.2f} ({top_cat['count']} transactions).")
         
         # New categories
         if category_analysis['new_spending_categories']:
@@ -309,17 +340,17 @@ class WeeklyReportService:
                 insights.append(f"You didn't spend on {len(category_analysis['no_spending_categories'])} categories this week.")
         
         # Total spending insight
-        insights.append(f"Total spending this week: ${summary['total_expenses']:.2f} across {summary['transaction_count']} transactions.")
+        insights.append(f"Total spending this week: {user_currency}{summary['total_expenses']:.2f} across {summary['transaction_count']} transactions.")
         
         # Net savings insight
         if summary['net_savings'] > 0:
-            insights.append(f"You saved ${summary['net_savings']:.2f} this week!")
+            insights.append(f"You saved {user_currency}{summary['net_savings']:.2f} this week!")
         elif summary['net_savings'] < 0:
-            insights.append(f"You spent ${abs(summary['net_savings']):.2f} more than you earned this week.")
+            insights.append(f"You spent {user_currency}{abs(summary['net_savings']):.2f} more than you earned this week.")
         
         return insights
     
-    def _detect_achievements(self, user_id: int, week_start: date, week_end: date) -> List[Dict]:
+    def _detect_achievements(self, user_id: int, week_start: date, week_end: date, user_currency: str = 'USD') -> List[Dict]:
         """Detect positive achievements and milestones"""
         achievements = []
         
@@ -371,7 +402,7 @@ class WeeklyReportService:
                 achievements.append({
                     'type': 'under_budget',
                     'title': 'Under Budget!',
-                    'description': f'You spent 20% less than your average this week, saving ${savings:.2f}!',
+                    'description': f'You spent 20% less than your average this week, saving {user_currency}{savings:.2f}!',
                     'points': 50
                 })
         
@@ -396,7 +427,7 @@ class WeeklyReportService:
         
         return achievements
     
-    def _generate_recommendations(self, user_id: int, week_start: date, week_end: date) -> List[Dict]:
+    def _generate_recommendations(self, user_id: int, week_start: date, week_end: date, user_currency: str = 'USD') -> List[Dict]:
         """Generate actionable recommendations"""
         recommendations = []
         
@@ -413,7 +444,7 @@ class WeeklyReportService:
                     'priority': 'high',
                     'category': top_cat['name'],
                     'title': f"Consider reducing {top_cat['name']} spending",
-                    'description': f"You spent ${top_cat['amount']:.2f} on {top_cat['name']} this week. Could you reduce by 10-20%?",
+                    'description': f"You spent {user_currency}{top_cat['amount']:.2f} on {top_cat['name']} this week. Could you reduce by 10-20%?",
                     'potential_savings': top_cat['amount'] * 0.15  # 15% savings potential
                 })
         
@@ -425,7 +456,7 @@ class WeeklyReportService:
                     'priority': 'medium',
                     'category': cat['name'],
                     'title': f"{cat['name']} spending spiked {cat['change_pct']:.0f}%",
-                    'description': f"You spent ${cat['change_amount']:.2f} more on {cat['name']} this week. Is this expected?",
+                    'description': f"You spent {user_currency}{cat['change_amount']:.2f} more on {cat['name']} this week. Is this expected?",
                     'action': 'review'
                 })
         
@@ -439,7 +470,7 @@ class WeeklyReportService:
                 'type': 'increase_savings',
                 'priority': 'high',
                 'title': 'Increase your savings',
-                'description': f"You spent ${abs(summary['net_savings']):.2f} more than you earned. Consider setting a weekly budget.",
+                'description': f"You spent {user_currency}{abs(summary['net_savings']):.2f} more than you earned. Consider setting a weekly budget.",
                 'action': 'budget_plan'
             })
         
@@ -451,7 +482,7 @@ class WeeklyReportService:
                     'priority': 'low',
                     'category': cat['name'],
                     'title': f"Great job on {cat['name']}!",
-                    'description': f"You reduced {cat['name']} spending by {abs(cat['change_pct']):.0f}%, saving ${abs(cat['change_amount']):.2f}. Keep it up!",
+                    'description': f"You reduced {cat['name']} spending by {abs(cat['change_pct']):.0f}%, saving {user_currency}{abs(cat['change_amount']):.2f}. Keep it up!",
                     'action': 'celebrate'
                 })
         
