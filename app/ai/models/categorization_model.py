@@ -162,13 +162,24 @@ class CategorizationModel:
         print(f"✅ Training complete! Test accuracy: {test_accuracy:.2%}")
         
         # Generate classification report
-        category_names = self.label_encoder.classes_
-        class_report = classification_report(
-            y_test, y_pred,
-            target_names=[str(cat) for cat in category_names],
-            output_dict=True,
-            zero_division=0
-        )
+        # Only use labels that actually appear in y_test to avoid mismatch errors
+        unique_test_labels = np.unique(y_test)
+        test_category_names = self.label_encoder.inverse_transform(unique_test_labels)
+        
+        try:
+            class_report = classification_report(
+                y_test, y_pred,
+                labels=unique_test_labels,
+                target_names=[str(cat) for cat in test_category_names],
+                output_dict=True,
+                zero_division=0
+            )
+        except Exception as e:
+            print(f"⚠️  Could not generate detailed classification report: {e}")
+            class_report = {
+                'accuracy': float(test_accuracy),
+                'note': 'Detailed metrics unavailable'
+            }
         
         return {
             'accuracy': float(test_accuracy),

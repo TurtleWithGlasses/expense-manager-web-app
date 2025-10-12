@@ -368,12 +368,25 @@ class AICategorizationService:
                     'stats': stats
                 }
             
-            # Prepare training data
-            features_df, labels = self.training_pipeline.prepare_training_data(user_id)
+            # Prepare training data (filters out rare categories)
+            features_df, labels = self.training_pipeline.prepare_training_data(
+                user_id, 
+                min_samples=50,
+                min_samples_per_category=3  # Need at least 3 samples per category
+            )
             
             # Train model
             model = CategorizationModel()
             training_results = model.train(features_df, labels)
+            
+            # Add data quality warnings to results
+            if training_results['accuracy'] < 0.60:
+                training_results['warning'] = (
+                    "Low accuracy detected. Model may not predict well. "
+                    "Consider: 1) Adding more transactions, "
+                    "2) Reducing number of categories, "
+                    "3) Ensuring each category has 10+ examples"
+                )
             
             # Save model
             model_path = model.save_model(user_id)

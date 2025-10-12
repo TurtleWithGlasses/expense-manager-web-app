@@ -16,13 +16,14 @@ class TrainingDataPipeline:
     def __init__(self, db: Session):
         self.db = db
     
-    def prepare_training_data(self, user_id: int, min_samples: int = 50) -> Tuple[pd.DataFrame, List[int]]:
+    def prepare_training_data(self, user_id: int, min_samples: int = 50, min_samples_per_category: int = 3) -> Tuple[pd.DataFrame, List[int]]:
         """
         Prepare training data from user's historical entries
         
         Args:
             user_id: User ID to prepare data for
-            min_samples: Minimum number of samples required for training
+            min_samples: Minimum number of total samples required for training
+            min_samples_per_category: Minimum samples per category to include (default 3)
         
         Returns:
             Tuple of (features_df, labels) where:
@@ -44,11 +45,35 @@ class TrainingDataPipeline:
                 f"Found {len(entries)}. Please categorize more entries before training."
             )
         
+        # Count samples per category
+        from collections import Counter
+        category_counts = Counter(entry.category_id for entry in entries)
+        
+        # Filter out categories with too few samples
+        valid_categories = {cat_id for cat_id, count in category_counts.items() 
+                          if count >= min_samples_per_category}
+        
+        if not valid_categories:
+            raise ValueError(
+                f"No categories have at least {min_samples_per_category} samples. "
+                f"Add more diverse transactions before training."
+            )
+        
+        # Filter entries to only include valid categories
+        filtered_entries = [entry for entry in entries 
+                          if entry.category_id in valid_categories]
+        
+        excluded_count = len(entries) - len(filtered_entries)
+        if excluded_count > 0:
+            excluded_categories = len(category_counts) - len(valid_categories)
+            print(f"ℹ️  Excluded {excluded_count} entries from {excluded_categories} rare categories "
+                  f"(< {min_samples_per_category} samples each)")
+        
         # Extract features and labels
         features_list = []
         labels = []
         
-        for entry in entries:
+        for entry in filtered_entries:
             features = self.extract_features(entry)
             features_list.append(features)
             labels.append(entry.category_id)
