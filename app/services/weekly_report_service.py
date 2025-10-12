@@ -75,7 +75,7 @@ class WeeklyReportService:
             'insights': self._generate_insights(user_id, week_start, week_end, prev_week_start, prev_week_end),
             'achievements': self._detect_achievements(user_id, week_start, week_end, user_currency),
             'recommendations': self._generate_recommendations(user_id, week_start, week_end, user_currency),
-            'anomalies': self._detect_anomalies(user_id, week_start, week_end),
+            'anomalies': self._detect_anomalies(user_id, week_start, week_end, user_currency),
             'generated_at': datetime.utcnow().isoformat()
         }
         
@@ -83,8 +83,14 @@ class WeeklyReportService:
     
     def _calculate_weekly_income_from_monthly(self, user_id: int, week_entries: List[Entry]) -> float:
         """Calculate weekly income based on monthly income patterns"""
+        # Use the date from the first entry or current date
+        if week_entries:
+            reference_date = week_entries[0].date
+        else:
+            reference_date = date.today()
+        
         # Get all income entries for the current month
-        month_start = week_entries[0].date.replace(day=1) if week_entries else date.today().replace(day=1)
+        month_start = reference_date.replace(day=1)
         month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
         
         # Get monthly income
@@ -125,12 +131,10 @@ class WeeklyReportService:
         
         # Calculate totals
         current_expenses = sum(float(e.amount) for e in current_week if e.type == 'expense')
-        
-        # For income, use monthly income calculation (more realistic for most people)
-        current_income = self._calculate_weekly_income_from_monthly(user_id, current_week)
-        prev_income = self._calculate_weekly_income_from_monthly(user_id, previous_week)
+        current_income = sum(float(e.amount) for e in current_week if e.type == 'income')
         
         prev_expenses = sum(float(e.amount) for e in previous_week if e.type == 'expense')
+        prev_income = sum(float(e.amount) for e in previous_week if e.type == 'income')
         
         # Calculate changes
         expense_change = ((current_expenses - prev_expenses) / prev_expenses * 100) if prev_expenses > 0 else 0
@@ -488,7 +492,7 @@ class WeeklyReportService:
         
         return recommendations
     
-    def _detect_anomalies(self, user_id: int, week_start: date, week_end: date) -> List[Dict]:
+    def _detect_anomalies(self, user_id: int, week_start: date, week_end: date, user_currency: str = 'USD') -> List[Dict]:
         """Detect unusual transactions"""
         anomalies = []
         
@@ -535,8 +539,8 @@ class WeeklyReportService:
                     'category': entry.category.name if entry.category else 'Uncategorized',
                     'note': entry.note,
                     'severity': 'high' if amount > mean_amount * 5 else 'medium',
-                    'description': f"${amount:.2f} is {(amount/mean_amount):.1f}x your average transaction.",
-                    'comparison': f"Your typical transaction: ${mean_amount:.2f}"
+                    'description': f"{user_currency}{amount:.2f} is {(amount/mean_amount):.1f}x your average transaction.",
+                    'comparison': f"Your typical transaction: {user_currency}{mean_amount:.2f}"
                 })
             
             # Anomaly 2: Unusual category for amount
@@ -555,8 +559,8 @@ class WeeklyReportService:
                             'category': entry.category.name,
                             'note': entry.note,
                             'severity': 'medium',
-                            'description': f"${amount:.2f} is unusually high for {entry.category.name}.",
-                            'comparison': f"Typical {entry.category.name}: ${cat_mean:.2f}"
+                            'description': f"{user_currency}{amount:.2f} is unusually high for {entry.category.name}.",
+                            'comparison': f"Typical {entry.category.name}: {user_currency}{cat_mean:.2f}"
                         })
         
         return anomalies
@@ -565,7 +569,7 @@ class WeeklyReportService:
         """Get list of all days in the week"""
         return [week_start + timedelta(days=i) for i in range(7)]
     
-    def format_report_text(self, report: Dict) -> str:
+    def format_report_text(self, report: Dict, user_currency: str = 'USD') -> str:
         """Format report as readable text for email"""
         summary = report['summary']
         period = report['period']
@@ -577,9 +581,9 @@ Week of {period['start']} to {period['end']}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 💰 SUMMARY
-• Total Expenses: ${summary['total_expenses']:.2f}
-• Total Income: ${summary['total_income']:.2f}
-• Net Savings: ${summary['net_savings']:.2f}
+• Total Expenses: {user_currency}{summary['total_expenses']:.2f}
+• Total Income: {user_currency}{summary['total_income']:.2f}
+• Net Savings: {user_currency}{summary['net_savings']:.2f}
 • Transactions: {summary['transaction_count']}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -611,7 +615,7 @@ Week of {period['start']} to {period['end']}
         if report['anomalies']:
             text += "⚠️ UNUSUAL TRANSACTIONS\n\n"
             for anomaly in report['anomalies']:
-                text += f"• ${anomaly['amount']:.2f} on {anomaly['date']} - {anomaly['category']}\n"
+                text += f"• {user_currency}{anomaly['amount']:.2f} on {anomaly['date']} - {anomaly['category']}\n"
                 text += f"  {anomaly['description']}\n\n"
         
         text += """
