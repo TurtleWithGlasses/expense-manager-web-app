@@ -117,12 +117,7 @@ async def remove(
     delete_entry(db, user_id=user.id, entry_id=entry_id)
     entries = list_entries(db, user_id=user.id)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
-    
-    # Check if this is a mobile request (check for mobile-entries-list target)
-    if "mobile-entries-list" in str(request.headers.get("hx-target", "")):
-        return render(request, "entries/_mobile_list.html", {"entries": entries, "user_currency": user_currency})
-    else:
-        return render(request, "entries/_list.html", {"entries": entries, "user_currency": user_currency})
+    return render(request, "entries/_list.html", {"entries": entries, "user_currency": user_currency})
 
 
 # ---------- Inline edit: amount cell ----------

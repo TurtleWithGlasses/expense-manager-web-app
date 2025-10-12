@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, Form, HTTPException, Query
+from fastapi import APIRouter, Depends, Request, Form, HTTPException, Query, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -17,10 +17,12 @@ async def ai_settings_page(request: Request, user=Depends(current_user), db: Ses
     """AI settings page"""
     ai_service = AICategorizationService(db)
     preferences = ai_service.get_user_ai_preferences(user.id)
+    model_status = ai_service.get_model_status(user.id)
     
     return render(request, "settings/ai_settings.html", {
         "user": user,
-        "preferences": preferences
+        "preferences": preferences,
+        "model_status": model_status
     })
 
 
@@ -154,3 +156,63 @@ async def ai_dashboard_widget(
         "user": user,
         "insights": insights
     })
+
+
+@router.get("/model/status")
+async def get_model_status(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Get ML model training status"""
+    ai_service = AICategorizationService(db)
+    status = ai_service.get_model_status(user.id)
+    
+    return JSONResponse({
+        "success": True,
+        "status": status
+    })
+
+
+@router.post("/model/train")
+async def train_model(
+    background_tasks: BackgroundTasks,
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Train ML model for user's transaction categorization
+    
+    This endpoint triggers model training in the background.
+    Training requires at least 50 categorized entries.
+    """
+    ai_service = AICategorizationService(db)
+    
+    # Get current status
+    status = ai_service.get_model_status(user.id)
+    
+    if not status['can_train']:
+        return JSONResponse({
+            "success": False,
+            "message": f"Need at least 50 categorized entries. You have {status['training_stats']['total_categorized']}.",
+            "status": status
+        }, status_code=400)
+    
+    # Train the model (synchronously for now, can be made async later)
+    result = ai_service.train_user_model(user.id)
+    
+    return JSONResponse(result)
+
+
+@router.post("/model/retrain")
+async def retrain_model(
+    background_tasks: BackgroundTasks,
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Retrain the ML model with latest data"""
+    ai_service = AICategorizationService(db)
+    
+    # Train the model
+    result = ai_service.train_user_model(user.id)
+    
+    return JSONResponse(result)

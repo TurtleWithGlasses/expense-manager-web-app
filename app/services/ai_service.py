@@ -8,6 +8,8 @@ from sqlalchemy import func, desc
 from app.models.entry import Entry
 from app.models.category import Category
 from app.models.ai_model import AIModel, AISuggestion, UserAIPreferences
+from app.ai.models.categorization_model import CategorizationModel
+from app.ai.data.training_pipeline import TrainingDataPipeline
 
 
 class AICategorizationService:
@@ -15,6 +17,8 @@ class AICategorizationService:
     
     def __init__(self, db: Session):
         self.db = db
+        self.ml_model = None  # Lazy loaded when needed
+        self.training_pipeline = TrainingDataPipeline(db)
     
     def get_user_ai_preferences(self, user_id: int) -> Optional[UserAIPreferences]:
         """Get or create AI preferences for user"""
@@ -42,7 +46,7 @@ class AICategorizationService:
     
     def suggest_category(self, user_id: int, entry_data: Dict) -> Tuple[Optional[int], float]:
         """
-        Suggest a category for a new entry based on historical data and patterns
+        Suggest a category for a new entry using ML model with rule-based fallback
         
         Args:
             user_id: User ID
@@ -54,6 +58,79 @@ class AICategorizationService:
         preferences = self.get_user_ai_preferences(user_id)
         if not preferences.auto_categorization_enabled:
             return None, 0.0
+        
+        # Try ML model first
+        ml_suggestion = self._ml_suggest_category(user_id, entry_data)
+        if ml_suggestion[0] is not None and ml_suggestion[1] >= preferences.min_confidence_threshold:
+            return ml_suggestion
+        
+        # Fallback to rule-based system if ML doesn't provide confident suggestion
+        rule_suggestion = self._rule_based_suggest_category(user_id, entry_data)
+        
+        # Return whichever has higher confidence
+        if ml_suggestion[1] > rule_suggestion[1]:
+            return ml_suggestion
+        else:
+            return rule_suggestion
+    
+    def _ml_suggest_category(self, user_id: int, entry_data: Dict) -> Tuple[Optional[int], float]:
+        """
+        ML-powered category suggestion
+        
+        Args:
+            user_id: User ID
+            entry_data: Dictionary with entry details
+        
+        Returns:
+            Tuple of (category_id, confidence_score)
+        """
+        try:
+            # Load user's ML model if not already loaded
+            if self.ml_model is None:
+                self.ml_model = CategorizationModel()
+            
+            # Try to load trained model for this user
+            if not self.ml_model.is_trained:
+                if not self.ml_model.load_model(user_id):
+                    # No trained model available
+                    return None, 0.0
+            
+            # Extract features for prediction
+            from app.models.entry import Entry
+            
+            # Create a temporary Entry-like object to extract features
+            temp_entry = type('obj', (object,), {
+                'note': entry_data.get('note', ''),
+                'description': entry_data.get('description', ''),
+                'amount': entry_data.get('amount', 0),
+                'type': entry_data.get('type', 'expense'),
+                'date': entry_data.get('date', datetime.now().date())
+            })()
+            
+            # Extract features using pipeline
+            features = self.training_pipeline.extract_features(temp_entry)
+            
+            # Get prediction
+            category_id, confidence = self.ml_model.predict(features)
+            
+            return category_id, confidence
+            
+        except Exception as e:
+            print(f"Error in ML prediction: {e}")
+            return None, 0.0
+    
+    def _rule_based_suggest_category(self, user_id: int, entry_data: Dict) -> Tuple[Optional[int], float]:
+        """
+        Rule-based category suggestion (fallback)
+        
+        Args:
+            user_id: User ID
+            entry_data: Dictionary with entry details
+        
+        Returns:
+            Tuple of (category_id, confidence_score)
+        """
+        preferences = self.get_user_ai_preferences(user_id)
         
         # Extract text for analysis
         text_content = self._extract_text_content(entry_data)
@@ -71,7 +148,7 @@ class AICategorizationService:
         # Method 1: Exact text matching
         exact_match = self._exact_text_match(text_content, categories, user_id)
         if exact_match:
-            suggestions.append((exact_match[0], exact_match[1] * 0.9))  # High confidence for exact matches
+            suggestions.append((exact_match[0], exact_match[1] * 0.9))
         
         # Method 2: Keyword-based matching
         keyword_match = self._keyword_based_match(text_content, categories, user_id)
@@ -91,14 +168,9 @@ class AICategorizationService:
         if not suggestions:
             return None, 0.0
         
-        # Combine suggestions and return the best one
+        # Return the best suggestion
         best_suggestion = max(suggestions, key=lambda x: x[1])
-        
-        # Only return if confidence is above threshold
-        if best_suggestion[1] >= preferences.min_confidence_threshold:
-            return best_suggestion
-        else:
-            return None, best_suggestion[1]
+        return best_suggestion
     
     def _extract_text_content(self, entry_data: Dict) -> str:
         """Extract and clean text content from entry data"""
@@ -274,6 +346,166 @@ class AICategorizationService:
             return True
         
         return False
+    
+    def train_user_model(self, user_id: int) -> Dict:
+        """
+        Train ML model for a specific user
+        
+        Args:
+            user_id: User ID
+        
+        Returns:
+            Dictionary with training results and metrics
+        """
+        try:
+            # Check if user has enough data
+            stats = self.training_pipeline.get_training_stats(user_id)
+            
+            if not stats['is_ready_for_training']:
+                return {
+                    'success': False,
+                    'message': f"Need at least {stats['min_samples_required']} categorized entries. You have {stats['total_categorized']}.",
+                    'stats': stats
+                }
+            
+            # Prepare training data
+            features_df, labels = self.training_pipeline.prepare_training_data(user_id)
+            
+            # Train model
+            model = CategorizationModel()
+            training_results = model.train(features_df, labels)
+            
+            # Save model
+            model_path = model.save_model(user_id)
+            
+            # Update AI model metadata in database
+            ai_model = self.db.query(AIModel).filter(
+                AIModel.user_id == user_id,
+                AIModel.model_type == "categorization"
+            ).first()
+            
+            if not ai_model:
+                ai_model = AIModel(
+                    user_id=user_id,
+                    model_name="categorization_v1",
+                    model_type="categorization"
+                )
+                self.db.add(ai_model)
+            
+            ai_model.is_active = True
+            ai_model.accuracy_score = training_results['accuracy']
+            ai_model.training_data_count = training_results['training_samples']
+            ai_model.last_trained = datetime.utcnow()
+            ai_model.model_parameters = json.dumps({
+                'cv_mean': training_results['cv_mean'],
+                'cv_std': training_results['cv_std'],
+                'n_categories': training_results['n_categories']
+            })
+            
+            self.db.commit()
+            
+            return {
+                'success': True,
+                'message': 'Model trained successfully!',
+                'results': training_results,
+                'model_path': model_path
+            }
+            
+        except Exception as e:
+            print(f"Error training model: {e}")
+            return {
+                'success': False,
+                'message': f"Training failed: {str(e)}",
+                'error': str(e)
+            }
+    
+    def get_model_status(self, user_id: int) -> Dict:
+        """
+        Get status of user's ML model
+        
+        Args:
+            user_id: User ID
+        
+        Returns:
+            Dictionary with model status information
+        """
+        # Get training data stats
+        stats = self.training_pipeline.get_training_stats(user_id)
+        
+        # Get model info from database
+        ai_model = self.db.query(AIModel).filter(
+            AIModel.user_id == user_id,
+            AIModel.model_type == "categorization"
+        ).first()
+        
+        if ai_model:
+            model_info = {
+                'has_model': True,
+                'is_active': ai_model.is_active,
+                'accuracy': float(ai_model.accuracy_score) if ai_model.accuracy_score else 0.0,
+                'training_data_count': ai_model.training_data_count,
+                'last_trained': ai_model.last_trained.isoformat() if ai_model.last_trained else None,
+                'last_trained_ago': self._time_ago(ai_model.last_trained) if ai_model.last_trained else None
+            }
+        else:
+            model_info = {
+                'has_model': False,
+                'is_active': False,
+                'accuracy': 0.0,
+                'training_data_count': 0,
+                'last_trained': None,
+                'last_trained_ago': None
+            }
+        
+        return {
+            **model_info,
+            'training_stats': stats,
+            'can_train': stats['is_ready_for_training'],
+            'needs_retraining': self._needs_retraining(ai_model, stats) if ai_model else True
+        }
+    
+    def _needs_retraining(self, ai_model: AIModel, stats: Dict) -> bool:
+        """Check if model needs retraining"""
+        if not ai_model or not ai_model.last_trained:
+            return True
+        
+        # Check if it's been more than 7 days since last training
+        days_since_training = (datetime.utcnow() - ai_model.last_trained).days
+        if days_since_training > 7:
+            return True
+        
+        # Check if there's significantly more data now
+        current_data_count = stats['total_categorized']
+        trained_data_count = ai_model.training_data_count
+        
+        if current_data_count > trained_data_count * 1.2:  # 20% more data
+            return True
+        
+        return False
+    
+    def _time_ago(self, dt: datetime) -> str:
+        """Convert datetime to human-readable time ago string"""
+        if not dt:
+            return "Never"
+        
+        delta = datetime.utcnow() - dt
+        
+        if delta.days > 365:
+            years = delta.days // 365
+            return f"{years} year{'s' if years > 1 else ''} ago"
+        elif delta.days > 30:
+            months = delta.days // 30
+            return f"{months} month{'s' if months > 1 else ''} ago"
+        elif delta.days > 0:
+            return f"{delta.days} day{'s' if delta.days > 1 else ''} ago"
+        elif delta.seconds > 3600:
+            hours = delta.seconds // 3600
+            return f"{hours} hour{'s' if hours > 1 else ''} ago"
+        elif delta.seconds > 60:
+            minutes = delta.seconds // 60
+            return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
+        else:
+            return "Just now"
     
     def get_smart_insights(self, user_id: int) -> Dict:
         """Generate smart insights for the user"""

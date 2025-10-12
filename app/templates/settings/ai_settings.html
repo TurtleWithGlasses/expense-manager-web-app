@@ -365,12 +365,104 @@
                 </div>
 
                 <div class="col-lg-4">
+                    <!-- ML Model Status Card -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header {% if model_status.has_model %}bg-success{% else %}bg-warning{% endif %} text-white">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-cpu me-2"></i>
+                                ML Model Status
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if model_status.has_model %}
+                                <!-- Model Trained -->
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                            <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-0 text-white">Model Trained</h6>
+                                        <small class="text-light" style="opacity: 0.8;">{{ model_status.last_trained_ago }}</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="row text-center mb-3">
+                                    <div class="col-6">
+                                        <div class="border-end">
+                                            <h5 class="text-primary mb-0">{{ (model_status.accuracy * 100)|round(1) }}%</h5>
+                                            <small class="text-light" style="opacity: 0.8;">Accuracy</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <h5 class="text-success mb-0">{{ model_status.training_data_count }}</h5>
+                                        <small class="text-light" style="opacity: 0.8;">Training Samples</small>
+                                    </div>
+                                </div>
+                                
+                                {% if model_status.needs_retraining %}
+                                <div class="alert alert-warning py-2 mb-3">
+                                    <small class="text-dark">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        Model needs retraining with new data
+                                    </small>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="d-grid">
+                                    <button class="btn btn-primary" onclick="retrainModel()">
+                                        <i class="bi bi-arrow-repeat me-1"></i>
+                                        Retrain Model
+                                    </button>
+                                </div>
+                            {% else %}
+                                <!-- No Model Yet -->
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                            <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-0 text-white">No Model Trained</h6>
+                                        <small class="text-light" style="opacity: 0.8;">Using rule-based system</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="progress" style="height: 25px;">
+                                        <div class="progress-bar {% if model_status.training_stats.progress_percentage >= 100 %}bg-success{% else %}bg-info{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ model_status.training_stats.progress_percentage }}%;" 
+                                             aria-valuenow="{{ model_status.training_stats.progress_percentage }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ model_status.training_stats.total_categorized }} / 50
+                                        </div>
+                                    </div>
+                                    <small class="text-light d-block mt-2" style="opacity: 0.8;">
+                                        Categorize {{ 50 - model_status.training_stats.total_categorized }} more entries to enable ML training
+                                    </small>
+                                </div>
+                                
+                                <div class="d-grid">
+                                    <button class="btn btn-primary" onclick="trainModel()" 
+                                            {% if not model_status.can_train %}disabled{% endif %}>
+                                        <i class="bi bi-play-circle me-1"></i>
+                                        Train ML Model
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
                     <!-- AI Status Card -->
                     <div class="card shadow-sm mb-4">
                         <div class="card-header bg-success text-white">
                             <h6 class="card-title mb-0">
                                 <i class="bi bi-robot me-2"></i>
-                                AI Status
+                                AI Features
                             </h6>
                         </div>
                         <div class="card-body">
@@ -389,13 +481,13 @@
                             <div class="row text-center">
                                 <div class="col-6">
                                     <div class="border-end">
-                                        <h5 class="text-primary mb-0">4</h5>
-                                        <small class="text-light" style="opacity: 0.8;">Active Features</small>
+                                        <h5 class="text-primary mb-0">{{ model_status.training_stats.unique_categories }}</h5>
+                                        <small class="text-light" style="opacity: 0.8;">Categories</small>
                                     </div>
                                 </div>
                                 <div class="col-6">
-                                    <h5 class="text-success mb-0">95%</h5>
-                                    <small class="text-light" style="opacity: 0.8;">Accuracy</small>
+                                    <h5 class="text-success mb-0">{{ model_status.training_stats.total_entries }}</h5>
+                                    <small class="text-light" style="opacity: 0.8;">Total Entries</small>
                                 </div>
                             </div>
                         </div>
@@ -419,9 +511,9 @@
                                     <i class="bi bi-graph-up me-1"></i>
                                     View Spending Insights
                                 </button>
-                                <button class="btn btn-outline-warning btn-sm" onclick="resetAIModel()">
-                                    <i class="bi bi-arrow-repeat me-1"></i>
-                                    Reset AI Model
+                                <button class="btn btn-outline-warning btn-sm" onclick="checkModelStatus()">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Check Model Status
                                 </button>
                             </div>
                         </div>
@@ -678,6 +770,104 @@ function viewInsights() {
                 </div>
             `;
         });
+}
+
+function trainModel() {
+    if (!confirm('Train ML model now? This may take a few minutes.')) {
+        return;
+    }
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Training...';
+    btn.disabled = true;
+    
+    fetch('/ai/model/train', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Model trained successfully!\n\nAccuracy: ' + (data.results.accuracy * 100).toFixed(1) + '%\nTraining samples: ' + data.results.training_samples);
+            location.reload();
+        } else {
+            alert('Training failed: ' + data.message);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error training model. Please try again.');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+function retrainModel() {
+    if (!confirm('Retrain the ML model with latest data? This may take a few minutes.')) {
+        return;
+    }
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Retraining...';
+    btn.disabled = true;
+    
+    fetch('/ai/model/retrain', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Model retrained successfully!\n\nNew Accuracy: ' + (data.results.accuracy * 100).toFixed(1) + '%\nTraining samples: ' + data.results.training_samples);
+            location.reload();
+        } else {
+            alert('Retraining failed: ' + data.message);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error retraining model. Please try again.');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+function checkModelStatus() {
+    fetch('/ai/model/status')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const status = data.status;
+            let message = '=== ML Model Status ===\n\n';
+            
+            if (status.has_model) {
+                message += `Model: Trained\n`;
+                message += `Accuracy: ${(status.accuracy * 100).toFixed(1)}%\n`;
+                message += `Training Samples: ${status.training_data_count}\n`;
+                message += `Last Trained: ${status.last_trained_ago}\n`;
+                message += `Needs Retraining: ${status.needs_retraining ? 'Yes' : 'No'}\n`;
+            } else {
+                message += `Model: Not Trained\n`;
+                message += `Progress: ${status.training_stats.total_categorized} / 50 entries\n`;
+                message += `Can Train: ${status.can_train ? 'Yes' : 'No'}\n`;
+            }
+            
+            message += `\nCategories: ${status.training_stats.unique_categories}\n`;
+            message += `Total Entries: ${status.training_stats.total_entries}\n`;
+            message += `Categorized: ${status.training_stats.total_categorized}\n`;
+            message += `Uncategorized: ${status.training_stats.total_uncategorized}\n`;
+            
+            alert(message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error fetching model status.');
+    });
 }
 
 function resetAIModel() {
