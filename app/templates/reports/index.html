@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">
+                    <i class="bi bi-graph-up-arrow me-2"></i>
+                    Financial Reports
+                </h1>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="generateCustomReport()">
+                        <i class="bi bi-calendar-range me-1"></i>
+                        Custom Report
+                    </button>
+                    <a href="/reports/settings" class="btn btn-outline-secondary">
+                        <i class="bi bi-gear me-1"></i>
+                        Settings
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Report Type Cards -->
+            <div class="row g-4 mb-5">
+                <!-- Weekly Reports -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-calendar-week me-2"></i>
+                                    Weekly Reports
+                                </h5>
+                                <span class="badge bg-light text-dark">Focus on Expenses</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                Detailed analysis of your weekly spending patterns, expense trends, and budget control achievements.
+                            </p>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Expense tracking & trends</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Category analysis</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Spending achievements</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Budget recommendations</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-grid gap-2">
+                                <a href="/reports/weekly" class="btn btn-primary">
+                                    <i class="bi bi-file-text me-1"></i>
+                                    View Weekly Reports
+                                </a>
+                                <button class="btn btn-outline-primary btn-sm" onclick="emailWeeklyReport()">
+                                    <i class="bi bi-envelope me-1"></i>
+                                    Email Current Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Monthly Reports -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-calendar-month me-2"></i>
+                                    Monthly Reports
+                                </h5>
+                                <span class="badge bg-light text-dark">Full Financial Picture</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                Comprehensive monthly financial analysis including income, expenses, savings rate, and financial health.
+                            </p>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Income vs expenses</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Savings rate analysis</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Monthly trends</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Financial goals</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-grid gap-2">
+                                <a href="/reports/monthly" class="btn btn-success">
+                                    <i class="bi bi-file-text me-1"></i>
+                                    View Monthly Reports
+                                </a>
+                                <button class="btn btn-outline-success btn-sm" onclick="emailMonthlyReport()">
+                                    <i class="bi bi-envelope me-1"></i>
+                                    Email Current Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Annual Reports -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-calendar-year me-2"></i>
+                                    Annual Reports
+                                </h5>
+                                <span class="badge bg-light text-dark">Long-term Analysis</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                Year-long financial analysis with comprehensive insights, trends, and recommendations for financial growth.
+                            </p>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Annual spending patterns</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Income growth trends</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Financial milestones</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Investment recommendations</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-grid gap-2">
+                                <a href="/reports/annual" class="btn btn-warning text-dark">
+                                    <i class="bi bi-file-text me-1"></i>
+                                    View Annual Reports
+                                </a>
+                                <button class="btn btn-outline-warning btn-sm" onclick="emailAnnualReport()">
+                                    <i class="bi bi-envelope me-1"></i>
+                                    Email Current Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Reports -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-clock-history me-2"></i>
+                                Recent Reports
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Report Type</th>
+                                            <th>Period</th>
+                                            <th>Generated</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-primary">Weekly</span>
+                                            </td>
+                                            <td>Week 42, 2025</td>
+                                            <td>2 hours ago</td>
+                                            <td><span class="badge bg-success">New</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="viewReport('weekly', 'current')">
+                                                    <i class="bi bi-eye me-1"></i>View
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="emailReport('weekly', 'current')">
+                                                    <i class="bi bi-envelope me-1"></i>Email
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-success">Monthly</span>
+                                            </td>
+                                            <td>October 2025</td>
+                                            <td>1 week ago</td>
+                                            <td><span class="badge bg-secondary">Viewed</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="viewReport('monthly', 'october')">
+                                                    <i class="bi bi-eye me-1"></i>View
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="emailReport('monthly', 'october')">
+                                                    <i class="bi bi-envelope me-1"></i>Email
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Report Modal -->
+<div class="modal fade" id="customReportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-calendar-range me-2"></i>
+                    Generate Custom Report
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="customReportForm">
+                    <div class="mb-3">
+                        <label for="reportType" class="form-label">Report Type</label>
+                        <select class="form-select" id="reportType" required>
+                            <option value="expense">Expense Analysis</option>
+                            <option value="income">Income Analysis</option>
+                            <option value="comprehensive">Comprehensive</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="generateCustomReport()">
+                    <i class="bi bi-file-text me-1"></i>
+                    Generate Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function generateCustomReport() {
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('customReportModal'));
+    modal.show();
+}
+
+function emailWeeklyReport() {
+    fetch('/reports/weekly/email', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert('Weekly report email sent!');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function emailMonthlyReport() {
+    fetch('/reports/monthly/email', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert('Monthly report email sent!');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function emailAnnualReport() {
+    fetch('/reports/annual/email', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert('Annual report email sent!');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function viewReport(type, period) {
+    window.location.href = `/reports/${type}/${period}`;
+}
+
+function emailReport(type, period) {
+    fetch(`/reports/${type}/email`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert(`${type} report email sent!`);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+</script>
+
+{% endblock %}

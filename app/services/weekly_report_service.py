@@ -23,7 +23,7 @@ class WeeklyReportService:
         self.currency_service = CurrencyService()
     
     
-    def generate_weekly_report(self, user_id: int, week_end_date: Optional[date] = None) -> Dict:
+    def generate_weekly_report(self, user_id: int, week_end_date: Optional[date] = None, show_income: bool = False) -> Dict:
         """
         Generate comprehensive weekly financial report
         
@@ -69,13 +69,14 @@ class WeeklyReportService:
                 'year': week_start.year
             },
             'currency': user_currency,
-            'summary': self._generate_summary(user_id, week_start, week_end, prev_week_start, prev_week_end),
+            'summary': self._generate_summary(user_id, week_start, week_end, prev_week_start, prev_week_end, show_income),
             'category_analysis': self._analyze_categories(user_id, week_start, week_end, prev_week_start, prev_week_end),
             'daily_breakdown': self._daily_breakdown(user_id, week_start, week_end),
-            'insights': self._generate_insights(user_id, week_start, week_end, prev_week_start, prev_week_end),
+            'insights': self._generate_insights(user_id, week_start, week_end, prev_week_start, prev_week_end, show_income),
             'achievements': self._detect_achievements(user_id, week_start, week_end, user_currency),
-            'recommendations': self._generate_recommendations(user_id, week_start, week_end, user_currency),
+            'recommendations': self._generate_recommendations(user_id, week_start, week_end, user_currency, show_income),
             'anomalies': self._detect_anomalies(user_id, week_start, week_end, user_currency),
+            'show_income': show_income,  # Flag to control income display in templates
             'generated_at': datetime.utcnow().isoformat()
         }
         
@@ -113,7 +114,7 @@ class WeeklyReportService:
         return sum(float(e.amount) for e in weekly_income_entries)
     
     def _generate_summary(self, user_id: int, week_start: date, week_end: date,
-                         prev_week_start: date, prev_week_end: date) -> Dict:
+                         prev_week_start: date, prev_week_end: date, show_income: bool = False) -> Dict:
         """Generate week summary with comparisons"""
         # Current week data
         current_week = self.db.query(Entry).filter(
@@ -136,6 +137,12 @@ class WeeklyReportService:
         prev_expenses = sum(float(e.amount) for e in previous_week if e.type == 'expense')
         prev_income = sum(float(e.amount) for e in previous_week if e.type == 'income')
         
+        # For weekly reports, if income is 0, try to estimate from monthly income
+        if current_income == 0:
+            current_income = self._calculate_weekly_income_from_monthly(user_id, current_week)
+        if prev_income == 0:
+            prev_income = self._calculate_weekly_income_from_monthly(user_id, previous_week)
+        
         # Calculate changes
         expense_change = ((current_expenses - prev_expenses) / prev_expenses * 100) if prev_expenses > 0 else 0
         income_change = ((current_income - prev_income) / prev_income * 100) if prev_income > 0 else 0
@@ -145,12 +152,22 @@ class WeeklyReportService:
         prev_net = prev_income - prev_expenses
         net_change = current_net - prev_net
         
+        # For weekly reports, hide income if show_income is False
+        if not show_income:
+            current_income = 0
+            prev_income = 0
+            current_net = -current_expenses  # Show as negative expenses only
+            prev_net = -prev_expenses
+            net_change = current_net - prev_net
+            income_change = 0
+        
         return {
             'total_expenses': current_expenses,
             'total_income': current_income,
             'net_savings': current_net,
             'transaction_count': len(current_week),
             'avg_transaction': current_expenses / len([e for e in current_week if e.type == 'expense']) if any(e.type == 'expense' for e in current_week) else 0,
+            'show_income': show_income,
             'comparison': {
                 'expense_change_pct': expense_change,
                 'expense_change_amount': current_expenses - prev_expenses,
@@ -290,11 +307,11 @@ class WeeklyReportService:
         return daily_data
     
     def _generate_insights(self, user_id: int, week_start: date, week_end: date,
-                          prev_week_start: date, prev_week_end: date) -> List[str]:
+                          prev_week_start: date, prev_week_end: date, show_income: bool = False) -> List[str]:
         """Generate natural language insights"""
         insights = []
         
-        summary = self._generate_summary(user_id, week_start, week_end, prev_week_start, prev_week_end)
+        summary = self._generate_summary(user_id, week_start, week_end, prev_week_start, prev_week_end, show_income)
         category_analysis = self._analyze_categories(user_id, week_start, week_end, prev_week_start, prev_week_end)
         
         # Get user's currency symbol
@@ -346,11 +363,18 @@ class WeeklyReportService:
         # Total spending insight
         insights.append(f"Total spending this week: {summary['total_expenses']:.2f} across {summary['transaction_count']} transactions.")
         
-        # Net savings insight
-        if summary['net_savings'] > 0:
-            insights.append(f"You saved {summary['net_savings']:.2f} this week!")
-        elif summary['net_savings'] < 0:
-            insights.append(f"You spent {abs(summary['net_savings']):.2f} more than you earned this week.")
+        # Net savings insight (only show if income is displayed)
+        if show_income:
+            if summary['net_savings'] > 0:
+                insights.append(f"You saved {summary['net_savings']:.2f} this week!")
+            elif summary['net_savings'] < 0:
+                insights.append(f"You spent {abs(summary['net_savings']):.2f} more than you earned this week.")
+        else:
+            # For weekly reports without income, focus on spending control
+            if summary['total_expenses'] > 0:
+                insights.append(f"Focus on expense management this week.")
+            else:
+                insights.append(f"Great job! No expenses recorded this week.")
         
         return insights
     
@@ -431,7 +455,7 @@ class WeeklyReportService:
         
         return achievements
     
-    def _generate_recommendations(self, user_id: int, week_start: date, week_end: date, user_currency: str = 'USD') -> List[Dict]:
+    def _generate_recommendations(self, user_id: int, week_start: date, week_end: date, user_currency: str = 'USD', show_income: bool = False) -> List[Dict]:
         """Generate actionable recommendations"""
         recommendations = []
         
@@ -464,19 +488,32 @@ class WeeklyReportService:
                     'action': 'review'
                 })
         
-        # Recommendation 3: Savings opportunity
-        summary = self._generate_summary(user_id, week_start, week_end, 
-                                        week_start - timedelta(days=7), 
-                                        week_start - timedelta(days=1))
-        
-        if summary['net_savings'] < 0:
-            recommendations.append({
-                'type': 'increase_savings',
-                'priority': 'high',
-                'title': 'Increase your savings',
-                'description': f"You spent {abs(summary['net_savings']):.2f} more than you earned. Consider setting a weekly budget.",
-                'action': 'budget_plan'
-            })
+        # Recommendation 3: Savings opportunity (only show if income is displayed)
+        if show_income:
+            summary = self._generate_summary(user_id, week_start, week_end, 
+                                            week_start - timedelta(days=7), 
+                                            week_start - timedelta(days=1), show_income)
+            
+            if summary['net_savings'] < 0:
+                recommendations.append({
+                    'type': 'increase_savings',
+                    'priority': 'high',
+                    'title': 'Increase your savings',
+                    'description': f"You spent {abs(summary['net_savings']):.2f} more than you earned. Consider setting a weekly budget.",
+                    'action': 'budget_plan'
+                })
+        else:
+            # For weekly reports without income, focus on expense control
+            if category_analysis['top_category']:
+                top_cat = category_analysis['top_category']
+                if top_cat['amount'] > 500:  # High spending threshold
+                    recommendations.append({
+                        'type': 'expense_control',
+                        'priority': 'medium',
+                        'title': 'Monitor high spending',
+                        'description': f"You spent {top_cat['amount']:.2f} on {top_cat['name']} this week. Consider if this is necessary.",
+                        'action': 'review_spending'
+                    })
         
         # Recommendation 4: Positive reinforcement
         for cat in category_analysis['decreased_spending'][:1]:  # Top decrease

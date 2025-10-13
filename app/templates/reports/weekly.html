@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2">
+                        <i class="bi bi-calendar-week me-2"></i>
+                        Weekly Financial Reports
+                    </h1>
+                    <p class="text-muted mb-0">Focus on expense patterns and budget control</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="emailCurrentReport()">
+                        <i class="bi bi-envelope me-1"></i>
+                        Email Report
+                    </button>
+                    <a href="/reports/" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Back to Reports
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Current Week Report -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-graph-up-arrow me-2"></i>
+                                    This Week's Financial Report
+                                </h5>
+                                <span class="badge bg-light text-dark">
+                                    Week {{ report.period.week_number }}
+                                </span>
+                            </div>
+                            <small class="text-white" style="opacity: 0.9;">
+                                {{ report.period.start }} to {{ report.period.end }}
+                            </small>
+                        </div>
+                        
+                        <div class="card-body">
+                            <!-- Summary Cards -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-6 col-md-3">
+                                    <div class="summary-mini-card expenses">
+                                        <div class="label">Expenses</div>
+                                        <div class="value">{{ '%.2f'|format(report.summary.total_expenses) }}</div>
+                                        {% if report.summary.comparison.expense_change_pct != 0 %}
+                                        <div class="change {{ 'up' if report.summary.comparison.expense_change_pct > 0 else 'down' }}">
+                                            <i class="bi bi-{{ 'arrow-up' if report.summary.comparison.expense_change_pct > 0 else 'arrow-down' }}"></i>
+                                            {{ '%.1f'|format(report.summary.comparison.expense_change_pct|abs) }}%
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="summary-mini-card">
+                                        <div class="label">Transactions</div>
+                                        <div class="value">{{ report.summary.transaction_count }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="summary-mini-card {{ 'savings' if report.summary.net_savings > 0 else 'deficit' }}">
+                                        <div class="label">Net</div>
+                                        <div class="value">{{ '%.2f'|format(report.summary.net_savings) }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="summary-mini-card">
+                                        <div class="label">Avg Transaction</div>
+                                        <div class="value">{{ '%.2f'|format(report.summary.avg_transaction) }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Key Insights -->
+                            {% if report.insights %}
+                            <div class="insights-section mb-4">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-lightbulb me-2"></i>
+                                    Key Insights
+                                </h6>
+                                <ul class="insight-list">
+                                    {% for insight in report.insights %}
+                                    <li class="insight-item">{{ insight }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Achievements -->
+                            {% if report.achievements %}
+                            <div class="achievements-section mb-4">
+                                <h6 class="text-success mb-3">
+                                    <i class="bi bi-trophy me-2"></i>
+                                    Achievements Unlocked
+                                </h6>
+                                <div class="row g-2">
+                                    {% for achievement in report.achievements %}
+                                    <div class="col-md-6">
+                                        <div class="achievement-badge">
+                                            <div class="achievement-title">{{ achievement.title }}</div>
+                                            <div class="achievement-description">{{ achievement.description }}</div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Recommendations -->
+                            {% if report.recommendations %}
+                            <div class="recommendations-section mb-4">
+                                <h6 class="text-warning mb-3">
+                                    <i class="bi bi-stars me-2"></i>
+                                    Recommendations
+                                </h6>
+                                {% for rec in report.recommendations %}
+                                <div class="recommendation-card priority-{{ rec.priority }}">
+                                    <div class="rec-title">{{ rec.title }}</div>
+                                    <div class="rec-desc">{{ rec.description }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Category Analysis -->
+                            {% if report.category_analysis %}
+                            <div class="category-analysis-section mb-4">
+                                <h6 class="text-info mb-3">
+                                    <i class="bi bi-pie-chart me-2"></i>
+                                    Category Analysis
+                                </h6>
+                                <div class="row g-3">
+                                    {% if report.category_analysis.top_category %}
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6 class="card-title">Top Category</h6>
+                                                <h5 class="text-primary">{{ report.category_analysis.top_category.name }}</h5>
+                                                <p class="mb-0">{{ '%.2f'|format(report.category_analysis.top_category.amount) }}</p>
+                                                <small class="text-muted">{{ report.category_analysis.top_category.count }} transactions</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if report.category_analysis.increased_spending %}
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6 class="card-title text-danger">Increased Spending</h6>
+                                                {% for increase in report.category_analysis.increased_spending[:1] %}
+                                                <h6 class="text-danger">{{ increase.name }}</h6>
+                                                <p class="mb-0">+{{ increase.change_pct:.0f }}%</p>
+                                                <small class="text-muted">{{ '%.2f'|format(increase.change_amount) }} more</small>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if report.category_analysis.decreased_spending %}
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6 class="card-title text-success">Decreased Spending</h6>
+                                                {% for decrease in report.category_analysis.decreased_spending[:1] %}
+                                                <h6 class="text-success">{{ decrease.name }}</h6>
+                                                <p class="mb-0">{{ decrease.change_pct:.0f }}%</p>
+                                                <small class="text-muted">{{ '%.2f'|format(decrease.change_amount) }} saved</small>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Report History -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-clock-history me-2"></i>
+                                Weekly Report History
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Week</th>
+                                            <th>Period</th>
+                                            <th>Expenses</th>
+                                            <th>Transactions</th>
+                                            <th>Generated</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-primary">Week 42</span>
+                                            </td>
+                                            <td>Oct 13-19, 2025</td>
+                                            <td>{{ '%.2f'|format(report.summary.total_expenses) }}</td>
+                                            <td>{{ report.summary.transaction_count }}</td>
+                                            <td>Just now</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="viewReport('current')">
+                                                    <i class="bi bi-eye me-1"></i>View
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="emailReport('current')">
+                                                    <i class="bi bi-envelope me-1"></i>Email
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <!-- More historical reports would be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.summary-mini-card {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    border-left: 4px solid #dee2e6;
+}
+
+.summary-mini-card.expenses {
+    border-left-color: #dc3545;
+}
+
+.summary-mini-card.savings {
+    border-left-color: #198754;
+}
+
+.summary-mini-card.deficit {
+    border-left-color: #dc3545;
+}
+
+.summary-mini-card .label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.summary-mini-card .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.summary-mini-card .change {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.summary-mini-card .change.up {
+    color: #dc3545;
+}
+
+.summary-mini-card .change.down {
+    color: #198754;
+}
+
+.insight-list {
+    list-style: none;
+    padding: 0;
+}
+
+.insight-item {
+    background: #f8f9fa;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    border-left: 3px solid #0d6efd;
+}
+
+.achievement-badge {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+}
+
+.achievement-title {
+    font-weight: 600;
+    color: #155724;
+    margin-bottom: 0.25rem;
+}
+
+.achievement-description {
+    font-size: 0.875rem;
+    color: #155724;
+    opacity: 0.8;
+}
+
+.recommendation-card {
+    background: #fff3cd;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 6px;
+    border-left: 4px solid #ffc107;
+}
+
+.recommendation-card.priority-high {
+    border-left-color: #dc3545;
+    background: #f8d7da;
+}
+
+.recommendation-card.priority-medium {
+    border-left-color: #ffc107;
+    background: #fff3cd;
+}
+
+.recommendation-card.priority-low {
+    border-left-color: #28a745;
+    background: #d4edda;
+}
+
+.rec-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.rec-desc {
+    font-size: 0.875rem;
+    opacity: 0.8;
+}
+</style>
+
+<script>
+function emailCurrentReport() {
+    fetch('/reports/weekly/email', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert('Weekly report email sent!');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function viewReport(period) {
+    // Already viewing current report
+    if (period === 'current') {
+        return;
+    }
+    window.location.href = `/reports/weekly/${period}`;
+}
+
+function emailReport(period) {
+    fetch('/reports/weekly/email', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert('Weekly report email sent!');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+</script>
+
+{% endblock %}

@@ -35,18 +35,18 @@ class EmailService:
         
         # Skip email sending in development mode
         if self.is_development:
-            print(f"📧 Development mode: Skipping email to {to_email}")
-            print(f"📧 Subject: {subject}")
-            print(f"📧 Content preview: {html_content[:100]}...")
+            print(f"Development mode: Skipping email to {to_email}")
+            print(f"Subject: {subject}")
+            print(f"Content preview: {html_content[:100]}...")
             return True
         
         # Use Resend API if available (preferred method)
         if self.resend_api_key:
-            print(f"📧 Using Resend API for email...")
+            print(f"Using Resend API for email...")
             return await self._send_email_resend(to_email, subject, html_content, text_content)
         
         # Fallback to SMTP if Resend is not configured
-        print(f"📧 Using SMTP for email...")
+        print(f"Using SMTP for email...")
         
         # Try primary SMTP server first (Google SMTP with TLS)
         result = await self._try_send_email(to_email, subject, html_content, text_content, 
@@ -55,7 +55,7 @@ class EmailService:
             return True
             
         # Try alternative SMTP server (Google SMTP with SSL)
-        print(f"🔄 Trying alternative SMTP server (SSL)...")
+        print(f"Trying alternative SMTP server (SSL)...")
         result = await self._try_send_email(to_email, subject, html_content, text_content, 
                                           self.smtp_server_alt, self.smtp_port_alt, use_ssl=True)
         return result
@@ -63,9 +63,9 @@ class EmailService:
     async def _send_email_resend(self, to_email: str, subject: str, html_content: str, text_content: str = None):
         """Send email using Resend API"""
         try:
-            print(f"📧 Sending email via Resend to {to_email}")
-            print(f"📧 From: {self.resend_from_name} <{self.resend_from_email}>")
-            print(f"📧 Subject: {subject}")
+            print(f"Sending email via Resend to {to_email}")
+            print(f"From: {self.resend_from_name} <{self.resend_from_email}>")
+            print(f"Subject: {subject}")
             
             # Prepare email data for Resend API
             email_data = {
@@ -93,10 +93,10 @@ class EmailService:
                 )
                 
                 if response.status_code == 200:
-                    print(f"✅ Email sent successfully via Resend to {to_email}")
+                    print(f"Email sent successfully via Resend to {to_email}")
                     return True
                 else:
-                    print(f"❌ Resend API error: {response.status_code} - {response.text}")
+                    print(f"Resend API error: {response.status_code} - {response.text}")
                     return False
                     
         except Exception as e:
@@ -301,7 +301,7 @@ class EmailService:
         achievements = report['achievements']
         recommendations = report['recommendations']
         
-        subject = f"📊 Your Weekly Financial Report - Week of {period['start']}"
+        subject = f"Your Weekly Financial Report - Week of {period['start']}"
         
         # Build insights HTML
         insights_html = ""
@@ -362,7 +362,7 @@ class EmailService:
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>📊 Your Weekly Financial Report</h1>
+                    <h1>Your Weekly Financial Report</h1>
                     <p>Week of {period['start']} to {period['end']}</p>
                 </div>
                 
@@ -391,17 +391,17 @@ class EmailService:
                     
                     <!-- Key Insights -->
                     <div class="section">
-                        <h2 class="section-title">💡 Key Insights</h2>
+                        <h2 class="section-title">Key Insights</h2>
                         <ul class="insight-list">
                             {insights_html}
                         </ul>
                     </div>
                     
                     <!-- Achievements -->
-                    {"<div class='section'><h2 class='section-title'>🏆 Achievements</h2>" + achievements_html + "</div>" if achievements else ""}
+                    {"<div class='section'><h2 class='section-title'>Achievements</h2>" + achievements_html + "</div>" if achievements else ""}
                     
                     <!-- Recommendations -->
-                    {"<div class='section'><h2 class='section-title'>💡 Recommendations</h2>" + recommendations_html + "</div>" if recommendations else ""}
+                    {"<div class='section'><h2 class='section-title'>Recommendations</h2>" + recommendations_html + "</div>" if recommendations else ""}
                     
                     <!-- CTA -->
                     <div style="text-align: center; margin: 30px 0;">
@@ -410,7 +410,7 @@ class EmailService:
                 </div>
                 
                 <div class="footer">
-                    <p>Keep tracking your finances and stay on top of your goals! 💪</p>
+                    <p>Keep tracking your finances and stay on top of your goals!</p>
                     <p style="margin-top: 15px;">
                         <a href="{settings.BASE_URL}/ai/settings" style="color: #667eea; text-decoration: none;">Manage Report Settings</a>
                     </p>

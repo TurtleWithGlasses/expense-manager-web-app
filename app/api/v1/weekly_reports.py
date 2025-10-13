@@ -41,7 +41,7 @@ async def get_weekly_report_widget(
     user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
-    """Get weekly report widget for dashboard"""
+    """Get weekly report widget for dashboard (full report)"""
     # Check user preferences
     prefs = db.query(UserReportPreferences).filter(
         UserReportPreferences.user_id == user.id
@@ -54,6 +54,31 @@ async def get_weekly_report_widget(
     report = _get_or_generate_report(db, user.id)
     
     return render(request, "dashboard/_weekly_report.html", {
+        "user": user,
+        "report": report
+    })
+
+
+@router.get("/summary", response_class=HTMLResponse)
+async def get_weekly_summary_widget(
+    request: Request,
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Get compact weekly summary widget for dashboard"""
+    # Check user preferences
+    prefs = db.query(UserReportPreferences).filter(
+        UserReportPreferences.user_id == user.id
+    ).first()
+    
+    if prefs and not prefs.show_on_dashboard:
+        return HTMLResponse("")  # Don't show if disabled
+    
+    # Generate fresh compact report (without income)
+    report_service = WeeklyReportService(db)
+    report = report_service.generate_weekly_report(user.id, show_income=False)
+    
+    return render(request, "dashboard/_weekly_summary.html", {
         "user": user,
         "report": report
     })
@@ -186,7 +211,7 @@ def _get_or_generate_report(db: Session, user_id: int) -> dict:
     # Always generate fresh report to ensure latest code changes are applied
     # This prevents cached reports with old currency symbols from being displayed
     report_service = WeeklyReportService(db)
-    report = report_service.generate_weekly_report(user_id)
+    report = report_service.generate_weekly_report(user_id, show_income=False)
     
     # Save to database
     _save_report(db, user_id, report)

@@ -31,6 +31,7 @@
                     {% endif %}
                 </div>
             </div>
+            {% if report.show_income %}
             <div class="col-6 col-md-3">
                 <div class="summary-mini-card income">
                     <div class="label">Income*</div>
@@ -43,6 +44,7 @@
                     {% endif %}
                 </div>
             </div>
+            {% endif %}
             <div class="col-6 col-md-3">
                 <div class="summary-mini-card {{ 'savings' if report.summary.net_savings > 0 else 'deficit' }}">
                     <div class="label">Net</div>
@@ -135,12 +137,14 @@
             </button>
         </div>
         
-        <!-- Income Calculation Note -->
-        <div class="text-center mt-2">
-            <small class="text-muted" style="opacity: 0.7;">
-                * Income calculated from monthly earnings (÷ 4.33 weeks)
-            </small>
-        </div>
+                <!-- Income Calculation Note -->
+                {% if report.show_income %}
+                <div class="text-center mt-2">
+                    <small class="text-muted" style="opacity: 0.7;">
+                        * Income calculated from monthly earnings (÷ 4.33 weeks)
+                    </small>
+                </div>
+                {% endif %}
     </div>
 </div>
 

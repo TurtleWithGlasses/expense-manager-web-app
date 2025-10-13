@@ -7,6 +7,7 @@
 <div class="quick-links-horizontal">
   <a class="btn ghost" href="/entries/"><i class="bi bi-plus-circle"></i> Add / View / Edit Entries</a>
   <a class="btn ghost" href="/categories/"><i class="bi bi-tags"></i> Manage Categories</a>
+  <a class="btn ghost" href="/reports/"><i class="bi bi-graph-up"></i> Financial Reports</a>
   <a class="btn ghost" href="/currency/settings"><i class="bi bi-currency-exchange"></i> Currency</a>
   <a class="btn ghost" href="/ai/settings"><i class="bi bi-robot"></i> AI Settings</a>
   <a class="btn ghost" title="Coming soon" href="#"><i class="bi bi-calendar"></i> Calendar</a>
@@ -81,9 +82,9 @@
   </div>
 </div>
 
-<!-- Weekly Report Widget -->
-<div id="weekly-report" class="mt-4" hx-get="/reports/weekly/widget" hx-trigger="load" hx-swap="innerHTML">
-  <div class="muted">Loading weekly report...</div>
+<!-- Weekly Summary Widget (Compact) -->
+<div id="weekly-summary" class="mt-4" hx-get="/reports/weekly/summary" hx-trigger="load" hx-swap="innerHTML">
+  <div class="muted">Loading weekly summary...</div>
 </div>
 
 <!-- KPIs -->

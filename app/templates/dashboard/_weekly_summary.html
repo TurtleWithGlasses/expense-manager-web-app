@@ -1,0 +1,154 @@
+<!-- Weekly Financial Summary Widget (Compact) -->
+{% if report %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-gradient-primary">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="text-white mb-0">
+                <i class="bi bi-graph-up-arrow me-2"></i>
+                📊 Weekly Summary
+            </h5>
+            <span class="badge bg-light text-dark">
+                Week {{ report.period.week_number }}
+            </span>
+        </div>
+        <small class="text-white opacity-75">Week of {{ report.period.start }} to {{ report.period.end }}</small>
+    </div>
+    
+    <div class="card-body">
+        <!-- Quick Stats Row -->
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-md-3">
+                <div class="summary-mini-card expenses">
+                    <div class="label">Expenses</div>
+                    <div class="value">{{ '%.2f'|format(report.summary.total_expenses) }}</div>
+                    {% if report.summary.comparison.expense_change_pct != 0 %}
+                    <div class="change {{ 'up' if report.summary.comparison.expense_change_pct > 0 else 'down' }}">
+                        <i class="bi bi-{{ 'arrow-up' if report.summary.comparison.expense_change_pct > 0 else 'arrow-down' }}"></i>
+                        {{ '%.1f'|format(report.summary.comparison.expense_change_pct|abs) }}%
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="summary-mini-card">
+                    <div class="label">Transactions</div>
+                    <div class="value">{{ report.summary.transaction_count }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="summary-mini-card {{ 'savings' if report.summary.net_savings > 0 else 'deficit' }}">
+                    <div class="label">Net</div>
+                    <div class="value">{{ '%.2f'|format(report.summary.net_savings) }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="summary-mini-card">
+                    <div class="label">Avg/Transaction</div>
+                    <div class="value">{{ '%.2f'|format(report.summary.avg_transaction) }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Key Highlight -->
+        {% if report.insights %}
+        <div class="alert alert-success mb-3">
+            <i class="bi bi-lightbulb me-2"></i>
+            <strong>Key Insight:</strong> {{ report.insights[0] if report.insights else "No insights available" }}
+        </div>
+        {% endif %}
+        
+        <!-- Achievement Badge (if any) -->
+        {% if report.achievements %}
+        <div class="achievement-badge mb-3">
+            <i class="bi bi-trophy me-2"></i>
+            <strong>🏆 Achievement:</strong> {{ report.achievements[0].title if report.achievements else "No achievements this week" }}
+            {% if report.achievements and report.achievements[0].points %}
+            <span class="badge bg-success ms-2">+{{ report.achievements[0].points }} points</span>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Action Buttons -->
+        <div class="d-flex gap-2">
+            <a href="/reports/weekly" class="btn btn-primary btn-sm">
+                <i class="bi bi-file-text me-1"></i> View Full Report
+            </a>
+            <button class="btn btn-outline-secondary btn-sm" onclick="emailReport()">
+                <i class="bi bi-envelope me-1"></i> Email Report
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.summary-mini-card {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 8px;
+    text-align: center;
+    border-left: 4px solid #dee2e6;
+}
+
+.summary-mini-card.expenses {
+    border-left-color: #dc3545;
+}
+
+.summary-mini-card.savings {
+    border-left-color: #198754;
+}
+
+.summary-mini-card.deficit {
+    border-left-color: #dc3545;
+}
+
+.summary-mini-card .label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+}
+
+.summary-mini-card .value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.summary-mini-card .change {
+    font-size: 0.7rem;
+    margin-top: 0.25rem;
+}
+
+.summary-mini-card .change.up {
+    color: #dc3545;
+}
+
+.summary-mini-card .change.down {
+    color: #198754;
+}
+
+.achievement-badge {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    padding: 0.75rem;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+    font-size: 0.875rem;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+</style>
+
+<script>
+function emailReport() {
+    fetch('/reports/weekly/email', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert('Weekly report email sent!');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+</script>
