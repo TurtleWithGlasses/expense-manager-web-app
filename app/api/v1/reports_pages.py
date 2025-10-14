@@ -158,8 +158,8 @@ async def email_weekly_report(
     report = report_service.generate_weekly_report(user["id"], show_income=False)
     
     await email_service.send_weekly_report_email(
-        user.email,
-        user.full_name or "User",
+        user["email"],
+        user.get("full_name") or "User",
         report
     )
     
@@ -179,8 +179,8 @@ async def email_monthly_report(
     report = report_service.generate_monthly_report(user["id"])
     
     await email_service.send_monthly_report_email(
-        user.email,
-        user.full_name or "User",
+        user["email"],
+        user.get("full_name") or "User",
         report
     )
     
@@ -225,8 +225,8 @@ async def email_annual_report(
         }
         
         await email_service.send_annual_report_email(
-            user.email,
-            user.full_name or "User",
+            user["email"],
+            user.get("full_name") or "User",
             annual_report
         )
         
