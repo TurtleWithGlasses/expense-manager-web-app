@@ -589,7 +589,7 @@ class WeeklyReportService:
                 category_hist = [e for e in historical if e.category_id == entry.category_id]
                 if category_hist:
                     cat_amounts = [float(e.amount) for e in category_hist]
-                    cat_mean = np.mean(cat_amounts)
+                    cat_mean = sum(cat_amounts) / len(cat_amounts)
                     
                     if amount > cat_mean * 3:
                         anomalies.append({
