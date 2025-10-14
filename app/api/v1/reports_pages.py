@@ -33,15 +33,28 @@ async def weekly_reports_page(
     db: Session = Depends(get_db)
 ):
     """Weekly reports page"""
-    # Generate current weekly report (without income)
-    report_service = WeeklyReportService(db)
-    report = report_service.generate_weekly_report(user.id, show_income=False)
-    
-    return render(request, "reports/weekly.html", {
-        "user": user,
-        "report": report,
-        "request": request
-    })
+    try:
+        # Generate current weekly report (without income)
+        report_service = WeeklyReportService(db)
+        report = report_service.generate_weekly_report(user.id, show_income=False)
+        
+        return render(request, "reports/weekly.html", {
+            "user": user,
+            "report": report,
+            "request": request
+        })
+    except Exception as e:
+        print(f"ERROR in weekly_reports_page: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Return error page
+        return render(request, "reports/weekly.html", {
+            "user": user,
+            "report": None,
+            "error": str(e),
+            "request": request
+        })
 
 
 @router.get("/monthly", response_class=HTMLResponse)
@@ -51,15 +64,28 @@ async def monthly_reports_page(
     db: Session = Depends(get_db)
 ):
     """Monthly reports page"""
-    # Generate current monthly report (with income)
-    report_service = MonthlyReportService(db)
-    report = report_service.generate_monthly_report(user.id)
-    
-    return render(request, "reports/monthly.html", {
-        "user": user,
-        "report": report,
-        "request": request
-    })
+    try:
+        # Generate current monthly report (with income)
+        report_service = MonthlyReportService(db)
+        report = report_service.generate_monthly_report(user.id)
+        
+        return render(request, "reports/monthly.html", {
+            "user": user,
+            "report": report,
+            "request": request
+        })
+    except Exception as e:
+        print(f"ERROR in monthly_reports_page: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Return error page
+        return render(request, "reports/monthly.html", {
+            "user": user,
+            "report": None,
+            "error": str(e),
+            "request": request
+        })
 
 
 @router.get("/annual", response_class=HTMLResponse)
