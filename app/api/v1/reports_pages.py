@@ -17,7 +17,7 @@ router = APIRouter(prefix="/reports", tags=["Reports Pages"])
 @router.get("/", response_class=HTMLResponse)
 async def reports_index(
     request: Request,
-    user: User = Depends(current_user),
+    user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Main reports page"""
@@ -30,14 +30,14 @@ async def reports_index(
 @router.get("/weekly", response_class=HTMLResponse)
 async def weekly_reports_page(
     request: Request,
-    user: User = Depends(current_user),
+    user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Weekly reports page"""
     try:
         # Generate current weekly report (without income)
         report_service = WeeklyReportService(db)
-        report = report_service.generate_weekly_report(user.id, show_income=False)
+        report = report_service.generate_weekly_report(user["id"], show_income=False)
         
         return render(request, "reports/weekly.html", {
             "user": user,
@@ -61,14 +61,14 @@ async def weekly_reports_page(
 @router.get("/monthly", response_class=HTMLResponse)
 async def monthly_reports_page(
     request: Request,
-    user: User = Depends(current_user),
+    user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Monthly reports page"""
     try:
         # Generate current monthly report (with income)
         report_service = MonthlyReportService(db)
-        report = report_service.generate_monthly_report(user.id)
+        report = report_service.generate_monthly_report(user["id"])
         
         return render(request, "reports/monthly.html", {
             "user": user,
@@ -92,7 +92,7 @@ async def monthly_reports_page(
 @router.get("/annual", response_class=HTMLResponse)
 async def annual_reports_page(
     request: Request,
-    user: User = Depends(current_user),
+    user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Annual reports page"""
@@ -108,11 +108,11 @@ async def annual_reports_page(
         
         # Get user's currency
         from app.models.user_preferences import UserPreferences
-        user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
+        user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user["id"]).first()
         user_currency = user_prefs.currency_code if user_prefs and user_prefs.currency_code else 'USD'
         
         # Generate basic annual summary
-        annual_summary = await range_summary_multi_currency(db, user.id, year_start, year_end, user_currency)
+        annual_summary = await range_summary_multi_currency(db, user["id"], year_start, year_end, user_currency)
         
         # Create a basic annual report structure
         annual_report = {
@@ -147,7 +147,7 @@ async def annual_reports_page(
 
 @router.post("/weekly/email")
 async def email_weekly_report(
-    user: User = Depends(current_user),
+    user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Email current weekly report"""
@@ -155,7 +155,7 @@ async def email_weekly_report(
     from app.services.weekly_report_service import WeeklyReportService
     
     report_service = WeeklyReportService(db)
-    report = report_service.generate_weekly_report(user.id, show_income=False)
+    report = report_service.generate_weekly_report(user["id"], show_income=False)
     
     await email_service.send_weekly_report_email(
         user.email,
@@ -168,7 +168,7 @@ async def email_weekly_report(
 
 @router.post("/monthly/email")
 async def email_monthly_report(
-    user: User = Depends(current_user),
+    user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Email current monthly report"""
@@ -176,7 +176,7 @@ async def email_monthly_report(
     from app.services.monthly_report_service import MonthlyReportService
     
     report_service = MonthlyReportService(db)
-    report = report_service.generate_monthly_report(user.id)
+    report = report_service.generate_monthly_report(user["id"])
     
     await email_service.send_monthly_report_email(
         user.email,
@@ -189,7 +189,7 @@ async def email_monthly_report(
 
 @router.post("/annual/email")
 async def email_annual_report(
-    user: User = Depends(current_user),
+    user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Email current annual report"""
@@ -205,11 +205,11 @@ async def email_annual_report(
         
         # Get user's currency
         from app.models.user_preferences import UserPreferences
-        user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
+        user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user["id"]).first()
         user_currency = user_prefs.currency_code if user_prefs and user_prefs.currency_code else 'USD'
         
         # Generate basic annual summary
-        annual_summary = await range_summary_multi_currency(db, user.id, year_start, year_end, user_currency)
+        annual_summary = await range_summary_multi_currency(db, user["id"], year_start, year_end, user_currency)
         
         # Create a basic annual report structure
         annual_report = {

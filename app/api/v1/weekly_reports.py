@@ -1,9 +1,9 @@
 """Weekly Reports API"""
 
-from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi import APIRouter, Depends, Request, HTTPException, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.orm import Session
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import json
 
 from app.deps import current_user
@@ -24,10 +24,10 @@ async def get_current_week_report(
 ):
     """Get the current week's report"""
     report_service = WeeklyReportService(db)
-    report = report_service.generate_weekly_report(user.id)
+    report = report_service.generate_weekly_report(user["id"])
     
     # Save to database
-    _save_report(db, user.id, report)
+    _save_report(db, user["id"], report)
     
     return JSONResponse({
         "success": True,
@@ -44,14 +44,14 @@ async def get_weekly_report_widget(
     """Get weekly report widget for dashboard (full report)"""
     # Check user preferences
     prefs = db.query(UserReportPreferences).filter(
-        UserReportPreferences.user_id == user.id
+        UserReportPreferences.user_id == user["id"]
     ).first()
     
     if prefs and not prefs.show_on_dashboard:
         return HTMLResponse("")  # Don't show if disabled
     
     # Get or generate current week report
-    report = _get_or_generate_report(db, user.id)
+    report = _get_or_generate_report(db, user["id"])
     
     return render(request, "dashboard/_weekly_report.html", {
         "user": user,
@@ -68,7 +68,7 @@ async def get_weekly_summary_widget(
     """Get compact weekly summary widget for dashboard"""
     # Check user preferences
     prefs = db.query(UserReportPreferences).filter(
-        UserReportPreferences.user_id == user.id
+        UserReportPreferences.user_id == user["id"]
     ).first()
     
     if prefs and not prefs.show_on_dashboard:
@@ -76,7 +76,7 @@ async def get_weekly_summary_widget(
     
     # Generate fresh compact report (without income)
     report_service = WeeklyReportService(db)
-    report = report_service.generate_weekly_report(user.id, show_income=False)
+    report = report_service.generate_weekly_report(user["id"], show_income=False)
     
     return render(request, "dashboard/_weekly_summary.html", {
         "user": user,
@@ -93,7 +93,7 @@ async def weekly_reports_page(
     """Full weekly reports page with history"""
     # Get last 12 weeks of reports
     reports = db.query(WeeklyReport).filter(
-        WeeklyReport.user_id == user.id
+        WeeklyReport.user_id == user["id"]
     ).order_by(WeeklyReport.week_start.desc()).limit(12).all()
     
     # Parse report data
@@ -120,7 +120,7 @@ async def email_weekly_report(
 ):
     """Send current week's report via email"""
     # Get or generate report
-    report = _get_or_generate_report(db, user.id)
+    report = _get_or_generate_report(db, user["id"])
     
     if not report:
         return JSONResponse({
@@ -131,15 +131,15 @@ async def email_weekly_report(
     # Send email
     try:
         await email_service.send_weekly_report_email(
-            user.email,
-            user.full_name or user.email,
+            user["email"],
+            user.get("full_name") or user["email"],
             report
         )
         
         # Mark as sent
         week_start = date.fromisoformat(report['period']['start'])
         report_record = db.query(WeeklyReport).filter(
-            WeeklyReport.user_id == user.id,
+            WeeklyReport.user_id == user["id"],
             WeeklyReport.week_start == week_start
         ).first()
         
@@ -167,7 +167,7 @@ async def report_preferences_page(
     db: Session = Depends(get_db)
 ):
     """Report preferences page"""
-    prefs = _get_or_create_preferences(db, user.id)
+    prefs = _get_or_create_preferences(db, user["id"])
     
     return render(request, "settings/report_preferences.html", {
         "user": user,
@@ -177,24 +177,25 @@ async def report_preferences_page(
 
 @router.post("/preferences", response_class=JSONResponse)
 async def update_report_preferences(
-    request: Request,
+    show_on_dashboard: bool = Form(False),
+    send_email: bool = Form(False),
+    frequency: str = Form("weekly"),
+    include_achievements: bool = Form(True),
+    include_recommendations: bool = Form(True),
+    include_anomalies: bool = Form(True),
     user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Update report preferences"""
-    from fastapi import Form
-    
-    form_data = await request.form()
-    
-    prefs = _get_or_create_preferences(db, user.id)
+    prefs = _get_or_create_preferences(db, user["id"])
     
     # Update preferences
-    prefs.frequency = form_data.get('frequency', 'weekly')
-    prefs.send_email = form_data.get('send_email') == 'on'
-    prefs.show_on_dashboard = form_data.get('show_on_dashboard') == 'on'
-    prefs.include_achievements = form_data.get('include_achievements') == 'on'
-    prefs.include_recommendations = form_data.get('include_recommendations') == 'on'
-    prefs.include_anomalies = form_data.get('include_anomalies') == 'on'
+    prefs.frequency = frequency
+    prefs.send_email = send_email
+    prefs.show_on_dashboard = show_on_dashboard
+    prefs.include_achievements = include_achievements
+    prefs.include_recommendations = include_recommendations
+    prefs.include_anomalies = include_anomalies
     
     db.commit()
     
