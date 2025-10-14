@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Financial Report{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2 text-white mb-1">
+                        <i class="bi bi-calendar-month me-2"></i>
+                        Monthly Financial Report
+                    </h1>
+                    <p class="text-light mb-0">{{ report.period.month_name }} {{ report.period.year }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success" onclick="emailMonthlyReport()">
+                        <i class="bi bi-envelope me-1"></i>
+                        Email Report
+                    </button>
+                    <a href="/reports/" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Back to Reports
+                    </a>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white mb-1">Total Income</h6>
+                                    <h3 class="mb-0">{{ '%.2f'|format(report.summary.total_income) }}</h3>
+                                    {% if report.summary.comparison.income_change_pct != 0 %}
+                                    <small class="opacity-75">
+                                        <i class="bi bi-{{ 'arrow-up' if report.summary.comparison.income_change_pct > 0 else 'arrow-down' }}"></i>
+                                        {{ '%.1f'|format(report.summary.comparison.income_change_pct|abs) }}% vs last month
+                                    </small>
+                                    {% endif %}
+                                </div>
+                                <i class="bi bi-cash-coin fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white mb-1">Total Expenses</h6>
+                                    <h3 class="mb-0">{{ '%.2f'|format(report.summary.total_expenses) }}</h3>
+                                    {% if report.summary.comparison.expense_change_pct != 0 %}
+                                    <small class="opacity-75">
+                                        <i class="bi bi-{{ 'arrow-up' if report.summary.comparison.expense_change_pct > 0 else 'arrow-down' }}"></i>
+                                        {{ '%.1f'|format(report.summary.comparison.expense_change_pct|abs) }}% vs last month
+                                    </small>
+                                    {% endif %}
+                                </div>
+                                <i class="bi bi-cart-dash fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white mb-1">Net Savings</h6>
+                                    <h3 class="mb-0">{{ '%.2f'|format(report.summary.net_savings) }}</h3>
+                                    <small class="opacity-75">{{ '%.1f'|format(report.summary.savings_rate) }}% savings rate</small>
+                                </div>
+                                <i class="bi bi-piggy-bank fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white mb-1">Transactions</h6>
+                                    <h3 class="mb-0">{{ report.summary.transaction_count }}</h3>
+                                    <small class="opacity-75">{{ '%.2f'|format(report.summary.avg_transaction) }} avg</small>
+                                </div>
+                                <i class="bi bi-list-check fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Insights -->
+            {% if report.insights %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        Key Insights
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        {% for insight in report.insights %}
+                        <li class="mb-2 text-light">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            {{ insight }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Achievements -->
+            {% if report.achievements %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="bi bi-trophy me-2"></i>
+                        Achievements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for achievement in report.achievements %}
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="text-primary mb-1">{{ achievement.title }}</h6>
+                                <p class="text-muted mb-1">{{ achievement.description }}</p>
+                                <small class="text-success">{{ achievement.points }} points</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recommendations -->
+            {% if report.recommendations %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="bi bi-arrow-right-circle me-2"></i>
+                        Recommendations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for rec in report.recommendations %}
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="text-primary mb-0">{{ rec.title }}</h6>
+                                    <span class="badge bg-{{ 'danger' if rec.priority == 'high' else 'warning' }}">
+                                        {{ rec.priority|title }}
+                                    </span>
+                                </div>
+                                <p class="text-muted mb-2">{{ rec.description }}</p>
+                                {% if rec.potential_savings %}
+                                <small class="text-success">
+                                    Potential savings: {{ '%.2f'|format(rec.potential_savings) }}
+                                </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Category Analysis -->
+            {% if report.category_analysis %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="bi bi-pie-chart me-2"></i>
+                        Category Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if report.category_analysis.top_category %}
+                        <div class="col-md-4">
+                            <h6 class="text-white">Top Category</h6>
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="text-primary">{{ report.category_analysis.top_category.name }}</h6>
+                                <p class="text-muted mb-1">{{ '%.2f'|format(report.category_analysis.top_category.amount) }}</p>
+                                <small class="text-muted">{{ report.category_analysis.top_category.count }} transactions</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if report.category_analysis.increased_spending %}
+                        <div class="col-md-4">
+                            <h6 class="text-white">Increased Spending</h6>
+                            {% for item in report.category_analysis.increased_spending[:2] %}
+                            <div class="border rounded p-2 mb-2 bg-light">
+                                <small class="text-danger">{{ item.name }}: +{{ '%.1f'|format(item.change_pct) }}%</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if report.category_analysis.decreased_spending %}
+                        <div class="col-md-4">
+                            <h6 class="text-white">Decreased Spending</h6>
+                            {% for item in report.category_analysis.decreased_spending[:2] %}
+                            <div class="border rounded p-2 mb-2 bg-light">
+                                <small class="text-success">{{ item.name }}: {{ '%.1f'|format(item.change_pct) }}%</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function emailMonthlyReport() {
+    fetch('/reports/monthly/email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Monthly report email sent successfully!');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send email. Please try again.');
+    });
+}
+</script>
+{% endblock %}

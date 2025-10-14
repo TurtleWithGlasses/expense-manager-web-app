@@ -136,7 +136,7 @@ class MonthlyReportService:
             Category.name,
             func.sum(Entry.amount).label('total'),
             func.count(Entry.id).label('count')
-        ).join(Entry).filter(
+        ).join(Entry, Category.id == Entry.category_id).filter(
             Entry.user_id == user_id,
             Entry.date >= month_start,
             Entry.date <= month_end,
@@ -147,7 +147,7 @@ class MonthlyReportService:
         prev_categories = self.db.query(
             Category.name,
             func.sum(Entry.amount).label('total')
-        ).join(Entry).filter(
+        ).join(Entry, Category.id == Entry.category_id).filter(
             Entry.user_id == user_id,
             Entry.date >= prev_month_start,
             Entry.date <= prev_month_end,
