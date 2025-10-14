@@ -37,7 +37,7 @@ async def weekly_reports_page(
     try:
         # Generate current weekly report (without income)
         report_service = WeeklyReportService(db)
-        report = report_service.generate_weekly_report(user["id"], show_income=False)
+        report = report_service.generate_weekly_report(user.id, show_income=False)
         
         return render(request, "reports/weekly.html", {
             "user": user,
@@ -68,7 +68,7 @@ async def monthly_reports_page(
     try:
         # Generate current monthly report (with income)
         report_service = MonthlyReportService(db)
-        report = report_service.generate_monthly_report(user["id"])
+        report = report_service.generate_monthly_report(user.id)
         
         return render(request, "reports/monthly.html", {
             "user": user,
@@ -108,11 +108,11 @@ async def annual_reports_page(
         
         # Get user's currency
         from app.models.user_preferences import UserPreferences
-        user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user["id"]).first()
+        user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
         user_currency = user_prefs.currency_code if user_prefs and user_prefs.currency_code else 'USD'
         
         # Generate basic annual summary
-        annual_summary = await range_summary_multi_currency(db, user["id"], year_start, year_end, user_currency)
+        annual_summary = await range_summary_multi_currency(db, user.id, year_start, year_end, user_currency)
         
         # Create a basic annual report structure
         annual_report = {
@@ -155,11 +155,11 @@ async def email_weekly_report(
     from app.services.weekly_report_service import WeeklyReportService
     
     report_service = WeeklyReportService(db)
-    report = report_service.generate_weekly_report(user["id"], show_income=False)
+    report = report_service.generate_weekly_report(user.id, show_income=False)
     
     await email_service.send_weekly_report_email(
-        user["email"],
-        user.get("full_name") or "User",
+        user.email,
+        user.full_name or "User",
         report
     )
     
@@ -176,11 +176,11 @@ async def email_monthly_report(
     from app.services.monthly_report_service import MonthlyReportService
     
     report_service = MonthlyReportService(db)
-    report = report_service.generate_monthly_report(user["id"])
+    report = report_service.generate_monthly_report(user.id)
     
     await email_service.send_monthly_report_email(
-        user["email"],
-        user.get("full_name") or "User",
+        user.email,
+        user.full_name or "User",
         report
     )
     
@@ -205,11 +205,11 @@ async def email_annual_report(
         
         # Get user's currency
         from app.models.user_preferences import UserPreferences
-        user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user["id"]).first()
+        user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
         user_currency = user_prefs.currency_code if user_prefs and user_prefs.currency_code else 'USD'
         
         # Generate basic annual summary
-        annual_summary = await range_summary_multi_currency(db, user["id"], year_start, year_end, user_currency)
+        annual_summary = await range_summary_multi_currency(db, user.id, year_start, year_end, user_currency)
         
         # Create a basic annual report structure
         annual_report = {
@@ -225,8 +225,8 @@ async def email_annual_report(
         }
         
         await email_service.send_annual_report_email(
-            user["email"],
-            user.get("full_name") or "User",
+            user.email,
+            user.full_name or "User",
             annual_report
         )
         
