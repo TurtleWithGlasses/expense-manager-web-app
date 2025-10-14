@@ -187,7 +187,7 @@
                                                 <h6 class="card-title text-success">Decreased Spending</h6>
                                                 {% for decrease in report.category_analysis.decreased_spending[:1] %}
                                                 <h6 class="text-success">{{ decrease.name }}</h6>
-                                                <p class="mb-0">{{ decrease.change_pct:.0f }}%</p>
+                                                <p class="mb-0">{{ '%.0f'|format(decrease.change_pct) }}%</p>
                                                 <small class="text-muted">{{ '%.2f'|format(decrease.change_amount) }} saved</small>
                                                 {% endfor %}
                                             </div>
