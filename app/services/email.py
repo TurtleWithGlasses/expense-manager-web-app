@@ -425,6 +425,245 @@ class EmailService:
         text_content = WeeklyReportService(self.db).format_report_text(report) if hasattr(self, 'db') else "View your weekly report online."
         
         return await self.send_email(user_email, subject, html_content, text_content)
+    
+    async def send_monthly_report_email(self, user_email: str, user_name: str, report: Dict):
+        """Send monthly financial report email"""
+        period = report['period']
+        summary = report['summary']
+        insights = report['insights']
+        achievements = report['achievements']
+        recommendations = report['recommendations']
+        
+        subject = f"Your Monthly Financial Report - {period['month_name']} {period['year']}"
+        
+        # Build insights HTML
+        insights_html = ""
+        for insight in insights:
+            insight_text = insight
+            insights_html += f"<li style='margin-bottom: 10px;'>{insight_text}</li>"
+        
+        # Build achievements HTML
+        achievements_html = ""
+        if achievements:
+            for achievement in achievements:
+                achievements_html += f"""
+                <div style='background: #d4edda; padding: 15px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid #28a745;'>
+                    <strong style='color: #155724;'>{achievement['title']}</strong><br>
+                    <span style='color: #155724;'>{achievement['description']}</span>
+                </div>
+                """
+        
+        # Build recommendations HTML
+        recommendations_html = ""
+        if recommendations:
+            for rec in recommendations:
+                priority_color = "#dc3545" if rec.get('priority') == 'high' else "#ffc107"
+                recommendations_html += f"""
+                <div style='background: #fff3cd; padding: 15px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid {priority_color};'>
+                    <strong style='color: #856404;'>{rec['title']}</strong><br>
+                    <span style='color: #856404;'>{rec['description']}</span>
+                </div>
+                """
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Monthly Financial Report</title>
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ text-align: center; padding: 30px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; margin-bottom: 30px; }}
+                .header h1 {{ margin: 0; font-size: 28px; }}
+                .header p {{ margin: 10px 0 0 0; opacity: 0.9; }}
+                .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin: 20px 0; }}
+                .summary-card {{ background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                .summary-card .label {{ font-size: 14px; color: #6b7280; margin-bottom: 8px; }}
+                .summary-card .value {{ font-size: 24px; font-weight: 700; color: #1f2937; }}
+                .summary-card.positive .value {{ color: #10b981; }}
+                .summary-card.negative .value {{ color: #ef4444; }}
+                .section {{ margin: 30px 0; }}
+                .section-title {{ font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; }}
+                .insight-list {{ list-style: none; padding: 0; }}
+                .insight-list li {{ background: #f9fafb; padding: 12px 15px; margin-bottom: 8px; border-radius: 6px; border-left: 3px solid #667eea; }}
+                .footer {{ background: #f9fafb; padding: 20px; text-align: center; color: #6b7280; font-size: 14px; }}
+                .cta-button {{ display: inline-block; padding: 14px 28px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 600; }}
+                .cta-button:hover {{ background: #5568d3; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Your Monthly Financial Report</h1>
+                    <p>{period['month_name']} {period['year']}</p>
+                </div>
+                
+                <div class="content">
+                    <!-- Summary Section -->
+                    <div class="section">
+                        <div class="summary-grid">
+                            <div class="summary-card positive">
+                                <div class="label">Total Income</div>
+                                <div class="value">${summary['total_income']:.2f}</div>
+                            </div>
+                            <div class="summary-card negative">
+                                <div class="label">Total Expenses</div>
+                                <div class="value">${summary['total_expenses']:.2f}</div>
+                            </div>
+                            <div class="summary-card {'positive' if summary['net_savings'] > 0 else 'negative'}">
+                                <div class="label">Net Savings</div>
+                                <div class="value">${summary['net_savings']:.2f}</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="label">Savings Rate</div>
+                                <div class="value">{summary['savings_rate']:.1f}%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Key Insights -->
+                    <div class="section">
+                        <h2 class="section-title">Key Insights</h2>
+                        <ul class="insight-list">
+                            {insights_html}
+                        </ul>
+                    </div>
+                    
+                    {f'<!-- Achievements --><div class="section"><h2 class="section-title">Achievements</h2>{achievements_html}</div>' if achievements_html else ''}
+                    
+                    {f'<!-- Recommendations --><div class="section"><h2 class="section-title">Recommendations</h2>{recommendations_html}</div>' if recommendations_html else ''}
+                    
+                    <div style="text-align: center; margin: 40px 0;">
+                        <a href="https://yourbudgetpulse.online/reports/monthly" class="cta-button">View Full Report</a>
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <p>This report was generated automatically by your Expense Manager.</p>
+                    <p>For support, contact us at support@yourbudgetpulse.online</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Text fallback
+        text_content = f"""
+        Your Monthly Financial Report - {period['month_name']} {period['year']}
+        
+        Income: ${summary['total_income']:.2f}
+        Expenses: ${summary['total_expenses']:.2f}
+        Net Savings: ${summary['net_savings']:.2f}
+        Savings Rate: {summary['savings_rate']:.1f}%
+        
+        Key Insights:
+        {chr(10).join(insights)}
+        
+        View your full report at: https://yourbudgetpulse.online/reports/monthly
+        """
+        
+        return await self.send_email(user_email, subject, html_content, text_content)
+    
+    async def send_annual_report_email(self, user_email: str, user_name: str, report: Dict):
+        """Send annual financial report email"""
+        period = report['period']
+        summary = report['summary']
+        
+        subject = f"Your Annual Financial Report - {period['year']}"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Annual Financial Report</title>
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ text-align: center; padding: 30px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; margin-bottom: 30px; }}
+                .header h1 {{ margin: 0; font-size: 28px; }}
+                .header p {{ margin: 10px 0 0 0; opacity: 0.9; }}
+                .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin: 20px 0; }}
+                .summary-card {{ background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                .summary-card .label {{ font-size: 14px; color: #6b7280; margin-bottom: 8px; }}
+                .summary-card .value {{ font-size: 24px; font-weight: 700; color: #1f2937; }}
+                .summary-card.positive .value {{ color: #10b981; }}
+                .summary-card.negative .value {{ color: #ef4444; }}
+                .section {{ margin: 30px 0; }}
+                .section-title {{ font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; }}
+                .footer {{ background: #f9fafb; padding: 20px; text-align: center; color: #6b7280; font-size: 14px; }}
+                .cta-button {{ display: inline-block; padding: 14px 28px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 600; }}
+                .cta-button:hover {{ background: #5568d3; }}
+                .coming-soon {{ background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 20px 0; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Your Annual Financial Report</h1>
+                    <p>{period['year']}</p>
+                </div>
+                
+                <div class="content">
+                    <!-- Summary Section -->
+                    <div class="section">
+                        <div class="summary-grid">
+                            <div class="summary-card positive">
+                                <div class="label">Total Income</div>
+                                <div class="value">${summary['income']:.2f}</div>
+                            </div>
+                            <div class="summary-card negative">
+                                <div class="label">Total Expenses</div>
+                                <div class="value">${summary['expense']:.2f}</div>
+                            </div>
+                            <div class="summary-card {'positive' if summary['balance'] > 0 else 'negative'}">
+                                <div class="label">Net Balance</div>
+                                <div class="value">${summary['balance']:.2f}</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="label">Year</div>
+                                <div class="value">{period['year']}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="coming-soon">
+                        <h3 style="color: #856404; margin-top: 0;">Advanced Annual Reports Coming Soon!</h3>
+                        <p style="color: #856404; margin-bottom: 0;">
+                            We're working on comprehensive annual reports with year-over-year comparisons, 
+                            seasonal analysis, and detailed insights. Stay tuned for more features!
+                        </p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 40px 0;">
+                        <a href="https://yourbudgetpulse.online/reports/annual" class="cta-button">View Full Report</a>
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <p>This report was generated automatically by your Expense Manager.</p>
+                    <p>For support, contact us at support@yourbudgetpulse.online</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Text fallback
+        text_content = f"""
+        Your Annual Financial Report - {period['year']}
+        
+        Income: ${summary['income']:.2f}
+        Expenses: ${summary['expense']:.2f}
+        Net Balance: ${summary['balance']:.2f}
+        
+        Advanced annual reports with year-over-year comparisons and seasonal analysis are coming soon!
+        
+        View your full report at: https://yourbudgetpulse.online/reports/annual
+        """
+        
+        return await self.send_email(user_email, subject, html_content, text_content)
 
 # Global service instance
 email_service = EmailService()

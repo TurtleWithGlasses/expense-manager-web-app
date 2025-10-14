@@ -27,11 +27,90 @@
                 </div>
             </div>
 
+            <!-- Annual Report Content -->
+            {% if error %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h6 class="alert-heading">Error Loading Report</h6>
+                        <p class="mb-0">There was an error generating your annual report: {{ error }}</p>
+                    </div>
+                </div>
+            </div>
+            {% elif not report %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">No Data Available</h6>
+                        <p class="mb-0">Unable to generate an annual report. Please try again later.</p>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Basic Annual Summary -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white mb-1">Total Income</h6>
+                                    <h3 class="mb-0">{{ '%.2f'|format(report.summary.income) }}</h3>
+                                </div>
+                                <i class="bi bi-cash-coin fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white mb-1">Total Expenses</h6>
+                                    <h3 class="mb-0">{{ '%.2f'|format(report.summary.expense) }}</h3>
+                                </div>
+                                <i class="bi bi-cart-dash fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white mb-1">Net Balance</h6>
+                                    <h3 class="mb-0">{{ '%.2f'|format(report.summary.balance) }}</h3>
+                                </div>
+                                <i class="bi bi-piggy-bank fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-dark mb-1">Year</h6>
+                                    <h3 class="mb-0">{{ report.period.year }}</h3>
+                                </div>
+                                <i class="bi bi-calendar-year fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Coming Soon Message -->
             <div class="card">
                 <div class="card-body text-center py-5">
                     <i class="bi bi-tools fs-1 text-warning mb-3"></i>
-                    <h3 class="text-white mb-3">Annual Reports Coming Soon!</h3>
+                    <h3 class="text-white mb-3">Advanced Annual Reports Coming Soon!</h3>
                     <p class="text-light mb-4">
                         We're working on comprehensive annual financial reports that will include:
                     </p>
@@ -97,13 +176,27 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
 <script>
 function emailAnnualReport() {
-    alert('Annual reports are coming soon! Check back later for this feature.');
+    fetch('/reports/annual/email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Annual report email sent successfully!');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send email. Please try again.');
+    });
 }
 </script>
 {% endblock %}
