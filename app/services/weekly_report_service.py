@@ -1,7 +1,6 @@
 """Automated Weekly Financial Report Service"""
 
 import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta, date
 from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
@@ -556,10 +555,15 @@ class WeeklyReportService:
         if not historical:
             return anomalies
         
-        # Calculate statistical thresholds
+        # Calculate statistical thresholds (simplified to avoid numpy dependency issues)
         hist_amounts = [float(e.amount) for e in historical]
-        mean_amount = np.mean(hist_amounts)
-        std_amount = np.std(hist_amounts)
+        if not hist_amounts:
+            return anomalies
+            
+        mean_amount = sum(hist_amounts) / len(hist_amounts)
+        # Simple standard deviation calculation
+        variance = sum((x - mean_amount) ** 2 for x in hist_amounts) / len(hist_amounts)
+        std_amount = variance ** 0.5
         threshold = mean_amount + (2 * std_amount)  # 2 standard deviations
         
         # Detect anomalies
