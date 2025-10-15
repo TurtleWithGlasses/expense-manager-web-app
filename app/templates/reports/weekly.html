@@ -214,23 +214,31 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        {% if report %}
                                         <tr>
                                             <td>
-                                                <span class="badge bg-primary">Week 42</span>
+                                                <span class="badge bg-primary">Week {{ report.period.week_number }}</span>
                                             </td>
-                                            <td>Oct 13-19, 2025</td>
-                                            <td>{{ '%.2f'|format(report.summary.total_expenses) if report else '0.00' }}</td>
-                                            <td>{{ report.summary.transaction_count if report else 0 }}</td>
+                                            <td>{{ report.period.start }} to {{ report.period.end }}</td>
+                                            <td>{{ '%.2f'|format(report.summary.total_expenses) }}</td>
+                                            <td>{{ report.summary.transaction_count }}</td>
                                             <td>Just now</td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="viewReport('current')">
+                                                <button class="btn btn-sm btn-outline-primary" onclick="viewReport('current')" title="Scroll to top of current report">
                                                     <i class="bi bi-eye me-1"></i>View
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-secondary" onclick="emailReport('current')">
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="emailReport('current')" title="Email this report">
                                                     <i class="bi bi-envelope me-1"></i>Email
                                                 </button>
                                             </td>
                                         </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">
+                                                No report data available
+                                            </td>
+                                        </tr>
+                                        {% endif %}
                                         <!-- More historical reports would be loaded here -->
                                     </tbody>
                                 </table>
@@ -387,22 +395,40 @@ function emailCurrentReport() {
 }
 
 function viewReport(period) {
-    // Already viewing current report
     if (period === 'current') {
+        // Scroll to top of current report
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
     }
+    // For historical reports, navigate to specific report
     window.location.href = `/reports/weekly/${period}`;
 }
 
 function emailReport(period) {
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Sending...';
+    button.disabled = true;
+    
     fetch('/reports/weekly/email', { method: 'POST' })
         .then(response => response.json())
         .then(data => {
-            if (data.message) {
-                alert('Weekly report email sent!');
+            if (data.success) {
+                alert('✅ Weekly report email sent successfully!');
+            } else {
+                alert('❌ Failed to send email: ' + (data.message || 'Unknown error'));
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Error sending email. Please try again.');
+        })
+        .finally(() => {
+            // Restore button state
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
 }
 </script>
 

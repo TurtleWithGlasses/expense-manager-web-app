@@ -10,7 +10,7 @@
                     Financial Reports
                 </h1>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary" onclick="generateCustomReport()">
+                    <button class="btn btn-outline-primary" onclick="showCustomReportModal()">
                         <i class="bi bi-calendar-range me-1"></i>
                         Custom Report
                     </button>
@@ -261,58 +261,183 @@
 </div>
 
 <script>
-function generateCustomReport() {
+function showCustomReportModal() {
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('customReportModal'));
     modal.show();
 }
 
+function generateCustomReport() {
+    // Get form data
+    const form = document.getElementById('customReportForm');
+    const formData = new FormData(form);
+    
+    const reportType = formData.get('reportType');
+    const startDate = formData.get('startDate');
+    const endDate = formData.get('endDate');
+    
+    // Validate dates
+    if (!startDate || !endDate) {
+        alert('❌ Please select both start and end dates.');
+        return;
+    }
+    
+    if (new Date(startDate) > new Date(endDate)) {
+        alert('❌ Start date must be before end date.');
+        return;
+    }
+    
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generating...';
+    button.disabled = true;
+    
+    // Generate custom report
+    fetch('/reports/custom', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            report_type: reportType,
+            start_date: startDate,
+            end_date: endDate
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Custom report generated successfully!');
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('customReportModal'));
+            modal.hide();
+            // Redirect to view the report
+            if (data.report_url) {
+                window.location.href = data.report_url;
+            }
+        } else {
+            alert('❌ Failed to generate report: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Error generating custom report. Please try again.');
+    })
+    .finally(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
 function emailWeeklyReport() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Sending...';
+    button.disabled = true;
+    
     fetch('/reports/weekly/email', { method: 'POST' })
         .then(response => response.json())
         .then(data => {
-            if (data.message) {
-                alert('Weekly report email sent!');
+            if (data.success) {
+                alert('✅ Weekly report email sent successfully!');
+            } else {
+                alert('❌ Failed to send email: ' + (data.message || 'Unknown error'));
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Error sending email. Please try again.');
+        })
+        .finally(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
 }
 
 function emailMonthlyReport() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Sending...';
+    button.disabled = true;
+    
     fetch('/reports/monthly/email', { method: 'POST' })
         .then(response => response.json())
         .then(data => {
-            if (data.message) {
-                alert('Monthly report email sent!');
+            if (data.success) {
+                alert('✅ Monthly report email sent successfully!');
+            } else {
+                alert('❌ Failed to send email: ' + (data.message || 'Unknown error'));
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Error sending email. Please try again.');
+        })
+        .finally(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
 }
 
 function emailAnnualReport() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Sending...';
+    button.disabled = true;
+    
     fetch('/reports/annual/email', { method: 'POST' })
         .then(response => response.json())
         .then(data => {
-            if (data.message) {
-                alert('Annual report email sent!');
+            if (data.success) {
+                alert('✅ Annual report email sent successfully!');
+            } else {
+                alert('❌ Failed to send email: ' + (data.message || 'Unknown error'));
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Error sending email. Please try again.');
+        })
+        .finally(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
 }
 
 function viewReport(type, period) {
-    window.location.href = `/reports/${type}/${period}`;
+    if (period === 'current') {
+        // Navigate to the main report page for current period
+        window.location.href = `/reports/${type}`;
+    } else {
+        // For historical reports, navigate to specific report
+        window.location.href = `/reports/${type}/${period}`;
+    }
 }
 
 function emailReport(type, period) {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Sending...';
+    button.disabled = true;
+    
     fetch(`/reports/${type}/email`, { method: 'POST' })
         .then(response => response.json())
         .then(data => {
-            if (data.message) {
-                alert(`${type} report email sent!`);
+            if (data.success) {
+                alert(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} report email sent successfully!`);
+            } else {
+                alert(`❌ Failed to send ${type} email: ` + (data.message || 'Unknown error'));
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            alert(`❌ Error sending ${type} email. Please try again.`);
+        })
+        .finally(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
 }
 </script>
 
