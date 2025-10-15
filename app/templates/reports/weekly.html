@@ -257,6 +257,11 @@
     border-radius: 8px;
     text-align: center;
     border-left: 4px solid #dee2e6;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .summary-mini-card.expenses {
@@ -294,6 +299,12 @@
 
 .summary-mini-card .change.down {
     color: #198754;
+}
+
+/* Ensure equal column widths */
+.row .col-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
 }
 
 .insight-list {
