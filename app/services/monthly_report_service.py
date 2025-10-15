@@ -346,16 +346,28 @@ class MonthlyReportService:
             })
         
         # Top spending category recommendation
-        if category_analysis['top_category']:
+        if category_analysis['top_category'] and summary['total_income'] > 0:
             top_cat = category_analysis['top_category']
             if top_cat['amount'] > summary['total_income'] * 0.3:  # More than 30% of income
+                income_percentage = (top_cat['amount'] / summary['total_income']) * 100
                 recommendations.append({
                     'type': 'reduce_spending',
                     'priority': 'high',
                     'category': top_cat['name'],
                     'title': f'Consider reducing {top_cat["name"]} spending',
-                    'description': f'You spent {top_cat["amount"]:.2f} on {top_cat["name"]} this month ({top_cat["amount"]/summary["total_income"]*100:.1f}% of income).',
+                    'description': f'You spent {top_cat["amount"]:.2f} on {top_cat["name"]} this month ({income_percentage:.1f}% of income).',
                     'potential_savings': top_cat['amount'] * 0.15
                 })
+        elif category_analysis['top_category'] and summary['total_income'] == 0:
+            # Handle case where there's no income data
+            top_cat = category_analysis['top_category']
+            recommendations.append({
+                'type': 'track_income',
+                'priority': 'high',
+                'category': top_cat['name'],
+                'title': 'Start tracking your income',
+                'description': f'You spent {top_cat["amount"]:.2f} on {top_cat["name"]} this month. Consider adding income entries for better financial insights.',
+                'action': 'add_income'
+            })
         
         return recommendations

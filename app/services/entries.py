@@ -31,6 +31,12 @@ def create_entry(db: Session,
     db.add(e)
     db.commit()
     db.refresh(e)
+    
+    # Mark all reports as new when a new entry is created
+    from app.services.report_status_service import ReportStatusService
+    status_service = ReportStatusService(db)
+    status_service.mark_all_reports_as_new(user_id)
+    
     return e
 
 

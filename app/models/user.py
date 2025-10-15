@@ -34,3 +34,4 @@ class User(Base):
     # Report relationships
     weekly_reports = relationship("WeeklyReport", back_populates="user", cascade="all, delete-orphan")
     report_preferences = relationship("UserReportPreferences", back_populates="user", uselist=False)
+    report_statuses = relationship("ReportStatus", back_populates="user", cascade="all, delete-orphan")

@@ -162,49 +162,18 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
+                                <table class="table table-hover table-striped">
+                                    <thead class="table-dark">
                                         <tr>
-                                            <th class="text-white">Report Type</th>
-                                            <th class="text-white">Period</th>
-                                            <th class="text-white">Generated</th>
-                                            <th class="text-white">Status</th>
-                                            <th class="text-white">Actions</th>
+                                            <th class="text-white fw-bold">Report Type</th>
+                                            <th class="text-white fw-bold">Period</th>
+                                            <th class="text-white fw-bold">Last Updated</th>
+                                            <th class="text-white fw-bold">Status</th>
+                                            <th class="text-white fw-bold">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td class="text-light">
-                                                <span class="badge bg-primary">Weekly</span>
-                                            </td>
-                                            <td class="text-light">Week 42, 2025</td>
-                                            <td class="text-light">2 hours ago</td>
-                                            <td><span class="badge bg-success">New</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="viewReport('weekly', 'current')">
-                                                    <i class="bi bi-eye me-1"></i>View
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-secondary" onclick="emailReport('weekly', 'current')">
-                                                    <i class="bi bi-envelope me-1"></i>Email
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-light">
-                                                <span class="badge bg-success">Monthly</span>
-                                            </td>
-                                            <td class="text-light">October 2025</td>
-                                            <td class="text-light">1 week ago</td>
-                                            <td><span class="badge bg-secondary">Viewed</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="viewReport('monthly', 'october')">
-                                                    <i class="bi bi-eye me-1"></i>View
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-secondary" onclick="emailReport('monthly', 'october')">
-                                                    <i class="bi bi-envelope me-1"></i>Email
-                                                </button>
-                                            </td>
-                                        </tr>
+                                    <tbody id="recent-reports-tbody">
+                                        <!-- Dynamic content will be loaded here -->
                                     </tbody>
                                 </table>
                             </div>
@@ -406,14 +375,114 @@ function emailAnnualReport() {
 }
 
 function viewReport(type, period) {
+    // Mark report as viewed before navigating
+    markReportAsViewed(type, period);
+    
     if (period === 'current') {
         // Navigate to the main report page for current period
         window.location.href = `/reports/${type}`;
     } else {
-        // For historical reports, navigate to specific report
-        window.location.href = `/reports/${type}/${period}`;
+        // For now, all reports are current - redirect to main report page
+        // TODO: Implement historical report storage and retrieval
+        console.warn(`Historical report ${type}/${period} not yet implemented. Redirecting to current ${type} report.`);
+        window.location.href = `/reports/${type}`;
     }
 }
+
+function markReportAsViewed(type, period) {
+    fetch('/reports/status/mark-viewed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            report_type: type,
+            report_period: period
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload the report statuses to update the UI
+            loadReportStatuses();
+        }
+    })
+    .catch(error => {
+        console.error('Error marking report as viewed:', error);
+    });
+}
+
+function loadReportStatuses() {
+    fetch('/reports/status/')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('recent-reports-tbody');
+            if (tbody && data.statuses) {
+                tbody.innerHTML = generateReportRows(data.statuses);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading report statuses:', error);
+        });
+}
+
+function generateReportRows(statuses) {
+    const reports = [
+        { type: 'weekly', label: 'Weekly', badgeClass: 'bg-primary', period: 'Current Week' },
+        { type: 'monthly', label: 'Monthly', badgeClass: 'bg-success', period: 'Current Month' },
+        { type: 'annual', label: 'Annual', badgeClass: 'bg-warning text-dark', period: 'Current Year' }
+    ];
+    
+    return reports.map(report => {
+        const status = statuses[report.type] || { is_new: true, last_viewed: null };
+        const statusBadge = status.is_new ? 
+            '<span class="badge bg-success">New</span>' : 
+            '<span class="badge bg-secondary">Viewed</span>';
+        
+        const lastUpdated = status.last_updated ? 
+            formatRelativeTime(status.last_updated) : 
+            'Just now';
+        
+        return `
+            <tr>
+                <td class="text-dark">
+                    <span class="badge ${report.badgeClass}">${report.label}</span>
+                </td>
+                <td class="text-dark">${report.period}</td>
+                <td class="text-dark">${lastUpdated}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewReport('${report.type}', 'current')">
+                        <i class="bi bi-eye me-1"></i>View
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="emailReport('${report.type}', 'current')">
+                        <i class="bi bi-envelope me-1"></i>Email
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function formatRelativeTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+}
+
+// Load report statuses when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadReportStatuses();
+});
 
 function emailReport(type, period) {
     const button = event.target;
