@@ -16,30 +16,24 @@
     
     <div class="card-body">
         <!-- Quick Stats Row -->
-        <div class="row g-2 mb-3">
-            <div class="col-4">
-                <div class="summary-mini-card expenses">
-                    <div class="label">Expenses</div>
-                    <div class="value">{{ '%.2f'|format(report.summary.total_expenses) }}</div>
-                    {% if report.summary.comparison.expense_change_pct != 0 %}
-                    <div class="change {{ 'up' if report.summary.comparison.expense_change_pct > 0 else 'down' }}">
-                        <i class="bi bi-{{ 'arrow-up' if report.summary.comparison.expense_change_pct > 0 else 'arrow-down' }}"></i>
-                        {{ '%.1f'|format(report.summary.comparison.expense_change_pct|abs) }}%
-                    </div>
-                    {% endif %}
+        <div class="summary-cards-container mb-3">
+            <div class="summary-mini-card expenses">
+                <div class="label">Expenses</div>
+                <div class="value">{{ '%.2f'|format(report.summary.total_expenses) }}</div>
+                {% if report.summary.comparison.expense_change_pct != 0 %}
+                <div class="change {{ 'up' if report.summary.comparison.expense_change_pct > 0 else 'down' }}">
+                    <i class="bi bi-{{ 'arrow-up' if report.summary.comparison.expense_change_pct > 0 else 'arrow-down' }}"></i>
+                    {{ '%.1f'|format(report.summary.comparison.expense_change_pct|abs) }}%
                 </div>
+                {% endif %}
             </div>
-            <div class="col-4">
-                <div class="summary-mini-card">
-                    <div class="label">Transactions</div>
-                    <div class="value">{{ report.summary.transaction_count }}</div>
-                </div>
+            <div class="summary-mini-card">
+                <div class="label">Transactions</div>
+                <div class="value">{{ report.summary.transaction_count }}</div>
             </div>
-            <div class="col-4">
-                <div class="summary-mini-card">
-                    <div class="label">Avg/Transaction</div>
-                    <div class="value">{{ '%.2f'|format(report.summary.avg_transaction) }}</div>
-                </div>
+            <div class="summary-mini-card">
+                <div class="label">Avg/Transaction</div>
+                <div class="value">{{ '%.2f'|format(report.summary.avg_transaction) }}</div>
             </div>
         </div>
         
@@ -126,16 +120,18 @@
     color: #198754;
 }
 
-/* Ensure equal column widths and prevent wrapping */
-.row .col-4 {
-    flex: 0 0 32%;
-    max-width: 32%;
-    margin-right: 2%;
+/* Flexbox container for summary cards */
+.summary-cards-container {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: nowrap;
 }
 
-.row .col-4:last-child {
-    margin-right: 0;
+.summary-cards-container > .summary-mini-card {
+    flex: 1;
+    min-width: 0;
 }
+
 
 .achievement-badge {
     background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
