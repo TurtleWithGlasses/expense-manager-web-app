@@ -15,6 +15,7 @@ setTimeout(() => {
 
     // Chart data passed from the backend
     const chartData = {{ chart_data | safe }};
+    const userCurrency = '{{ user_currency }}';
 
     // Create new chart instance
     const chart = new Chart(ctx, {
@@ -80,7 +81,7 @@ setTimeout(() => {
                             .sort(([,a], [,b]) => b - a);
                         
                         for (const [category, amount] of sortedCategories) {
-                            categoryLines.push(`  • ${category}: $${amount.toFixed(2)}`);
+                            categoryLines.push(`  • ${category}: ${userCurrency}${amount.toFixed(2)}`);
                         }
                         
                         return categoryLines;
@@ -90,7 +91,7 @@ setTimeout(() => {
                         if (total > 0) {
                             return [
                                 '', // Empty line for spacing
-                                `Total Daily Expenses: $${total.toFixed(2)}`
+                                `Total Daily Expenses: ${userCurrency}${total.toFixed(2)}`
                             ];
                         }
                         return [];
@@ -138,7 +139,7 @@ setTimeout(() => {
                 display: true,
                 title: {
                     display: true,
-                    text: 'Amount ($)',
+                    text: `Amount (${userCurrency})`,
                     color: '#fff',
                     font: {
                         size: 14,
@@ -151,7 +152,7 @@ setTimeout(() => {
                         size: 11
                     },
                     callback: function(value) {
-                        return '$' + value.toFixed(0);
+                        return userCurrency + value.toFixed(0);
                     }
                 },
                 grid: {

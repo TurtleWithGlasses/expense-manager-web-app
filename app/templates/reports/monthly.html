@@ -162,12 +162,12 @@
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h6 class="text-primary mb-0">{{ rec.title }}</h6>
+                                    <h6 class="text-white mb-0">{{ rec.title }}</h6>
                                     <span class="badge bg-{{ 'danger' if rec.priority == 'high' else 'warning' }}">
                                         {{ rec.priority|title }}
                                     </span>
                                 </div>
-                                <p class="text-muted mb-2">{{ rec.description }}</p>
+                                <p class="text-light mb-2">{{ rec.description }}</p>
                                 {% if rec.potential_savings %}
                                 <small class="text-success">
                                     Potential savings: {{ '%.2f'|format(rec.potential_savings) }}

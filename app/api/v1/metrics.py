@@ -104,10 +104,20 @@ async def chart_bar(
     db: Session = Depends(get_db),
 ):
     s, e = _parsed_dates(start, end)
+    
+    # Get user's currency preference
+    from app.models.user_preferences import UserPreferences
+    user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
+    user_currency = user_prefs.currency_code if user_prefs and user_prefs.currency_code else 'USD'
+    
     data = expenses_by_category(db, user_id=user.id, start=s, end=e)
     labels = [n for n, _ in data]
     values = [v for _, v in data]
-    return render(request, "dashboard/_chart_bar.html", {"labels": labels, "values": values})
+    return render(request, "dashboard/_chart_bar.html", {
+        "labels": labels, 
+        "values": values,
+        "user_currency": user_currency
+    })
 
 
 @router.get("/chart/daily", response_class=HTMLResponse)
@@ -119,6 +129,11 @@ async def chart_daily(
     db: Session = Depends(get_db),
 ):
     s, e = _parsed_dates(start, end)
+    
+    # Get user's currency preference
+    from app.models.user_preferences import UserPreferences
+    user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
+    user_currency = user_prefs.currency_code if user_prefs and user_prefs.currency_code else 'USD'
     
     # Get enhanced data with category breakdown
     data = daily_expenses_with_categories(db, user_id=user.id, start=s, end=e)
@@ -154,5 +169,6 @@ async def chart_daily(
     return render(request, "dashboard/_chart_daily.html", {
         "chart_data": chart_data_json,
         "start_date": s.isoformat(),
-        "end_date": e.isoformat()
+        "end_date": e.isoformat(),
+        "user_currency": user_currency
     })
