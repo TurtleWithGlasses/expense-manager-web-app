@@ -61,7 +61,7 @@
                             {% else %}
                             <!-- Summary Cards -->
                             <div class="row g-3 mb-4">
-                                <div class="col-6 col-md-3">
+                                <div class="col-4">
                                     <div class="summary-mini-card expenses">
                                         <div class="label">Expenses</div>
                                         <div class="value">{{ '%.2f'|format(report.summary.total_expenses) }}</div>
@@ -73,19 +73,13 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="col-6 col-md-3">
+                                <div class="col-4">
                                     <div class="summary-mini-card">
                                         <div class="label">Transactions</div>
                                         <div class="value">{{ report.summary.transaction_count }}</div>
                                     </div>
                                 </div>
-                                <div class="col-6 col-md-3">
-                                    <div class="summary-mini-card {{ 'savings' if report.summary.net_savings > 0 else 'deficit' }}">
-                                        <div class="label">Net</div>
-                                        <div class="value">{{ '%.2f'|format(report.summary.net_savings) }}</div>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-md-3">
+                                <div class="col-4">
                                     <div class="summary-mini-card">
                                         <div class="label">Avg Transaction</div>
                                         <div class="value">{{ '%.2f'|format(report.summary.avg_transaction) }}</div>
