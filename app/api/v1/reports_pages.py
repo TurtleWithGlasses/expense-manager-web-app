@@ -163,7 +163,7 @@ async def email_weekly_report(
         report
     )
     
-    return {"message": "Weekly report email sent successfully"}
+    return {"success": True, "message": "Weekly report email sent successfully"}
 
 
 @router.post("/monthly/email")
@@ -184,7 +184,7 @@ async def email_monthly_report(
         report
     )
     
-    return {"message": "Monthly report email sent successfully"}
+    return {"success": True, "message": "Monthly report email sent successfully"}
 
 
 @router.post("/annual/email")
@@ -230,9 +230,9 @@ async def email_annual_report(
             annual_report
         )
         
-        return {"message": "Annual report email sent successfully"}
+        return {"success": True, "message": "Annual report email sent successfully"}
     except Exception as e:
         print(f"ERROR in email_annual_report: {e}")
         import traceback
         traceback.print_exc()
-        return {"message": f"Failed to send annual report email: {str(e)}"}
+        return {"success": False, "message": f"Failed to send annual report email: {str(e)}"}

@@ -132,7 +132,7 @@ async def email_weekly_report(
     try:
         await email_service.send_weekly_report_email(
             user.email,
-            user.get("full_name") or user.email,
+            user.full_name or user.email,
             report
         )
         
