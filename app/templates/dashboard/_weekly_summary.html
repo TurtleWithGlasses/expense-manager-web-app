@@ -16,7 +16,7 @@
     
     <div class="card-body">
         <!-- Quick Stats Row -->
-        <div class="row g-3 mb-3">
+        <div class="row g-2 mb-3">
             <div class="col-4">
                 <div class="summary-mini-card expenses">
                     <div class="label">Expenses</div>
@@ -126,10 +126,15 @@
     color: #198754;
 }
 
-/* Ensure equal column widths */
+/* Ensure equal column widths and prevent wrapping */
 .row .col-4 {
-    flex: 0 0 33.333333%;
-    max-width: 33.333333%;
+    flex: 0 0 32%;
+    max-width: 32%;
+    margin-right: 2%;
+}
+
+.row .col-4:last-child {
+    margin-right: 0;
 }
 
 .achievement-badge {
