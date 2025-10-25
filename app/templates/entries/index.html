@@ -48,8 +48,8 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-3 col-12">
-                <div class="d-flex gap-2 flex-wrap">
+            <div class="col-12">
+                <div class="d-flex gap-2 flex-wrap align-items-center">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-search me-1"></i>
                         Filter
@@ -58,11 +58,6 @@
                         <i class="bi bi-x-circle me-1"></i>
                         Clear
                     </a>
-                </div>
-            </div>
-            <!-- Export buttons - separate row for mobile -->
-            <div class="col-12 mt-3">
-                <div class="d-flex gap-2 flex-wrap justify-content-center">
                     <button type="button" class="btn btn-outline-success" onclick="exportToExcel()" title="Export to Excel">
                         <i class="bi bi-file-earmark-excel me-1"></i>
                         Excel Report
@@ -601,6 +596,31 @@
     color: white;
   }
 
+  /* Export buttons styling */
+  [data-theme="light"] .btn-outline-success {
+    background: #198754;
+    border-color: #198754;
+    color: #ffffff !important;
+  }
+
+  [data-theme="light"] .btn-outline-success:hover {
+    background: #157347;
+    border-color: #157347;
+    color: #ffffff !important;
+  }
+
+  [data-theme="light"] .btn-outline-danger {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: #ffffff !important;
+  }
+
+  [data-theme="light"] .btn-outline-danger:hover {
+    background: #bb2d3b;
+    border-color: #bb2d3b;
+    color: #ffffff !important;
+  }
+
   /* Edit buttons in table */
   [data-theme="light"] .btn-sm.btn-outline-primary {
     background: #0d6efd;
@@ -689,12 +709,12 @@
   }
 
   [data-theme="light"] .table-dark th {
-    color: #495057 !important;
+    color: #848a90 !important;
     background: #e9ecef !important;
   }
 
   [data-theme="light"] .table-dark td {
-    color: #212529 !important;
+    color: #737a81 !important;
     background: #ffffff !important;
   }
 
@@ -702,8 +722,17 @@
     background: #ffffff !important;
   }
 
-  [data-theme="light"] .table-dark tbody tr:hover {
-    background: #f8f9fa !important;
+  [data-theme="light"] .table-dark tbody tr:hover,
+  [data-theme="light"] .table-hover tbody tr:hover,
+  [data-theme="light"] .table-dark.table-hover tbody tr:hover,
+  [data-theme="light"] table.table-dark tbody tr:hover {
+    background-color: #e9ecef !important;
+    background: #e9ecef !important;
+  }
+
+  /* Override Bootstrap's dark hover styles */
+  [data-theme="light"] .table-dark tbody tr:hover td {
+    background-color: #e9ecef !important;
   }
 
   [data-theme="light"] .table-secondary {
