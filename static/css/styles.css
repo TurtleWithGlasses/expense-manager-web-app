@@ -147,7 +147,7 @@ a:hover{text-decoration:underline}
   color: var(--text);
 }
 
-.muted { color: #9ca3af; }
+.muted { color: var(--muted); }
 
 /* Optional: nicer empty state */
 .cat-empty {
