@@ -648,6 +648,37 @@
     min-height: 38px;
   }
 
+  /* Fix action buttons in table - keep them horizontal */
+  .table td.text-end {
+    white-space: nowrap;
+    min-width: 180px;
+  }
+
+  .table .btn-sm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    height: auto;
+    min-height: 32px;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
+  /* Ensure buttons stay on same line */
+  .table .btn-sm.me-2 {
+    margin-right: 8px !important;
+  }
+
+  /* Filter section button container */
+  .col-md-3.col-12 .d-flex {
+    align-items: stretch;
+  }
+
+  .col-md-3.col-12 .btn {
+    flex: 0 0 auto;
+  }
+
   /* Table light theme fixes */
   [data-theme="light"] .table-dark {
     background: #f8f9fa !important;
