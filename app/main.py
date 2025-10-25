@@ -32,17 +32,17 @@ async def startup_event():
     try:
         # Create all tables if they don't exist
         Base.metadata.create_all(bind=engine)
-        print("✅ Database tables initialized successfully")
-        
+        print("[OK] Database tables initialized successfully")
+
         # Start report scheduler in production
         from app.core.config import settings
         if settings.ENV == "production":
             from app.services.report_scheduler import report_scheduler
             report_scheduler.start()
-            print("✅ Report scheduler started")
-        
+            print("[OK] Report scheduler started")
+
     except Exception as e:
-        print(f"❌ Database initialization failed: {e}")
+        print(f"[ERROR] Database initialization failed: {e}")
         # Don't raise the exception to allow the app to start
         # The health check endpoint will catch database issues
 
@@ -55,9 +55,9 @@ async def shutdown_event():
         try:
             from app.services.report_scheduler import report_scheduler
             report_scheduler.stop()
-            print("✅ Report scheduler stopped")
+            print("[OK] Report scheduler stopped")
         except Exception as e:
-            print(f"⚠️  Error stopping scheduler: {e}")
+            print(f"[WARNING] Error stopping scheduler: {e}")
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -88,12 +88,17 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
     
     user_currency_code = user_preferences_service.get_user_currency(db, user.id)
     user_currency_info = CURRENCIES.get(user_currency_code, CURRENCIES['USD'])
-    
+
+    # Get user theme preference
+    user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
+    user_theme = user_prefs.theme if user_prefs and user_prefs.theme else 'dark'
+
     # Get categories for filtering
     categories = db.query(Category).filter(Category.user_id == user.id).order_by(Category.name).all()
 
     return render(request, "dashboard.html", {
         "user": user,
+        "user_theme": user_theme,
         "start": start.isoformat(),
         "end": end.isoformat(),
         "income_total": income_total,

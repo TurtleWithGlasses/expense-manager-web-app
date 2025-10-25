@@ -1,0 +1,328 @@
+/* ==============================================
+   DARK THEME (Default)
+   ============================================== */
+:root {
+  --bg: #0b1020;           /* dark ui background */
+  --surface: #11162a;
+  --panel: #151c33;
+  --muted: #9aa3b2;
+  --text: #e8ecf3;
+  --green: #28c081;
+  --red: #ff6b6b;
+  --blue: #4da3ff;
+  --purple: #a988ff;
+  --ring: rgba(77, 163, 255, .25);
+
+  /* Extended dark theme colors */
+  --border: #1c2440;
+  --border-light: #1e2748;
+  --input-bg: #0f142a;
+  --input-border: #1f2a4e;
+  --kpi-bg: #121939;
+  --kpi-border: #1e2748;
+  --topbar-bg: rgba(17, 22, 42, .8);
+  --card-shadow: rgba(0, 0, 0, .25);
+  --btn-default-bg: #253259;
+  --btn-default-text: #e7ecf7;
+  --cat-row-bg: rgba(255, 255, 255, 0.04);
+  --ghost-border: #2a355f;
+  --table-border: #1e2748;
+  --table-border-thick: #273157;
+}
+
+/* ==============================================
+   LIGHT THEME
+   ============================================== */
+[data-theme="light"] {
+  --bg: #f8f9fa;           /* light gray background */
+  --surface: #ffffff;
+  --panel: #ffffff;
+  --muted: #6c757d;
+  --text: #212529;         /* Dark text for readability */
+  --green: #198754;
+  --red: #dc3545;
+  --blue: #0d6efd;
+  --purple: #6f42c1;
+  --ring: rgba(13, 110, 253, .25);
+
+  /* Extended light theme colors */
+  --border: #dee2e6;
+  --border-light: #e9ecef;
+  --input-bg: #ffffff;
+  --input-border: #ced4da;
+  --kpi-bg: #f8f9fa;
+  --kpi-border: #dee2e6;
+  --topbar-bg: rgba(255, 255, 255, .95);
+  --card-shadow: rgba(0, 0, 0, .1);
+  --btn-default-bg: #6c757d;
+  --btn-default-text: #ffffff;
+  --cat-row-bg: rgba(0, 0, 0, 0.02);
+  --ghost-border: #adb5bd;
+  --table-border: #dee2e6;
+  --table-border-thick: #adb5bd;
+}
+
+/* Light theme specific overrides for better readability */
+[data-theme="light"] .h1,
+[data-theme="light"] .h2,
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6 {
+  color: #212529;  /* Dark text for headers */
+}
+
+[data-theme="light"] .muted {
+  color: #6c757d;  /* Darker muted text */
+}
+
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  color: #212529;  /* Dark text in inputs */
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] select::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #6c757d;  /* Gray placeholder text */
+  opacity: 0.7;
+}
+
+/* Fix brand/logo text in light theme */
+[data-theme="light"] .brand {
+  color: #212529;  /* Dark brand text */
+}
+
+/* Fix nav links in light theme */
+[data-theme="light"] .nav-link {
+  color: #495057;  /* Dark gray nav links */
+}
+
+[data-theme="light"] .nav-link:hover {
+  color: #212529;  /* Darker on hover */
+}
+
+/* Fix table headers in light theme */
+[data-theme="light"] .table thead th {
+  color: #495057;  /* Dark gray table headers */
+}
+
+/* Fix label text in light theme */
+[data-theme="light"] label,
+[data-theme="light"] .label {
+  color: #495057;  /* Dark gray labels */
+}
+
+/* Fix card text in light theme */
+[data-theme="light"] .card {
+  color: #212529;  /* Dark text in cards */
+}
+
+/* Fix button ghost variant in light theme */
+[data-theme="light"] .btn.ghost,
+[data-theme="light"] .btn-ghost {
+  color: #495057;  /* Dark text for ghost buttons */
+  border-color: #6c757d;
+}
+
+[data-theme="light"] .btn.ghost:hover,
+[data-theme="light"] .btn-ghost:hover {
+  background: #f8f9fa;
+  color: #212529;
+}
+
+/* Fix category list dark background in light theme */
+[data-theme="light"] .cat-list {
+  background: transparent;
+}
+
+[data-theme="light"] .cat-row {
+  background: #f8f9fa;  /* Light gray instead of dark */
+  border: 1px solid #e9ecef;
+  color: #212529;
+}
+
+[data-theme="light"] .cat-name {
+  color: #212529;  /* Dark text for category names */
+}
+
+/* Fix table dark backgrounds in light theme */
+[data-theme="light"] .table tbody tr {
+  background: #ffffff;  /* White rows */
+  color: #212529;
+}
+
+[data-theme="light"] .table tbody tr:hover {
+  background: #f8f9fa;  /* Light gray on hover */
+}
+
+[data-theme="light"] .table {
+  background: #ffffff;  /* White table background */
+}
+
+/* Fix any dark backgrounds that appear in light theme */
+[data-theme="light"] [style*="background: #2d3748"],
+[data-theme="light"] [style*="background:#2d3748"],
+[data-theme="light"] [class*="bg-dark"],
+[data-theme="light"] .bg-gray-800,
+[data-theme="light"] .bg-gray-900 {
+  background: #f8f9fa !important;
+  color: #212529 !important;
+}
+
+/* Smooth theme transition */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Disable transitions during theme switch to avoid flicker */
+.theme-transitioning * {
+  transition: none !important;
+}
+
+/* ==============================================
+   LIGHT THEME FIXES FOR SPECIFIC PAGES
+   ============================================== */
+
+/* Reports Page - Card text and lists */
+[data-theme="light"] .card-text {
+  color: #212529 !important;
+}
+
+[data-theme="light"] .text-light {
+  color: #212529 !important;
+}
+
+[data-theme="light"] .text-white {
+  color: #212529 !important;
+}
+
+[data-theme="light"] .list-unstyled {
+  color: #212529 !important;
+}
+
+[data-theme="light"] .list-unstyled li {
+  color: #212529 !important;
+}
+
+/* Reports Page - Card headers */
+[data-theme="light"] .card-header.bg-primary {
+  background: #0d6efd !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .card-header.bg-primary h5,
+[data-theme="light"] .card-header.bg-primary .card-title {
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .card-header.bg-success {
+  background: #198754 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .card-header.bg-success h5,
+[data-theme="light"] .card-header.bg-success .card-title {
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .card-header.bg-warning {
+  background: #ffc107 !important;
+  color: #212529 !important;
+}
+
+[data-theme="light"] .card-header.bg-warning h5,
+[data-theme="light"] .card-header.bg-warning .card-title {
+  color: #212529 !important;
+}
+
+/* Reports Page - Table dark header */
+[data-theme="light"] .table-dark {
+  background: #343a40 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .table-dark th {
+  color: #ffffff !important;
+}
+
+[data-theme="light"] thead.table-dark th {
+  color: #ffffff !important;
+  background: #343a40 !important;
+}
+
+/* Dashboard - Chart section */
+[data-theme="light"] .chart-section {
+  background: #ffffff !important;
+  border: 1px solid #dee2e6 !important;
+}
+
+[data-theme="light"] .chart-header {
+  background: #f8f9fa !important;
+  border-bottom: 1px solid #dee2e6 !important;
+}
+
+[data-theme="light"] .chart-header h2 {
+  color: #212529 !important;
+}
+
+[data-theme="light"] .chart-display {
+  background: #ffffff !important;
+  color: #212529 !important;
+}
+
+/* Dashboard - Data sections */
+[data-theme="light"] .data-section {
+  background: #ffffff !important;
+  border: 1px solid #dee2e6 !important;
+}
+
+[data-theme="light"] .data-section h2 {
+  color: #212529 !important;
+}
+
+[data-theme="light"] .data-section th {
+  color: #495057 !important;
+}
+
+/* Dashboard - Controls section */
+[data-theme="light"] .controls-section {
+  background: #f8f9fa !important;
+  border: 1px solid #dee2e6 !important;
+}
+
+[data-theme="light"] .currency-label,
+[data-theme="light"] .color-picker-group label {
+  color: #495057 !important;
+}
+
+/* Fix any remaining text-white in light theme */
+[data-theme="light"] h1.text-white,
+[data-theme="light"] h2.text-white,
+[data-theme="light"] h3.text-white,
+[data-theme="light"] h4.text-white,
+[data-theme="light"] h5.text-white,
+[data-theme="light"] h6.text-white {
+  color: #212529 !important;
+}
+
+/* Fix paragraph text in cards */
+[data-theme="light"] p {
+  color: #212529 !important;
+}
+
+/* Fix general text color */
+[data-theme="light"] body {
+  color: #212529 !important;
+}
+
+/* Fix any inline styles that set light colors */
+[data-theme="light"] [style*="color: #e2e8f0"],
+[data-theme="light"] [style*="color:#e2e8f0"],
+[data-theme="light"] [style*="color: #ccc"],
+[data-theme="light"] [style*="color:#ccc"] {
+  color: #212529 !important;
+}

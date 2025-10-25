@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1 class="h1 mb-4">Categories</h1>
+<h1 class="h1 mb-4" style="color: var(--text);">Categories</h1>
 
 <!-- Add new category with gradient design -->
 <div class="card bg-gradient mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
@@ -60,14 +60,14 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
   }
 
-  /* Category list styling */
+  /* Category list styling - Dark Theme */
   .cat-item {
     background: #1a1d29;
     border-bottom: 1px solid rgba(255,255,255,0.05);
     transition: all 0.3s ease;
     padding: 1rem 1.5rem;
   }
-  
+
   .cat-item:hover {
     background: linear-gradient(90deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
     transform: translateX(5px);
@@ -85,6 +85,51 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+  /* Light Theme Overrides */
+  [data-theme="light"] .bg-gradient {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  [data-theme="light"] .bg-gradient h5 {
+    color: #1a237e !important;
+  }
+
+  [data-theme="light"] .cat-item {
+    background: #ffffff;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  [data-theme="light"] .cat-item:hover {
+    background: #f8f9fa;
+  }
+
+  [data-theme="light"] .cat-name {
+    color: #212529;
+  }
+
+  [data-theme="light"] .card-header.bg-dark {
+    background: #f8f9fa !important;
+    color: #212529 !important;
+    border-bottom: 2px solid #dee2e6;
+  }
+
+  [data-theme="light"] .cat-edit-form input {
+    background: #ffffff;
+    border: 2px solid #ced4da;
+    color: #212529;
+  }
+
+  [data-theme="light"] .cat-edit-form input:focus {
+    background: #ffffff;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+  }
+
+  [data-theme="light"] .cat-empty {
+    color: #6c757d;
   }
 
   .cat-icon {
