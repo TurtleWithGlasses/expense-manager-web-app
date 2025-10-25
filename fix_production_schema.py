@@ -4,6 +4,7 @@ Script to fix production database schema by adding missing columns.
 This can be run directly in production to add the missing columns including:
 - Email verification columns to users table
 - AI-related columns to entries table
+- Theme column to user_preferences table
 """
 
 import os
@@ -12,7 +13,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 
 def fix_production_schema():
-    """Add missing columns to the database tables (email verification and AI columns)."""
+    """Add missing columns to the database tables (email verification, AI columns, and theme column)."""
     
     # Get database URL from environment
     database_url = os.getenv('DATABASE_URL')
@@ -102,9 +103,19 @@ def fix_production_schema():
                     'check_query': "SELECT column_name FROM information_schema.columns WHERE table_name = 'entries' AND column_name = 'ai_processed'"
                 }
             ]
-            
+
+            # List of columns to add to user_preferences table
+            user_preferences_columns_to_add = [
+                {
+                    'table': 'user_preferences',
+                    'name': 'theme',
+                    'definition': "VARCHAR(10) DEFAULT 'dark'",
+                    'check_query': "SELECT column_name FROM information_schema.columns WHERE table_name = 'user_preferences' AND column_name = 'theme'"
+                }
+            ]
+
             # Combine all columns to add
-            all_columns_to_add = users_columns_to_add + entries_ai_columns_to_add
+            all_columns_to_add = users_columns_to_add + entries_ai_columns_to_add + user_preferences_columns_to_add
             
             # Add each column if it doesn't exist
             for column in all_columns_to_add:
