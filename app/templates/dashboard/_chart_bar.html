@@ -4,6 +4,12 @@
   const ctx = document.getElementById('chartBar').getContext('2d');
   const labels = {{ labels | tojson }};
   const values = {{ values | tojson }};
+
+  // Detect current theme
+  const isDarkTheme = document.documentElement.getAttribute('data-theme') !== 'light';
+  const textColor = isDarkTheme ? '#fff' : '#212529';
+  const gridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
   new Chart(ctx, {
     type: 'bar',
     data: {
@@ -11,8 +17,22 @@
       datasets: [{ label: 'Expenses', data: values }]
     },
     options: {
-      scales: { y: { beginAtZero: true } },
-      plugins: { legend: { display: false } }
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        },
+        x: {
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
     }
   });
 })();

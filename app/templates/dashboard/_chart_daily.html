@@ -17,6 +17,13 @@ setTimeout(() => {
     const chartData = {{ chart_data | safe }};
     const userCurrency = '{{ user_currency }}';
 
+    // Detect current theme
+    const isDarkTheme = document.documentElement.getAttribute('data-theme') !== 'light';
+
+    // Theme-aware colors
+    const textColor = isDarkTheme ? '#fff' : '#212529';
+    const gridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
     // Create new chart instance
     const chart = new Chart(ctx, {
     type: 'line',
@@ -101,7 +108,7 @@ setTimeout(() => {
             legend: {
                 display: true,
                 labels: {
-                    color: '#fff',
+                    color: textColor,
                     font: {
                         size: 12
                     }
@@ -114,14 +121,14 @@ setTimeout(() => {
                 title: {
                     display: true,
                     text: 'Date',
-                    color: '#fff',
+                    color: textColor,
                     font: {
                         size: 14,
                         weight: 'bold'
                     }
                 },
                 ticks: {
-                    color: '#fff',
+                    color: textColor,
                     font: {
                         size: 11
                     },
@@ -131,7 +138,7 @@ setTimeout(() => {
                     }
                 },
                 grid: {
-                    color: 'rgba(255, 255, 255, 0.1)',
+                    color: gridColor,
                     drawBorder: false
                 }
             },
@@ -140,14 +147,14 @@ setTimeout(() => {
                 title: {
                     display: true,
                     text: `Amount (${userCurrency})`,
-                    color: '#fff',
+                    color: textColor,
                     font: {
                         size: 14,
                         weight: 'bold'
                     }
                 },
                 ticks: {
-                    color: '#fff',
+                    color: textColor,
                     font: {
                         size: 11
                     },
@@ -156,7 +163,7 @@ setTimeout(() => {
                     }
                 },
                 grid: {
-                    color: 'rgba(255, 255, 255, 0.1)',
+                    color: gridColor,
                     drawBorder: false
                 }
             }
