@@ -764,24 +764,408 @@ select.form-select{
   width: 100%;
 }
 
-.table{width:100%;border-collapse:collapse}
-.table th,.table td{
-  padding:10px 12px;
-  border-top:1px solid var(--table-border);
+/* ==============================================
+   TABLE SYSTEM
+   ============================================== */
+
+/* Base Table */
+.table{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+/* Table Cells */
+.table th,
+.table td{
+  padding: var(--spacing-sm) var(--spacing-4);
+  border-top: 1px solid var(--table-border);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
+  text-align: left;
+  vertical-align: middle;
 }
+
+/* Table Header */
 .table thead th{
-  color:var(--muted);
-  font-weight: var(--font-weight-semibold);
+  color: var(--muted);
+  font-weight: var(--font-weight-bold);
   font-size: var(--font-size-sm);
-  text-align:left;
-  border-top:0;
+  text-align: left;
+  border-top: 0;
+  border-bottom: 2px solid var(--table-border-thick);
   letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  background: var(--surface);
+  white-space: nowrap;
 }
-.table tfoot td{
+
+/* Table Body */
+.table tbody tr{
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+/* Zebra Striping */
+.table-striped tbody tr:nth-child(odd){
+  background: transparent;
+}
+
+.table-striped tbody tr:nth-child(even){
+  background: var(--cat-row-bg);
+}
+
+/* Hover State */
+.table-hover tbody tr:hover{
+  background: var(--table-hover-bg);
+  cursor: pointer;
+}
+
+.table-striped.table-hover tbody tr:hover{
+  background: var(--table-hover-bg);
+}
+
+/* Table Footer */
+.table tfoot td,
+.table tfoot th{
   font-weight: var(--font-weight-extrabold);
-  border-top:2px solid var(--table-border-thick);
+  border-top: 2px solid var(--table-border-thick);
+  background: var(--surface);
+}
+
+/* Table Variants */
+.table-bordered{
+  border: 1px solid var(--table-border);
+}
+
+.table-bordered th,
+.table-bordered td{
+  border: 1px solid var(--table-border);
+}
+
+.table-borderless th,
+.table-borderless td,
+.table-borderless thead th{
+  border: 0;
+}
+
+/* Sticky Header */
+.table-sticky thead th{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--surface);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Table */
+.table-responsive{
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive > .table{
+  margin-bottom: 0;
+}
+
+/* Table Sizes */
+.table-sm th,
+.table-sm td{
+  padding: var(--spacing-1) var(--spacing-2);
+  font-size: var(--font-size-xs);
+}
+
+.table-lg th,
+.table-lg td{
+  padding: var(--spacing-4) var(--spacing-5);
+  font-size: var(--font-size-base);
+}
+
+/* Sortable Columns */
+.table th.sortable{
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: var(--spacing-6);
+}
+
+.table th.sortable:hover{
+  color: var(--text);
+  background: var(--table-hover-bg);
+}
+
+.table th.sortable::after{
+  content: '⇅';
+  position: absolute;
+  right: var(--spacing-2);
+  opacity: 0.3;
+  font-size: var(--font-size-xs);
+}
+
+.table th.sortable.sort-asc::after{
+  content: '↑';
+  opacity: 1;
+  color: var(--blue);
+}
+
+.table th.sortable.sort-desc::after{
+  content: '↓';
+  opacity: 1;
+  color: var(--blue);
+}
+
+/* Table Actions Column */
+.table-actions{
+  width: 120px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table-actions .btn{
+  margin-left: var(--spacing-1);
+}
+
+/* Row Selection */
+.table-select{
+  width: 40px;
+  text-align: center;
+}
+
+.table-select input[type="checkbox"]{
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* Selected Row Highlight */
+.table tbody tr.selected{
+  background: rgba(77, 163, 255, 0.1);
+}
+
+.table tbody tr.selected:hover{
+  background: rgba(77, 163, 255, 0.15);
+}
+
+/* ==============================================
+   EMPTY STATE
+   ============================================== */
+
+.empty-state{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-8) var(--spacing-4);
+  text-align: center;
+  min-height: 300px;
+}
+
+.empty-state-icon{
+  font-size: 4rem;
+  color: var(--muted);
+  margin-bottom: var(--spacing-4);
+  opacity: 0.5;
+}
+
+.empty-state-title{
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  margin-bottom: var(--spacing-2);
+}
+
+.empty-state-description{
+  font-size: var(--font-size-base);
+  color: var(--muted);
+  margin-bottom: var(--spacing-5);
+  max-width: 400px;
+}
+
+.empty-state-actions{
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ==============================================
+   PAGINATION
+   ============================================== */
+
+.pagination{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4) 0;
+  flex-wrap: wrap;
+}
+
+.pagination-info{
+  font-size: var(--font-size-sm);
+  color: var(--muted);
+}
+
+.pagination-pages{
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pagination-item{
+  display: inline-flex;
+}
+
+.pagination-link{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: var(--spacing-1) var(--spacing-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-base);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.pagination-link:hover{
+  background: var(--table-hover-bg);
+  border-color: var(--border-hover);
+  text-decoration: none;
+}
+
+.pagination-link.active{
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+  cursor: default;
+}
+
+.pagination-link.disabled{
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.pagination-link-prev,
+.pagination-link-next{
+  padding: var(--spacing-1) var(--spacing-3);
+}
+
+.pagination-ellipsis{
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-1) var(--spacing-2);
+  color: var(--muted);
+}
+
+/* Page Size Selector */
+.pagination-size{
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-sm);
+  color: var(--muted);
+}
+
+.pagination-size select{
+  padding: var(--spacing-1) var(--spacing-6) var(--spacing-1) var(--spacing-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-base);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+/* ==============================================
+   BULK ACTIONS TOOLBAR
+   ============================================== */
+
+.bulk-actions{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: rgba(77, 163, 255, 0.1);
+  border: 1px solid rgba(77, 163, 255, 0.3);
+  border-radius: var(--radius-base);
+  margin-bottom: var(--spacing-4);
+}
+
+.bulk-actions-info{
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text);
+}
+
+.bulk-actions-buttons{
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+/* ==============================================
+   TOOLTIP
+   ============================================== */
+
+.tooltip{
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-text{
+  visibility: hidden;
+  position: absolute;
+  z-index: 1000;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--gray-900);
+  color: #fff;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+}
+
+.tooltip-text::after{
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--gray-900);
+}
+
+.tooltip:hover .tooltip-text{
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Alternative: Use title attribute for browser native tooltips */
+[data-tooltip]{
+  position: relative;
+  cursor: help;
 }
 
 .mt-4{margin-top:16px}
