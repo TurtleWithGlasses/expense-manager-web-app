@@ -109,22 +109,47 @@
   </section>
 </div>
 
-<!-- Chart area with buttons moved to top -->
+<!-- Chart area with tabs -->
 <section class="chart-section mt-6">
-  <!-- Chart control buttons -->
+  <!-- Chart tabs navigation -->
   <div class="chart-header">
-    <h2 class="h2">Charts</h2>
-    <div class="chart-actions">
-      <button class="btn purple" type="button" hx-get="/metrics/chart/pie" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">Pie chart</button>
-      <button class="btn blue" type="button" hx-get="/metrics/chart/bar" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">Bar chart</button>
-      <button class="btn green" type="button" hx-get="/metrics/chart/daily" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">Daily chart</button>
-      <button class="btn ghost" type="button" hx-on:click="document.querySelector('#chart-area').innerHTML = '<div class=&quot;muted text-center&quot;>Choose a chart above to see visualization</div>'">Close chart</button>
+    <h2 class="h2">Data Visualizations</h2>
+    <div class="chart-tabs">
+      <button class="chart-tab active" data-chart="pie" type="button" onclick="switchChart('pie')" hx-get="/metrics/chart/pie" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">
+        <i class="bi bi-pie-chart"></i>
+        <span>Pie Chart</span>
+      </button>
+      <button class="chart-tab" data-chart="bar" type="button" onclick="switchChart('bar')" hx-get="/metrics/chart/bar" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">
+        <i class="bi bi-bar-chart"></i>
+        <span>Bar Chart</span>
+      </button>
+      <button class="chart-tab" data-chart="daily" type="button" onclick="switchChart('daily')" hx-get="/metrics/chart/daily" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">
+        <i class="bi bi-graph-up"></i>
+        <span>Daily Trend</span>
+      </button>
     </div>
   </div>
-  
-  <!-- Chart display area -->
+
+  <!-- Chart display area with download button -->
   <div class="chart-display" id="chart-area">
-    <div class="muted text-center">Choose a chart above to see visualization</div>
+    <!-- Loading skeleton -->
+    <div class="chart-skeleton">
+      <div class="skeleton-title"></div>
+      <div class="skeleton-chart"></div>
+      <div class="skeleton-legend"></div>
+    </div>
+  </div>
+
+  <!-- Chart actions bar -->
+  <div class="chart-actions-bar" id="chart-actions" style="display: none;">
+    <button class="btn-icon" onclick="downloadChart()" title="Download chart as PNG">
+      <i class="bi bi-download"></i>
+      <span>Download PNG</span>
+    </button>
+    <button class="btn-icon" onclick="toggleChartLegend()" title="Toggle legend">
+      <i class="bi bi-list-ul"></i>
+      <span>Toggle Legend</span>
+    </button>
   </div>
 </section>
 
@@ -320,32 +345,135 @@
   background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
   padding: 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
 }
 
 .chart-header h2 {
   color: #fff;
-  margin: 0;
+  margin: 0 0 1rem 0;
   font-size: 1.5rem;
 }
 
-.chart-actions {
+/* Chart tabs navigation */
+.chart-tabs {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
 
+.chart-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chart-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.chart-tab.active {
+  background: #4da3ff;
+  border-color: #4da3ff;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(77, 163, 255, 0.3);
+}
+
+.chart-tab i {
+  font-size: 1.125rem;
+}
+
+/* Chart display area */
 .chart-display {
   padding: 2rem;
-  min-height: 300px;
+  min-height: 400px;
   background: rgba(255, 255, 255, 0.02);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Loading skeleton */
+.chart-skeleton {
+  width: 100%;
+  max-width: 800px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-title {
+  height: 24px;
+  width: 40%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.skeleton-chart {
+  height: 300px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.skeleton-legend {
+  height: 60px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Chart actions bar */
+.chart-actions-bar {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: flex-end;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.btn-icon i {
+  font-size: 1rem;
 }
 
 /* Mobile Responsive Design */
@@ -480,6 +608,27 @@
     padding: 1.5rem;
     min-height: 250px;
   }
+
+  .chart-tabs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .chart-tab {
+    width: 100%;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .chart-actions-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .btn-icon {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 480px) {
@@ -516,6 +665,70 @@
     min-height: 48px;
     font-size: 0.8rem;
   }
+}
+
+/* =============================================
+   LIGHT THEME - CHART SECTION
+   ============================================= */
+[data-theme="light"] .chart-section {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+[data-theme="light"] .chart-header {
+  background: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+[data-theme="light"] .chart-header h2 {
+  color: #212529;
+}
+
+[data-theme="light"] .chart-tab {
+  background: #ffffff;
+  border-color: #ced4da;
+  color: #495057;
+}
+
+[data-theme="light"] .chart-tab:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  color: #212529;
+}
+
+[data-theme="light"] .chart-tab.active {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+[data-theme="light"] .chart-display {
+  background: #f8f9fa;
+}
+
+[data-theme="light"] .skeleton-title,
+[data-theme="light"] .skeleton-chart,
+[data-theme="light"] .skeleton-legend {
+  background: #e9ecef;
+}
+
+[data-theme="light"] .chart-actions-bar {
+  background: #f8f9fa;
+  border-top: 2px solid #dee2e6;
+}
+
+[data-theme="light"] .btn-icon {
+  background: #ffffff;
+  border-color: #ced4da;
+  color: #495057;
+}
+
+[data-theme="light"] .btn-icon:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  color: #212529;
 }
 </style>
 
@@ -591,6 +804,87 @@ function exportCategorySummary() {
   const url = `/reports/excel/categories?${filters}`;
   window.open(url, '_blank');
 }
+
+// ============================================
+// CHART FUNCTIONS - Phase 5
+// ============================================
+
+// Store current chart instance globally
+let currentChartInstance = null;
+let currentChartType = 'pie';
+
+// Switch between charts and update tab states
+function switchChart(chartType) {
+  currentChartType = chartType;
+
+  // Update active tab
+  document.querySelectorAll('.chart-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.querySelector(`[data-chart="${chartType}"]`).classList.add('active');
+
+  // Show chart actions bar
+  document.getElementById('chart-actions').style.display = 'flex';
+}
+
+// Download current chart as PNG
+function downloadChart() {
+  const canvas = document.querySelector('#chart-area canvas');
+  if (!canvas) {
+    alert('No chart to download. Please load a chart first.');
+    return;
+  }
+
+  try {
+    // Create download link
+    const link = document.createElement('a');
+    link.download = `expense-chart-${currentChartType}-${new Date().toISOString().split('T')[0]}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (error) {
+    console.error('Error downloading chart:', error);
+    alert('Failed to download chart. Please try again.');
+  }
+}
+
+// Toggle chart legend visibility
+function toggleChartLegend() {
+  if (window.dailyChartInstance) {
+    const legendPlugin = window.dailyChartInstance.options.plugins.legend;
+    legendPlugin.display = !legendPlugin.display;
+    window.dailyChartInstance.update();
+  }
+}
+
+// Listen for HTMX events to handle chart loading
+document.addEventListener('htmx:beforeRequest', function(event) {
+  if (event.detail.target.id === 'chart-area') {
+    // Show loading skeleton
+    event.detail.target.innerHTML = `
+      <div class="chart-skeleton">
+        <div class="skeleton-title"></div>
+        <div class="skeleton-chart"></div>
+        <div class="skeleton-legend"></div>
+      </div>
+    `;
+  }
+});
+
+document.addEventListener('htmx:afterSwap', function(event) {
+  if (event.detail.target.id === 'chart-area') {
+    // Chart loaded, show actions bar
+    document.getElementById('chart-actions').style.display = 'flex';
+  }
+});
+
+// Auto-load pie chart on page load
+document.addEventListener('DOMContentLoaded', function() {
+  // Trigger the first chart load (pie chart)
+  const pieChartButton = document.querySelector('[data-chart="pie"]');
+  if (pieChartButton) {
+    pieChartButton.click();
+  }
+});
 </script>
 
 {% endblock %}
