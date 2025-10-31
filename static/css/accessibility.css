@@ -1,0 +1,667 @@
+/* ==============================================
+   ACCESSIBILITY ENHANCEMENTS
+   Phase 10: Accessibility & Polish
+   ============================================== */
+
+/* ==============================================
+   SKIP LINKS
+   ============================================== */
+
+/* Skip to main content link - visible only when focused */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--blue);
+  color: #fff;
+  padding: var(--spacing-3) var(--spacing-4);
+  text-decoration: none;
+  font-weight: var(--font-weight-semibold);
+  z-index: 10000;
+  border-radius: 0 0 var(--radius-base) 0;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+/* ==============================================
+   SCREEN READER ONLY TEXT
+   ============================================== */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only-focusable:active,
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* ==============================================
+   FOCUS VISIBLE STYLES
+   ============================================== */
+
+/* Enhanced focus styles for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Button focus styles */
+button:focus-visible,
+.btn:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(77, 163, 255, 0.1);
+}
+
+/* Link focus styles */
+a:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 4px;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+/* Input focus styles */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 0;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(77, 163, 255, 0.1);
+}
+
+/* Chart tab focus - special case */
+.chart-tab:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+/* Navigation link focus */
+.nav-link:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  background: var(--table-hover-bg);
+}
+
+/* Toggle switch focus */
+.switch input[type="checkbox"]:focus-visible + .switch-slider {
+  outline: 2px solid var(--blue);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 4px rgba(77, 163, 255, 0.15);
+}
+
+/* ==============================================
+   HIGH CONTRAST MODE SUPPORT
+   ============================================== */
+
+/* Detects Windows High Contrast Mode */
+@media (prefers-contrast: high) {
+  /* Increase border widths */
+  .btn,
+  .card,
+  .input,
+  select,
+  textarea {
+    border-width: 2px !important;
+  }
+
+  /* Increase text thickness */
+  body {
+    font-weight: 500 !important;
+  }
+
+  /* Enhanced focus indicators */
+  *:focus-visible {
+    outline-width: 3px !important;
+    outline-offset: 3px !important;
+  }
+
+  /* Make icons more visible */
+  i,
+  .bi {
+    font-weight: bold !important;
+  }
+
+  /* Stronger shadows */
+  .btn,
+  .card {
+    box-shadow: 0 0 0 2px currentColor !important;
+  }
+
+  /* Remove subtle backgrounds */
+  .chart-skeleton,
+  .skeleton-title,
+  .skeleton-chart,
+  .skeleton-legend {
+    background: transparent !important;
+    border: 2px solid currentColor !important;
+  }
+}
+
+/* ==============================================
+   REDUCED MOTION SUPPORT (Enhanced)
+   ============================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all animations */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable transforms */
+  .btn:hover,
+  .chart-tab:hover,
+  .btn-icon:hover {
+    transform: none !important;
+  }
+
+  /* Keep loading spinners but make them instant */
+  .spinner,
+  .btn-loading::after {
+    animation: none !important;
+  }
+
+  /* Static pulse for loading states */
+  .chart-skeleton {
+    animation: none !important;
+    opacity: 0.7 !important;
+  }
+}
+
+/* ==============================================
+   KEYBOARD NAVIGATION ENHANCEMENTS
+   ============================================== */
+
+/* Highlight interactive elements on focus */
+body:not(.using-mouse) button:focus,
+body:not(.using-mouse) a:focus,
+body:not(.using-mouse) input:focus,
+body:not(.using-mouse) select:focus,
+body:not(.using-mouse) textarea:focus {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* Remove outlines when using mouse */
+body.using-mouse button:focus,
+body.using-mouse a:focus,
+body.using-mouse input:focus,
+body.using-mouse select:focus,
+body.using-mouse textarea:focus {
+  outline: none;
+}
+
+/* But always show focus-visible */
+body.using-mouse *:focus-visible {
+  outline: 2px solid var(--blue) !important;
+  outline-offset: 2px !important;
+}
+
+/* ==============================================
+   ARIA LIVE REGIONS
+   ============================================== */
+
+/* Ensure live regions are accessible */
+[aria-live="polite"],
+[aria-live="assertive"] {
+  /* Screen readers will announce changes */
+  /* No visual styles needed */
+}
+
+/* Loading indicators should be announced */
+[role="status"] {
+  /* Announced by screen readers */
+}
+
+/* Alert regions */
+[role="alert"] {
+  padding: var(--spacing-3) var(--spacing-4);
+  border-left: 4px solid var(--blue);
+  background: rgba(77, 163, 255, 0.1);
+  border-radius: var(--radius-base);
+}
+
+/* ==============================================
+   DISABLED STATE ENHANCEMENTS
+   ============================================== */
+
+/* Make disabled elements obvious */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Disabled link styling */
+a[aria-disabled="true"] {
+  color: var(--muted);
+  opacity: 0.6;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* ==============================================
+   FORM VALIDATION & ERROR STATES
+   ============================================== */
+
+/* Invalid input styling */
+input:invalid:not(:focus),
+select:invalid:not(:focus),
+textarea:invalid:not(:focus) {
+  border-color: var(--red);
+}
+
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: var(--red);
+  border-width: 2px;
+}
+
+/* Error message styling */
+.error-message,
+[role="alert"].error {
+  color: var(--red);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-2);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.error-message::before {
+  content: "⚠";
+  font-weight: bold;
+}
+
+/* Success state */
+input[aria-invalid="false"] {
+  border-color: var(--green);
+}
+
+.success-message {
+  color: var(--green);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-2);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.success-message::before {
+  content: "✓";
+  font-weight: bold;
+}
+
+/* ==============================================
+   TOUCH TARGET SIZES (WCAG 2.5.5)
+   ============================================== */
+
+/* Ensure all interactive elements meet minimum size */
+@media (pointer: coarse) {
+  button,
+  a,
+  input[type="checkbox"],
+  input[type="radio"],
+  .btn,
+  .nav-link,
+  .chart-tab {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Add padding to ensure clickable area */
+  a:not(.btn) {
+    padding: var(--spacing-2);
+    margin: calc(-1 * var(--spacing-2));
+  }
+}
+
+/* ==============================================
+   COLOR CONTRAST ENHANCEMENTS
+   ============================================== */
+
+/* Ensure muted text meets AA standard */
+.muted {
+  color: #9ca3af; /* Contrast ratio 4.52:1 on dark bg */
+}
+
+[data-theme="light"] .muted {
+  color: #6b7280; /* Contrast ratio 4.54:1 on light bg */
+}
+
+/* Ensure links have good contrast */
+a {
+  color: var(--blue);
+  font-weight: var(--font-weight-medium);
+}
+
+[data-theme="light"] a {
+  color: #0d6efd; /* Better contrast on light backgrounds */
+}
+
+/* ==============================================
+   LOADING STATES ACCESSIBILITY
+   ============================================== */
+
+/* Loading spinner with announcement */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(77, 163, 255, 0.3);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spinner-spin 0.6s linear infinite;
+}
+
+@keyframes spinner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading text for screen readers */
+.loading-text {
+  margin-left: var(--spacing-2);
+}
+
+/* Button loading state */
+.btn-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.btn-loading::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-left: -8px;
+  margin-top: -8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spinner-spin 0.6s linear infinite;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: inherit;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-3);
+  color: #fff;
+}
+
+.loading-content .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border-width: 4px;
+}
+
+.loading-content .loading-text {
+  margin-left: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Element loading state */
+.loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ==============================================
+   TABLE ACCESSIBILITY
+   ============================================== */
+
+/* Ensure tables have proper structure */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* Table headers must be clear */
+th {
+  font-weight: var(--font-weight-bold);
+  text-align: left;
+}
+
+/* Zebra striping for better readability */
+tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="light"] tbody tr:nth-child(even) {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Hover state for rows */
+tbody tr:hover {
+  background: var(--table-hover-bg);
+}
+
+/* ==============================================
+   MODAL & DIALOG ACCESSIBILITY
+   ============================================== */
+
+/* Modal overlay - trap focus */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay[aria-hidden="true"] {
+  display: none;
+}
+
+/* Modal dialog */
+.modal[role="dialog"] {
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+/* Focus trap helper */
+.modal:focus {
+  outline: none;
+}
+
+/* Close button accessibility */
+.modal-close:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* ==============================================
+   TOAST NOTIFICATION ACCESSIBILITY
+   ============================================== */
+
+/* Toast should be announced but not intrusive */
+.toast {
+  /* Already has role="status" or role="alert" from feedback.js */
+}
+
+.toast:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+
+.toast-close:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+
+/* ==============================================
+   LIGHT THEME OVERRIDES
+   ============================================== */
+
+[data-theme="light"] .skip-link {
+  background: #0d6efd;
+  color: #fff;
+}
+
+[data-theme="light"] .skip-link:focus {
+  outline-color: #ffc107;
+}
+
+[data-theme="light"] *:focus-visible {
+  outline-color: #0d6efd;
+}
+
+[data-theme="light"] button:focus-visible,
+[data-theme="light"] .btn:focus-visible {
+  outline-color: #0d6efd;
+  box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+}
+
+[data-theme="light"] input:focus-visible,
+[data-theme="light"] select:focus-visible,
+[data-theme="light"] textarea:focus-visible {
+  outline-color: #0d6efd;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+}
+
+/* ==============================================
+   PRINT ACCESSIBILITY
+   ============================================== */
+
+@media print {
+  /* Hide skip links */
+  .skip-link {
+    display: none !important;
+  }
+
+  /* Ensure focus indicators don't print */
+  *:focus,
+  *:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Show link URLs */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  /* Don't show URLs for skip links or anchors */
+  a[href^="#"]::after,
+  .skip-link::after {
+    content: "";
+  }
+}
+
+/* ==============================================
+   MOBILE ACCESSIBILITY
+   ============================================== */
+
+@media (max-width: 768px) {
+  /* Larger touch targets on mobile */
+  button,
+  .btn,
+  a {
+    min-height: 44px;
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+
+  /* Skip link positioning */
+  .skip-link {
+    width: 100%;
+    text-align: center;
+    border-radius: 0;
+  }
+
+  .skip-link:focus {
+    top: 0;
+  }
+
+  /* Focus indicators can be smaller on mobile */
+  *:focus-visible {
+    outline-width: 2px;
+    outline-offset: 2px;
+  }
+}
+
+/* ==============================================
+   KEYBOARD NAVIGATION HELPER CLASSES
+   ============================================== */
+
+/* Add this class to body to track input method */
+body.keyboard-nav *:focus {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+body.mouse-nav *:focus {
+  outline: none;
+}
+
+/* But always show focus-visible */
+body *:focus-visible {
+  outline: 2px solid var(--blue) !important;
+  outline-offset: 2px !important;
+}

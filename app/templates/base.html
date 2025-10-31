@@ -17,27 +17,36 @@
   <link rel="stylesheet" href="/static/css/themes.css?v=2">
   <!-- Your custom CSS -->
   <link rel="stylesheet" href="/static/css/styles.css?v=2">
+  <!-- Accessibility CSS - Phase 10 -->
+  <link rel="stylesheet" href="/static/css/accessibility.css?v=1">
+  <!-- Polish & Animations - Phase 10 -->
+  <link rel="stylesheet" href="/static/css/polish.css?v=1">
 </head>
 <body class="bg-surface">
-  <header class="topbar">
+  <!-- Skip to main content link for keyboard users -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="topbar" role="banner">
     <div class="wrap">
-      <a class="brand" href="/"><i class="bi bi-wallet2"></i> Expense Manager</a>
-      <nav class="nav">
+      <a class="brand" href="/" aria-label="Expense Manager Home">
+        <i class="bi bi-wallet2" aria-hidden="true"></i> Expense Manager
+      </a>
+      <nav class="nav" role="navigation" aria-label="Main navigation">
         <button
           id="theme-toggle"
           class="btn ghost"
           style="padding: 6px 12px; margin-right: 16px;"
-          title="Toggle theme"
+          aria-label="Toggle between dark and light theme"
         >
-          <i class="bi bi-moon-fill" id="theme-icon-dark" style="display: none;"></i>
-          <i class="bi bi-sun-fill" id="theme-icon-light" style="display: none;"></i>
+          <i class="bi bi-moon-fill" id="theme-icon-dark" style="display: none;" aria-hidden="true"></i>
+          <i class="bi bi-sun-fill" id="theme-icon-light" style="display: none;" aria-hidden="true"></i>
         </button>
-        <a class="nav-link" href="/logout">Logout</a>
+        <a class="nav-link" href="/logout" aria-label="Logout from your account">Logout</a>
       </nav>
     </div>
   </header>
 
-  <main class="wrap py-6">
+  <main id="main-content" class="wrap py-6" role="main">
     {% block content %}{% endblock %}
   </main>
 
@@ -49,6 +58,37 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Feedback System (Toast & Modals) - Phase 6 -->
   <script src="/static/js/feedback.js?v=1"></script>
+  <!-- Error Handling & Loading States - Phase 10 -->
+  <script src="/static/js/error-handling.js?v=1"></script>
+
+  <!-- Keyboard Navigation Detection - Phase 10 -->
+  <script>
+    // Detect keyboard vs mouse navigation for better accessibility
+    (function() {
+      let usingKeyboard = false;
+
+      // Detect Tab key usage
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+          usingKeyboard = true;
+          document.body.classList.add('keyboard-nav');
+          document.body.classList.remove('mouse-nav');
+        }
+      });
+
+      // Detect mouse usage
+      document.addEventListener('mousedown', function() {
+        if (usingKeyboard) {
+          usingKeyboard = false;
+          document.body.classList.add('mouse-nav');
+          document.body.classList.remove('keyboard-nav');
+        }
+      });
+
+      // Initialize as mouse navigation
+      document.body.classList.add('mouse-nav');
+    })();
+  </script>
 
   <!-- Theme Toggle Script -->
   <script>

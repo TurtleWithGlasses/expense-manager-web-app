@@ -1,0 +1,717 @@
+/* ==============================================
+   POLISH & REFINEMENTS
+   Phase 10: Smooth Animations & Transitions
+   ============================================== */
+
+/* ==============================================
+   SMOOTH SCROLL BEHAVIOR
+   ============================================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Disable for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ==============================================
+   REFINED BUTTON ANIMATIONS
+   ============================================== */
+
+.btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ripple effect on click */
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Smooth hover elevation */
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Button loading shimmer */
+@keyframes button-shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.btn-loading {
+  background: linear-gradient(
+    90deg,
+    var(--blue) 0%,
+    rgba(77, 163, 255, 0.8) 50%,
+    var(--blue) 100%
+  );
+  background-size: 1000px 100%;
+  animation: button-shimmer 2s infinite;
+}
+
+/* ==============================================
+   REFINED CARD ANIMATIONS
+   ============================================== */
+
+.card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Card entry animation */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Stagger card animations */
+.card:nth-child(1) { animation-delay: 0s; }
+.card:nth-child(2) { animation-delay: 0.1s; }
+.card:nth-child(3) { animation-delay: 0.2s; }
+.card:nth-child(4) { animation-delay: 0.3s; }
+.card:nth-child(5) { animation-delay: 0.4s; }
+
+/* ==============================================
+   SMOOTH INPUT TRANSITIONS
+   ============================================== */
+
+input,
+select,
+textarea,
+.form-input {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.form-input:focus {
+  transform: scale(1.01);
+  box-shadow: 0 0 0 4px rgba(77, 163, 255, 0.1);
+}
+
+/* Label float animation */
+.form-field {
+  position: relative;
+}
+
+.form-field label {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-field input:focus + label,
+.form-field input:not(:placeholder-shown) + label {
+  transform: translateY(-24px) scale(0.85);
+  color: var(--blue);
+}
+
+/* ==============================================
+   TOAST ANIMATIONS (ENHANCED)
+   ============================================== */
+
+/* Smooth slide in from right */
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Smooth slide out to right */
+@keyframes toast-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+}
+
+.toast {
+  animation: toast-slide-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toast.removing {
+  animation: toast-slide-out 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==============================================
+   MODAL ANIMATIONS (ENHANCED)
+   ============================================== */
+
+/* Smooth backdrop fade */
+@keyframes modal-backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-backdrop-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Modal zoom and fade */
+@keyframes modal-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modal-zoom-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+}
+
+.modal-overlay {
+  animation: modal-backdrop-fade-in 0.25s ease;
+}
+
+.modal-overlay.closing {
+  animation: modal-backdrop-fade-out 0.25s ease;
+}
+
+.modal {
+  animation: modal-zoom-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal.closing {
+  animation: modal-zoom-out 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==============================================
+   LOADING ANIMATIONS (REFINED)
+   ============================================== */
+
+/* Smooth pulse for loading states */
+@keyframes pulse-smooth {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.skeleton,
+.chart-skeleton > * {
+  animation: pulse-smooth 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Spinner with smooth rotation */
+@keyframes spinner-smooth {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner,
+.loading-spinner,
+.btn-loading::after {
+  animation: spinner-smooth 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Progress bar animation */
+@keyframes progress-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--progress-width);
+  }
+}
+
+.progress-bar {
+  animation: progress-fill 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==============================================
+   CHART ANIMATIONS
+   ============================================== */
+
+/* Chart fade in */
+@keyframes chart-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+#chart-area canvas {
+  animation: chart-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Chart tab transitions */
+.chart-tab {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chart-tab:hover {
+  transform: translateY(-2px);
+}
+
+.chart-tab.active {
+  transform: translateY(-3px);
+}
+
+/* ==============================================
+   PAGE TRANSITION ANIMATIONS
+   ============================================== */
+
+/* Fade in page content */
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+main {
+  animation: page-fade-in 0.4s ease;
+}
+
+/* Section slide in */
+@keyframes section-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+section {
+  animation: section-slide-in 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==============================================
+   NAVIGATION ANIMATIONS
+   ============================================== */
+
+/* Navigation link hover effect */
+.nav-link {
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--blue);
+  transform: translateX(-50%);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-link:hover::after {
+  width: 80%;
+}
+
+/* Brand hover effect */
+.brand {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.brand:hover {
+  transform: scale(1.05);
+}
+
+/* ==============================================
+   TABLE ANIMATIONS
+   ============================================== */
+
+/* Row hover effect */
+tbody tr {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+tbody tr:hover {
+  transform: translateX(4px);
+  box-shadow: -4px 0 0 var(--blue);
+}
+
+/* Table fade in */
+@keyframes table-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+table {
+  animation: table-fade-in 0.4s ease;
+}
+
+/* Row stagger animation */
+tbody tr {
+  animation: table-fade-in 0.3s ease;
+}
+
+tbody tr:nth-child(1) { animation-delay: 0s; }
+tbody tr:nth-child(2) { animation-delay: 0.05s; }
+tbody tr:nth-child(3) { animation-delay: 0.1s; }
+tbody tr:nth-child(4) { animation-delay: 0.15s; }
+tbody tr:nth-child(5) { animation-delay: 0.2s; }
+
+/* ==============================================
+   LINK HOVER EFFECTS
+   ============================================== */
+
+a {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+a:hover {
+  color: var(--blue-light);
+}
+
+/* Underline animation */
+a:not(.btn)::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--blue);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+a:not(.btn):hover::after {
+  width: 100%;
+}
+
+/* ==============================================
+   TOGGLE SWITCH ANIMATION
+   ============================================== */
+
+.switch-slider {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.switch-slider::before {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.switch input:checked + .switch-slider {
+  background: var(--blue);
+  box-shadow: 0 0 12px rgba(77, 163, 255, 0.4);
+}
+
+.switch input:checked + .switch-slider::before {
+  transform: translateX(22px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* ==============================================
+   ICON ANIMATIONS
+   ============================================== */
+
+/* Icon pulse on hover */
+@keyframes icon-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.btn:hover i,
+a:hover i {
+  animation: icon-pulse 0.6s ease;
+}
+
+/* Icon spin */
+@keyframes icon-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.icon-spin {
+  animation: icon-spin 1s linear infinite;
+}
+
+/* ==============================================
+   BADGE ANIMATIONS
+   ============================================== */
+
+.badge {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.badge:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Badge bounce in */
+@keyframes badge-bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.badge {
+  animation: badge-bounce-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==============================================
+   THEME TRANSITION
+   ============================================== */
+
+/* Smooth theme switching */
+body.theme-transitioning,
+body.theme-transitioning * {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ==============================================
+   MICRO-INTERACTIONS
+   ============================================== */
+
+/* Button press effect */
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* Input focus glow */
+@keyframes input-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(77, 163, 255, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(77, 163, 255, 0.15);
+  }
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  animation: input-glow 2s ease infinite;
+}
+
+/* Success checkmark animation */
+@keyframes checkmark-draw {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.checkmark {
+  stroke-dasharray: 100;
+  animation: checkmark-draw 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==============================================
+   ERROR SHAKE ANIMATION
+   ============================================== */
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-10px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(10px);
+  }
+}
+
+.error,
+input[aria-invalid="true"],
+.shake {
+  animation: shake 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==============================================
+   BACKDROP BLUR EFFECTS
+   ============================================== */
+
+.backdrop-blur {
+  backdrop-filter: blur(8px);
+  transition: backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.backdrop-blur:hover {
+  backdrop-filter: blur(12px);
+}
+
+/* ==============================================
+   GRADIENT TEXT ANIMATIONS
+   ============================================== */
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-text {
+  background: linear-gradient(
+    45deg,
+    var(--blue),
+    var(--purple),
+    var(--blue)
+  );
+  background-size: 200% 200%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* ==============================================
+   DISABLE ANIMATIONS FOR REDUCED MOTION
+   ============================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Keep essential transitions but make them instant */
+  .btn:hover,
+  .card:hover,
+  a:hover {
+    transform: none !important;
+  }
+
+  /* Remove all animations */
+  @keyframes none {
+    0%, 100% { opacity: 1; }
+  }
+}
+
+/* ==============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================== */
+
+/* GPU acceleration for transforms */
+.btn,
+.card,
+.modal,
+.toast {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Contain layout shifts */
+.card,
+.btn {
+  contain: layout style;
+}

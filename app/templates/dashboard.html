@@ -4,29 +4,41 @@
 <h1 class="h1">Welcome, {{ user.email }}</h1>
 
 <!-- Navigation Links - Fixed with proper horizontal layout -->
-<div class="quick-links-horizontal">
-  <a class="btn ghost" href="/entries/"><i class="bi bi-plus-circle"></i> Add / View / Edit Entries</a>
-  <a class="btn ghost" href="/categories/"><i class="bi bi-tags"></i> Manage Categories</a>
-  <a class="btn ghost" href="/reports/"><i class="bi bi-graph-up"></i> Financial Reports</a>
-  <a class="btn ghost" href="/currency/settings"><i class="bi bi-currency-exchange"></i> Currency</a>
-  <a class="btn ghost" href="/ai/settings"><i class="bi bi-robot"></i> AI Settings</a>
-  <a class="btn ghost" title="Coming soon" href="#"><i class="bi bi-calendar"></i> Calendar</a>
-</div>
+<nav class="quick-links-horizontal" aria-label="Quick actions">
+  <a class="btn ghost" href="/entries/" aria-label="Add, view, or edit expense entries">
+    <i class="bi bi-plus-circle" aria-hidden="true"></i> Add / View / Edit Entries
+  </a>
+  <a class="btn ghost" href="/categories/" aria-label="Manage expense categories">
+    <i class="bi bi-tags" aria-hidden="true"></i> Manage Categories
+  </a>
+  <a class="btn ghost" href="/reports/" aria-label="View financial reports and analytics">
+    <i class="bi bi-graph-up" aria-hidden="true"></i> Financial Reports
+  </a>
+  <a class="btn ghost" href="/currency/settings" aria-label="Change currency settings">
+    <i class="bi bi-currency-exchange" aria-hidden="true"></i> Currency
+  </a>
+  <a class="btn ghost" href="/ai/settings" aria-label="Configure AI and machine learning settings">
+    <i class="bi bi-robot" aria-hidden="true"></i> AI Settings
+  </a>
+  <a class="btn ghost" href="#" aria-disabled="true" aria-label="Calendar view - Coming soon">
+    <i class="bi bi-calendar" aria-hidden="true"></i> Calendar
+  </a>
+</nav>
 
 <!-- Horizontal date and category filters -->
-<form id="filters" class="date-filters mt-6" onsubmit="return false">
+<form id="filters" class="date-filters mt-6" onsubmit="return false" role="search" aria-label="Filter expenses by date and category">
   <div class="date-inputs">
     <div class="date-field">
       <label class="muted" for="start">Start date</label>
-      <input id="start" name="start" type="date" class="input" value="{{ start or '' }}">
+      <input id="start" name="start" type="date" class="input" value="{{ start or '' }}" aria-label="Filter start date">
     </div>
     <div class="date-field">
       <label class="muted" for="end">End date</label>
-      <input id="end" name="end" type="date" class="input" value="{{ end or '' }}">
+      <input id="end" name="end" type="date" class="input" value="{{ end or '' }}" aria-label="Filter end date">
     </div>
     <div class="date-field">
       <label class="muted" for="category">Category</label>
-      <select id="category" name="category" class="input">
+      <select id="category" name="category" class="input" aria-label="Filter by category">
         <option value="">All Categories</option>
         {% for category in categories %}
           <option value="{{ category.id }}" {% if selected_category and selected_category == category.id|string %}selected{% endif %}>
@@ -110,44 +122,45 @@
 </div>
 
 <!-- Chart area with tabs -->
-<section class="chart-section mt-6">
+<section class="chart-section mt-6" aria-labelledby="chart-heading">
   <!-- Chart tabs navigation -->
   <div class="chart-header">
-    <h2 class="h2">Data Visualizations</h2>
-    <div class="chart-tabs">
-      <button class="chart-tab active" data-chart="pie" type="button" onclick="switchChart('pie')" hx-get="/metrics/chart/pie" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">
-        <i class="bi bi-pie-chart"></i>
+    <h2 class="h2" id="chart-heading">Data Visualizations</h2>
+    <div class="chart-tabs" role="tablist" aria-label="Chart type selector">
+      <button class="chart-tab active" data-chart="pie" type="button" role="tab" aria-selected="true" aria-controls="chart-area" onclick="switchChart('pie')" hx-get="/metrics/chart/pie" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">
+        <i class="bi bi-pie-chart" aria-hidden="true"></i>
         <span>Pie Chart</span>
       </button>
-      <button class="chart-tab" data-chart="bar" type="button" onclick="switchChart('bar')" hx-get="/metrics/chart/bar" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">
-        <i class="bi bi-bar-chart"></i>
+      <button class="chart-tab" data-chart="bar" type="button" role="tab" aria-selected="false" aria-controls="chart-area" onclick="switchChart('bar')" hx-get="/metrics/chart/bar" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">
+        <i class="bi bi-bar-chart" aria-hidden="true"></i>
         <span>Bar Chart</span>
       </button>
-      <button class="chart-tab" data-chart="daily" type="button" onclick="switchChart('daily')" hx-get="/metrics/chart/daily" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">
-        <i class="bi bi-graph-up"></i>
+      <button class="chart-tab" data-chart="daily" type="button" role="tab" aria-selected="false" aria-controls="chart-area" onclick="switchChart('daily')" hx-get="/metrics/chart/daily" hx-include="#filters" hx-target="#chart-area" hx-swap="innerHTML">
+        <i class="bi bi-graph-up" aria-hidden="true"></i>
         <span>Daily Trend</span>
       </button>
     </div>
   </div>
 
   <!-- Chart display area with download button -->
-  <div class="chart-display" id="chart-area">
+  <div class="chart-display" id="chart-area" role="tabpanel" aria-live="polite" aria-label="Chart visualization area">
     <!-- Loading skeleton -->
-    <div class="chart-skeleton">
+    <div class="chart-skeleton" aria-label="Loading chart" role="status">
       <div class="skeleton-title"></div>
       <div class="skeleton-chart"></div>
       <div class="skeleton-legend"></div>
+      <span class="sr-only">Loading chart data...</span>
     </div>
   </div>
 
   <!-- Chart actions bar -->
   <div class="chart-actions-bar" id="chart-actions" style="display: none;">
-    <button class="btn-icon" onclick="downloadChart()" title="Download chart as PNG">
-      <i class="bi bi-download"></i>
+    <button class="btn-icon" onclick="downloadChart()" aria-label="Download chart as PNG image">
+      <i class="bi bi-download" aria-hidden="true"></i>
       <span>Download PNG</span>
     </button>
-    <button class="btn-icon" onclick="toggleChartLegend()" title="Toggle legend">
-      <i class="bi bi-list-ul"></i>
+    <button class="btn-icon" onclick="toggleChartLegend()" aria-label="Toggle chart legend visibility">
+      <i class="bi bi-list-ul" aria-hidden="true"></i>
       <span>Toggle Legend</span>
     </button>
   </div>
@@ -817,11 +830,15 @@ let currentChartType = 'pie';
 function switchChart(chartType) {
   currentChartType = chartType;
 
-  // Update active tab
+  // Update active tab and ARIA states
   document.querySelectorAll('.chart-tab').forEach(tab => {
     tab.classList.remove('active');
+    tab.setAttribute('aria-selected', 'false');
   });
-  document.querySelector(`[data-chart="${chartType}"]`).classList.add('active');
+
+  const activeTab = document.querySelector(`[data-chart="${chartType}"]`);
+  activeTab.classList.add('active');
+  activeTab.setAttribute('aria-selected', 'true');
 
   // Show chart actions bar
   document.getElementById('chart-actions').style.display = 'flex';
