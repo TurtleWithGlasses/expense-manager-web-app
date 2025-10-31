@@ -1,0 +1,413 @@
+{% extends "base.html" %}
+
+{% block title %}Appearance Settings - Expense Manager{% endblock %}
+
+{% block content %}
+<div class="settings-page">
+  <!-- Settings Header -->
+  <div class="settings-header">
+    <h1 class="h1">
+      <i class="bi bi-gear-fill"></i>
+      Settings
+    </h1>
+    <p class="settings-subtitle">Manage your account preferences and application settings</p>
+  </div>
+
+  <!-- Settings Navigation Tabs -->
+  <div class="settings-tabs">
+    <a href="/settings" class="settings-tab" data-tab="general">
+      <i class="bi bi-person-circle"></i>
+      <span>General</span>
+    </a>
+    <a href="/settings/appearance" class="settings-tab active" data-tab="appearance">
+      <i class="bi bi-palette"></i>
+      <span>Appearance</span>
+    </a>
+    <a href="/currency/settings" class="settings-tab" data-tab="currency">
+      <i class="bi bi-currency-dollar"></i>
+      <span>Currency</span>
+    </a>
+    <a href="/ai/settings" class="settings-tab" data-tab="ai">
+      <i class="bi bi-robot"></i>
+      <span>AI Features</span>
+    </a>
+  </div>
+
+  <!-- Settings Content -->
+  <div class="settings-content">
+    <!-- Appearance Settings Section -->
+    <section class="settings-section">
+      <div class="settings-section-header">
+        <h2 class="h2">
+          <i class="bi bi-palette"></i>
+          Appearance & Display
+        </h2>
+        <p class="text-muted">Customize the look and feel of your application</p>
+      </div>
+
+      <!-- Theme Card -->
+      <div class="card settings-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="bi bi-moon-stars"></i>
+            Theme
+          </h3>
+        </div>
+        <div class="card-body">
+          <p class="card-description">Choose your preferred theme mode</p>
+
+          <div class="theme-options">
+            <div class="theme-option" onclick="setThemeMode('dark')">
+              <div class="theme-preview theme-preview-dark">
+                <div class="theme-preview-header"></div>
+                <div class="theme-preview-content">
+                  <div class="theme-preview-box"></div>
+                  <div class="theme-preview-box"></div>
+                </div>
+              </div>
+              <div class="theme-option-info">
+                <input type="radio" name="theme" value="dark" id="theme-dark"
+                       {% if user_theme == 'dark' %}checked{% endif %}>
+                <label for="theme-dark">
+                  <i class="bi bi-moon-fill"></i>
+                  <span>Dark Mode</span>
+                </label>
+                <p>Dark background with light text</p>
+              </div>
+            </div>
+
+            <div class="theme-option" onclick="setThemeMode('light')">
+              <div class="theme-preview theme-preview-light">
+                <div class="theme-preview-header"></div>
+                <div class="theme-preview-content">
+                  <div class="theme-preview-box"></div>
+                  <div class="theme-preview-box"></div>
+                </div>
+              </div>
+              <div class="theme-option-info">
+                <input type="radio" name="theme" value="light" id="theme-light"
+                       {% if user_theme == 'light' %}checked{% endif %}>
+                <label for="theme-light">
+                  <i class="bi bi-sun-fill"></i>
+                  <span>Light Mode</span>
+                </label>
+                <p>Light background with dark text</p>
+              </div>
+            </div>
+
+            <div class="theme-option" onclick="Toast.info('Auto theme will be available soon!', 'Coming Soon')">
+              <div class="theme-preview theme-preview-auto">
+                <div class="theme-preview-header"></div>
+                <div class="theme-preview-content">
+                  <div class="theme-preview-box"></div>
+                  <div class="theme-preview-box"></div>
+                </div>
+              </div>
+              <div class="theme-option-info">
+                <input type="radio" name="theme" value="auto" id="theme-auto" disabled>
+                <label for="theme-auto">
+                  <i class="bi bi-circle-half"></i>
+                  <span>Auto</span>
+                  <span class="badge badge-sm">Coming Soon</span>
+                </label>
+                <p>Match system preferences</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Display Preferences Card -->
+      <div class="card settings-card mt-4">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="bi bi-display"></i>
+            Display Preferences
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="preferences-grid">
+            <div class="preference-item">
+              <div class="preference-info">
+                <label class="preference-label">Compact Mode</label>
+                <p class="preference-description">Reduce spacing for a more compact layout</p>
+              </div>
+              <div class="preference-control">
+                <label class="switch">
+                  <input type="checkbox" onchange="Toast.info('Compact mode feature coming soon!', 'Coming Soon')">
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="preference-item">
+              <div class="preference-info">
+                <label class="preference-label">Animations</label>
+                <p class="preference-description">Enable smooth transitions and animations</p>
+              </div>
+              <div class="preference-control">
+                <label class="switch">
+                  <input type="checkbox" checked disabled>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="preference-item">
+              <div class="preference-info">
+                <label class="preference-label">Sidebar Always Visible</label>
+                <p class="preference-description">Keep sidebar expanded at all times</p>
+              </div>
+              <div class="preference-control">
+                <label class="switch">
+                  <input type="checkbox" onchange="Toast.info('Sidebar preferences coming soon!', 'Coming Soon')">
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Font Size Card -->
+      <div class="card settings-card mt-4">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="bi bi-fonts"></i>
+            Typography
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label" for="font-size">
+              Font Size
+            </label>
+            <select class="form-input" id="font-size" onchange="Toast.info('Font size adjustment coming soon!', 'Coming Soon')">
+              <option value="small">Small</option>
+              <option value="medium" selected>Medium (Default)</option>
+              <option value="large">Large</option>
+              <option value="extra-large">Extra Large</option>
+            </select>
+            <small class="form-helper">Adjust the base font size for better readability</small>
+          </div>
+
+          <div class="font-preview">
+            <p class="preview-text-sm">Small text preview - Quick brown fox jumps over the lazy dog</p>
+            <p class="preview-text-base">Regular text preview - Quick brown fox jumps over the lazy dog</p>
+            <p class="preview-text-lg">Large text preview - Quick brown fox jumps over the lazy dog</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<style>
+/* Reuse styles from index.html */
+.settings-page, .settings-header, .settings-subtitle, .settings-tabs, .settings-tab,
+.settings-grid, .settings-card, .preferences-grid, .preference-item, .preference-info,
+.preference-label, .preference-description, .switch, .switch-slider {
+  /* Styles inherited from index.html */
+}
+
+/* Theme Options */
+.theme-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-4);
+}
+
+.theme-option {
+  cursor: pointer;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-base);
+  padding: var(--spacing-4);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.theme-option:hover {
+  border-color: var(--blue);
+  transform: translateY(-2px);
+}
+
+.theme-option:has(input:checked) {
+  border-color: var(--blue);
+  background: rgba(77, 163, 255, 0.05);
+}
+
+/* Theme Preview */
+.theme-preview {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: var(--spacing-3);
+  border: 1px solid var(--border);
+}
+
+.theme-preview-dark {
+  background: #1a1d29;
+}
+
+.theme-preview-light {
+  background: #ffffff;
+}
+
+.theme-preview-auto {
+  background: linear-gradient(90deg, #1a1d29 50%, #ffffff 50%);
+}
+
+.theme-preview-header {
+  height: 25%;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.theme-preview-light .theme-preview-header {
+  background: rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.theme-preview-content {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.theme-preview-box {
+  height: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.theme-preview-light .theme-preview-box {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Theme Option Info */
+.theme-option-info {
+  text-align: center;
+}
+
+.theme-option-info input[type="radio"] {
+  display: none;
+}
+
+.theme-option-info label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+
+.theme-option-info label i {
+  font-size: 1.125rem;
+}
+
+.theme-option-info p {
+  font-size: var(--font-size-sm);
+  color: var(--muted);
+  margin: 0;
+}
+
+.badge-sm {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold);
+  background: var(--blue);
+  color: white;
+  border-radius: var(--radius-sm);
+}
+
+/* Font Preview */
+.font-preview {
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-4);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-base);
+  border: 1px solid var(--border);
+}
+
+.preview-text-sm {
+  font-size: var(--font-size-sm);
+  color: var(--muted);
+  margin-bottom: var(--spacing-2);
+}
+
+.preview-text-base {
+  font-size: var(--font-size-base);
+  color: var(--text);
+  margin-bottom: var(--spacing-2);
+}
+
+.preview-text-lg {
+  font-size: var(--font-size-lg);
+  color: var(--text);
+  margin: 0;
+}
+
+/* Light Theme */
+[data-theme="light"] .theme-option:has(input:checked) {
+  background: rgba(13, 110, 253, 0.05);
+  border-color: #0d6efd;
+}
+
+[data-theme="light"] .font-preview {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .theme-options {
+    grid-template-columns: 1fr;
+  }
+
+  .theme-option {
+    padding: var(--spacing-3);
+  }
+}
+</style>
+
+<script>
+async function setThemeMode(mode) {
+  const html = document.documentElement;
+
+  // Update UI immediately
+  html.setAttribute('data-theme', mode);
+
+  // Update radio buttons
+  document.querySelectorAll('input[name="theme"]').forEach(input => {
+    input.checked = (input.value === mode);
+  });
+
+  // Save to backend
+  try {
+    const response = await fetch('/theme/toggle', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (response.ok) {
+      Toast.success(`Theme changed to ${mode} mode`, 'Theme Updated');
+    } else {
+      Toast.error('Failed to save theme preference', 'Error');
+    }
+  } catch (error) {
+    console.error('Error saving theme:', error);
+    Toast.error('Failed to save theme preference', 'Error');
+  }
+}
+</script>
+
+<link rel="stylesheet" href="/static/css/settings.css">
+{% endblock %}

@@ -3,19 +3,50 @@
 {% block title %}AI Settings - Expense Manager{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="settings-page">
+    <!-- Settings Header -->
+    <div class="settings-header">
+        <h1 class="h1">
+            <i class="bi bi-gear-fill"></i>
+            Settings
+        </h1>
+        <p class="settings-subtitle">Manage your account preferences and application settings</p>
+    </div>
+
+    <!-- Settings Navigation Tabs -->
+    <div class="settings-tabs">
+        <a href="/settings" class="settings-tab" data-tab="general">
+            <i class="bi bi-person-circle"></i>
+            <span>General</span>
+        </a>
+        <a href="/settings/appearance" class="settings-tab" data-tab="appearance">
+            <i class="bi bi-palette"></i>
+            <span>Appearance</span>
+        </a>
+        <a href="/currency/settings" class="settings-tab" data-tab="currency">
+            <i class="bi bi-currency-dollar"></i>
+            <span>Currency</span>
+        </a>
+        <a href="/ai/settings" class="settings-tab active" data-tab="ai">
+            <i class="bi bi-robot"></i>
+            <span>AI Features</span>
+        </a>
+    </div>
+
+    <!-- Settings Content -->
+    <div class="settings-content">
+        <section class="settings-section">
+            <div class="settings-section-header">
+                <h2 class="h2">
+                    <i class="bi bi-robot"></i>
+                    AI Features
+                </h2>
+                <p class="text-muted">Configure artificial intelligence features and preferences</p>
+            </div>
+
+<div class="container-fluid py-0">
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-robot me-2"></i>
-                    AI Settings
-                </h1>
-                <a href="/" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i>
-                    Back to Dashboard
-                </a>
-            </div>
 
             {% if message %}
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -881,4 +912,13 @@ function resetAIModel() {
     }
 }
 </script>
+
+        </div>
+    </div>
+</div>
+        </section>
+    </div>
+</div>
+
+<link rel="stylesheet" href="/static/css/settings.css">
 {% endblock %}

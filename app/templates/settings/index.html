@@ -1,0 +1,609 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Expense Manager{% endblock %}
+
+{% block content %}
+<div class="settings-page">
+  <!-- Settings Header -->
+  <div class="settings-header">
+    <h1 class="h1">
+      <i class="bi bi-gear-fill"></i>
+      Settings
+    </h1>
+    <p class="settings-subtitle">Manage your account preferences and application settings</p>
+  </div>
+
+  <!-- Settings Navigation Tabs -->
+  <div class="settings-tabs">
+    <a href="/settings" class="settings-tab active" data-tab="general">
+      <i class="bi bi-person-circle"></i>
+      <span>General</span>
+    </a>
+    <a href="/settings/appearance" class="settings-tab" data-tab="appearance">
+      <i class="bi bi-palette"></i>
+      <span>Appearance</span>
+    </a>
+    <a href="/currency/settings" class="settings-tab" data-tab="currency">
+      <i class="bi bi-currency-dollar"></i>
+      <span>Currency</span>
+    </a>
+    <a href="/ai/settings" class="settings-tab" data-tab="ai">
+      <i class="bi bi-robot"></i>
+      <span>AI Features</span>
+    </a>
+  </div>
+
+  <!-- Settings Content -->
+  <div class="settings-content">
+    <!-- General Settings Section -->
+    <section class="settings-section">
+      <div class="settings-section-header">
+        <h2 class="h2">
+          <i class="bi bi-person-circle"></i>
+          Profile & Account
+        </h2>
+        <p class="text-muted">Manage your profile information and account details</p>
+      </div>
+
+      <div class="settings-grid">
+        <!-- Profile Card -->
+        <div class="card settings-card">
+          <div class="card-header">
+            <h3 class="card-title">Profile Information</h3>
+          </div>
+          <div class="card-body">
+            <div class="profile-section">
+              <div class="profile-avatar">
+                <div class="avatar-circle">
+                  <i class="bi bi-person-fill"></i>
+                </div>
+                <button class="btn btn-sm btn-outline" onclick="Toast.info('Profile picture upload coming soon!', 'Feature Coming Soon')">
+                  <i class="bi bi-camera"></i>
+                  Change Photo
+                </button>
+              </div>
+
+              <div class="profile-info">
+                <div class="form-group">
+                  <label class="form-label" for="user-email">
+                    <i class="bi bi-envelope"></i>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="user-email"
+                    class="form-input"
+                    value="{{ user.email }}"
+                    readonly
+                  >
+                  <small class="form-helper">Your email is used for login and notifications</small>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="user-name">
+                    <i class="bi bi-person"></i>
+                    Display Name
+                  </label>
+                  <input
+                    type="text"
+                    id="user-name"
+                    class="form-input"
+                    value="{{ user.email.split('@')[0] }}"
+                    placeholder="Your name"
+                  >
+                  <small class="form-helper">This name will be displayed across the app</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <button class="btn btn-primary" onclick="Toast.info('Profile update feature coming soon!', 'Feature Coming Soon')">
+              <i class="bi bi-check-circle"></i>
+              Save Changes
+            </button>
+          </div>
+        </div>
+
+        <!-- Account Stats Card -->
+        <div class="card settings-card">
+          <div class="card-header">
+            <h3 class="card-title">Account Statistics</h3>
+          </div>
+          <div class="card-body">
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-label">Member Since</div>
+                  <div class="stat-value">{{ user.created_at.strftime('%B %Y') if user.created_at else 'N/A' }}</div>
+                </div>
+              </div>
+
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <i class="bi bi-receipt"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-label">Total Entries</div>
+                  <div class="stat-value">{{ total_entries | default(0) }}</div>
+                </div>
+              </div>
+
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <i class="bi bi-tags"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-label">Categories</div>
+                  <div class="stat-value">{{ total_categories | default(0) }}</div>
+                </div>
+              </div>
+
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-label">Last Activity</div>
+                  <div class="stat-value">{{ last_activity | default('Today') }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferences Card -->
+      <div class="card settings-card mt-4">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="bi bi-sliders"></i>
+            Preferences
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="preferences-grid">
+            <div class="preference-item">
+              <div class="preference-info">
+                <label class="preference-label">Email Notifications</label>
+                <p class="preference-description">Receive email updates about your spending</p>
+              </div>
+              <div class="preference-control">
+                <label class="switch">
+                  <input type="checkbox" checked>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="preference-item">
+              <div class="preference-info">
+                <label class="preference-label">Weekly Summary</label>
+                <p class="preference-description">Get weekly expense summaries via email</p>
+              </div>
+              <div class="preference-control">
+                <label class="switch">
+                  <input type="checkbox">
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="preference-item">
+              <div class="preference-info">
+                <label class="preference-label">Auto-save Drafts</label>
+                <p class="preference-description">Automatically save unfinished entries</p>
+              </div>
+              <div class="preference-control">
+                <label class="switch">
+                  <input type="checkbox" checked>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="card settings-card card-danger mt-4">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="bi bi-exclamation-triangle"></i>
+            Danger Zone
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="danger-actions">
+            <div class="danger-item">
+              <div>
+                <h4 class="danger-title">Export All Data</h4>
+                <p class="danger-description">Download all your data in JSON format</p>
+              </div>
+              <button class="btn btn-outline" onclick="Toast.info('Data export feature coming soon!', 'Feature Coming Soon')">
+                <i class="bi bi-download"></i>
+                Export Data
+              </button>
+            </div>
+
+            <div class="danger-item">
+              <div>
+                <h4 class="danger-title">Delete Account</h4>
+                <p class="danger-description">Permanently delete your account and all data</p>
+              </div>
+              <button class="btn btn-danger" onclick="confirmDeleteAccount()">
+                <i class="bi bi-trash"></i>
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<style>
+/* Settings Page Styles */
+.settings-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.settings-header {
+  margin-bottom: var(--spacing-6);
+}
+
+.settings-header .h1 {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-2);
+}
+
+.settings-subtitle {
+  color: var(--muted);
+  font-size: var(--font-size-base);
+  margin: 0;
+}
+
+/* Settings Tabs */
+.settings-tabs {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-6);
+  border-bottom: 2px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.settings-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  min-height: 48px;
+}
+
+.settings-tab:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.settings-tab.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+.settings-tab i {
+  font-size: 1.125rem;
+}
+
+/* Settings Grid */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-4);
+}
+
+.settings-card {
+  height: fit-content;
+}
+
+/* Profile Section */
+.profile-section {
+  display: flex;
+  gap: var(--spacing-5);
+  flex-wrap: wrap;
+}
+
+.profile-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.avatar-circle {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 280px;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  gap: var(--spacing-4);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  background: rgba(77, 163, 255, 0.05);
+  border-radius: var(--radius-base);
+  border-left: 3px solid var(--blue);
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(77, 163, 255, 0.1);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.stat-value {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+}
+
+/* Preferences Grid */
+.preferences-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.preference-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-base);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.preference-info {
+  flex: 1;
+}
+
+.preference-label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.preference-description {
+  font-size: var(--font-size-sm);
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--border);
+  border-radius: 26px;
+  transition: background-color 0.2s ease;
+}
+
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.switch input:checked + .switch-slider {
+  background: var(--blue);
+}
+
+.switch input:checked + .switch-slider:before {
+  transform: translateX(22px);
+}
+
+/* Danger Zone */
+.card-danger {
+  border-color: var(--red);
+}
+
+.card-danger .card-header {
+  background: rgba(239, 68, 68, 0.1);
+  border-bottom-color: var(--red);
+}
+
+.card-danger .card-title {
+  color: var(--red);
+}
+
+.danger-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.danger-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-base);
+}
+
+.danger-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  margin: 0 0 4px 0;
+}
+
+.danger-description {
+  font-size: var(--font-size-sm);
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Light Theme Overrides */
+[data-theme="light"] .stat-item {
+  background: rgba(13, 110, 253, 0.05);
+  border-left-color: #0d6efd;
+}
+
+[data-theme="light"] .stat-icon {
+  background: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+}
+
+[data-theme="light"] .switch input:checked + .switch-slider {
+  background: #0d6efd;
+}
+
+[data-theme="light"] .settings-tab.active {
+  color: #0d6efd;
+  border-bottom-color: #0d6efd;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .settings-tabs {
+    gap: var(--spacing-1);
+  }
+
+  .settings-tab {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: 0.813rem;
+  }
+
+  .settings-tab i {
+    font-size: 1rem;
+  }
+
+  .settings-tab span {
+    display: none;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-section {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .profile-info {
+    width: 100%;
+  }
+
+  .danger-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .danger-item .btn {
+    width: 100%;
+  }
+
+  .preference-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+</style>
+
+<script>
+function confirmDeleteAccount() {
+  ConfirmModal.show({
+    type: 'danger',
+    danger: true,
+    title: 'Delete Account',
+    message: 'Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be permanently removed.',
+    confirmText: 'Yes, Delete My Account',
+    cancelText: 'Cancel',
+    onConfirm: () => {
+      Toast.info('Account deletion feature coming soon!', 'Feature Coming Soon');
+    }
+  });
+}
+</script>
+
+<link rel="stylesheet" href="/static/css/settings.css">
+{% endblock %}
