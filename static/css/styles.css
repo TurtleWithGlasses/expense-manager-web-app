@@ -2265,3 +2265,465 @@ select.form-select{
 [data-theme="light"] .modal-overlay {
   background: rgba(0, 0, 0, 0.4);
 }
+
+/* ==============================================
+   PHASE 7: RESPONSIVE & MOBILE OPTIMIZATION
+   ============================================== */
+
+/* Mobile-first base improvements */
+@media (max-width: 1024px) {
+  /* Tablet adjustments */
+  .wrap {
+    padding: 0 var(--spacing-4);
+  }
+
+  /* Reduce padding on sections */
+  .kpis {
+    gap: var(--spacing-3);
+  }
+
+  /* Stack grids earlier */
+  .grid-2 {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+}
+
+/* Primary mobile breakpoint */
+@media (max-width: 768px) {
+  /* ===== TYPOGRAPHY ===== */
+  html {
+    font-size: 15px; /* Slightly smaller base for mobile */
+  }
+
+  h1, .h1 {
+    font-size: var(--font-size-xl); /* 24px instead of 32px */
+  }
+
+  h2, .h2 {
+    font-size: var(--font-size-lg); /* 20px instead of 24px */
+  }
+
+  /* ===== LAYOUT ===== */
+  .wrap {
+    padding: 0 var(--spacing-3);
+  }
+
+  .py-6 {
+    padding-block: var(--spacing-4);
+  }
+
+  /* ===== HEADER ===== */
+  .topbar .wrap {
+    height: 56px; /* Slightly shorter on mobile */
+    gap: var(--spacing-2);
+  }
+
+  .brand {
+    font-size: var(--font-size-base);
+  }
+
+  .brand i {
+    font-size: 1.25rem;
+  }
+
+  .nav {
+    gap: var(--spacing-2);
+  }
+
+  .nav-link {
+    padding: var(--spacing-2);
+    font-size: 0.813rem;
+  }
+
+  /* ===== BUTTONS ===== */
+  /* Ensure minimum touch target */
+  .btn {
+    min-height: 44px;
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--font-size-base);
+  }
+
+  .btn-sm {
+    min-height: 40px;
+    padding: var(--spacing-2) var(--spacing-3);
+  }
+
+  .btn-lg {
+    min-height: 52px;
+    padding: var(--spacing-4) var(--spacing-5);
+  }
+
+  /* Icon-only buttons */
+  .btn i:only-child {
+    font-size: 1.25rem;
+  }
+
+  /* ===== FORMS ===== */
+  /* Prevent zoom on iOS */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="date"],
+  input[type="time"],
+  textarea,
+  select,
+  .form-input {
+    font-size: 16px !important; /* Prevent iOS zoom */
+    min-height: 44px;
+    padding: var(--spacing-3);
+  }
+
+  textarea {
+    min-height: 120px;
+  }
+
+  /* Form groups stack on mobile */
+  .form-group {
+    margin-bottom: var(--spacing-4);
+  }
+
+  /* ===== CARDS ===== */
+  .card {
+    border-radius: var(--radius-base);
+    padding: var(--spacing-4);
+  }
+
+  .card-header {
+    padding: var(--spacing-4);
+  }
+
+  .card-body {
+    padding: var(--spacing-4);
+  }
+
+  .card-footer {
+    padding: var(--spacing-4);
+  }
+
+  /* ===== TABLES ===== */
+  .table {
+    font-size: 0.875rem;
+  }
+
+  .table th,
+  .table td {
+    padding: var(--spacing-2) var(--spacing-3);
+  }
+
+  /* Enable horizontal scroll for wide tables */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 calc(var(--spacing-3) * -1); /* Bleed to edges */
+  }
+
+  .table-responsive table {
+    min-width: 600px; /* Ensure table doesn't collapse */
+  }
+
+  /* ===== MODALS ===== */
+  .modal {
+    max-width: 100%;
+    margin: var(--spacing-2);
+  }
+
+  .modal-header {
+    padding: var(--spacing-4);
+    flex-wrap: wrap;
+  }
+
+  .modal-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+
+  .modal-title {
+    font-size: var(--font-size-base);
+  }
+
+  .modal-body {
+    padding: var(--spacing-4);
+    font-size: var(--font-size-sm);
+  }
+
+  .modal-footer {
+    padding: var(--spacing-4);
+    flex-direction: column-reverse;
+    gap: var(--spacing-2);
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  /* ===== PAGINATION ===== */
+  .pagination {
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+  }
+
+  .pagination-link {
+    min-width: 44px;
+    min-height: 44px;
+    padding: var(--spacing-2);
+  }
+
+  .pagination-info {
+    width: 100%;
+    text-align: center;
+    order: -1;
+  }
+
+  /* ===== BREADCRUMBS ===== */
+  .breadcrumb {
+    font-size: 0.813rem;
+    flex-wrap: wrap;
+  }
+
+  /* ===== EMPTY STATES ===== */
+  .empty-state {
+    padding: var(--spacing-6) var(--spacing-3);
+    min-height: 250px;
+  }
+
+  .empty-state-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 2rem;
+  }
+
+  .empty-state-title {
+    font-size: var(--font-size-lg);
+  }
+
+  .empty-state-message {
+    font-size: var(--font-size-sm);
+  }
+
+  /* ===== SPACING ===== */
+  .mt-6, .my-6 {
+    margin-top: var(--spacing-5) !important;
+  }
+
+  .mb-6, .my-6 {
+    margin-bottom: var(--spacing-5) !important;
+  }
+
+  .mt-4, .my-4 {
+    margin-top: var(--spacing-4) !important;
+  }
+
+  .mb-4, .my-4 {
+    margin-bottom: var(--spacing-4) !important;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  /* ===== TYPOGRAPHY ===== */
+  html {
+    font-size: 14px;
+  }
+
+  h1, .h1 {
+    font-size: var(--font-size-lg); /* 20px */
+  }
+
+  /* ===== LAYOUT ===== */
+  .wrap {
+    padding: 0 var(--spacing-2);
+  }
+
+  /* ===== HEADER ===== */
+  .topbar .wrap {
+    height: 52px;
+  }
+
+  .brand {
+    font-size: 0.875rem;
+  }
+
+  .brand i {
+    font-size: 1.125rem;
+  }
+
+  /* Hide text on small screens, keep icons */
+  .nav-link span {
+    display: none;
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    font-size: 0.875rem;
+  }
+
+  /* ===== CARDS ===== */
+  .card {
+    padding: var(--spacing-3);
+  }
+
+  .card-header,
+  .card-body,
+  .card-footer {
+    padding: var(--spacing-3);
+  }
+
+  /* ===== TABLES ===== */
+  .table {
+    font-size: 0.813rem;
+  }
+
+  .table th,
+  .table td {
+    padding: var(--spacing-2);
+  }
+
+  /* ===== MODALS ===== */
+  .modal {
+    margin: var(--spacing-1);
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: var(--spacing-3);
+  }
+
+  /* ===== TOASTS ===== */
+  .toast {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .toast-title {
+    font-size: 0.813rem;
+  }
+
+  .toast-message {
+    font-size: 0.75rem;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  /* Reduce vertical spacing in landscape */
+  .topbar .wrap {
+    height: 48px;
+  }
+
+  .py-6 {
+    padding-block: var(--spacing-3);
+  }
+
+  .empty-state {
+    min-height: 200px;
+    padding: var(--spacing-4) var(--spacing-3);
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase touch targets for touch devices */
+  .btn,
+  .nav-link,
+  a,
+  button,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Add more spacing between interactive elements */
+  .btn + .btn {
+    margin-left: var(--spacing-2);
+  }
+
+  /* Remove hover effects on touch devices */
+  .btn:hover,
+  .nav-link:hover,
+  a:hover {
+    transform: none;
+  }
+
+  /* Add active/tap feedback */
+  .btn:active,
+  .nav-link:active,
+  a:active {
+    transform: scale(0.98);
+    opacity: 0.8;
+  }
+
+  /* Larger checkboxes and radio buttons */
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+  }
+}
+
+/* High resolution displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Crisper borders on retina displays */
+  .card,
+  .modal,
+  .toast,
+  .btn {
+    border-width: 0.5px;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Disable scroll animations */
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  /* Hide interactive elements */
+  .btn,
+  .nav,
+  .toast-container,
+  .modal-overlay,
+  .topbar {
+    display: none !important;
+  }
+
+  /* Optimize for print */
+  body {
+    background: white;
+    color: black;
+  }
+
+  .card {
+    border: 1px solid black;
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+
+  /* Show full URLs for links */
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+}
