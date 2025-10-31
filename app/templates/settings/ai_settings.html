@@ -773,66 +773,70 @@ function viewInsights() {
 }
 
 function trainModel() {
-    if (!confirm('Train ML model now? This may take a few minutes.')) {
-        return;
-    }
-    
     const btn = event.target;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Training...';
-    btn.disabled = true;
-    
-    fetch('/ai/model/train', {
-        method: 'POST'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Model trained successfully!\n\nAccuracy: ' + (data.results.accuracy * 100).toFixed(1) + '%\nTraining samples: ' + data.results.training_samples);
-            location.reload();
-        } else {
-            alert('Training failed: ' + data.message);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+
+    ConfirmModal.show({
+        type: 'info',
+        title: 'Train ML Model',
+        message: 'Train ML model now? This may take a few minutes.',
+        confirmText: 'Train Model',
+        cancelText: 'Cancel',
+        onConfirm: () => {
+            Loading.button(btn, true);
+
+            fetch('/ai/model/train', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Toast.success(`Accuracy: ${(data.results.accuracy * 100).toFixed(1)}%\nTraining samples: ${data.results.training_samples}`, 'Model Trained Successfully');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    Toast.error(data.message, 'Training Failed');
+                    Loading.button(btn, false);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Toast.error('Error training model. Please try again.', 'Training Error');
+                Loading.button(btn, false);
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error training model. Please try again.');
-        btn.innerHTML = originalText;
-        btn.disabled = false;
     });
 }
 
 function retrainModel() {
-    if (!confirm('Retrain the ML model with latest data? This may take a few minutes.')) {
-        return;
-    }
-    
     const btn = event.target;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Retraining...';
-    btn.disabled = true;
-    
-    fetch('/ai/model/retrain', {
-        method: 'POST'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Model retrained successfully!\n\nNew Accuracy: ' + (data.results.accuracy * 100).toFixed(1) + '%\nTraining samples: ' + data.results.training_samples);
-            location.reload();
-        } else {
-            alert('Retraining failed: ' + data.message);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+
+    ConfirmModal.show({
+        type: 'info',
+        title: 'Retrain ML Model',
+        message: 'Retrain the ML model with latest data? This may take a few minutes.',
+        confirmText: 'Retrain Model',
+        cancelText: 'Cancel',
+        onConfirm: () => {
+            Loading.button(btn, true);
+
+            fetch('/ai/model/retrain', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Toast.success(`New Accuracy: ${(data.results.accuracy * 100).toFixed(1)}%\nTraining samples: ${data.results.training_samples}`, 'Model Retrained Successfully');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    Toast.error(data.message, 'Retraining Failed');
+                    Loading.button(btn, false);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Toast.error('Error retraining model. Please try again.', 'Retraining Error');
+                Loading.button(btn, false);
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error retraining model. Please try again.');
-        btn.innerHTML = originalText;
-        btn.disabled = false;
     });
 }
 

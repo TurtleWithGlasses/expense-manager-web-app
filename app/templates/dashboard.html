@@ -831,19 +831,23 @@ function switchChart(chartType) {
 function downloadChart() {
   const canvas = document.querySelector('#chart-area canvas');
   if (!canvas) {
-    alert('No chart to download. Please load a chart first.');
+    Toast.warning('Please load a chart first.', 'No Chart Available');
     return;
   }
 
   try {
     // Create download link
     const link = document.createElement('a');
-    link.download = `expense-chart-${currentChartType}-${new Date().toISOString().split('T')[0]}.png`;
+    const filename = `expense-chart-${currentChartType}-${new Date().toISOString().split('T')[0]}.png`;
+    link.download = filename;
     link.href = canvas.toDataURL('image/png');
     link.click();
+
+    // Show success toast
+    Toast.success(`Chart downloaded as ${filename}`, 'Download Complete');
   } catch (error) {
     console.error('Error downloading chart:', error);
-    alert('Failed to download chart. Please try again.');
+    Toast.error('Failed to download chart. Please try again.', 'Download Failed');
   }
 }
 
