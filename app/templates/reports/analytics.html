@@ -1,0 +1,591 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics & Reports - Expense Manager{% endblock %}
+
+{% block content %}
+<div class="reports-analytics-page">
+  <!-- Reports Header -->
+  <div class="reports-header">
+    <div class="reports-title-section">
+      <h1 class="h1">
+        <i class="bi bi-graph-up-arrow"></i>
+        Analytics & Reports
+      </h1>
+      <p class="reports-subtitle">Comprehensive analysis of your financial data</p>
+    </div>
+
+    <div class="reports-actions">
+      <button class="btn btn-outline" onclick="window.print()">
+        <i class="bi bi-printer"></i>
+        <span>Print</span>
+      </button>
+      <button class="btn btn-primary" onclick="exportReport()">
+        <i class="bi bi-download"></i>
+        <span>Export PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Date Range Selector -->
+  <div class="date-range-card">
+    <div class="date-range-header">
+      <h3 class="date-range-title">
+        <i class="bi bi-calendar-range"></i>
+        Date Range
+      </h3>
+      <button class="btn-text" onclick="resetDateRange()">
+        <i class="bi bi-arrow-clockwise"></i>
+        Reset
+      </button>
+    </div>
+
+    <div class="date-range-content">
+      <!-- Quick Presets -->
+      <div class="date-presets">
+        <button class="preset-btn active" data-preset="this-month" onclick="selectPreset(this, 'this-month')">
+          This Month
+        </button>
+        <button class="preset-btn" data-preset="last-month" onclick="selectPreset(this, 'last-month')">
+          Last Month
+        </button>
+        <button class="preset-btn" data-preset="last-3-months" onclick="selectPreset(this, 'last-3-months')">
+          Last 3 Months
+        </button>
+        <button class="preset-btn" data-preset="last-6-months" onclick="selectPreset(this, 'last-6-months')">
+          Last 6 Months
+        </button>
+        <button class="preset-btn" data-preset="this-year" onclick="selectPreset(this, 'this-year')">
+          This Year
+        </button>
+        <button class="preset-btn" data-preset="custom" onclick="selectPreset(this, 'custom')">
+          <i class="bi bi-calendar3"></i>
+          Custom Range
+        </button>
+      </div>
+
+      <!-- Custom Date Inputs -->
+      <div class="custom-date-range" id="custom-date-range" style="display: none;">
+        <div class="date-input-group">
+          <label for="start-date">From</label>
+          <input type="date" id="start-date" class="form-input" onchange="updateDateRange()">
+        </div>
+        <div class="date-separator">
+          <i class="bi bi-arrow-right"></i>
+        </div>
+        <div class="date-input-group">
+          <label for="end-date">To</label>
+          <input type="date" id="end-date" class="form-input" onchange="updateDateRange()">
+        </div>
+        <button class="btn btn-primary" onclick="applyCustomRange()">
+          Apply
+        </button>
+      </div>
+
+      <!-- Comparison Toggle -->
+      <div class="comparison-toggle">
+        <label class="switch">
+          <input type="checkbox" id="comparison-mode" onchange="toggleComparison()">
+          <span class="switch-slider"></span>
+        </label>
+        <label for="comparison-mode" class="comparison-label">
+          Compare with previous period
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Metrics Grid -->
+  <div class="metrics-grid">
+    <div class="metric-card metric-income">
+      <div class="metric-icon">
+        <i class="bi bi-arrow-down-circle"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-label">Total Income</div>
+        <div class="metric-value">{{ total_income | default('$0.00') }}</div>
+        <div class="metric-change positive">
+          <i class="bi bi-arrow-up"></i>
+          <span>+12% vs last period</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="metric-card metric-expense">
+      <div class="metric-icon">
+        <i class="bi bi-arrow-up-circle"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-label">Total Expenses</div>
+        <div class="metric-value">{{ total_expenses | default('$0.00') }}</div>
+        <div class="metric-change negative">
+          <i class="bi bi-arrow-down"></i>
+          <span>-5% vs last period</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="metric-card metric-savings">
+      <div class="metric-icon">
+        <i class="bi bi-piggy-bank"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-label">Net Savings</div>
+        <div class="metric-value">{{ net_savings | default('$0.00') }}</div>
+        <div class="metric-change positive">
+          <i class="bi bi-arrow-up"></i>
+          <span>+25% vs last period</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="metric-card metric-rate">
+      <div class="metric-icon">
+        <i class="bi bi-percent"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-label">Savings Rate</div>
+        <div class="metric-value">{{ savings_rate | default('0%') }}</div>
+        <div class="metric-change positive">
+          <i class="bi bi-arrow-up"></i>
+          <span>+8% vs last period</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <!-- Spending Trend Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3 class="chart-title">
+          <i class="bi bi-graph-up"></i>
+          Spending Trend
+        </h3>
+        <div class="chart-controls">
+          <button class="btn-icon" onclick="downloadChartImage('spending-trend-chart')">
+            <i class="bi bi-download"></i>
+          </button>
+          <button class="btn-icon" onclick="toggleChartType('spending-trend')">
+            <i class="bi bi-bar-chart"></i>
+          </button>
+        </div>
+      </div>
+      <div class="chart-body">
+        <canvas id="spending-trend-chart" height="80"></canvas>
+      </div>
+    </div>
+
+    <!-- Category Breakdown -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3 class="chart-title">
+          <i class="bi bi-pie-chart"></i>
+          Category Breakdown
+        </h3>
+        <div class="chart-controls">
+          <button class="btn-icon" onclick="downloadChartImage('category-chart')">
+            <i class="bi bi-download"></i>
+          </button>
+          <button class="btn-icon" onclick="toggleDataView('category')">
+            <i class="bi bi-table"></i>
+          </button>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="category-chart-container">
+          <canvas id="category-chart" height="80"></canvas>
+          <div class="category-legend" id="category-legend">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Categories Table -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">
+        <i class="bi bi-trophy"></i>
+        Top Spending Categories
+      </h3>
+      <div class="card-actions">
+        <button class="btn-text" onclick="sortCategories('amount')">
+          <i class="bi bi-sort-down"></i>
+          Sort by Amount
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="categories-table">
+        <div class="category-row category-row-header">
+          <div class="category-name">Category</div>
+          <div class="category-amount">Amount</div>
+          <div class="category-percentage">Percentage</div>
+          <div class="category-change">Change</div>
+          <div class="category-bar">Distribution</div>
+        </div>
+
+        <!-- Category Row Template -->
+        <div class="category-row">
+          <div class="category-name">
+            <div class="category-icon" style="background: #4da3ff;">
+              <i class="bi bi-cart"></i>
+            </div>
+            <span>Groceries</span>
+          </div>
+          <div class="category-amount">$1,250.00</div>
+          <div class="category-percentage">35%</div>
+          <div class="category-change positive">
+            <i class="bi bi-arrow-up"></i>
+            +12%
+          </div>
+          <div class="category-bar">
+            <div class="progress-bar" style="width: 35%; background: #4da3ff;"></div>
+          </div>
+        </div>
+
+        <div class="category-row">
+          <div class="category-name">
+            <div class="category-icon" style="background: #28c081;">
+              <i class="bi bi-house"></i>
+            </div>
+            <span>Housing</span>
+          </div>
+          <div class="category-amount">$900.00</div>
+          <div class="category-percentage">25%</div>
+          <div class="category-change neutral">
+            <i class="bi bi-dash"></i>
+            0%
+          </div>
+          <div class="category-bar">
+            <div class="progress-bar" style="width: 25%; background: #28c081;"></div>
+          </div>
+        </div>
+
+        <div class="category-row">
+          <div class="category-name">
+            <div class="category-icon" style="background: #ffc107;">
+              <i class="bi bi-car-front"></i>
+            </div>
+            <span>Transportation</span>
+          </div>
+          <div class="category-amount">$450.00</div>
+          <div class="category-percentage">13%</div>
+          <div class="category-change negative">
+            <i class="bi bi-arrow-down"></i>
+            -5%
+          </div>
+          <div class="category-bar">
+            <div class="progress-bar" style="width: 13%; background: #ffc107;"></div>
+          </div>
+        </div>
+
+        <!-- More rows would be dynamically added -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Month-over-Month Comparison -->
+  <div class="comparison-section" id="comparison-section" style="display: none;">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="bi bi-bar-chart-line"></i>
+          Month-over-Month Comparison
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="comparison-grid">
+          <div class="comparison-item">
+            <div class="comparison-period">Current Period</div>
+            <div class="comparison-value">$3,500</div>
+            <div class="comparison-dates">Oct 1 - Oct 31</div>
+          </div>
+          <div class="comparison-arrow">
+            <i class="bi bi-arrow-left-right"></i>
+          </div>
+          <div class="comparison-item">
+            <div class="comparison-period">Previous Period</div>
+            <div class="comparison-value">$3,200</div>
+            <div class="comparison-dates">Sep 1 - Sep 30</div>
+          </div>
+          <div class="comparison-result positive">
+            <div class="comparison-diff">+$300</div>
+            <div class="comparison-percent">+9.4%</div>
+          </div>
+        </div>
+
+        <div class="comparison-chart">
+          <canvas id="comparison-chart" height="60"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Insights Section -->
+  <div class="insights-section">
+    <h2 class="h2">
+      <i class="bi bi-lightbulb"></i>
+      Key Insights
+    </h2>
+
+    <div class="insights-grid">
+      <div class="insight-card insight-positive">
+        <div class="insight-icon">
+          <i class="bi bi-trophy"></i>
+        </div>
+        <div class="insight-content">
+          <h4 class="insight-title">Great Progress!</h4>
+          <p class="insight-description">
+            You've reduced your dining out expenses by 23% this month compared to last month.
+          </p>
+        </div>
+      </div>
+
+      <div class="insight-card insight-warning">
+        <div class="insight-icon">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <div class="insight-content">
+          <h4 class="insight-title">Watch Out</h4>
+          <p class="insight-description">
+            Your entertainment spending is 40% higher than your 3-month average.
+          </p>
+        </div>
+      </div>
+
+      <div class="insight-card insight-info">
+        <div class="insight-icon">
+          <i class="bi bi-info-circle"></i>
+        </div>
+        <div class="insight-content">
+          <h4 class="insight-title">Did You Know?</h4>
+          <p class="insight-description">
+            Your largest expense category is groceries, accounting for 35% of total spending.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="/static/css/reports.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Date Range Functions
+function selectPreset(btn, preset) {
+  // Remove active from all
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const customRange = document.getElementById('custom-date-range');
+
+  if (preset === 'custom') {
+    customRange.style.display = 'flex';
+  } else {
+    customRange.style.display = 'none';
+    // Apply preset logic here
+    Toast.info(`Applied ${btn.textContent.trim()} filter`, 'Date Range Updated');
+  }
+}
+
+function resetDateRange() {
+  const thisMonthBtn = document.querySelector('[data-preset="this-month"]');
+  selectPreset(thisMonthBtn, 'this-month');
+}
+
+function updateDateRange() {
+  const startDate = document.getElementById('start-date').value;
+  const endDate = document.getElementById('end-date').value;
+  console.log('Date range:', startDate, 'to', endDate);
+}
+
+function applyCustomRange() {
+  const startDate = document.getElementById('start-date').value;
+  const endDate = document.getElementById('end-date').value;
+
+  if (!startDate || !endDate) {
+    Toast.warning('Please select both start and end dates', 'Invalid Range');
+    return;
+  }
+
+  Toast.success(`Applied custom range: ${startDate} to ${endDate}`, 'Date Range Updated');
+  // Apply custom range logic here
+}
+
+// Comparison Functions
+function toggleComparison() {
+  const checkbox = document.getElementById('comparison-mode');
+  const section = document.getElementById('comparison-section');
+
+  if (checkbox.checked) {
+    section.style.display = 'block';
+    Toast.info('Showing comparison with previous period', 'Comparison Enabled');
+  } else {
+    section.style.display = 'none';
+  }
+}
+
+// Chart Functions
+function downloadChartImage(chartId) {
+  const canvas = document.getElementById(chartId);
+  if (!canvas) return;
+
+  const link = document.createElement('a');
+  link.download = `${chartId}-${new Date().toISOString().split('T')[0]}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+
+  Toast.success('Chart downloaded successfully', 'Download Complete');
+}
+
+function toggleChartType(chartType) {
+  Toast.info('Chart type toggle feature coming soon', 'Feature Coming Soon');
+}
+
+function toggleDataView(viewType) {
+  Toast.info('Data table view feature coming soon', 'Feature Coming Soon');
+}
+
+function sortCategories(sortBy) {
+  Toast.info(`Sorting by ${sortBy}`, 'Sorting Applied');
+}
+
+function exportReport() {
+  Toast.info('PDF export feature coming soon', 'Feature Coming Soon');
+}
+
+// Initialize Charts
+document.addEventListener('DOMContentLoaded', function() {
+  initSpendingTrendChart();
+  initCategoryChart();
+  initComparisonChart();
+});
+
+function initSpendingTrendChart() {
+  const ctx = document.getElementById('spending-trend-chart');
+  if (!ctx) return;
+
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const textColor = isDark ? '#fff' : '#212529';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+      datasets: [{
+        label: 'Expenses',
+        data: [850, 920, 780, 950],
+        borderColor: '#4da3ff',
+        backgroundColor: 'rgba(77, 163, 255, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        },
+        x: {
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        }
+      }
+    }
+  });
+}
+
+function initCategoryChart() {
+  const ctx = document.getElementById('category-chart');
+  if (!ctx) return;
+
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Groceries', 'Housing', 'Transportation', 'Entertainment', 'Others'],
+      datasets: [{
+        data: [35, 25, 13, 12, 15],
+        backgroundColor: [
+          '#4da3ff',
+          '#28c081',
+          '#ffc107',
+          '#ff6b6b',
+          '#9b59b6'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
+    }
+  });
+}
+
+function initComparisonChart() {
+  const ctx = document.getElementById('comparison-chart');
+  if (!ctx) return;
+
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const textColor = isDark ? '#fff' : '#212529';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+      datasets: [
+        {
+          label: 'Current Period',
+          data: [850, 920, 780, 950],
+          backgroundColor: '#4da3ff'
+        },
+        {
+          label: 'Previous Period',
+          data: [800, 850, 750, 800],
+          backgroundColor: 'rgba(77, 163, 255, 0.3)'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: textColor }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        },
+        x: {
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        }
+      }
+    }
+  });
+}
+</script>
+{% endblock %}
