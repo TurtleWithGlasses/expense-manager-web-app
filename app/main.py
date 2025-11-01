@@ -34,12 +34,14 @@ async def startup_event():
         Base.metadata.create_all(bind=engine)
         print("[OK] Database tables initialized successfully")
 
-        # Start report scheduler in production
+        # Start report scheduler
         from app.core.config import settings
-        if settings.ENV == "production":
+        # Start scheduler in production, or if explicitly enabled in development
+        enable_scheduler = settings.ENV == "production" or getattr(settings, 'ENABLE_SCHEDULER', False)
+        if enable_scheduler:
             from app.services.report_scheduler import report_scheduler
             report_scheduler.start()
-            print("[OK] Report scheduler started")
+            print(f"[OK] Report scheduler started (ENV: {settings.ENV})")
 
     except Exception as e:
         print(f"[ERROR] Database initialization failed: {e}")
@@ -51,7 +53,8 @@ async def startup_event():
 async def shutdown_event():
     """Cleanup on shutdown"""
     from app.core.config import settings
-    if settings.ENV == "production":
+    enable_scheduler = settings.ENV == "production" or getattr(settings, 'ENABLE_SCHEDULER', False)
+    if enable_scheduler:
         try:
             from app.services.report_scheduler import report_scheduler
             report_scheduler.stop()

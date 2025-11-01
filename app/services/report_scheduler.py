@@ -9,6 +9,7 @@ import json
 
 from app.db.session import SessionLocal
 from app.services.weekly_report_service import WeeklyReportService
+from app.services.monthly_report_service import MonthlyReportService
 from app.services.email import email_service
 from app.models.weekly_report import UserReportPreferences, WeeklyReport
 from app.models.user import User
@@ -34,7 +35,16 @@ class ReportScheduler:
             name='Send Weekly Financial Reports',
             replace_existing=True
         )
-        
+
+        # Schedule monthly reports - 1st day of every month at 9 AM
+        self.scheduler.add_job(
+            self.send_monthly_reports,
+            CronTrigger(day=1, hour=9, minute=0),
+            id='monthly_reports',
+            name='Send Monthly Financial Reports',
+            replace_existing=True
+        )
+
         # Schedule daily check for custom preferences - Every day at 9 AM
         self.scheduler.add_job(
             self.send_custom_reports,
@@ -58,7 +68,7 @@ class ReportScheduler:
     async def send_weekly_reports(self):
         """Send weekly reports to all users who have it enabled"""
         print(f"📊 Starting weekly report generation at {datetime.now()}")
-        
+
         db = SessionLocal()
         try:
             # Get all users with weekly reports enabled
@@ -66,22 +76,61 @@ class ReportScheduler:
                 UserReportPreferences.frequency == "weekly",
                 UserReportPreferences.send_email == True
             ).all()
-            
+
             print(f"📧 Found {len(preferences)} users to send reports to")
-            
+
             for pref in preferences:
                 try:
                     await self._send_report_to_user(db, pref.user_id)
                 except Exception as e:
                     print(f"❌ Error sending report to user {pref.user_id}: {e}")
-            
+
             print(f"✅ Weekly reports sent successfully")
-            
+
         except Exception as e:
             print(f"❌ Error in weekly report job: {e}")
         finally:
             db.close()
-    
+
+    async def send_monthly_reports(self):
+        """Send monthly reports to all users on the 1st day of the month"""
+        print(f"📊 Starting monthly report generation at {datetime.now()}")
+
+        db = SessionLocal()
+        try:
+            # Get all users with monthly reports enabled
+            preferences = db.query(UserReportPreferences).filter(
+                UserReportPreferences.frequency == "monthly",
+                UserReportPreferences.send_email == True
+            ).all()
+
+            # Also send to all active users (fallback)
+            if not preferences:
+                # Get all users who have entries in the last 30 days
+                all_users = db.query(User).all()
+                print(f"📧 Sending monthly reports to all {len(all_users)} active users")
+
+                for user in all_users:
+                    try:
+                        await self._send_monthly_report_to_user(db, user.id)
+                    except Exception as e:
+                        print(f"❌ Error sending monthly report to user {user.id}: {e}")
+            else:
+                print(f"📧 Found {len(preferences)} users to send monthly reports to")
+
+                for pref in preferences:
+                    try:
+                        await self._send_monthly_report_to_user(db, pref.user_id)
+                    except Exception as e:
+                        print(f"❌ Error sending monthly report to user {pref.user_id}: {e}")
+
+            print(f"✅ Monthly reports sent successfully")
+
+        except Exception as e:
+            print(f"❌ Error in monthly report job: {e}")
+        finally:
+            db.close()
+
     async def send_custom_reports(self):
         """Send reports based on custom user preferences"""
         print(f"📊 Checking custom report schedules at {datetime.now()}")
@@ -169,6 +218,38 @@ class ReportScheduler:
         except Exception as e:
             print(f"❌ Failed to send email to {user.email}: {e}")
     
+    async def _send_monthly_report_to_user(self, db: Session, user_id: int):
+        """Generate and send monthly report to a specific user"""
+        # Get user
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            print(f"⚠️  User {user_id} not found")
+            return
+
+        # Generate monthly report for previous month
+        today = datetime.now()
+        if today.month == 1:
+            prev_month = date(today.year - 1, 12, 1)
+        else:
+            prev_month = date(today.year, today.month - 1, 1)
+
+        # Generate report
+        report_service = MonthlyReportService(db)
+        report = report_service.generate_monthly_report(user_id, prev_month)
+
+        # Send email
+        try:
+            await email_service.send_monthly_report_email(
+                user.email,
+                user.full_name or user.email,
+                report
+            )
+
+            print(f"✅ Sent monthly report to {user.email}")
+
+        except Exception as e:
+            print(f"❌ Failed to send monthly report email to {user.email}: {e}")
+
     async def _should_send_report(self, db: Session, pref: UserReportPreferences) -> bool:
         """Check if report should be sent based on frequency"""
         # Get last sent report
@@ -176,12 +257,12 @@ class ReportScheduler:
             WeeklyReport.user_id == pref.user_id,
             WeeklyReport.is_sent_via_email == True
         ).order_by(WeeklyReport.created_at.desc()).first()
-        
+
         if not last_report:
             return True  # First report
-        
+
         days_since_last = (date.today() - last_report.week_start).days
-        
+
         # Check frequency
         if pref.frequency == "weekly" and days_since_last >= 7:
             return True
@@ -189,7 +270,7 @@ class ReportScheduler:
             return True
         elif pref.frequency == "monthly" and days_since_last >= 30:
             return True
-        
+
         return False
 
 
