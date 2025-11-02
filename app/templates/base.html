@@ -165,7 +165,11 @@
     async function applyGlobalDisplayPreferences() {
       try {
         const response = await fetch('/theme/preferences');
-        if (!response.ok) return;
+        if (!response.ok) {
+          // Set default font size even if preferences fail to load
+          document.documentElement.setAttribute('data-font-size', 'medium');
+          return;
+        }
 
         const prefs = await response.json();
 
@@ -179,12 +183,12 @@
           document.documentElement.classList.add('no-animations');
         }
 
-        // Apply font size
-        if (prefs.font_size) {
-          document.documentElement.setAttribute('data-font-size', prefs.font_size);
-        }
+        // Apply font size (always set, default to medium)
+        const fontSize = prefs.font_size || 'medium';
+        document.documentElement.setAttribute('data-font-size', fontSize);
       } catch (error) {
-        // Silently fail - preferences are not critical
+        // Set default font size even on error
+        document.documentElement.setAttribute('data-font-size', 'medium');
         console.debug('Display preferences not loaded:', error);
       }
     }
