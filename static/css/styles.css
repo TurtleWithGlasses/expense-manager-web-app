@@ -97,9 +97,30 @@ a:hover{
 
 /* User Profile Navigation */
 .user-profile-nav {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--spacing-2);
+  position: relative;
+}
+
+.user-profile-nav:hover {
+  text-decoration: none;
+}
+
+.user-profile-nav::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transition: transform 0.2s ease;
+}
+
+.user-profile-nav:hover::after {
+  transform: scaleX(1);
 }
 
 .user-avatar-mini {
