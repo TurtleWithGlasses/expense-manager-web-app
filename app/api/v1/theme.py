@@ -98,13 +98,17 @@ async def get_current_theme(
 
 @router.post("/preferences", response_class=JSONResponse)
 async def set_display_preferences(
-    compact_mode: bool = Form(False),
-    animations_enabled: bool = Form(True),
+    compact_mode: str = Form("false"),
+    animations_enabled: str = Form("true"),
     font_size: str = Form("medium"),
     user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Set display preferences (compact mode, animations, font size)"""
+
+    # Convert string boolean values to actual booleans
+    compact_mode_bool = compact_mode.lower() in ['true', '1', 'yes']
+    animations_enabled_bool = animations_enabled.lower() in ['true', '1', 'yes']
 
     # Validate font size
     if font_size not in ['small', 'medium', 'large', 'extra-large']:
@@ -131,8 +135,8 @@ async def set_display_preferences(
     if prefs.preferences is None:
         prefs.preferences = {}
 
-    prefs.preferences['compact_mode'] = compact_mode
-    prefs.preferences['animations_enabled'] = animations_enabled
+    prefs.preferences['compact_mode'] = compact_mode_bool
+    prefs.preferences['animations_enabled'] = animations_enabled_bool
     prefs.preferences['font_size'] = font_size
 
     db.commit()
