@@ -1,9 +1,11 @@
 """Profile management endpoints"""
 import os
+import json
 import shutil
 from pathlib import Path
+from datetime import datetime
 from fastapi import APIRouter, Depends, File, UploadFile, HTTPException, Form
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from PIL import Image
 import io
@@ -11,6 +13,10 @@ import io
 from app.deps import current_user
 from app.db.session import get_db
 from app.models.user import User
+from app.models.entry import Entry
+from app.models.category import Category
+from app.models.user_preferences import UserPreferences
+from app.models.weekly_report import UserReportPreferences
 
 router = APIRouter()
 
@@ -176,3 +182,108 @@ async def get_profile(
             "created_at": user.created_at.isoformat() if user.created_at else None
         }
     })
+
+
+@router.get("/api/profile/export")
+async def export_user_data(
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Export all user data as JSON"""
+
+    # Get all user data
+    entries = db.query(Entry).filter(Entry.user_id == user.id).all()
+    categories = db.query(Category).filter(Category.user_id == user.id).all()
+    preferences = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
+    report_prefs = db.query(UserReportPreferences).filter(UserReportPreferences.user_id == user.id).first()
+
+    # Build export data structure
+    export_data = {
+        "export_date": datetime.utcnow().isoformat(),
+        "user": {
+            "email": user.email,
+            "full_name": user.full_name,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "is_verified": user.is_verified
+        },
+        "preferences": {
+            "currency_code": preferences.currency_code if preferences else "USD",
+            "theme": preferences.theme if preferences else "dark",
+            "custom_preferences": preferences.preferences if preferences else {}
+        },
+        "report_preferences": {
+            "send_email": report_prefs.send_email if report_prefs else True,
+            "show_on_dashboard": report_prefs.show_on_dashboard if report_prefs else True,
+            "frequency": report_prefs.frequency if report_prefs else "weekly"
+        } if report_prefs else None,
+        "categories": [
+            {
+                "name": cat.name,
+                "type": cat.type,
+                "icon": cat.icon,
+                "created_at": cat.created_at.isoformat() if cat.created_at else None
+            }
+            for cat in categories
+        ],
+        "entries": [
+            {
+                "amount": float(entry.amount),
+                "description": entry.description,
+                "date": entry.date.isoformat() if entry.date else None,
+                "type": entry.type,
+                "category_name": entry.category.name if entry.category else None,
+                "notes": entry.notes,
+                "created_at": entry.created_at.isoformat() if entry.created_at else None
+            }
+            for entry in entries
+        ],
+        "statistics": {
+            "total_entries": len(entries),
+            "total_categories": len(categories),
+            "total_expenses": sum(float(e.amount) for e in entries if e.type == "expense"),
+            "total_income": sum(float(e.amount) for e in entries if e.type == "income")
+        }
+    }
+
+    # Convert to JSON string
+    json_data = json.dumps(export_data, indent=2, ensure_ascii=False)
+
+    # Create filename with timestamp
+    filename = f"expense_manager_data_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+
+    # Return as downloadable file
+    return StreamingResponse(
+        io.BytesIO(json_data.encode('utf-8')),
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
+
+@router.delete("/api/profile/account")
+async def delete_account(
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Permanently delete user account and all associated data"""
+
+    try:
+        # Delete avatar file if exists
+        if user.avatar_url:
+            avatar_path = Path(user.avatar_url.lstrip('/'))
+            if avatar_path.exists():
+                avatar_path.unlink()
+
+        # Delete user (cascade will handle related records)
+        db.delete(user)
+        db.commit()
+
+        return JSONResponse({
+            "success": True,
+            "message": "Account deleted successfully"
+        })
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete account: {str(e)}")

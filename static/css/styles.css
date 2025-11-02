@@ -2774,3 +2774,61 @@ select.form-select{
     content: " (" attr(href) ")";
   }
 }
+
+/* ==============================================
+   DISPLAY PREFERENCES
+   ============================================== */
+
+/* Compact Mode - Reduce spacing */
+html.compact-mode {
+  --spacing-1: 2px;
+  --spacing-2: 4px;
+  --spacing-3: 8px;
+  --spacing-4: 12px;
+  --spacing-5: 16px;
+  --spacing-6: 20px;
+}
+
+html.compact-mode .card {
+  padding: var(--spacing-3);
+}
+
+html.compact-mode .topbar .wrap {
+  height: 56px;
+}
+
+html.compact-mode .form-group {
+  margin-bottom: var(--spacing-3);
+}
+
+html.compact-mode .table td,
+html.compact-mode .table th {
+  padding: 8px 12px;
+}
+
+/* Disable Animations */
+html.no-animations *,
+html.no-animations *::before,
+html.no-animations *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+/* Font Size Preferences */
+html[data-font-size="small"] {
+  font-size: 14px;
+}
+
+html[data-font-size="medium"] {
+  font-size: 16px;
+}
+
+html[data-font-size="large"] {
+  font-size: 18px;
+}
+
+html[data-font-size="extra-large"] {
+  font-size: 20px;
+}

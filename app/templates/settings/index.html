@@ -228,7 +228,7 @@
                 <h4 class="danger-title">Export All Data</h4>
                 <p class="danger-description">Download all your data in JSON format</p>
               </div>
-              <button class="btn btn-outline" onclick="Toast.info('Data export feature coming soon!', 'Feature Coming Soon')">
+              <button class="btn btn-outline" onclick="exportData()">
                 <i class="bi bi-download"></i>
                 Export Data
               </button>
@@ -787,6 +787,47 @@ async function updateWeeklySummary(enabled) {
   }
 }
 
+// Export user data
+async function exportData() {
+  try {
+    Toast.info('Preparing your data for export...', 'Export Started');
+
+    const response = await fetch('/api/profile/export');
+
+    if (!response.ok) {
+      throw new Error('Export failed');
+    }
+
+    // Get the blob data
+    const blob = await response.blob();
+
+    // Create download link
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+
+    // Get filename from response headers or use default
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = contentDisposition
+      ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+      : 'expense_manager_data.json';
+
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+
+    // Cleanup
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    Toast.success('Data exported successfully!', 'Export Complete');
+  } catch (error) {
+    console.error('Error exporting data:', error);
+    Toast.error('Failed to export data', 'Error');
+  }
+}
+
+// Delete account
 function confirmDeleteAccount() {
   ConfirmModal.show({
     type: 'danger',
@@ -795,8 +836,28 @@ function confirmDeleteAccount() {
     message: 'Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be permanently removed.',
     confirmText: 'Yes, Delete My Account',
     cancelText: 'Cancel',
-    onConfirm: () => {
-      Toast.info('Account deletion feature coming soon!', 'Feature Coming Soon');
+    onConfirm: async () => {
+      try {
+        const response = await fetch('/api/profile/account', {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          Toast.success('Account deleted successfully. Redirecting...', 'Account Deleted');
+
+          // Wait 2 seconds then redirect to logout
+          setTimeout(() => {
+            window.location.href = '/logout';
+          }, 2000);
+        } else {
+          Toast.error(data.detail || 'Failed to delete account', 'Error');
+        }
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        Toast.error('Failed to delete account', 'Error');
+      }
     }
   });
 }

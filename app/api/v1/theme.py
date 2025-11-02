@@ -49,11 +49,11 @@ async def set_theme(
     user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
-    """Set specific theme (light or dark)"""
-    if theme not in ['light', 'dark']:
+    """Set specific theme (light, dark, or auto)"""
+    if theme not in ['light', 'dark', 'auto']:
         return JSONResponse({
             "success": False,
-            "message": "Invalid theme. Must be 'light' or 'dark'"
+            "message": "Invalid theme. Must be 'light', 'dark', or 'auto'"
         }, status_code=400)
 
     # Get or create user preferences
@@ -93,4 +93,75 @@ async def get_current_theme(
 
     return JSONResponse({
         "theme": theme
+    })
+
+
+@router.post("/preferences", response_class=JSONResponse)
+async def set_display_preferences(
+    compact_mode: bool = Form(False),
+    animations_enabled: bool = Form(True),
+    font_size: str = Form("medium"),
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Set display preferences (compact mode, animations, font size)"""
+
+    # Validate font size
+    if font_size not in ['small', 'medium', 'large', 'extra-large']:
+        return JSONResponse({
+            "success": False,
+            "message": "Invalid font size"
+        }, status_code=400)
+
+    # Get or create user preferences
+    prefs = db.query(UserPreferences).filter(
+        UserPreferences.user_id == user.id
+    ).first()
+
+    if not prefs:
+        prefs = UserPreferences(
+            user_id=user.id,
+            theme='dark',
+            currency_code='USD',
+            preferences={}
+        )
+        db.add(prefs)
+
+    # Update preferences JSON
+    if prefs.preferences is None:
+        prefs.preferences = {}
+
+    prefs.preferences['compact_mode'] = compact_mode
+    prefs.preferences['animations_enabled'] = animations_enabled
+    prefs.preferences['font_size'] = font_size
+
+    db.commit()
+
+    return JSONResponse({
+        "success": True,
+        "message": "Display preferences updated successfully"
+    })
+
+
+@router.get("/preferences", response_class=JSONResponse)
+async def get_display_preferences(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Get display preferences"""
+    prefs = db.query(UserPreferences).filter(
+        UserPreferences.user_id == user.id
+    ).first()
+
+    if not prefs or not prefs.preferences:
+        return JSONResponse({
+            "compact_mode": False,
+            "animations_enabled": True,
+            "font_size": "medium"
+        })
+
+    return JSONResponse({
+        "compact_mode": prefs.preferences.get('compact_mode', False),
+        "animations_enabled": prefs.preferences.get('animations_enabled', True),
+        "font_size": prefs.preferences.get('font_size', 'medium')
     })

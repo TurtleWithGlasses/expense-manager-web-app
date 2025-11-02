@@ -95,7 +95,7 @@
               </div>
             </div>
 
-            <div class="theme-option" onclick="Toast.info('Auto theme will be available soon!', 'Coming Soon')">
+            <div class="theme-option" onclick="setThemeMode('auto')">
               <div class="theme-preview theme-preview-auto">
                 <div class="theme-preview-header"></div>
                 <div class="theme-preview-content">
@@ -104,11 +104,11 @@
                 </div>
               </div>
               <div class="theme-option-info">
-                <input type="radio" name="theme" value="auto" id="theme-auto" disabled>
+                <input type="radio" name="theme" value="auto" id="theme-auto"
+                       {% if user_theme == 'auto' %}checked{% endif %}>
                 <label for="theme-auto">
                   <i class="bi bi-circle-half"></i>
                   <span>Auto</span>
-                  <span class="badge badge-sm">Coming Soon</span>
                 </label>
                 <p>Match system preferences</p>
               </div>
@@ -134,7 +134,7 @@
               </div>
               <div class="preference-control">
                 <label class="switch">
-                  <input type="checkbox" onchange="Toast.info('Compact mode feature coming soon!', 'Coming Soon')">
+                  <input type="checkbox" id="compact-mode-toggle" {% if compact_mode %}checked{% endif %} onchange="updateDisplayPreference('compact_mode', this.checked)">
                   <span class="switch-slider"></span>
                 </label>
               </div>
@@ -147,7 +147,7 @@
               </div>
               <div class="preference-control">
                 <label class="switch">
-                  <input type="checkbox" checked disabled>
+                  <input type="checkbox" id="animations-toggle" {% if animations_enabled %}checked{% endif %} onchange="updateDisplayPreference('animations', this.checked)">
                   <span class="switch-slider"></span>
                 </label>
               </div>
@@ -179,14 +179,14 @@
         </div>
         <div class="card-body">
           <div class="form-group">
-            <label class="form-label" for="font-size">
+            <label class="form-label" for="font-size-select">
               Font Size
             </label>
-            <select class="form-input" id="font-size" onchange="Toast.info('Font size adjustment coming soon!', 'Coming Soon')">
-              <option value="small">Small</option>
-              <option value="medium" selected>Medium (Default)</option>
-              <option value="large">Large</option>
-              <option value="extra-large">Extra Large</option>
+            <select class="form-input" id="font-size-select" onchange="updateDisplayPreference('font_size', this.value)">
+              <option value="small" {% if font_size == 'small' %}selected{% endif %}>Small</option>
+              <option value="medium" {% if font_size == 'medium' %}selected{% endif %}>Medium (Default)</option>
+              <option value="large" {% if font_size == 'large' %}selected{% endif %}>Large</option>
+              <option value="extra-large" {% if font_size == 'extra-large' %}selected{% endif %}>Extra Large</option>
             </select>
             <small class="form-helper">Adjust the base font size for better readability</small>
           </div>
@@ -377,11 +377,29 @@
 </style>
 
 <script>
-async function setThemeMode(mode) {
+// Apply theme based on mode
+function applyTheme(mode) {
   const html = document.documentElement;
 
-  // Update UI immediately
-  html.setAttribute('data-theme', mode);
+  if (mode === 'auto') {
+    // Detect system preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const actualTheme = prefersDark ? 'dark' : 'light';
+    html.setAttribute('data-theme', actualTheme);
+
+    // Store that we're in auto mode
+    html.setAttribute('data-theme-mode', 'auto');
+  } else {
+    // Apply specific theme
+    html.setAttribute('data-theme', mode);
+    html.setAttribute('data-theme-mode', mode);
+  }
+}
+
+// Set theme mode
+async function setThemeMode(mode) {
+  // Apply theme immediately
+  applyTheme(mode);
 
   // Update radio buttons
   document.querySelectorAll('input[name="theme"]').forEach(input => {
@@ -390,21 +408,137 @@ async function setThemeMode(mode) {
 
   // Save to backend
   try {
-    const response = await fetch('/theme/toggle', {
+    const formData = new FormData();
+    formData.append('theme', mode);
+
+    const response = await fetch('/theme/set', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      }
+      body: formData
     });
 
-    if (response.ok) {
-      Toast.success(`Theme changed to ${mode} mode`, 'Theme Updated');
+    const data = await response.json();
+
+    if (data.success) {
+      const modeText = mode === 'auto' ? 'auto (system)' : mode;
+      Toast.success(`Theme changed to ${modeText} mode`, 'Theme Updated');
     } else {
       Toast.error('Failed to save theme preference', 'Error');
     }
   } catch (error) {
     console.error('Error saving theme:', error);
     Toast.error('Failed to save theme preference', 'Error');
+  }
+}
+
+// Listen for system theme changes when in auto mode
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    const html = document.documentElement;
+    const themeMode = html.getAttribute('data-theme-mode');
+
+    // Only auto-switch if user is in auto mode
+    if (themeMode === 'auto') {
+      const newTheme = e.matches ? 'dark' : 'light';
+      html.setAttribute('data-theme', newTheme);
+    }
+  });
+}
+
+// Apply theme on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const checkedTheme = document.querySelector('input[name="theme"]:checked');
+  if (checkedTheme && checkedTheme.value === 'auto') {
+    applyTheme('auto');
+  }
+
+  // Apply display preferences on page load
+  applyDisplayPreferences();
+});
+
+// Apply display preferences to the page
+async function applyDisplayPreferences() {
+  try {
+    const response = await fetch('/theme/preferences');
+    const prefs = await response.json();
+
+    // Apply compact mode
+    if (prefs.compact_mode) {
+      document.documentElement.classList.add('compact-mode');
+    } else {
+      document.documentElement.classList.remove('compact-mode');
+    }
+
+    // Apply animations
+    if (!prefs.animations_enabled) {
+      document.documentElement.classList.add('no-animations');
+    } else {
+      document.documentElement.classList.remove('no-animations');
+    }
+
+    // Apply font size
+    document.documentElement.setAttribute('data-font-size', prefs.font_size);
+  } catch (error) {
+    console.error('Error applying display preferences:', error);
+  }
+}
+
+// Update a specific display preference
+async function updateDisplayPreference(prefType, value) {
+  try {
+    // Get current preferences
+    const response = await fetch('/theme/preferences');
+    const currentPrefs = await response.json();
+
+    // Update the specific preference
+    let compact_mode = currentPrefs.compact_mode;
+    let animations_enabled = currentPrefs.animations_enabled;
+    let font_size = currentPrefs.font_size;
+
+    if (prefType === 'compact_mode') {
+      compact_mode = value;
+      // Apply immediately
+      if (value) {
+        document.documentElement.classList.add('compact-mode');
+      } else {
+        document.documentElement.classList.remove('compact-mode');
+      }
+    } else if (prefType === 'animations') {
+      animations_enabled = value;
+      // Apply immediately
+      if (!value) {
+        document.documentElement.classList.add('no-animations');
+      } else {
+        document.documentElement.classList.remove('no-animations');
+      }
+    } else if (prefType === 'font_size') {
+      font_size = value;
+      // Apply immediately
+      document.documentElement.setAttribute('data-font-size', value);
+    }
+
+    // Save to backend
+    const formData = new FormData();
+    formData.append('compact_mode', compact_mode);
+    formData.append('animations_enabled', animations_enabled);
+    formData.append('font_size', font_size);
+
+    const saveResponse = await fetch('/theme/preferences', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await saveResponse.json();
+
+    if (data.success) {
+      const prefName = prefType === 'compact_mode' ? 'Compact mode' :
+                       prefType === 'animations' ? 'Animations' : 'Font size';
+      Toast.success(`${prefName} updated successfully`, 'Preferences Updated');
+    } else {
+      Toast.error('Failed to save preference', 'Error');
+    }
+  } catch (error) {
+    console.error('Error updating display preference:', error);
+    Toast.error('Failed to save preference', 'Error');
   }
 }
 </script>

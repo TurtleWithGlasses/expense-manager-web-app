@@ -50,3 +50,30 @@ async def settings_page(
         "category_count": category_count,
         "days_active": days_active,
     })
+
+
+@router.get("/settings/appearance", response_class=HTMLResponse)
+async def appearance_settings_page(
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Render the appearance settings page"""
+
+    # Get user preferences
+    user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
+    user_theme = user_prefs.theme if user_prefs and user_prefs.theme else 'dark'
+
+    # Get display preferences from JSON field
+    display_prefs = user_prefs.preferences if user_prefs and user_prefs.preferences else {}
+    compact_mode = display_prefs.get('compact_mode', False)
+    animations_enabled = display_prefs.get('animations_enabled', True)
+    font_size = display_prefs.get('font_size', 'medium')
+
+    return render(request, "settings/appearance.html", {
+        "user": user,
+        "user_theme": user_theme,
+        "compact_mode": compact_mode,
+        "animations_enabled": animations_enabled,
+        "font_size": font_size
+    })

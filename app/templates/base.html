@@ -160,6 +160,37 @@
         console.warn('Error saving theme:', error);
       }
     });
+
+    // Apply display preferences on all pages
+    async function applyGlobalDisplayPreferences() {
+      try {
+        const response = await fetch('/theme/preferences');
+        if (!response.ok) return;
+
+        const prefs = await response.json();
+
+        // Apply compact mode
+        if (prefs.compact_mode) {
+          document.documentElement.classList.add('compact-mode');
+        }
+
+        // Apply animations
+        if (!prefs.animations_enabled) {
+          document.documentElement.classList.add('no-animations');
+        }
+
+        // Apply font size
+        if (prefs.font_size) {
+          document.documentElement.setAttribute('data-font-size', prefs.font_size);
+        }
+      } catch (error) {
+        // Silently fail - preferences are not critical
+        console.debug('Display preferences not loaded:', error);
+      }
+    }
+
+    // Apply preferences when page loads
+    document.addEventListener('DOMContentLoaded', applyGlobalDisplayPreferences);
   </script>
 </body>
 </html>
