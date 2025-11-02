@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '20251025_0001'
-down_revision = None  # Update this to the latest migration ID in your system
+down_revision = '20250102_0001_add_ai_features'
 branch_labels = None
 depends_on = None
 
