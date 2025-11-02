@@ -86,7 +86,7 @@ a:hover{
   opacity: 0.8;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  text-decoration: none;
+  text-decoration: none !important;
   padding: var(--spacing-2) var(--spacing-3);
   border-radius: var(--radius-base);
   transition: opacity 0.2s ease, background-color 0.2s ease;
@@ -96,7 +96,7 @@ a:hover{
 .nav-link:hover{
   opacity: 1;
   background: var(--table-hover-bg);
-  text-decoration: none;
+  text-decoration: none !important;
 }
 
 /* User Profile Navigation - extends nav-link styling */
