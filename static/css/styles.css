@@ -79,6 +79,9 @@ a:hover{
 }
 
 .nav-link{
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
   color: var(--text);
   opacity: 0.8;
   font-size: var(--font-size-sm);
@@ -87,6 +90,7 @@ a:hover{
   padding: var(--spacing-2) var(--spacing-3);
   border-radius: var(--radius-base);
   transition: opacity 0.2s ease, background-color 0.2s ease;
+  position: relative;
 }
 
 .nav-link:hover{
@@ -95,32 +99,9 @@ a:hover{
   text-decoration: none;
 }
 
-/* User Profile Navigation */
+/* User Profile Navigation - extends nav-link styling */
 .user-profile-nav {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  position: relative;
-}
-
-.user-profile-nav:hover {
-  text-decoration: none;
-}
-
-.user-profile-nav::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: currentColor;
-  transform: scaleX(0);
-  transition: transform 0.2s ease;
-}
-
-.user-profile-nav:hover::after {
-  transform: scaleX(1);
+  /* Inherits all nav-link styles */
 }
 
 .user-avatar-mini {
