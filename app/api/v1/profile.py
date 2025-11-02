@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from PIL import Image
 import io
 
-from app.core.session import require_session
+from app.deps import current_user
 from app.db.session import get_db
 from app.models.user import User
 
@@ -27,13 +27,10 @@ MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 @router.post("/api/profile/update")
 async def update_profile(
     full_name: str = Form(None),
-    sess: dict = Depends(require_session),
+    user: User = Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Update user profile information"""
-    user = db.query(User).filter(User.id == sess["id"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
 
     # Update full name if provided
     if full_name is not None:
@@ -63,13 +60,10 @@ async def update_profile(
 @router.post("/api/profile/avatar/upload")
 async def upload_avatar(
     file: UploadFile = File(...),
-    sess: dict = Depends(require_session),
+    user: User = Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Upload and update user avatar"""
-    user = db.query(User).filter(User.id == sess["id"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
 
     # Validate file extension
     file_ext = Path(file.filename).suffix.lower()
@@ -142,13 +136,10 @@ async def upload_avatar(
 
 @router.delete("/api/profile/avatar/delete")
 async def delete_avatar(
-    sess: dict = Depends(require_session),
+    user: User = Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Delete user avatar"""
-    user = db.query(User).filter(User.id == sess["id"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
 
     # Delete avatar file if exists
     if user.avatar_url and user.avatar_url.startswith('/static/uploads/avatars/'):
@@ -169,13 +160,10 @@ async def delete_avatar(
 
 @router.get("/api/profile/me")
 async def get_profile(
-    sess: dict = Depends(require_session),
+    user: User = Depends(current_user),
     db: Session = Depends(get_db)
 ):
     """Get current user profile"""
-    user = db.query(User).filter(User.id == sess["id"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
 
     return JSONResponse({
         "success": True,
