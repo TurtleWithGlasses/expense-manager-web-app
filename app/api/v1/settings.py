@@ -11,6 +11,7 @@ from app.models.user import User
 from app.models.entry import Entry
 from app.models.category import Category
 from app.models.user_preferences import UserPreferences
+from app.models.weekly_report import UserReportPreferences
 from app.templates import render
 
 router = APIRouter()
@@ -28,6 +29,9 @@ async def settings_page(
     user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
     user_theme = user_prefs.theme if user_prefs and user_prefs.theme else 'dark'
 
+    # Get report preferences
+    report_prefs = db.query(UserReportPreferences).filter(UserReportPreferences.user_id == user.id).first()
+
     # Get account statistics
     entry_count = db.query(func.count(Entry.id)).filter(Entry.user_id == user.id).scalar() or 0
     category_count = db.query(func.count(Category.id)).filter(Category.user_id == user.id).scalar() or 0
@@ -41,6 +45,7 @@ async def settings_page(
     return render(request, "settings/index.html", {
         "user": user,
         "user_theme": user_theme,
+        "report_prefs": report_prefs,
         "entry_count": entry_count,
         "category_count": category_count,
         "days_active": days_active,

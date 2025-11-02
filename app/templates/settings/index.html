@@ -191,7 +191,7 @@
               </div>
               <div class="preference-control">
                 <label class="switch">
-                  <input type="checkbox">
+                  <input type="checkbox" id="weekly-summary-toggle" {% if report_prefs and report_prefs.send_email %}checked{% endif %} onchange="updateWeeklySummary(this.checked)">
                   <span class="switch-slider"></span>
                 </label>
               </div>
@@ -749,6 +749,42 @@ async function deleteAvatar() {
       }
     }
   });
+}
+
+// Update weekly summary preference
+async function updateWeeklySummary(enabled) {
+  try {
+    const formData = new FormData();
+    formData.append('send_email', enabled ? 'true' : 'false');
+    formData.append('show_on_dashboard', 'true');
+    formData.append('frequency', 'weekly');
+    formData.append('include_achievements', 'true');
+    formData.append('include_recommendations', 'true');
+    formData.append('include_anomalies', 'true');
+
+    const response = await fetch('/reports/weekly/preferences', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      Toast.success(
+        enabled ? 'Weekly email summaries enabled' : 'Weekly email summaries disabled',
+        'Preferences Updated'
+      );
+    } else {
+      Toast.error(data.detail || 'Failed to update preferences', 'Error');
+      // Revert toggle on error
+      document.getElementById('weekly-summary-toggle').checked = !enabled;
+    }
+  } catch (error) {
+    console.error('Error updating weekly summary preference:', error);
+    Toast.error('Failed to update preferences', 'Error');
+    // Revert toggle on error
+    document.getElementById('weekly-summary-toggle').checked = !enabled;
+  }
 }
 
 function confirmDeleteAccount() {
