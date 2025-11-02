@@ -54,13 +54,24 @@
           <div class="card-body">
             <div class="profile-section">
               <div class="profile-avatar">
-                <div class="avatar-circle">
-                  <i class="bi bi-person-fill"></i>
+                <div class="avatar-circle" id="avatar-circle">
+                  {% if user.avatar_url %}
+                    <img src="{{ user.avatar_url }}" alt="Profile avatar" class="avatar-image">
+                  {% else %}
+                    <i class="bi bi-person-fill"></i>
+                  {% endif %}
                 </div>
-                <button class="btn btn-sm btn-outline" onclick="Toast.info('Profile picture upload coming soon!', 'Feature Coming Soon')">
+                <input type="file" id="avatar-input" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;" onchange="uploadAvatar(this)">
+                <button class="btn btn-sm btn-outline" onclick="document.getElementById('avatar-input').click()">
                   <i class="bi bi-camera"></i>
                   Change Photo
                 </button>
+                {% if user.avatar_url %}
+                <button class="btn btn-sm btn-outline btn-danger-outline" onclick="deleteAvatar()">
+                  <i class="bi bi-trash"></i>
+                  Remove
+                </button>
+                {% endif %}
               </div>
 
               <div class="profile-info">
@@ -88,19 +99,14 @@
                     type="text"
                     id="user-name"
                     class="form-input"
-                    value="{{ user.email.split('@')[0] }}"
+                    value="{{ user.full_name or user.email.split('@')[0] }}"
                     placeholder="Your name"
+                    onchange="updateProfile()"
                   >
                   <small class="form-helper">This name will be displayed across the app</small>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="card-footer">
-            <button class="btn btn-primary" onclick="Toast.info('Profile update feature coming soon!', 'Feature Coming Soon')">
-              <i class="bi bi-check-circle"></i>
-              Save Changes
-            </button>
           </div>
         </div>
 
@@ -344,6 +350,26 @@
   align-items: center;
   justify-content: center;
   font-size: 3rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-danger-outline {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.btn-danger-outline:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #dc2626;
 }
 
 .profile-info {
@@ -590,6 +616,141 @@
 </style>
 
 <script>
+// Profile update with debouncing
+let updateTimeout;
+async function updateProfile() {
+  clearTimeout(updateTimeout);
+  updateTimeout = setTimeout(async () => {
+    const fullName = document.getElementById('user-name').value.trim();
+
+    if (!fullName || fullName.length < 2) {
+      Toast.error('Name must be at least 2 characters', 'Invalid Name');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('full_name', fullName);
+
+      const response = await fetch('/api/profile/update', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        Toast.success('Profile updated successfully', 'Success');
+      } else {
+        Toast.error(data.detail || 'Failed to update profile', 'Error');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Toast.error('Failed to update profile', 'Error');
+    }
+  }, 500);
+}
+
+// Avatar upload
+async function uploadAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  // Validate file size (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    Toast.error('File size must be less than 5MB', 'File Too Large');
+    input.value = '';
+    return;
+  }
+
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    Toast.error('Only JPG, PNG, GIF, and WebP images are allowed', 'Invalid File Type');
+    input.value = '';
+    return;
+  }
+
+  try {
+    Toast.info('Uploading avatar...', 'Please Wait');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/profile/avatar/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Update avatar display
+      const avatarCircle = document.getElementById('avatar-circle');
+      avatarCircle.innerHTML = `<img src="${data.avatar_url}?t=${Date.now()}" alt="Profile avatar" class="avatar-image">`;
+
+      // Add remove button if not exists
+      const removeBtn = document.querySelector('.btn-danger-outline');
+      if (!removeBtn) {
+        const changeBtn = document.querySelector('.profile-avatar .btn-outline');
+        const newBtn = document.createElement('button');
+        newBtn.className = 'btn btn-sm btn-outline btn-danger-outline';
+        newBtn.onclick = deleteAvatar;
+        newBtn.innerHTML = '<i class="bi bi-trash"></i> Remove';
+        changeBtn.parentNode.insertBefore(newBtn, changeBtn.nextSibling);
+      }
+
+      Toast.success('Avatar uploaded successfully', 'Success');
+    } else {
+      Toast.error(data.detail || 'Failed to upload avatar', 'Error');
+    }
+  } catch (error) {
+    console.error('Error uploading avatar:', error);
+    Toast.error('Failed to upload avatar', 'Error');
+  } finally {
+    input.value = '';
+  }
+}
+
+// Delete avatar
+async function deleteAvatar() {
+  ConfirmModal.show({
+    type: 'warning',
+    title: 'Delete Avatar',
+    message: 'Are you sure you want to remove your profile picture?',
+    confirmText: 'Yes, Remove',
+    cancelText: 'Cancel',
+    onConfirm: async () => {
+      try {
+        const response = await fetch('/api/profile/avatar/delete', {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Reset avatar to default
+          const avatarCircle = document.getElementById('avatar-circle');
+          avatarCircle.innerHTML = '<i class="bi bi-person-fill"></i>';
+
+          // Remove delete button
+          const removeBtn = document.querySelector('.btn-danger-outline');
+          if (removeBtn) {
+            removeBtn.remove();
+          }
+
+          Toast.success('Avatar removed successfully', 'Success');
+        } else {
+          Toast.error(data.detail || 'Failed to delete avatar', 'Error');
+        }
+      } catch (error) {
+        console.error('Error deleting avatar:', error);
+        Toast.error('Failed to delete avatar', 'Error');
+      }
+    }
+  });
+}
+
 function confirmDeleteAccount() {
   ConfirmModal.show({
     type: 'danger',
