@@ -3,6 +3,7 @@
 Script to fix production database schema by adding missing columns.
 This can be run directly in production to add the missing columns including:
 - Email verification columns to users table
+- Avatar URL column to users table
 - AI-related columns to entries table
 - Theme column to user_preferences table
 """
@@ -13,7 +14,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 
 def fix_production_schema():
-    """Add missing columns to the database tables (email verification, AI columns, and theme column)."""
+    """Add missing columns to the database tables (email verification, avatar URL, AI columns, and theme column)."""
     
     # Get database URL from environment
     database_url = os.getenv('DATABASE_URL')
@@ -67,6 +68,12 @@ def fix_production_schema():
                     'name': 'created_at',
                     'definition': 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP',
                     'check_query': "SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'created_at'"
+                },
+                {
+                    'table': 'users',
+                    'name': 'avatar_url',
+                    'definition': 'VARCHAR(500)',
+                    'check_query': "SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'avatar_url'"
                 }
             ]
             
