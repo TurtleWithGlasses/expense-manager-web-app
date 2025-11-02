@@ -43,6 +43,16 @@
           <i class="bi bi-moon-fill" id="theme-icon-dark" style="display: none;" aria-hidden="true"></i>
           <i class="bi bi-sun-fill" id="theme-icon-light" style="display: none;" aria-hidden="true"></i>
         </button>
+        <a class="nav-link user-profile-nav" href="/settings" aria-label="User settings">
+          <div class="user-avatar-mini">
+            {% if user and user.avatar_url %}
+              <img src="{{ user.avatar_url }}" alt="Profile" class="avatar-mini-img">
+            {% else %}
+              <i class="bi bi-person-circle" aria-hidden="true"></i>
+            {% endif %}
+          </div>
+          <span class="user-name-nav">{{ user.full_name or user.email.split('@')[0] if user else 'Settings' }}</span>
+        </a>
         <a class="nav-link" href="/logout" aria-label="Logout from your account">Logout</a>
       </nav>
     </div>

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python run_local.py:*)",
+      "Bash(sqlite3:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(python:*)",
+      "Bash(nul)",
+      "Bash(alembic upgrade:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
