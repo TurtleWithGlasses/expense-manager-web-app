@@ -168,10 +168,15 @@ class ReportScheduler:
         if not user:
             print(f"⚠️  User {user_id} not found")
             return
-        
-        # Generate report
+
+        # Calculate previous week's end date (last Sunday)
+        # Today is Monday, so previous Sunday is yesterday
+        today = date.today()
+        previous_sunday = today - timedelta(days=1)
+
+        # Generate report for the previous week (Monday to Sunday)
         report_service = WeeklyReportService(db)
-        report = report_service.generate_weekly_report(user_id)
+        report = report_service.generate_weekly_report(user_id, week_end_date=previous_sunday)
         
         # Save to database
         week_start = date.fromisoformat(report['period']['start'])
