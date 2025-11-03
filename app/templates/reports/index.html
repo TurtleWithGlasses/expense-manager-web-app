@@ -200,7 +200,7 @@
                 <form id="customReportForm">
                     <div class="mb-3">
                         <label for="reportType" class="form-label">Report Type</label>
-                        <select class="form-select" id="reportType" required>
+                        <select class="form-select" id="reportType" name="reportType" required>
                             <option value="expense">Expense Analysis</option>
                             <option value="income">Income Analysis</option>
                             <option value="comprehensive">Comprehensive</option>
@@ -209,11 +209,11 @@
                     <div class="row">
                         <div class="col-md-6">
                             <label for="startDate" class="form-label">Start Date</label>
-                            <input type="date" class="form-control" id="startDate" required>
+                            <input type="date" class="form-control" id="startDate" name="startDate" required>
                         </div>
                         <div class="col-md-6">
                             <label for="endDate" class="form-label">End Date</label>
-                            <input type="date" class="form-control" id="endDate" required>
+                            <input type="date" class="form-control" id="endDate" name="endDate" required>
                         </div>
                     </div>
                 </form>
@@ -240,63 +240,42 @@ function generateCustomReport() {
     // Get form data
     const form = document.getElementById('customReportForm');
     const formData = new FormData(form);
-    
+
     const reportType = formData.get('reportType');
     const startDate = formData.get('startDate');
     const endDate = formData.get('endDate');
-    
+
     // Validate dates
     if (!startDate || !endDate) {
-        alert('❌ Please select both start and end dates.');
+        Toast.warning('Please select both start and end dates', 'Invalid Date Range');
         return;
     }
-    
+
     if (new Date(startDate) > new Date(endDate)) {
-        alert('❌ Start date must be before end date.');
+        Toast.error('Start date must be before end date', 'Invalid Date Range');
         return;
     }
-    
-    // Show loading state
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generating...';
-    button.disabled = true;
-    
-    // Generate custom report
-    fetch('/reports/custom', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            report_type: reportType,
-            start_date: startDate,
-            end_date: endDate
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ Custom report generated successfully!');
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('customReportModal'));
-            modal.hide();
-            // Redirect to view the report
-            if (data.report_url) {
-                window.location.href = data.report_url;
-            }
-        } else {
-            alert('❌ Failed to generate report: ' + (data.message || 'Unknown error'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('❌ Error generating custom report. Please try again.');
-    })
-    .finally(() => {
-        button.innerHTML = originalText;
-        button.disabled = false;
-    });
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('customReportModal'));
+    modal.hide();
+
+    // Show success message
+    Toast.success('Generating your custom report...', 'Report Generation');
+
+    // Build export URL based on report type
+    let exportUrl;
+    if (reportType === 'expense') {
+        exportUrl = `/reports/excel/entries?start=${startDate}&end=${endDate}&report_type=expense`;
+    } else if (reportType === 'income') {
+        exportUrl = `/reports/excel/entries?start=${startDate}&end=${endDate}&report_type=income`;
+    } else {
+        // Comprehensive report - use PDF export
+        exportUrl = `/reports/pdf/financial?start=${startDate}&end=${endDate}&report_type=all`;
+    }
+
+    // Trigger download
+    window.location.href = exportUrl;
 }
 
 function emailWeeklyReport() {
