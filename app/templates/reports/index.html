@@ -220,10 +220,16 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="generateCustomReport()">
-                    <i class="bi bi-file-text me-1"></i>
-                    Generate Report
-                </button>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-success" onclick="generateCustomReport('excel')">
+                        <i class="bi bi-file-earmark-excel me-1"></i>
+                        Excel Report
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="generateCustomReport('pdf')">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>
+                        PDF Report
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -236,7 +242,7 @@ function showCustomReportModal() {
     modal.show();
 }
 
-function generateCustomReport() {
+function generateCustomReport(format) {
     // Get form data
     const form = document.getElementById('customReportForm');
     const formData = new FormData(form);
@@ -261,17 +267,32 @@ function generateCustomReport() {
     modal.hide();
 
     // Show success message
-    Toast.success('Generating your custom report...', 'Report Generation');
+    const formatName = format === 'excel' ? 'Excel' : 'PDF';
+    Toast.success(`Generating your ${formatName} report...`, 'Report Generation');
 
-    // Build export URL based on report type
+    // Build export URL based on format and report type
     let exportUrl;
-    if (reportType === 'expense') {
-        exportUrl = `/reports/excel/entries?start=${startDate}&end=${endDate}&report_type=expense`;
-    } else if (reportType === 'income') {
-        exportUrl = `/reports/excel/entries?start=${startDate}&end=${endDate}&report_type=income`;
+
+    if (format === 'excel') {
+        // Excel export
+        if (reportType === 'expense') {
+            exportUrl = `/reports/excel/entries?start=${startDate}&end=${endDate}&report_type=expense`;
+        } else if (reportType === 'income') {
+            exportUrl = `/reports/excel/entries?start=${startDate}&end=${endDate}&report_type=income`;
+        } else {
+            // Comprehensive - all entries
+            exportUrl = `/reports/excel/entries?start=${startDate}&end=${endDate}&report_type=all`;
+        }
     } else {
-        // Comprehensive report - use PDF export
-        exportUrl = `/reports/pdf/financial?start=${startDate}&end=${endDate}&report_type=all`;
+        // PDF export
+        if (reportType === 'expense') {
+            exportUrl = `/reports/pdf/financial?start=${startDate}&end=${endDate}&report_type=expense`;
+        } else if (reportType === 'income') {
+            exportUrl = `/reports/pdf/financial?start=${startDate}&end=${endDate}&report_type=income`;
+        } else {
+            // Comprehensive - all entries
+            exportUrl = `/reports/pdf/financial?start=${startDate}&end=${endDate}&report_type=all`;
+        }
     }
 
     // Trigger download
