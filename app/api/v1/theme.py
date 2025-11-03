@@ -135,9 +135,18 @@ async def set_display_preferences(
     if prefs.preferences is None:
         prefs.preferences = {}
 
-    prefs.preferences['compact_mode'] = compact_mode_bool
-    prefs.preferences['animations_enabled'] = animations_enabled_bool
-    prefs.preferences['font_size'] = font_size
+    # Create a new dict to ensure SQLAlchemy detects the change
+    new_prefs = dict(prefs.preferences)
+    new_prefs['compact_mode'] = compact_mode_bool
+    new_prefs['animations_enabled'] = animations_enabled_bool
+    new_prefs['font_size'] = font_size
+
+    # Assign the new dict to trigger SQLAlchemy's change detection
+    prefs.preferences = new_prefs
+
+    # Mark the field as modified explicitly
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(prefs, 'preferences')
 
     db.commit()
 
