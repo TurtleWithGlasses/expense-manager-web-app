@@ -300,7 +300,21 @@ class EmailService:
         insights = report['insights']
         achievements = report['achievements']
         recommendations = report['recommendations']
-        
+        currency_code = report.get('currency', 'USD')
+
+        # Get currency symbol from the CURRENCIES dictionary
+        from app.core.currency import CURRENCIES
+        currency_info = CURRENCIES.get(currency_code, CURRENCIES['USD'])
+        currency_symbol = currency_info['symbol']
+        currency_position = currency_info.get('position', 'before')
+
+        # Helper function to format amounts with correct currency
+        def format_currency(amount):
+            if currency_position == 'before':
+                return f"{currency_symbol}{amount:.2f}"
+            else:
+                return f"{amount:.2f}{currency_symbol}"
+
         subject = f"Your Weekly Financial Report - Week of {period['start']}"
         
         # Build insights HTML
@@ -372,15 +386,15 @@ class EmailService:
                         <div class="summary-grid">
                             <div class="summary-card negative">
                                 <div class="label">Total Expenses</div>
-                                <div class="value">${summary['total_expenses']:.2f}</div>
+                                <div class="value">{format_currency(summary['total_expenses'])}</div>
                             </div>
                             <div class="summary-card positive">
                                 <div class="label">Total Income</div>
-                                <div class="value">${summary['total_income']:.2f}</div>
+                                <div class="value">{format_currency(summary['total_income'])}</div>
                             </div>
                             <div class="summary-card {'positive' if summary['net_savings'] > 0 else 'negative'}">
                                 <div class="label">Net Savings</div>
-                                <div class="value">${summary['net_savings']:.2f}</div>
+                                <div class="value">{format_currency(summary['net_savings'])}</div>
                             </div>
                             <div class="summary-card">
                                 <div class="label">Transactions</div>
@@ -433,7 +447,21 @@ class EmailService:
         insights = report['insights']
         achievements = report['achievements']
         recommendations = report['recommendations']
-        
+        currency_code = report.get('currency', 'USD')
+
+        # Get currency symbol from the CURRENCIES dictionary
+        from app.core.currency import CURRENCIES
+        currency_info = CURRENCIES.get(currency_code, CURRENCIES['USD'])
+        currency_symbol = currency_info['symbol']
+        currency_position = currency_info.get('position', 'before')
+
+        # Helper function to format amounts with correct currency
+        def format_currency(amount):
+            if currency_position == 'before':
+                return f"{currency_symbol}{amount:.2f}"
+            else:
+                return f"{amount:.2f}{currency_symbol}"
+
         subject = f"Your Monthly Financial Report - {period['month_name']} {period['year']}"
         
         # Build insights HTML
@@ -505,15 +533,15 @@ class EmailService:
                         <div class="summary-grid">
                             <div class="summary-card positive">
                                 <div class="label">Total Income</div>
-                                <div class="value">${summary['total_income']:.2f}</div>
+                                <div class="value">{format_currency(summary['total_income'])}</div>
                             </div>
                             <div class="summary-card negative">
                                 <div class="label">Total Expenses</div>
-                                <div class="value">${summary['total_expenses']:.2f}</div>
+                                <div class="value">{format_currency(summary['total_expenses'])}</div>
                             </div>
                             <div class="summary-card {'positive' if summary['net_savings'] > 0 else 'negative'}">
                                 <div class="label">Net Savings</div>
-                                <div class="value">${summary['net_savings']:.2f}</div>
+                                <div class="value">{format_currency(summary['net_savings'])}</div>
                             </div>
                             <div class="summary-card">
                                 <div class="label">Savings Rate</div>
@@ -551,15 +579,15 @@ class EmailService:
         # Text fallback
         text_content = f"""
         Your Monthly Financial Report - {period['month_name']} {period['year']}
-        
-        Income: ${summary['total_income']:.2f}
-        Expenses: ${summary['total_expenses']:.2f}
-        Net Savings: ${summary['net_savings']:.2f}
+
+        Income: {format_currency(summary['total_income'])}
+        Expenses: {format_currency(summary['total_expenses'])}
+        Net Savings: {format_currency(summary['net_savings'])}
         Savings Rate: {summary['savings_rate']:.1f}%
-        
+
         Key Insights:
         {chr(10).join(insights)}
-        
+
         View your full report at: https://yourbudgetpulse.online/reports/monthly
         """
         
@@ -569,7 +597,21 @@ class EmailService:
         """Send annual financial report email"""
         period = report['period']
         summary = report['summary']
-        
+        currency_code = report.get('currency', 'USD')
+
+        # Get currency symbol from the CURRENCIES dictionary
+        from app.core.currency import CURRENCIES
+        currency_info = CURRENCIES.get(currency_code, CURRENCIES['USD'])
+        currency_symbol = currency_info['symbol']
+        currency_position = currency_info.get('position', 'before')
+
+        # Helper function to format amounts with correct currency
+        def format_currency(amount):
+            if currency_position == 'before':
+                return f"{currency_symbol}{amount:.2f}"
+            else:
+                return f"{amount:.2f}{currency_symbol}"
+
         subject = f"Your Annual Financial Report - {period['year']}"
         
         html_content = f"""
@@ -611,15 +653,15 @@ class EmailService:
                         <div class="summary-grid">
                             <div class="summary-card positive">
                                 <div class="label">Total Income</div>
-                                <div class="value">${summary['income']:.2f}</div>
+                                <div class="value">{format_currency(summary['income'])}</div>
                             </div>
                             <div class="summary-card negative">
                                 <div class="label">Total Expenses</div>
-                                <div class="value">${summary['expense']:.2f}</div>
+                                <div class="value">{format_currency(summary['expense'])}</div>
                             </div>
                             <div class="summary-card {'positive' if summary['balance'] > 0 else 'negative'}">
                                 <div class="label">Net Balance</div>
-                                <div class="value">${summary['balance']:.2f}</div>
+                                <div class="value">{format_currency(summary['balance'])}</div>
                             </div>
                             <div class="summary-card">
                                 <div class="label">Year</div>
@@ -653,13 +695,13 @@ class EmailService:
         # Text fallback
         text_content = f"""
         Your Annual Financial Report - {period['year']}
-        
-        Income: ${summary['income']:.2f}
-        Expenses: ${summary['expense']:.2f}
-        Net Balance: ${summary['balance']:.2f}
-        
+
+        Income: {format_currency(summary['income'])}
+        Expenses: {format_currency(summary['expense'])}
+        Net Balance: {format_currency(summary['balance'])}
+
         Advanced annual reports with year-over-year comparisons and seasonal analysis are coming soon!
-        
+
         View your full report at: https://yourbudgetpulse.online/reports/annual
         """
         
