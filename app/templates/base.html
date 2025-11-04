@@ -24,8 +24,24 @@
   <!-- Advanced Features - Phase 11 -->
   <link rel="stylesheet" href="/static/css/advanced-features.css?v=1">
 
+  <!-- CRITICAL: Navigation fix must be AFTER all CSS files -->
   <style>
-    /* NUCLEAR OPTION: Remove all underlines from navigation */
+    /* ============================================
+       NAVIGATION FIX - FINAL OVERRIDE
+       This MUST be after all CSS files to work!
+       ============================================ */
+    .topbar,
+    .topbar *,
+    .topbar a,
+    .topbar a:hover,
+    .topbar a:focus,
+    .topbar a:active,
+    .topbar a:visited,
+    .topbar a:link,
+    .topbar nav a,
+    .topbar nav a:hover,
+    .topbar nav a:focus,
+    .topbar nav a:active,
     a.nav-link,
     a.nav-link:hover,
     a.nav-link:focus,
@@ -37,7 +53,21 @@
     a.user-profile-nav:focus,
     a.user-profile-nav:active,
     a.user-profile-nav:visited,
-    a.user-profile-nav:link {
+    a.user-profile-nav:link,
+    header a,
+    header a:hover,
+    header a:focus,
+    header a:active,
+    .user-name-nav,
+    .user-name-nav:hover,
+    .nav-link *,
+    .nav-link:hover *,
+    .user-profile-nav *,
+    .user-profile-nav:hover *,
+    .nav-link.user-profile-nav:hover,
+    .nav-link.user-profile-nav:focus,
+    header .nav-link:hover,
+    header .nav-link:focus {
       text-decoration: none !important;
       text-decoration-line: none !important;
       text-decoration-style: none !important;
@@ -48,50 +78,6 @@
       border-bottom-width: 0 !important;
       border-bottom-style: none !important;
       box-shadow: none !important;
-    }
-
-    /* Target any child elements too */
-    a.nav-link *,
-    a.nav-link:hover *,
-    a.user-profile-nav *,
-    a.user-profile-nav:hover *,
-    .user-name-nav,
-    .user-name-nav:hover {
-      text-decoration: none !important;
-      border-bottom: none !important;
-    }
-
-    /* Additional specificity for the entire nav area */
-    .topbar nav a,
-    .topbar nav a:hover,
-    .topbar nav a:focus,
-    .topbar nav a:active,
-    .topbar nav a:visited {
-      text-decoration: none !important;
-      border-bottom: none !important;
-    }
-
-    /* Bootstrap overrides */
-    .nav-link.user-profile-nav:hover,
-    .nav-link.user-profile-nav:focus,
-    header .nav-link:hover,
-    header .nav-link:focus,
-    header a:hover,
-    header a:focus {
-      text-decoration: none !important;
-      border-bottom: none !important;
-    }
-
-    /* Topbar specific */
-    .topbar,
-    .topbar *,
-    .topbar a,
-    .topbar a:hover,
-    .topbar a:focus,
-    .topbar a:active,
-    .topbar a:visited {
-      text-decoration: none !important;
-      border-bottom: none !important;
     }
   </style>
 </head>
