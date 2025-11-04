@@ -25,17 +25,19 @@
   <link rel="stylesheet" href="/static/css/advanced-features.css?v=1">
 
   <style>
-    /* Force remove underlines from navigation links */
+    /* NUCLEAR OPTION: Remove all underlines from navigation */
     a.nav-link,
     a.nav-link:hover,
     a.nav-link:focus,
     a.nav-link:active,
     a.nav-link:visited,
+    a.nav-link:link,
     a.user-profile-nav,
     a.user-profile-nav:hover,
     a.user-profile-nav:focus,
     a.user-profile-nav:active,
-    a.user-profile-nav:visited {
+    a.user-profile-nav:visited,
+    a.user-profile-nav:link {
       text-decoration: none !important;
       text-decoration-line: none !important;
       text-decoration-style: none !important;
@@ -48,9 +50,46 @@
       box-shadow: none !important;
     }
 
+    /* Target any child elements too */
     a.nav-link *,
+    a.nav-link:hover *,
     a.user-profile-nav *,
-    .user-name-nav {
+    a.user-profile-nav:hover *,
+    .user-name-nav,
+    .user-name-nav:hover {
+      text-decoration: none !important;
+      border-bottom: none !important;
+    }
+
+    /* Additional specificity for the entire nav area */
+    .topbar nav a,
+    .topbar nav a:hover,
+    .topbar nav a:focus,
+    .topbar nav a:active,
+    .topbar nav a:visited {
+      text-decoration: none !important;
+      border-bottom: none !important;
+    }
+
+    /* Bootstrap overrides */
+    .nav-link.user-profile-nav:hover,
+    .nav-link.user-profile-nav:focus,
+    header .nav-link:hover,
+    header .nav-link:focus,
+    header a:hover,
+    header a:focus {
+      text-decoration: none !important;
+      border-bottom: none !important;
+    }
+
+    /* Topbar specific */
+    .topbar,
+    .topbar *,
+    .topbar a,
+    .topbar a:hover,
+    .topbar a:focus,
+    .topbar a:active,
+    .topbar a:visited {
       text-decoration: none !important;
       border-bottom: none !important;
     }

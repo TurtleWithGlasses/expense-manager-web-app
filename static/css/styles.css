@@ -98,7 +98,6 @@ a:hover{
   position: relative;
 }
 
-.nav-link:hover,
 .nav-link:focus,
 .nav-link:active,
 .nav-link:visited,
@@ -119,7 +118,6 @@ a:hover{
   border-bottom: 0 solid transparent !important;
 }
 
-.user-profile-nav:hover,
 .user-profile-nav:focus,
 .user-profile-nav:active,
 .user-profile-nav:visited,
@@ -166,12 +164,39 @@ a:hover{
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+
+.user-name-nav:hover {
+  text-decoration: none !important;
+  border-bottom: none !important;
 }
 
 @media (max-width: 768px) {
   .user-name-nav {
     display: none;
   }
+}
+
+/* =================================
+   NAVIGATION - NO UNDERLINES EVER
+   ================================= */
+.topbar,
+.topbar *,
+.topbar a,
+.topbar a:hover,
+.topbar a:focus,
+.topbar a:active,
+.topbar a:visited,
+.topbar .nav-link,
+.topbar .nav-link:hover,
+.topbar .nav-link:focus,
+.topbar .user-profile-nav,
+.topbar .user-profile-nav:hover,
+.topbar .user-profile-nav:focus {
+  text-decoration: none !important;
+  border-bottom: none !important;
 }
 
 /* Theme Toggle Button */
