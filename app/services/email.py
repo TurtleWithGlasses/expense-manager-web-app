@@ -563,7 +563,7 @@ class EmailService:
                     {f'<!-- Recommendations --><div class="section"><h2 class="section-title">Recommendations</h2>{recommendations_html}</div>' if recommendations_html else ''}
                     
                     <div style="text-align: center; margin: 40px 0;">
-                        <a href="https://yourbudgetpulse.online/reports/monthly" class="cta-button">View Full Report</a>
+                        <a href="{settings.BASE_URL}/reports/monthly" class="cta-button">View Full Report</a>
                     </div>
                 </div>
                 
@@ -588,7 +588,7 @@ class EmailService:
         Key Insights:
         {chr(10).join(insights)}
 
-        View your full report at: https://yourbudgetpulse.online/reports/monthly
+        View your full report at: {settings.BASE_URL}/reports/monthly
         """
         
         return await self.send_email(user_email, subject, html_content, text_content)
@@ -679,7 +679,7 @@ class EmailService:
                     </div>
                     
                     <div style="text-align: center; margin: 40px 0;">
-                        <a href="https://yourbudgetpulse.online/reports/annual" class="cta-button">View Full Report</a>
+                        <a href="{settings.BASE_URL}/reports/annual" class="cta-button">View Full Report</a>
                     </div>
                 </div>
                 
@@ -702,7 +702,7 @@ class EmailService:
 
         Advanced annual reports with year-over-year comparisons and seasonal analysis are coming soon!
 
-        View your full report at: https://yourbudgetpulse.online/reports/annual
+        View your full report at: {settings.BASE_URL}/reports/annual
         """
         
         return await self.send_email(user_email, subject, html_content, text_content)
