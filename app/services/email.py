@@ -419,7 +419,7 @@ class EmailService:
                     
                     <!-- CTA -->
                     <div style="text-align: center; margin: 30px 0;">
-                        <a href="{settings.BASE_URL}/dashboard" class="cta-button">View Full Dashboard</a>
+                        <a href="{settings.BASE_URL}/" class="cta-button">View Full Dashboard</a>
                     </div>
                 </div>
                 

@@ -87,21 +87,53 @@ a:hover{
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   text-decoration: none !important;
+  text-underline-offset: 0 !important;
+  -webkit-text-decoration: none !important;
+  -moz-text-decoration: none !important;
+  border-bottom: 0 solid transparent !important;
+  box-shadow: none !important;
   padding: var(--spacing-2) var(--spacing-3);
   border-radius: var(--radius-base);
   transition: opacity 0.2s ease, background-color 0.2s ease;
   position: relative;
 }
 
-.nav-link:hover{
+.nav-link:hover,
+.nav-link:focus,
+.nav-link:active,
+.nav-link:visited,
+.nav-link:link{
   opacity: 1;
   background: var(--table-hover-bg);
   text-decoration: none !important;
+  -webkit-text-decoration: none !important;
+  -moz-text-decoration: none !important;
+  border-bottom: 0 solid transparent !important;
+  box-shadow: none !important;
 }
 
 /* User Profile Navigation - extends nav-link styling */
 .user-profile-nav {
-  /* Inherits all nav-link styles */
+  text-decoration: none !important;
+  -webkit-text-decoration: none !important;
+  border-bottom: 0 solid transparent !important;
+}
+
+.user-profile-nav:hover,
+.user-profile-nav:focus,
+.user-profile-nav:active,
+.user-profile-nav:visited,
+.user-profile-nav:link {
+  text-decoration: none !important;
+  -webkit-text-decoration: none !important;
+  border-bottom: 0 solid transparent !important;
+}
+
+.user-profile-nav *,
+.nav-link *,
+.user-name-nav {
+  text-decoration: none !important;
+  border-bottom: 0 solid transparent !important;
 }
 
 .user-avatar-mini {

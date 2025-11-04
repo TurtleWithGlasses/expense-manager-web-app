@@ -218,10 +218,8 @@ async def export_user_data(
         } if report_prefs else None,
         "categories": [
             {
-                "name": cat.name,
-                "type": cat.type,
-                "icon": cat.icon,
-                "created_at": cat.created_at.isoformat() if cat.created_at else None
+                "id": cat.id,
+                "name": cat.name
             }
             for cat in categories
         ],
@@ -232,8 +230,8 @@ async def export_user_data(
                 "date": entry.date.isoformat() if entry.date else None,
                 "type": entry.type,
                 "category_name": entry.category.name if entry.category else None,
-                "notes": entry.notes,
-                "created_at": entry.created_at.isoformat() if entry.created_at else None
+                "note": entry.note,
+                "currency_code": entry.currency_code
             }
             for entry in entries
         ],
@@ -247,16 +245,18 @@ async def export_user_data(
 
     # Convert to JSON string
     json_data = json.dumps(export_data, indent=2, ensure_ascii=False)
+    json_bytes = json_data.encode('utf-8')
 
     # Create filename with timestamp
     filename = f"expense_manager_data_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
 
     # Return as downloadable file
     return StreamingResponse(
-        io.BytesIO(json_data.encode('utf-8')),
+        iter([json_bytes]),
         media_type="application/json",
         headers={
-            "Content-Disposition": f"attachment; filename={filename}"
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Length": str(len(json_bytes))
         }
     )
 
