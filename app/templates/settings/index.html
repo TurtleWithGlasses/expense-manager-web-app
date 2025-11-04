@@ -795,7 +795,8 @@ async function exportData() {
     const response = await fetch('/api/profile/export');
 
     if (!response.ok) {
-      throw new Error('Export failed');
+      const errorData = await response.json().catch(() => ({ detail: 'Export failed' }));
+      throw new Error(errorData.detail || 'Export failed');
     }
 
     // Get the blob data
@@ -808,22 +809,29 @@ async function exportData() {
 
     // Get filename from response headers or use default
     const contentDisposition = response.headers.get('Content-Disposition');
-    const filename = contentDisposition
-      ? contentDisposition.split('filename=')[1].replace(/"/g, '')
-      : 'expense_manager_data.json';
+    let filename = 'expense_manager_data.json';
+
+    if (contentDisposition) {
+      const matches = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (matches && matches[1]) {
+        filename = matches[1].replace(/['"]/g, '');
+      }
+    }
 
     a.download = filename;
     document.body.appendChild(a);
     a.click();
 
     // Cleanup
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }, 100);
 
     Toast.success('Data exported successfully!', 'Export Complete');
   } catch (error) {
     console.error('Error exporting data:', error);
-    Toast.error('Failed to export data', 'Error');
+    Toast.error(error.message || 'Failed to export data', 'Error');
   }
 }
 
