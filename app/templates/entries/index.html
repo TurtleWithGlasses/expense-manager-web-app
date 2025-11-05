@@ -66,6 +66,10 @@
                         <i class="bi bi-file-earmark-pdf me-1"></i>
                         PDF Report
                     </button>
+                    <button type="button" class="btn btn-outline-info" onclick="openBulkAIModal()" title="Bulk AI Categorization">
+                        <i class="bi bi-robot me-1"></i>
+                        AI Categorize
+                    </button>
                 </div>
             </div>
         </form>
@@ -911,6 +915,55 @@
       font-size: 0.9rem !important;
     }
   }
+
+  /* =============================================
+     BULK AI MODAL LIGHT THEME
+     ============================================= */
+  [data-theme="light"] #bulkAIModal .modal-content {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    border: 1px solid rgba(13, 110, 253, 0.3) !important;
+  }
+
+  [data-theme="light"] #bulkAIModal .modal-header {
+    border-bottom: 1px solid #dee2e6 !important;
+  }
+
+  [data-theme="light"] #bulkAIModal .modal-footer {
+    border-top: 1px solid #dee2e6 !important;
+  }
+
+  [data-theme="light"] #bulkAIModal .modal-title {
+    color: #0d6efd !important;
+  }
+
+  [data-theme="light"] #bulkAIModal .form-label,
+  [data-theme="light"] #bulkAIModal .form-check-label {
+    color: #212529 !important;
+  }
+
+  [data-theme="light"] #bulkAIModal .text-light {
+    color: #495057 !important;
+  }
+
+  [data-theme="light"] #bulkAIModal .text-muted {
+    color: #6c757d !important;
+  }
+
+  [data-theme="light"] #bulkAIModal .alert-info {
+    background: rgba(13, 110, 253, 0.1) !important;
+    border: 1px solid rgba(13, 110, 253, 0.3) !important;
+    color: #004085 !important;
+  }
+
+  [data-theme="light"] #bulkAIModal .alert-success {
+    background: rgba(25, 135, 84, 0.1) !important;
+    border: 1px solid rgba(25, 135, 84, 0.3) !important;
+    color: #0f5132 !important;
+  }
+
+  [data-theme="light"] #bulkAIModal .progress {
+    background: #e9ecef !important;
+  }
 </style>
 
 <script>
@@ -1491,5 +1544,279 @@ document.addEventListener('htmx:afterRequest', function(event) {
   }
 }
 </style>
+
+<!-- Bulk AI Categorization Modal -->
+<div class="modal fade" id="bulkAIModal" tabindex="-1" aria-labelledby="bulkAIModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="background: linear-gradient(135deg, #1a1f36 0%, #0f1419 100%); border: 1px solid rgba(77, 163, 255, 0.3);">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+        <h5 class="modal-title" id="bulkAIModalLabel">
+          <i class="bi bi-robot me-2" style="color: #4da3ff;"></i>
+          Bulk AI Categorization
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info" style="background: rgba(77, 163, 255, 0.1); border: 1px solid rgba(77, 163, 255, 0.3);">
+          <i class="bi bi-info-circle me-2"></i>
+          <strong>How it works:</strong> The AI will analyze all uncategorized entries and suggest categories based on transaction descriptions, amounts, and patterns.
+        </div>
+
+        <!-- Options -->
+        <div class="mb-4">
+          <label class="form-label fw-bold">
+            <i class="bi bi-sliders me-2"></i>
+            Categorization Options
+          </label>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="autoApply" checked>
+            <label class="form-check-label" for="autoApply">
+              Automatically apply high-confidence suggestions (≥80%)
+            </label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="onlyUncategorized" checked>
+            <label class="form-check-label" for="onlyUncategorized">
+              Only process uncategorized entries
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="recordFeedback" checked>
+            <label class="form-check-label" for="recordFeedback">
+              Record as training feedback for AI improvement
+            </label>
+          </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="bulkAIProgress" style="display: none;">
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-light">Processing entries...</span>
+              <span id="bulkProgressText" class="fw-bold text-info">0 / 0</span>
+            </div>
+            <div class="progress" style="height: 8px; background: rgba(0,0,0,0.3);">
+              <div id="bulkProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div id="bulkResults" class="mt-3" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+
+        <!-- Summary Section -->
+        <div id="bulkAISummary" style="display: none;">
+          <div class="alert alert-success" style="background: rgba(40, 167, 69, 0.1); border: 1px solid rgba(40, 167, 69, 0.3);">
+            <h6 class="alert-heading">
+              <i class="bi bi-check-circle me-2"></i>
+              Categorization Complete!
+            </h6>
+            <div class="mt-2">
+              <p class="mb-1"><strong>Total Processed:</strong> <span id="summaryTotal">0</span> entries</p>
+              <p class="mb-1"><strong>Auto-Applied:</strong> <span id="summaryApplied">0</span> (high confidence)</p>
+              <p class="mb-1"><strong>Requires Review:</strong> <span id="summaryPending">0</span> (low confidence)</p>
+              <p class="mb-0"><strong>Average Confidence:</strong> <span id="summaryAvgConfidence">0%</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="startBulkAI" onclick="startBulkAICategorization()">
+          <i class="bi bi-play-circle me-1"></i>
+          Start Categorization
+        </button>
+        <button type="button" class="btn btn-success" id="reloadAfterBulk" style="display: none;" onclick="location.reload()">
+          <i class="bi bi-arrow-clockwise me-1"></i>
+          Reload Page
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Bulk AI Categorization Functions
+let bulkAIModal = null;
+
+function openBulkAIModal() {
+    if (!bulkAIModal) {
+        bulkAIModal = new bootstrap.Modal(document.getElementById('bulkAIModal'));
+    }
+
+    // Reset modal state
+    document.getElementById('bulkAIProgress').style.display = 'none';
+    document.getElementById('bulkAISummary').style.display = 'none';
+    document.getElementById('startBulkAI').style.display = 'block';
+    document.getElementById('reloadAfterBulk').style.display = 'none';
+    document.getElementById('bulkResults').innerHTML = '';
+
+    bulkAIModal.show();
+}
+
+async function startBulkAICategorization() {
+    const autoApply = document.getElementById('autoApply').checked;
+    const onlyUncategorized = document.getElementById('onlyUncategorized').checked;
+    const recordFeedback = document.getElementById('recordFeedback').checked;
+
+    // Hide start button, show progress
+    document.getElementById('startBulkAI').style.display = 'none';
+    document.getElementById('bulkAIProgress').style.display = 'block';
+
+    try {
+        // Fetch uncategorized entries
+        const response = await fetch('/entries/uncategorized');
+        const data = await response.json();
+
+        if (!data.success || !data.entries || data.entries.length === 0) {
+            document.getElementById('bulkAIProgress').style.display = 'none';
+            document.getElementById('bulkAISummary').style.display = 'block';
+
+            document.getElementById('bulkAISummary').innerHTML = `
+                <div class="alert alert-info" style="background: rgba(77, 163, 255, 0.1); border: 1px solid rgba(77, 163, 255, 0.3);">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No Uncategorized Entries
+                    </h6>
+                    <p class="mb-0">Great! You don't have any uncategorized entries. All your transactions are already organized.</p>
+                </div>
+            `;
+
+            document.getElementById('reloadAfterBulk').style.display = 'none';
+            document.getElementById('startBulkAI').style.display = 'block';
+
+            showToast('No uncategorized entries found', 'info');
+            return;
+        }
+
+        const entries = data.entries;
+        const total = entries.length;
+        let processed = 0;
+        let applied = 0;
+        let pending = 0;
+        let totalConfidence = 0;
+
+        const resultsDiv = document.getElementById('bulkResults');
+        const progressBar = document.getElementById('bulkProgressBar');
+        const progressText = document.getElementById('bulkProgressText');
+
+        progressText.textContent = `0 / ${total}`;
+
+        // Process entries one by one
+        for (const entry of entries) {
+            try {
+                // Get AI suggestion
+                const formData = new FormData();
+                formData.append('note', entry.note || '');
+                formData.append('description', entry.description || '');
+                formData.append('amount', entry.amount);
+                formData.append('entry_type', entry.type);
+
+                const suggestionResponse = await fetch('/ai/suggest-category', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const suggestionData = await suggestionResponse.json();
+
+                if (suggestionData.success && suggestionData.suggestion) {
+                    const suggestion = suggestionData.suggestion;
+                    const confidence = Math.round(suggestion.confidence_score * 100);
+                    totalConfidence += confidence;
+
+                    // Auto-apply if confidence is high enough
+                    if (autoApply && confidence >= 80) {
+                        // Update entry category
+                        const updateResponse = await fetch(`/entries/${entry.id}/category`, {
+                            method: 'PUT',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({category_id: suggestion.category_id})
+                        });
+
+                        if (updateResponse.ok) {
+                            applied++;
+                            addResultRow(resultsDiv, entry, suggestion.category_name, confidence, 'applied');
+
+                            // Record feedback if enabled
+                            if (recordFeedback) {
+                                recordAIFeedback(suggestion.suggestion_id, true);
+                            }
+                        }
+                    } else {
+                        pending++;
+                        addResultRow(resultsDiv, entry, suggestion.category_name, confidence, 'pending');
+                    }
+                } else {
+                    addResultRow(resultsDiv, entry, 'N/A', 0, 'failed');
+                }
+            } catch (error) {
+                console.error('Error processing entry:', entry.id, error);
+                addResultRow(resultsDiv, entry, 'Error', 0, 'failed');
+            }
+
+            // Update progress
+            processed++;
+            const progress = (processed / total) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${processed} / ${total}`;
+
+            // Small delay to prevent overwhelming the server
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        // Show summary
+        document.getElementById('bulkAIProgress').style.display = 'none';
+        document.getElementById('bulkAISummary').style.display = 'block';
+        document.getElementById('reloadAfterBulk').style.display = 'block';
+
+        document.getElementById('summaryTotal').textContent = total;
+        document.getElementById('summaryApplied').textContent = applied;
+        document.getElementById('summaryPending').textContent = pending;
+        document.getElementById('summaryAvgConfidence').textContent =
+            total > 0 ? Math.round(totalConfidence / total) + '%' : '0%';
+
+        showToast(`Bulk categorization complete! ${applied} entries categorized.`, 'success');
+
+    } catch (error) {
+        console.error('Bulk AI categorization error:', error);
+        showToast('Failed to perform bulk categorization', 'error');
+        document.getElementById('bulkAIProgress').style.display = 'none';
+        document.getElementById('startBulkAI').style.display = 'block';
+    }
+}
+
+function addResultRow(container, entry, category, confidence, status) {
+    const statusColors = {
+        applied: {bg: 'rgba(40, 167, 69, 0.1)', border: 'rgba(40, 167, 69, 0.3)', icon: 'check-circle', color: '#28a745'},
+        pending: {bg: 'rgba(255, 193, 7, 0.1)', border: 'rgba(255, 193, 7, 0.3)', icon: 'clock', color: '#ffc107'},
+        failed: {bg: 'rgba(220, 53, 69, 0.1)', border: 'rgba(220, 53, 69, 0.3)', icon: 'x-circle', color: '#dc3545'}
+    };
+
+    const style = statusColors[status] || statusColors.failed;
+
+    const row = document.createElement('div');
+    row.className = 'p-2 mb-2 rounded';
+    row.style.background = style.bg;
+    row.style.border = `1px solid ${style.border}`;
+    row.style.fontSize = '0.85rem';
+
+    row.innerHTML = `
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="flex-grow-1">
+                <i class="bi bi-${style.icon} me-2" style="color: ${style.color};"></i>
+                <strong>${entry.note || entry.description || 'Unnamed entry'}</strong>
+                <span class="text-muted ms-2">(${entry.amount} ${entry.currency_code || 'TRY'})</span>
+            </div>
+            <div class="text-end">
+                <span class="badge" style="background: ${style.color};">${category}</span>
+                ${confidence > 0 ? `<span class="ms-2 text-muted">${confidence}%</span>` : ''}
+            </div>
+        </div>
+    `;
+
+    container.appendChild(row);
+
+    // Auto-scroll to bottom
+    container.scrollTop = container.scrollHeight;
+}
+</script>
 
 {% endblock %}

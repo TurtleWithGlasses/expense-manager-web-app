@@ -234,3 +234,83 @@ async def update_entry(
         "entries/_row.html",
         {"e": e, "categories": cats, "user_currency": user_currency, "wrap": True}
     )
+
+
+# ---------- API Endpoints for Bulk Operations ----------
+
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
+@router.get("/uncategorized", response_class=JSONResponse)
+async def get_uncategorized_entries(
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Get all uncategorized entries for the current user."""
+    try:
+        entries = db.query(Entry).filter(
+            Entry.user_id == user.id,
+            Entry.category_id.is_(None)
+        ).order_by(Entry.date.desc()).all()
+
+        entries_data = [
+            {
+                "id": e.id,
+                "type": e.type,
+                "amount": float(e.amount),
+                "note": e.note,
+                "description": e.note,  # Alias for compatibility
+                "date": e.date.isoformat() if e.date else None,
+                "currency_code": e.currency_code
+            }
+            for e in entries
+        ]
+
+        return JSONResponse({
+            "success": True,
+            "entries": entries_data,
+            "count": len(entries_data)
+        })
+    except Exception as error:
+        return JSONResponse({
+            "success": False,
+            "message": str(error)
+        }, status_code=500)
+
+
+class UpdateCategoryRequest(BaseModel):
+    category_id: int
+
+@router.put("/{entry_id}/category", response_class=JSONResponse)
+async def update_entry_category(
+    entry_id: int,
+    request_data: UpdateCategoryRequest,
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Update category for a specific entry."""
+    try:
+        entry = db.query(Entry).filter(
+            Entry.id == entry_id,
+            Entry.user_id == user.id
+        ).first()
+
+        if not entry:
+            return JSONResponse({
+                "success": False,
+                "message": "Entry not found"
+            }, status_code=404)
+
+        entry.category_id = request_data.category_id
+        db.commit()
+
+        return JSONResponse({
+            "success": True,
+            "message": "Category updated successfully"
+        })
+    except Exception as error:
+        db.rollback()
+        return JSONResponse({
+            "success": False,
+            "message": str(error)
+        }, status_code=500)
