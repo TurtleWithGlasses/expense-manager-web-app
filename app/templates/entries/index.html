@@ -156,19 +156,29 @@
         
         <!-- AI Suggestion Display -->
         <div id="ai-suggestion" class="mt-2" style="display: none;">
-          <div class="alert alert-info alert-sm py-2 px-3 mb-2">
-            <div class="d-flex align-items-center">
-              <i class="bi bi-robot me-2"></i>
+          <div class="alert alert-info py-2 px-3 mb-2" style="background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(111, 66, 193, 0.1) 100%); border: 1px solid rgba(13, 110, 253, 0.3); border-radius: 8px;">
+            <div class="d-flex align-items-start">
+              <i class="bi bi-robot me-2 mt-1" style="font-size: 1.2rem; color: #0d6efd;"></i>
               <div class="flex-grow-1">
-                <small class="fw-bold">AI Suggestion:</small>
-                <div id="suggestion-text" class="small"></div>
+                <small class="fw-bold d-block mb-1" style="color: #0d6efd;">AI Suggestion</small>
+                <div id="suggestion-text" class="mb-2"></div>
+                <!-- Confidence Progress Bar -->
+                <div class="mb-2">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <small class="text-muted">Confidence:</small>
+                    <small id="confidence-percentage" class="fw-bold"></small>
+                  </div>
+                  <div class="progress" style="height: 6px; background: rgba(0,0,0,0.1);">
+                    <div id="confidence-bar" class="progress-bar" role="progressbar" style="width: 0%; transition: width 0.3s ease;"></div>
+                  </div>
+                </div>
               </div>
-              <div class="flex-shrink-0">
-                <button type="button" class="btn btn-sm btn-outline-success me-1" onclick="acceptAISuggestion()">
-                  <i class="bi bi-check"></i>
+              <div class="flex-shrink-0 ms-2">
+                <button type="button" class="btn btn-sm btn-success me-1" onclick="acceptAISuggestion()" title="Accept suggestion">
+                  <i class="bi bi-check-lg"></i>
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="dismissAISuggestion()">
-                  <i class="bi bi-x"></i>
+                <button type="button" class="btn btn-sm btn-danger" onclick="rejectAISuggestion()" title="Reject suggestion">
+                  <i class="bi bi-x-lg"></i>
                 </button>
               </div>
             </div>
@@ -760,6 +770,128 @@
   [data-theme="light"] .bg-gradient .text-white-50 {
     color: #495057 !important;
   }
+
+  /* =============================================
+     AI SUGGESTION STYLING
+     ============================================= */
+  #ai-suggestion {
+    animation: slideDown 0.3s ease;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  #ai-suggestion .btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    transition: all 0.2s ease;
+  }
+
+  #ai-suggestion .btn-success:hover {
+    background: linear-gradient(135deg, #218838 0%, #1aa179 100%);
+    transform: scale(1.05);
+  }
+
+  #ai-suggestion .btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+    transition: all 0.2s ease;
+  }
+
+  #ai-suggestion .btn-danger:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+    transform: scale(1.05);
+  }
+
+  /* Progress bar animations */
+  #confidence-bar {
+    animation: fillBar 0.5s ease;
+  }
+
+  @keyframes fillBar {
+    from {
+      width: 0%;
+    }
+  }
+
+  /* Light theme AI suggestion overrides */
+  [data-theme="light"] #ai-suggestion .alert {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.05) 0%, rgba(111, 66, 193, 0.05) 100%) !important;
+    border: 1px solid rgba(13, 110, 253, 0.2) !important;
+  }
+
+  [data-theme="light"] #ai-suggestion .bi-robot {
+    color: #0d6efd !important;
+  }
+
+  [data-theme="light"] #ai-suggestion .fw-bold {
+    color: #0d6efd !important;
+  }
+
+  [data-theme="light"] #ai-suggestion .text-muted {
+    color: #6c757d !important;
+  }
+
+  /* Mobile responsive AI suggestions */
+  @media (max-width: 768px) {
+    #ai-suggestion {
+      margin-top: 0.75rem !important;
+    }
+
+    #ai-suggestion .alert {
+      padding: 0.75rem !important;
+    }
+
+    #ai-suggestion .btn-sm {
+      padding: 8px 12px;
+      min-height: 36px;
+    }
+
+    #ai-suggestion .bi-robot {
+      font-size: 1rem !important;
+    }
+
+    #suggestion-text {
+      font-size: 0.85rem;
+    }
+
+    #confidence-percentage {
+      font-size: 0.75rem;
+    }
+
+    .progress {
+      height: 5px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    #ai-suggestion .d-flex {
+      flex-direction: column;
+      align-items: stretch !important;
+    }
+
+    #ai-suggestion .flex-shrink-0 {
+      margin-top: 0.5rem;
+      margin-left: 0 !important;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    #ai-suggestion .btn-sm {
+      flex: 1;
+      padding: 10px 16px;
+      min-height: 44px;
+    }
+  }
 </style>
 
 <script>
@@ -812,14 +944,41 @@ function showAISuggestion(suggestion) {
     currentSuggestion = suggestion;
     const suggestionDiv = document.getElementById('ai-suggestion');
     const suggestionText = document.getElementById('suggestion-text');
-    
+    const confidencePercentage = document.getElementById('confidence-percentage');
+    const confidenceBar = document.getElementById('confidence-bar');
+
     const confidence = Math.round(suggestion.confidence_score * 100);
-    suggestionText.innerHTML = `
-        <strong>${suggestion.category_name}</strong> 
-        <span class="badge bg-primary">${confidence}% confidence</span>
-    `;
-    
+
+    // Update suggestion text
+    suggestionText.innerHTML = `<strong style="font-size: 0.9rem;">${suggestion.category_name}</strong>`;
+
+    // Update confidence percentage
+    confidencePercentage.textContent = `${confidence}%`;
+
+    // Update progress bar with color based on confidence level
+    confidenceBar.style.width = `${confidence}%`;
+
+    if (confidence >= 80) {
+        confidenceBar.className = 'progress-bar bg-success';
+        confidencePercentage.style.color = '#28a745';
+    } else if (confidence >= 60) {
+        confidenceBar.className = 'progress-bar bg-info';
+        confidencePercentage.style.color = '#17a2b8';
+    } else if (confidence >= 40) {
+        confidenceBar.className = 'progress-bar bg-warning';
+        confidencePercentage.style.color = '#ffc107';
+    } else {
+        confidenceBar.className = 'progress-bar bg-danger';
+        confidencePercentage.style.color = '#dc3545';
+    }
+
+    // Show suggestion with animation
     suggestionDiv.style.display = 'block';
+    suggestionDiv.style.opacity = '0';
+    setTimeout(() => {
+        suggestionDiv.style.transition = 'opacity 0.3s ease';
+        suggestionDiv.style.opacity = '1';
+    }, 10);
 }
 
 function acceptAISuggestion() {
@@ -827,27 +986,132 @@ function acceptAISuggestion() {
         // Set the category in the form
         const categorySelect = document.querySelector('select[name="category_id"]');
         categorySelect.value = currentSuggestion.category_id;
-        
+
         // Add visual feedback
         categorySelect.style.borderColor = '#28a745';
         categorySelect.style.boxShadow = '0 0 0 0.2rem rgba(40, 167, 69, 0.25)';
-        
+
         setTimeout(() => {
             categorySelect.style.borderColor = '';
             categorySelect.style.boxShadow = '';
         }, 2000);
-        
+
+        // Record positive feedback to AI system
+        recordAIFeedback(currentSuggestion.suggestion_id, true);
+
         dismissAISuggestion();
-        
+
         // Show success message
-        showToast('AI suggestion applied!', 'success');
+        showToast('AI suggestion applied! The AI will learn from your choice.', 'success');
+    }
+}
+
+function rejectAISuggestion() {
+    if (currentSuggestion) {
+        // Record negative feedback to AI system
+        recordAIFeedback(currentSuggestion.suggestion_id, false);
+
+        dismissAISuggestion();
+
+        // Show info message
+        showToast('Suggestion dismissed. The AI will learn from this.', 'info');
+    }
+}
+
+async function recordAIFeedback(suggestionId, accepted) {
+    try {
+        const formData = new FormData();
+        formData.append('suggestion_id', suggestionId);
+        formData.append('accepted', accepted);
+
+        const response = await fetch('/ai/feedback', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            console.log('AI feedback recorded successfully');
+
+            // Trigger auto-training if enough feedback accumulated
+            checkAndTriggerAutoTraining();
+        } else {
+            console.error('Failed to record AI feedback:', data.message);
+        }
+    } catch (error) {
+        console.error('Error recording AI feedback:', error);
     }
 }
 
 function dismissAISuggestion() {
     const suggestionDiv = document.getElementById('ai-suggestion');
-    suggestionDiv.style.display = 'none';
+    suggestionDiv.style.transition = 'opacity 0.3s ease';
+    suggestionDiv.style.opacity = '0';
+
+    setTimeout(() => {
+        suggestionDiv.style.display = 'none';
+        suggestionDiv.style.opacity = '1';
+    }, 300);
+
     currentSuggestion = null;
+}
+
+async function checkAndTriggerAutoTraining() {
+    try {
+        // Get model status to check feedback count
+        const response = await fetch('/ai/model/status');
+        const data = await response.json();
+
+        if (data.success && data.model) {
+            const feedbackCount = data.model.feedback_count || 0;
+            const lastTrainedAt = data.model.last_trained_at;
+
+            // Auto-trigger training if:
+            // 1. More than 50 feedback entries accumulated, OR
+            // 2. More than 20 feedback entries and model hasn't been trained in 7 days
+            const shouldTrain = feedbackCount >= 50 ||
+                               (feedbackCount >= 20 && isModelStale(lastTrainedAt, 7));
+
+            if (shouldTrain) {
+                console.log(`Auto-training triggered: ${feedbackCount} feedback entries`);
+                triggerModelTraining();
+            }
+        }
+    } catch (error) {
+        console.error('Error checking auto-training:', error);
+    }
+}
+
+function isModelStale(lastTrainedAt, daysThreshold) {
+    if (!lastTrainedAt) return true;
+
+    const lastTrained = new Date(lastTrainedAt);
+    const now = new Date();
+    const daysSinceTraining = (now - lastTrained) / (1000 * 60 * 60 * 24);
+
+    return daysSinceTraining > daysThreshold;
+}
+
+async function triggerModelTraining() {
+    try {
+        console.log('Starting background model training...');
+
+        const response = await fetch('/ai/model/retrain', {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            console.log('Model training started successfully');
+            showToast('AI model training started in background', 'info');
+        } else {
+            console.error('Failed to start model training:', data.message);
+        }
+    } catch (error) {
+        console.error('Error triggering model training:', error);
+    }
 }
 
 function showToast(message, type = 'info') {
