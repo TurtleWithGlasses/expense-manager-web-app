@@ -156,29 +156,29 @@
         
         <!-- AI Suggestion Display -->
         <div id="ai-suggestion" class="mt-2" style="display: none;">
-          <div class="alert alert-info py-2 px-3 mb-2" style="background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(111, 66, 193, 0.1) 100%); border: 1px solid rgba(13, 110, 253, 0.3); border-radius: 8px;">
-            <div class="d-flex align-items-center">
-              <i class="bi bi-robot me-2" style="font-size: 1.2rem; color: #0d6efd;"></i>
-              <div class="flex-grow-1">
+          <div class="alert alert-info mb-2" style="background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(111, 66, 193, 0.1) 100%); border: 1px solid rgba(13, 110, 253, 0.3); border-radius: 8px; padding: 0.75rem;">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-robot" style="font-size: 1.1rem; color: #0d6efd; flex-shrink: 0;"></i>
+              <div class="flex-grow-1" style="min-width: 0;">
                 <small class="fw-bold d-block mb-1" style="color: #0d6efd;">AI Suggestion</small>
-                <div id="suggestion-text" class="mb-2"></div>
+                <div id="suggestion-text" class="mb-2" style="font-size: 0.9rem;"></div>
                 <!-- Confidence Progress Bar -->
                 <div class="mb-0">
                   <div class="d-flex justify-content-between align-items-center mb-1">
-                    <small class="text-muted">Confidence:</small>
-                    <small id="confidence-percentage" class="fw-bold"></small>
+                    <small class="text-muted" style="font-size: 0.75rem;">Confidence:</small>
+                    <small id="confidence-percentage" class="fw-bold" style="font-size: 0.75rem;"></small>
                   </div>
-                  <div class="progress" style="height: 6px; background: rgba(0,0,0,0.1);">
+                  <div class="progress" style="height: 5px; background: rgba(0,0,0,0.1);">
                     <div id="confidence-bar" class="progress-bar" role="progressbar" style="width: 0%; transition: width 0.3s ease;"></div>
                   </div>
                 </div>
               </div>
-              <div class="flex-shrink-0 ms-3 d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-success" onclick="acceptAISuggestion()" title="Accept suggestion" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                  <i class="bi bi-check-lg"></i>
+              <div class="d-flex gap-1" style="flex-shrink: 0;">
+                <button type="button" class="btn btn-sm btn-success" onclick="acceptAISuggestion()" title="Accept suggestion" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                  <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i>
                 </button>
-                <button type="button" class="btn btn-sm btn-danger" onclick="rejectAISuggestion()" title="Reject suggestion" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                  <i class="bi bi-x-lg"></i>
+                <button type="button" class="btn btn-sm btn-danger" onclick="rejectAISuggestion()" title="Reject suggestion" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                  <i class="bi bi-x-lg" style="font-size: 0.9rem;"></i>
                 </button>
               </div>
             </div>
@@ -857,12 +857,7 @@
     }
 
     #ai-suggestion .alert {
-      padding: 0.75rem !important;
-    }
-
-    #ai-suggestion .btn-sm {
-      padding: 8px 12px;
-      min-height: 36px;
+      padding: 0.65rem !important;
     }
 
     #ai-suggestion .bi-robot {
@@ -870,36 +865,50 @@
     }
 
     #suggestion-text {
-      font-size: 0.85rem;
+      font-size: 0.85rem !important;
     }
 
-    #confidence-percentage {
-      font-size: 0.75rem;
+    #confidence-percentage,
+    #ai-suggestion .text-muted {
+      font-size: 0.7rem !important;
     }
 
-    .progress {
-      height: 5px !important;
+    #ai-suggestion .btn-sm {
+      width: 30px !important;
+      height: 30px !important;
+    }
+
+    #ai-suggestion .btn-sm i {
+      font-size: 0.85rem !important;
     }
   }
 
   @media (max-width: 480px) {
-    #ai-suggestion .d-flex {
-      flex-direction: column;
-      align-items: stretch !important;
+    #ai-suggestion .alert {
+      padding: 0.5rem !important;
     }
 
-    #ai-suggestion .flex-shrink-0 {
-      margin-top: 0.5rem;
-      margin-left: 0 !important;
-      display: flex;
-      justify-content: center;
-      gap: 0.5rem;
+    #ai-suggestion .d-flex.align-items-center {
+      flex-wrap: wrap;
+    }
+
+    #ai-suggestion .flex-grow-1 {
+      flex-basis: 100%;
+      margin-bottom: 0.5rem;
+    }
+
+    #ai-suggestion .bi-robot {
+      font-size: 0.9rem !important;
     }
 
     #ai-suggestion .btn-sm {
-      flex: 1;
-      padding: 10px 16px;
-      min-height: 44px;
+      width: 36px !important;
+      height: 36px !important;
+      flex: 0 0 auto;
+    }
+
+    #ai-suggestion .btn-sm i {
+      font-size: 0.9rem !important;
     }
   }
 </style>
