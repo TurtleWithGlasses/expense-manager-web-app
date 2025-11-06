@@ -119,6 +119,46 @@
   </div>
 </div>
 
+<!-- Phase 15: Predictive Analytics Widget -->
+<div id="predictive-analytics-widget" class="mt-4" style="background: linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(75, 0, 130, 0.1) 100%); border: 1px solid rgba(138, 43, 226, 0.3); border-radius: 14px; padding: 1.5rem;">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="h3 mb-0" style="color: #ba55d3;">
+      <i class="bi bi-graph-up-arrow me-2"></i>
+      Predictive Analytics
+    </h3>
+    <button class="btn btn-sm btn-outline-info" onclick="refreshPredictiveAnalytics()" title="Refresh predictions">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+  </div>
+
+  <div id="predictive-content">
+    <div class="muted">
+      <i class="bi bi-hourglass-split me-2"></i>
+      Loading predictions...
+    </div>
+  </div>
+</div>
+
+<!-- Phase 15: Anomaly Detection Widget -->
+<div id="anomaly-detection-widget" class="mt-4" style="background: linear-gradient(135deg, rgba(255, 99, 71, 0.1) 0%, rgba(220, 20, 60, 0.1) 100%); border: 1px solid rgba(255, 99, 71, 0.3); border-radius: 14px; padding: 1.5rem;">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="h3 mb-0" style="color: #ff6347;">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      Anomaly Alerts
+    </h3>
+    <button class="btn btn-sm btn-outline-info" onclick="refreshAnomalies()" title="Refresh anomaly detection">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+  </div>
+
+  <div id="anomaly-content">
+    <div class="muted">
+      <i class="bi bi-hourglass-split me-2"></i>
+      Checking for unusual patterns...
+    </div>
+  </div>
+</div>
+
 <!-- KPIs -->
 <div id="totals" class="kpis mt-4" hx-get="/dashboard/summary" hx-include="#filters" hx-trigger="load, change from:#filters delay:150ms" hx-swap="innerHTML">
   <div class="muted">Loading totals...</div>
@@ -901,6 +941,9 @@
 </style>
 
 <script>
+// Get user's currency symbol from template
+const CURRENCY_SYMBOL = '{% if user_currency %}{{ user_currency.symbol }}{% else %}${% endif %}';
+
 function updateIncomeColor(color) {
   document.documentElement.style.setProperty('--income-color', color);
   localStorage.setItem('income-color', color);
@@ -1103,6 +1146,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Load AI insights
   loadAIInsights();
+
+  // Load Predictive Analytics (Phase 15)
+  loadPredictiveAnalytics();
+
+  // Load Anomaly Detection (Phase 15)
+  loadAnomalyDetection();
 });
 
 // ============================================
@@ -1161,7 +1210,7 @@ function displayAIInsights(insights) {
                         <i class="bi bi-${icons[idx]} me-2" style="color: #4da3ff;"></i>
                         ${cat.name}
                     </span>
-                    <strong style="color: #fca5a5;">${cat.total}€</strong>
+                    <strong style="color: #fca5a5;">${cat.total}${CURRENCY_SYMBOL}</strong>
                 </div>
             `;
         });
@@ -1238,6 +1287,350 @@ function refreshAIInsights() {
         </div>
     `;
     loadAIInsights();
+}
+
+// ============================================
+// PHASE 15: PREDICTIVE ANALYTICS WIDGET
+// ============================================
+
+async function loadPredictiveAnalytics() {
+    const contentDiv = document.getElementById('predictive-content');
+
+    try {
+        // Fetch next month prediction and budget status in parallel
+        const [predictionResponse, budgetResponse] = await Promise.all([
+            fetch('/ai/predictions/next-month'),
+            fetch('/ai/predictions/budget-status')
+        ]);
+
+        const predictionData = await predictionResponse.json();
+        const budgetData = await budgetResponse.json();
+
+        if (predictionData.success || budgetData.success) {
+            displayPredictiveAnalytics(predictionData, budgetData);
+        } else {
+            contentDiv.innerHTML = `
+                <div class="alert alert-warning" style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3);">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Need more historical data for predictions. Add at least 10 expense entries.
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading predictions:', error);
+        contentDiv.innerHTML = `
+            <div class="alert alert-danger" style="background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.3);">
+                <i class="bi bi-x-circle me-2"></i>
+                Failed to load predictions. Please try again later.
+            </div>
+        `;
+    }
+}
+
+function displayPredictiveAnalytics(predictionData, budgetData) {
+    const contentDiv = document.getElementById('predictive-content');
+
+    let html = '<div class="predictions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">';
+
+    // Next Month Prediction Card
+    if (predictionData.success && predictionData.prediction) {
+        const pred = predictionData.prediction;
+        const trend = predictionData.historical_data.trend;
+        const trendIcon = trend === 'increasing' ? 'arrow-up-circle' : trend === 'decreasing' ? 'arrow-down-circle' : 'dash-circle';
+        const trendColor = trend === 'increasing' ? '#fca5a5' : trend === 'decreasing' ? '#86efac' : '#fbbf24';
+
+        html += `
+            <div class="prediction-card" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 1rem;">
+                <h6 style="color: #ba55d3; margin-bottom: 0.75rem;">
+                    <i class="bi bi-calendar-check me-2"></i>
+                    Next Month Forecast
+                </h6>
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="font-size: 0.85rem; color: #999; margin-bottom: 0.25rem;">${pred.month}</div>
+                    <div style="font-size: 1.8rem; font-weight: bold; color: #ba55d3; margin-bottom: 0.25rem;">
+                        ${pred.amount.toLocaleString()}${CURRENCY_SYMBOL}
+                    </div>
+                    <div style="font-size: 0.75rem; color: #999;">
+                        Range: ${pred.confidence_interval.lower.toLocaleString()}${CURRENCY_SYMBOL} - ${pred.confidence_interval.upper.toLocaleString()}${CURRENCY_SYMBOL}
+                    </div>
+                </div>
+                <div class="d-flex align-items-center" style="font-size: 0.85rem;">
+                    <i class="bi bi-${trendIcon}" style="color: ${trendColor}; margin-right: 0.5rem;"></i>
+                    <span style="color: #ccc;">Trend: </span>
+                    <strong style="color: ${trendColor}; margin-left: 0.25rem; text-transform: capitalize;">${trend}</strong>
+                </div>
+            </div>
+        `;
+    }
+
+    // Current Month Budget Status Card
+    if (budgetData.success) {
+        const statusColors = {
+            'on_track': '#86efac',
+            'over_budget': '#fca5a5',
+            'under_budget': '#93c5fd'
+        };
+        const statusIcons = {
+            'on_track': 'check-circle',
+            'over_budget': 'exclamation-circle',
+            'under_budget': 'arrow-down-circle'
+        };
+        const statusLabels = {
+            'on_track': 'On Track',
+            'over_budget': 'Over Budget',
+            'under_budget': 'Under Budget'
+        };
+
+        const status = budgetData.status;
+        const color = statusColors[status] || '#999';
+        const icon = statusIcons[status] || 'dash-circle';
+        const label = statusLabels[status] || 'Unknown';
+
+        html += `
+            <div class="prediction-card" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 1rem;">
+                <h6 style="color: #ba55d3; margin-bottom: 0.75rem;">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    Current Month Status
+                </h6>
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="font-size: 0.85rem; color: #999; margin-bottom: 0.25rem;">${budgetData.current_month}</div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-${icon}" style="font-size: 2rem; color: ${color}; margin-right: 0.75rem;"></i>
+                        <div>
+                            <div style="font-size: 1.2rem; font-weight: bold; color: ${color};">${label}</div>
+                            <div style="font-size: 0.85rem; color: #ccc;">
+                                Spent: ${budgetData.current_spending.toLocaleString()}${CURRENCY_SYMBOL}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.75rem; color: #999;">
+                        <i class="bi bi-graph-up me-1"></i>
+                        Projected: ${budgetData.predicted_month_total.toLocaleString()}${CURRENCY_SYMBOL}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Recommendation Card
+    if (budgetData.success && budgetData.recommendation) {
+        html += `
+            <div class="prediction-card" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 1rem;">
+                <h6 style="color: #ba55d3; margin-bottom: 0.75rem;">
+                    <i class="bi bi-lightbulb me-2"></i>
+                    AI Recommendation
+                </h6>
+                <p style="font-size: 0.9rem; color: #ccc; line-height: 1.6; margin: 0;">
+                    ${budgetData.recommendation}
+                </p>
+            </div>
+        `;
+    }
+
+    html += '</div>';
+    contentDiv.innerHTML = html;
+}
+
+function refreshPredictiveAnalytics() {
+    const contentDiv = document.getElementById('predictive-content');
+    contentDiv.innerHTML = `
+        <div class="muted">
+            <i class="bi bi-hourglass-split me-2"></i>
+            Refreshing predictions...
+        </div>
+    `;
+    loadPredictiveAnalytics();
+}
+
+// ============================================
+// PHASE 15: ANOMALY DETECTION WIDGET
+// ============================================
+
+async function loadAnomalyDetection() {
+    const contentDiv = document.getElementById('anomaly-content');
+
+    try {
+        // Fetch anomaly insights
+        const response = await fetch('/ai/anomalies/insights');
+        const data = await response.json();
+
+        if (data.success && (data.insights.length > 0 || data.recommendations.length > 0)) {
+            displayAnomalies(data);
+        } else {
+            contentDiv.innerHTML = `
+                <div class="alert alert-success" style="background: rgba(40, 167, 69, 0.1); border: 1px solid rgba(40, 167, 69, 0.3);">
+                    <i class="bi bi-check-circle me-2"></i>
+                    No unusual spending patterns detected. Your finances look healthy!
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading anomalies:', error);
+        contentDiv.innerHTML = `
+            <div class="alert alert-danger" style="background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.3);">
+                <i class="bi bi-x-circle me-2"></i>
+                Failed to load anomaly detection. Please try again later.
+            </div>
+        `;
+    }
+}
+
+function displayAnomalies(data) {
+    const contentDiv = document.getElementById('anomaly-content');
+
+    let html = '<div class="anomalies-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">';
+
+    // Insights Card
+    if (data.insights && data.insights.length > 0) {
+        html += `
+            <div class="anomaly-card" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 1rem;">
+                <h6 style="color: #ff6347; margin-bottom: 0.75rem;">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Key Findings
+                </h6>
+                <div style="font-size: 0.9rem; color: #ccc; line-height: 1.8;">
+        `;
+
+        data.insights.forEach((insight, idx) => {
+            html += `
+                <div class="mb-2">
+                    <i class="bi bi-dot" style="color: #ff6347;"></i>
+                    ${insight}
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+    }
+
+    // Recommendations Card
+    if (data.recommendations && data.recommendations.length > 0) {
+        html += `
+            <div class="anomaly-card" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 1rem;">
+                <h6 style="color: #ff6347; margin-bottom: 0.75rem;">
+                    <i class="bi bi-clipboard-check me-2"></i>
+                    Action Items
+                </h6>
+                <div style="font-size: 0.9rem; color: #ccc; line-height: 1.8;">
+        `;
+
+        data.recommendations.forEach((rec, idx) => {
+            html += `
+                <div class="mb-2">
+                    <i class="bi bi-arrow-right-circle" style="color: #fbbf24;"></i>
+                    ${rec}
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+    }
+
+    // Detailed Anomalous Transactions List (if available)
+    if (data.detailed_anomalies && data.detailed_anomalies.general &&
+        data.detailed_anomalies.general.anomalies &&
+        data.detailed_anomalies.general.anomalies.length > 0) {
+
+        const anomalies = data.detailed_anomalies.general.anomalies;
+        const anomalyCount = anomalies.length;
+        const highSeverity = anomalies.filter(a => a.severity === 'high').length;
+
+        // Show top 5 most severe anomalies
+        const topAnomalies = anomalies.slice(0, 5);
+
+        html += `
+            <div class="anomaly-card" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 1rem; grid-column: 1 / -1;">
+                <h6 style="color: #ff6347; margin-bottom: 0.75rem;">
+                    <i class="bi bi-list-ul me-2"></i>
+                    Unusual Transactions
+                    ${highSeverity > 0 ? `<span style="background: rgba(255, 99, 71, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem;">${highSeverity} high priority</span>` : ''}
+                </h6>
+                <div style="font-size: 0.85rem; color: #999; margin-bottom: 1rem;">
+                    Showing ${Math.min(5, anomalyCount)} of ${anomalyCount} unusual transaction${anomalyCount > 1 ? 's' : ''}
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        `;
+
+        topAnomalies.forEach((anomaly, idx) => {
+            const severityColors = {
+                'high': '#fca5a5',
+                'medium': '#fbbf24',
+                'low': '#93c5fd'
+            };
+            const severityIcons = {
+                'high': 'exclamation-circle-fill',
+                'medium': 'exclamation-triangle-fill',
+                'low': 'info-circle-fill'
+            };
+            const color = severityColors[anomaly.severity] || '#999';
+            const icon = severityIcons[anomaly.severity] || 'info-circle';
+
+            // Format date
+            const date = new Date(anomaly.date);
+            const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            html += `
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 0.75rem; display: flex; align-items-start; gap: 0.75rem;">
+                    <div style="flex-shrink: 0;">
+                        <i class="bi bi-${icon}" style="color: ${color}; font-size: 1.25rem;"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="display: flex; justify-content-between; align-items-start; margin-bottom: 0.25rem;">
+                            <div style="font-weight: 600; color: #fff; font-size: 0.95rem;">
+                                ${anomaly.amount.toLocaleString()}${CURRENCY_SYMBOL}
+                                <span style="font-weight: 400; color: #999; margin-left: 0.5rem;">• ${anomaly.category}</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: #999; white-space: nowrap;">
+                                ${formattedDate}
+                            </div>
+                        </div>
+                        ${anomaly.note ? `
+                            <div style="font-size: 0.85rem; color: #ccc; margin-bottom: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                ${anomaly.note}
+                            </div>
+                        ` : ''}
+                        <div style="font-size: 0.8rem; color: #aaa; font-style: italic; line-height: 1.4;">
+                            <i class="bi bi-info-circle" style="font-size: 0.75rem; margin-right: 0.25rem;"></i>
+                            ${anomaly.explanation}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
+                ${anomalyCount > 5 ? `
+                    <div style="margin-top: 1rem; text-align: center;">
+                        <a href="/entries/" class="btn btn-sm" style="background: rgba(255, 99, 71, 0.2); border: 1px solid rgba(255, 99, 71, 0.4); color: #ff6347;">
+                            <i class="bi bi-eye me-1"></i>
+                            View All ${anomalyCount} Transactions
+                        </a>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    html += '</div>';
+    contentDiv.innerHTML = html;
+}
+
+function refreshAnomalies() {
+    const contentDiv = document.getElementById('anomaly-content');
+    contentDiv.innerHTML = `
+        <div class="muted">
+            <i class="bi bi-hourglass-split me-2"></i>
+            Refreshing anomaly detection...
+        </div>
+    `;
+    loadAnomalyDetection();
 }
 </script>
 

@@ -9,6 +9,8 @@ from app.templates import render
 from app.services.ai_service import AICategorizationService
 from app.models.ai_model import UserAIPreferences
 from app.ai.data.time_series_analyzer import TimeSeriesAnalyzer
+from app.ai.services.prediction_service import PredictionService
+from app.ai.services.anomaly_detection import AnomalyDetectionService
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -293,8 +295,193 @@ async def detect_spending_patterns(
     """Detect comprehensive spending patterns across all time scales"""
     analyzer = TimeSeriesAnalyzer(db)
     patterns = analyzer.detect_spending_patterns(user.id)
-    
+
     return JSONResponse({
         "success": True,
         "patterns": patterns
     })
+
+
+# ============================================================================
+# PHASE 15: PREDICTIVE ANALYTICS & ANOMALY DETECTION ENDPOINTS
+# ============================================================================
+
+@router.get("/predictions/next-month")
+async def predict_next_month_spending(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Predict spending for the next month using time series analysis
+
+    Returns:
+        - Predicted amount
+        - Confidence interval (95%)
+        - Historical trend
+        - Model accuracy metrics
+    """
+    prediction_service = PredictionService(db)
+    result = prediction_service.predict_next_month_spending(user.id)
+
+    return JSONResponse(result)
+
+
+@router.get("/predictions/category/{category_id}")
+async def predict_category_spending(
+    category_id: int,
+    days_ahead: int = Query(30, ge=7, le=90),
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Predict spending for a specific category
+
+    Args:
+        category_id: Category ID to predict
+        days_ahead: Number of days to forecast (7-90, default 30)
+    """
+    prediction_service = PredictionService(db)
+    result = prediction_service.predict_category_spending(user.id, category_id, days_ahead)
+
+    return JSONResponse(result)
+
+
+@router.get("/predictions/cash-flow")
+async def predict_cash_flow(
+    months_ahead: int = Query(3, ge=1, le=12),
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Predict cash flow (income - expenses) for upcoming months
+
+    Args:
+        months_ahead: Number of months to forecast (1-12, default 3)
+    """
+    prediction_service = PredictionService(db)
+    result = prediction_service.predict_cash_flow(user.id, months_ahead)
+
+    return JSONResponse(result)
+
+
+@router.get("/predictions/budget-status")
+async def predict_budget_status(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Predict if user will stay within budget for current month
+
+    Returns:
+        - Current spending status
+        - Predicted end-of-month total
+        - Comparison with previous month
+        - Personalized recommendations
+    """
+    prediction_service = PredictionService(db)
+    result = prediction_service.predict_budget_status(user.id)
+
+    return JSONResponse(result)
+
+
+@router.get("/predictions/forecast-data")
+async def get_forecast_data(
+    months_back: int = Query(6, ge=3, le=24),
+    months_ahead: int = Query(3, ge=1, le=12),
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get comprehensive forecast data for visualization
+
+    Args:
+        months_back: Historical months to include (3-24, default 6)
+        months_ahead: Future months to forecast (1-12, default 3)
+
+    Returns:
+        Historical data + predictions with confidence intervals for charts
+    """
+    prediction_service = PredictionService(db)
+    result = prediction_service.get_spending_forecast_data(user.id, months_back, months_ahead)
+
+    return JSONResponse(result)
+
+
+@router.get("/anomalies/detect")
+async def detect_spending_anomalies(
+    days_back: int = Query(90, ge=30, le=365),
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Detect unusual spending patterns using machine learning
+
+    Args:
+        days_back: Number of days to analyze (30-365, default 90)
+
+    Returns:
+        - List of anomalous transactions
+        - Severity levels (low/medium/high)
+        - Explanations for each anomaly
+        - Summary statistics
+    """
+    anomaly_service = AnomalyDetectionService(db)
+    result = anomaly_service.detect_spending_anomalies(user.id, days_back)
+
+    return JSONResponse(result)
+
+
+@router.get("/anomalies/category/{category_id}")
+async def detect_category_anomalies(
+    category_id: int,
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Detect anomalies within a specific category
+
+    Args:
+        category_id: Category ID to analyze
+
+    Returns:
+        Category-specific anomalies with statistical analysis
+    """
+    anomaly_service = AnomalyDetectionService(db)
+    result = anomaly_service.detect_category_anomalies(user.id, category_id)
+
+    return JSONResponse(result)
+
+
+@router.get("/anomalies/recurring")
+async def detect_recurring_anomalies(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Detect recurring transactions with unusual amounts
+
+    Identifies subscriptions or bills that have changed unexpectedly
+    """
+    anomaly_service = AnomalyDetectionService(db)
+    result = anomaly_service.detect_recurring_anomalies(user.id)
+
+    return JSONResponse(result)
+
+
+@router.get("/anomalies/insights")
+async def get_anomaly_insights(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get comprehensive anomaly insights and recommendations
+
+    Returns:
+        - Key insights about unusual spending
+        - Actionable recommendations
+        - Detailed anomaly breakdowns
+    """
+    anomaly_service = AnomalyDetectionService(db)
+    result = anomaly_service.get_anomaly_insights(user.id)
+
+    return JSONResponse(result)
