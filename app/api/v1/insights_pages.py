@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.deps import current_user
 from app.templates import render
+from app.core.currency import CURRENCIES
+from app.services.user_preferences import user_preferences_service
 
 router = APIRouter(prefix="/insights", tags=["Insights Pages"])
 
@@ -17,7 +19,13 @@ async def insights_page(
     db: Session = Depends(get_db)
 ):
     """Financial insights dashboard page"""
+    # Get user's currency preference
+    user_currency_code = user_preferences_service.get_user_currency(db, user.id)
+    user_currency_info = CURRENCIES.get(user_currency_code, CURRENCIES['USD'])
+
     return render(request, "insights.html", {
         "user": user,
-        "request": request
+        "request": request,
+        "user_currency": user_currency_info,
+        "user_currency_code": user_currency_code
     })
