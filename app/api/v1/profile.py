@@ -2,6 +2,7 @@
 import os
 import json
 import shutil
+import base64
 from pathlib import Path
 from datetime import datetime
 from fastapi import APIRouter, Depends, File, UploadFile, HTTPException, Form
@@ -19,11 +20,6 @@ from app.models.user_preferences import UserPreferences
 from app.models.weekly_report import UserReportPreferences
 
 router = APIRouter()
-
-
-# Ensure uploads directory exists
-UPLOAD_DIR = Path("static/uploads/avatars")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
@@ -101,8 +97,8 @@ async def upload_avatar(
             background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
             image = background
 
-        # Resize to square (256x256)
-        size = 256
+        # Resize to square (128x128) - smaller size for database storage
+        size = 128
         image.thumbnail((size, size), Image.Resampling.LANCZOS)
 
         # Create square canvas
@@ -111,21 +107,15 @@ async def upload_avatar(
         offset = ((size - image.size[0]) // 2, (size - image.size[1]) // 2)
         square_image.paste(image, offset)
 
-        # Generate filename
-        filename = f"user_{user.id}.jpg"
-        filepath = UPLOAD_DIR / filename
+        # Convert image to base64 data URI
+        buffered = io.BytesIO()
+        square_image.save(buffered, format="JPEG", quality=85, optimize=True)
+        img_bytes = buffered.getvalue()
+        img_base64 = base64.b64encode(img_bytes).decode('utf-8')
+        data_uri = f"data:image/jpeg;base64,{img_base64}"
 
-        # Delete old avatar if exists
-        if user.avatar_url and user.avatar_url.startswith('/static/uploads/avatars/'):
-            old_filepath = Path(user.avatar_url.lstrip('/').replace('/', os.sep))
-            if old_filepath.exists():
-                old_filepath.unlink()
-
-        # Save image
-        square_image.save(filepath, "JPEG", quality=90, optimize=True)
-
-        # Update user avatar URL
-        user.avatar_url = f"/static/uploads/avatars/{filename}"
+        # Update user avatar URL with base64 data URI
+        user.avatar_url = data_uri
         db.commit()
         db.refresh(user)
 
@@ -147,13 +137,7 @@ async def delete_avatar(
 ):
     """Delete user avatar"""
 
-    # Delete avatar file if exists
-    if user.avatar_url and user.avatar_url.startswith('/static/uploads/avatars/'):
-        filepath = Path(user.avatar_url.lstrip('/').replace('/', os.sep))
-        if filepath.exists():
-            filepath.unlink()
-
-    # Clear avatar URL
+    # Clear avatar URL (no need to delete files since we store in database now)
     user.avatar_url = None
     db.commit()
     db.refresh(user)
@@ -269,13 +253,8 @@ async def delete_account(
     """Permanently delete user account and all associated data"""
 
     try:
-        # Delete avatar file if exists
-        if user.avatar_url:
-            avatar_path = Path(user.avatar_url.lstrip('/'))
-            if avatar_path.exists():
-                avatar_path.unlink()
-
         # Delete user (cascade will handle related records)
+        # No need to delete avatar files since we store in database now
         db.delete(user)
         db.commit()
 

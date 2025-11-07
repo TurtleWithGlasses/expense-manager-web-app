@@ -1,0 +1,736 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="insights-header mb-4">
+  <h1 class="h1">
+    <i class="bi bi-lightbulb me-2"></i>
+    Financial Insights
+  </h1>
+  <p class="muted">AI-powered analysis and recommendations for better financial health</p>
+</div>
+
+<!-- Budget Health Score -->
+<div id="budget-health-section" class="mb-4">
+  <div class="muted">
+    <i class="bi bi-hourglass-split me-2"></i>
+    Loading budget health...
+  </div>
+</div>
+
+<!-- Alerts Section -->
+<div id="alerts-section" class="mb-4" style="display: none;">
+</div>
+
+<!-- Achievements Section -->
+<div id="achievements-section" class="mb-4" style="display: none;">
+</div>
+
+<!-- Main Insights Grid -->
+<div class="insights-grid mt-4">
+  <!-- Spending Patterns -->
+  <section class="insight-section">
+    <h2 class="h2">
+      <i class="bi bi-graph-up me-2"></i>
+      Spending Patterns
+    </h2>
+    <div id="spending-patterns-content">
+      <div class="muted">Loading patterns...</div>
+    </div>
+  </section>
+
+  <!-- Saving Opportunities -->
+  <section class="insight-section">
+    <h2 class="h2">
+      <i class="bi bi-piggy-bank me-2"></i>
+      Saving Opportunities
+    </h2>
+    <div id="saving-opportunities-content">
+      <div class="muted">Analyzing opportunities...</div>
+    </div>
+  </section>
+
+  <!-- Category Trends -->
+  <section class="insight-section">
+    <h2 class="h2">
+      <i class="bi bi-bar-chart me-2"></i>
+      Category Trends
+    </h2>
+    <div id="category-trends-content">
+      <div class="muted">Loading trends...</div>
+    </div>
+  </section>
+
+  <!-- Recommendations -->
+  <section class="insight-section">
+    <h2 class="h2">
+      <i class="bi bi-clipboard-check me-2"></i>
+      Recommendations
+    </h2>
+    <div id="recommendations-content">
+      <div class="muted">Generating recommendations...</div>
+    </div>
+  </section>
+</div>
+
+<style>
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+.insight-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.insight-section h2 {
+  margin-bottom: 1rem;
+  color: #4da3ff;
+}
+
+.budget-health-card {
+  background: linear-gradient(135deg, rgba(77, 163, 255, 0.1) 0%, rgba(111, 66, 193, 0.1) 100%);
+  border: 1px solid rgba(77, 163, 255, 0.3);
+  border-radius: 14px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.health-score {
+  font-size: 4rem;
+  font-weight: bold;
+  margin: 1rem 0;
+}
+
+.health-excellent {
+  color: #86efac;
+}
+
+.health-good {
+  color: #93c5fd;
+}
+
+.health-fair {
+  color: #fbbf24;
+}
+
+.health-poor {
+  color: #fca5a5;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #4da3ff;
+  margin: 0.5rem 0;
+}
+
+.metric-label {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.alert-banner {
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.alert-high {
+  background: rgba(255, 99, 71, 0.15);
+  border: 1px solid rgba(255, 99, 71, 0.3);
+  color: #fca5a5;
+}
+
+.alert-medium {
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: #fbbf24;
+}
+
+.alert-low {
+  background: rgba(13, 110, 253, 0.15);
+  border: 1px solid rgba(13, 110, 253, 0.3);
+  color: #93c5fd;
+}
+
+.achievement-card {
+  background: rgba(134, 239, 172, 0.1);
+  border: 1px solid rgba(134, 239, 172, 0.3);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.achievement-icon {
+  font-size: 2rem;
+  color: #86efac;
+}
+
+.pattern-card,
+.opportunity-card,
+.trend-card,
+.recommendation-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pattern-card:hover,
+.opportunity-card:hover,
+.trend-card:hover,
+.recommendation-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  transition: all 0.2s ease;
+}
+
+.priority-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.priority-high {
+  background: rgba(255, 99, 71, 0.2);
+  color: #fca5a5;
+}
+
+.priority-medium {
+  background: rgba(255, 193, 7, 0.2);
+  color: #fbbf24;
+}
+
+.priority-low {
+  background: rgba(13, 110, 253, 0.2);
+  color: #93c5fd;
+}
+
+.trend-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+}
+
+.trend-increasing {
+  color: #fca5a5;
+}
+
+.trend-decreasing {
+  color: #86efac;
+}
+
+.trend-stable {
+  color: #93c5fd;
+}
+
+@media (max-width: 768px) {
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .health-score {
+    font-size: 3rem;
+  }
+}
+
+/* Light Theme */
+[data-theme="light"] .insight-section {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .budget-health-card {
+  background: linear-gradient(135deg, rgba(77, 163, 255, 0.08) 0%, rgba(111, 66, 193, 0.08) 100%);
+  border: 1px solid rgba(77, 163, 255, 0.25);
+}
+
+[data-theme="light"] .metric-card,
+[data-theme="light"] .pattern-card,
+[data-theme="light"] .opportunity-card,
+[data-theme="light"] .trend-card,
+[data-theme="light"] .recommendation-card {
+  background: rgba(248, 249, 250, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .metric-label,
+[data-theme="light"] .muted {
+  color: #6c757d !important;
+}
+
+[data-theme="light"] .achievement-card {
+  background: rgba(134, 239, 172, 0.15);
+  border: 1px solid rgba(134, 239, 172, 0.4);
+}
+
+[data-theme="light"] .alert-high {
+  background: rgba(255, 99, 71, 0.12);
+  border: 1px solid rgba(255, 99, 71, 0.4);
+  color: #dc3545;
+}
+
+[data-theme="light"] .alert-medium {
+  background: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  color: #f59e0b;
+}
+
+[data-theme="light"] .alert-low {
+  background: rgba(13, 110, 253, 0.12);
+  border: 1px solid rgba(13, 110, 253, 0.4);
+  color: #0d6efd;
+}
+</style>
+
+<script>
+// Get user's currency symbol from template
+const CURRENCY_SYMBOL = '{% if user_currency %}{{ user_currency.symbol }}{% else %}${% endif %}';
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadAllInsights();
+});
+
+async function loadAllInsights() {
+  // Load all insights in parallel for better performance
+  await Promise.all([
+    loadBudgetHealth(),
+    loadAlerts(),
+    loadAchievements(),
+    loadSpendingPatterns(),
+    loadSavingOpportunities(),
+    loadCategoryTrends(),
+    loadRecommendations()
+  ]);
+}
+
+async function loadBudgetHealth() {
+  try {
+    const response = await fetch('/ai/insights/budget-health');
+    const data = await response.json();
+
+    if (data.success && data.budget_health) {
+      displayBudgetHealth(data.budget_health);
+    }
+  } catch (error) {
+    console.error('Error loading budget health:', error);
+  }
+}
+
+function displayBudgetHealth(health) {
+  const section = document.getElementById('budget-health-section');
+
+  const statusClass = `health-${health.status}`;
+  const statusIcon = health.status === 'excellent' ? 'emoji-smile' :
+                     health.status === 'good' ? 'emoji-neutral' :
+                     health.status === 'fair' ? 'emoji-frown' : 'emoji-dizzy';
+
+  section.innerHTML = `
+    <div class="budget-health-card">
+      <h2 class="h2">
+        <i class="bi bi-heart-pulse me-2"></i>
+        Budget Health Score
+      </h2>
+      <div class="health-score ${statusClass}">
+        ${health.health_score.toFixed(0)}<small style="font-size: 2rem;">/100</small>
+      </div>
+      <div style="font-size: 1.2rem; margin-bottom: 1rem;">
+        <i class="bi bi-${statusIcon} me-2"></i>
+        ${health.status_message}
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-label">Savings Rate</div>
+          <div class="metric-value">${health.current_savings_rate.toFixed(1)}%</div>
+          <div class="metric-label" style="font-size: 0.75rem;">
+            ${health.current_savings_rate > health.previous_savings_rate ?
+              '<i class="bi bi-arrow-up text-success"></i>' :
+              '<i class="bi bi-arrow-down text-danger"></i>'}
+            ${Math.abs(health.current_savings_rate - health.previous_savings_rate).toFixed(1)}%
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">This Month</div>
+          <div class="metric-value">${health.current_month_expense.toLocaleString()}${CURRENCY_SYMBOL}</div>
+          <div class="metric-label" style="font-size: 0.75rem;">Expenses</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Income</div>
+          <div class="metric-value">${health.current_month_income.toLocaleString()}${CURRENCY_SYMBOL}</div>
+          <div class="metric-label" style="font-size: 0.75rem;">This Month</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Expense Change</div>
+          <div class="metric-value ${health.expense_change_percentage > 0 ? 'text-danger' : 'text-success'}">
+            ${health.expense_change_percentage > 0 ? '+' : ''}${health.expense_change_percentage.toFixed(1)}%
+          </div>
+          <div class="metric-label" style="font-size: 0.75rem;">vs Last Month</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function loadAlerts() {
+  try {
+    const response = await fetch('/ai/insights/alerts');
+    const data = await response.json();
+
+    if (data.success && data.alerts && data.alerts.length > 0) {
+      displayAlerts(data.alerts);
+      document.getElementById('alerts-section').style.display = 'block';
+    }
+  } catch (error) {
+    console.error('Error loading alerts:', error);
+  }
+}
+
+function displayAlerts(alerts) {
+  const section = document.getElementById('alerts-section');
+
+  let html = '<h2 class="h2 mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Important Alerts</h2>';
+
+  alerts.forEach(alert => {
+    const severityClass = `alert-${alert.severity}`;
+    const icon = alert.severity === 'high' ? 'exclamation-circle-fill' :
+                 alert.severity === 'medium' ? 'exclamation-triangle-fill' : 'info-circle-fill';
+
+    html += `
+      <div class="alert-banner ${severityClass}">
+        <i class="bi bi-${icon}" style="font-size: 1.5rem;"></i>
+        <div style="flex: 1;">
+          <div style="font-weight: 600; margin-bottom: 0.25rem;">${alert.title}</div>
+          <div style="font-size: 0.9rem; opacity: 0.9;">${alert.message}</div>
+          <div style="font-size: 0.85rem; margin-top: 0.5rem;">
+            <i class="bi bi-arrow-right me-1"></i>
+            ${alert.action}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  section.innerHTML = html;
+}
+
+async function loadAchievements() {
+  try {
+    const response = await fetch('/ai/insights/achievements');
+    const data = await response.json();
+
+    if (data.success && data.achievements && data.achievements.length > 0) {
+      displayAchievements(data.achievements);
+      document.getElementById('achievements-section').style.display = 'block';
+    }
+  } catch (error) {
+    console.error('Error loading achievements:', error);
+  }
+}
+
+function displayAchievements(achievements) {
+  const section = document.getElementById('achievements-section');
+
+  let html = '<h2 class="h2 mb-3"><i class="bi bi-trophy me-2"></i>Your Achievements</h2>';
+
+  achievements.forEach(achievement => {
+    html += `
+      <div class="achievement-card">
+        <i class="bi bi-${achievement.icon} achievement-icon"></i>
+        <div style="flex: 1;">
+          <div style="font-weight: 600; color: #86efac; margin-bottom: 0.25rem;">${achievement.title}</div>
+          <div style="font-size: 0.9rem; color: #ccc;">${achievement.description}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  section.innerHTML = html;
+}
+
+async function loadSpendingPatterns() {
+  try {
+    const response = await fetch('/ai/insights/spending-patterns');
+    const data = await response.json();
+
+    if (data.success && data.patterns) {
+      displaySpendingPatterns(data.patterns);
+    }
+  } catch (error) {
+    console.error('Error loading spending patterns:', error);
+    document.getElementById('spending-patterns-content').innerHTML = '<div class="muted">Unable to load patterns</div>';
+  }
+}
+
+function displaySpendingPatterns(patterns) {
+  const content = document.getElementById('spending-patterns-content');
+
+  if (patterns.message) {
+    content.innerHTML = `<div class="muted">${patterns.message}</div>`;
+    return;
+  }
+
+  let html = `
+    <div class="pattern-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-weight: 600; color: #4da3ff;">
+          <i class="bi bi-calendar-week me-2"></i>
+          Most Active Day
+        </div>
+        <div style="font-size: 1.1rem; font-weight: bold;">${patterns.most_active_day}</div>
+      </div>
+      <div style="font-size: 0.85rem; color: #999;">
+        You make the most transactions on ${patterns.most_active_day}s
+      </div>
+    </div>
+
+    <div class="pattern-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-weight: 600; color: #4da3ff;">
+          <i class="bi bi-cash-stack me-2"></i>
+          Highest Spending Day
+        </div>
+        <div style="font-size: 1.1rem; font-weight: bold;">${patterns.highest_spending_day}</div>
+      </div>
+      <div style="font-size: 0.85rem; color: #999;">
+        Your biggest expenses typically occur on ${patterns.highest_spending_day}s
+      </div>
+    </div>
+
+    <div class="pattern-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-weight: 600; color: #4da3ff;">
+          <i class="bi bi-graph-up me-2"></i>
+          Average Transaction
+        </div>
+        <div style="font-size: 1.1rem; font-weight: bold;">${patterns.average_transaction.toLocaleString()}${CURRENCY_SYMBOL}</div>
+      </div>
+      <div style="font-size: 0.85rem; color: #999;">
+        Across ${patterns.total_transactions} transactions (largest: ${patterns.largest_transaction.toLocaleString()}${CURRENCY_SYMBOL})
+      </div>
+    </div>
+
+    <div class="pattern-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-weight: 600; color: #4da3ff;">
+          <i class="bi bi-calendar3 me-2"></i>
+          Spending Pattern
+        </div>
+        <div style="font-size: 0.9rem;">${patterns.spending_phase_description}</div>
+      </div>
+      <div style="font-size: 0.85rem; color: #999;">
+        Daily average: ${patterns.avg_daily_spending.toLocaleString()}${CURRENCY_SYMBOL}
+      </div>
+    </div>
+  `;
+
+  content.innerHTML = html;
+}
+
+async function loadSavingOpportunities() {
+  try {
+    const response = await fetch('/ai/insights/saving-opportunities');
+    const data = await response.json();
+
+    if (data.success && data.opportunities) {
+      displaySavingOpportunities(data.opportunities);
+    }
+  } catch (error) {
+    console.error('Error loading saving opportunities:', error);
+    document.getElementById('saving-opportunities-content').innerHTML = '<div class="muted">Unable to load opportunities</div>';
+  }
+}
+
+function displaySavingOpportunities(opportunities) {
+  const content = document.getElementById('saving-opportunities-content');
+
+  if (opportunities.length === 0) {
+    content.innerHTML = '<div class="muted">No significant saving opportunities identified yet. Keep tracking your expenses!</div>';
+    return;
+  }
+
+  let html = '';
+
+  opportunities.forEach(opp => {
+    const priorityClass = `priority-${opp.priority}`;
+
+    html += `
+      <div class="opportunity-card">
+        <div style="display: flex; justify-content: between; align-items-start; margin-bottom: 0.5rem;">
+          <div style="flex: 1;">
+            <div style="font-weight: 600; margin-bottom: 0.25rem;">
+              ${opp.category}
+              <span class="priority-badge ${priorityClass}">${opp.priority}</span>
+            </div>
+          </div>
+          ${opp.potential_saving ? `
+            <div style="text-align: right;">
+              <div style="font-size: 1.2rem; font-weight: bold; color: #86efac;">
+                ${opp.potential_saving.toLocaleString()}${CURRENCY_SYMBOL}
+              </div>
+              <div style="font-size: 0.75rem; color: #999;">potential/month</div>
+            </div>
+          ` : ''}
+        </div>
+        <div style="font-size: 0.85rem; color: #ccc; margin-bottom: 0.5rem;">
+          ${opp.recommendation}
+        </div>
+        ${opp.current_monthly ? `
+          <div style="font-size: 0.8rem; color: #999;">
+            Current: ${opp.current_monthly.toLocaleString()}${CURRENCY_SYMBOL}/month
+          </div>
+        ` : ''}
+      </div>
+    `;
+  });
+
+  content.innerHTML = html;
+}
+
+async function loadCategoryTrends() {
+  try {
+    const response = await fetch('/ai/insights/category-trends');
+    const data = await response.json();
+
+    if (data.success && data.trends) {
+      displayCategoryTrends(data.trends);
+    }
+  } catch (error) {
+    console.error('Error loading category trends:', error);
+    document.getElementById('category-trends-content').innerHTML = '<div class="muted">Unable to load trends</div>';
+  }
+}
+
+function displayCategoryTrends(trends) {
+  const content = document.getElementById('category-trends-content');
+
+  if (trends.length === 0) {
+    content.innerHTML = '<div class="muted">Not enough data to analyze category trends. Add more transactions!</div>';
+    return;
+  }
+
+  let html = '';
+
+  trends.forEach(trend => {
+    const trendClass = `trend-${trend.trend}`;
+    const trendIcon = trend.trend === 'increasing' ? 'arrow-up-circle' :
+                      trend.trend === 'decreasing' ? 'arrow-down-circle' : 'dash-circle';
+
+    html += `
+      <div class="trend-card">
+        <div style="display: flex; justify-content: space-between; align-items-start; margin-bottom: 0.5rem;">
+          <div style="font-weight: 600;">${trend.category}</div>
+          <div class="trend-indicator ${trendClass}">
+            <i class="bi bi-${trendIcon}"></i>
+            ${trend.trend_percentage > 0 ? '+' : ''}${trend.trend_percentage.toFixed(1)}%
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #ccc; margin-bottom: 0.5rem;">
+          <span>Avg monthly: ${trend.avg_monthly.toLocaleString()}${CURRENCY_SYMBOL}</span>
+          <span>Latest: ${trend.latest_month.toLocaleString()}${CURRENCY_SYMBOL}</span>
+        </div>
+        <div style="font-size: 0.8rem; color: #999;">
+          ${trend.change_amount > 0 ? '+' : ''}${trend.change_amount.toLocaleString()}${CURRENCY_SYMBOL} from average
+        </div>
+      </div>
+    `;
+  });
+
+  content.innerHTML = html;
+}
+
+async function loadRecommendations() {
+  try {
+    const response = await fetch('/ai/insights/recommendations');
+    const data = await response.json();
+
+    if (data.success && data.recommendations) {
+      displayRecommendations(data.recommendations);
+    }
+  } catch (error) {
+    console.error('Error loading recommendations:', error);
+    document.getElementById('recommendations-content').innerHTML = '<div class="muted">Unable to load recommendations</div>';
+  }
+}
+
+function displayRecommendations(recommendations) {
+  const content = document.getElementById('recommendations-content');
+
+  if (recommendations.length === 0) {
+    content.innerHTML = '<div class="muted">Great job! No urgent recommendations at this time.</div>';
+    return;
+  }
+
+  let html = '';
+
+  recommendations.forEach(rec => {
+    const priorityClass = `priority-${rec.priority}`;
+    const impactIcon = rec.potential_impact === 'high' ? '3' :
+                       rec.potential_impact === 'medium' ? '2' : '1';
+
+    html += `
+      <div class="recommendation-card">
+        <div style="display: flex; justify-content: space-between; align-items-start; margin-bottom: 0.5rem;">
+          <div style="font-weight: 600; flex: 1;">
+            <i class="bi bi-lightbulb me-2"></i>
+            ${rec.title}
+          </div>
+          <span class="priority-badge ${priorityClass}">${rec.priority}</span>
+        </div>
+        <div style="font-size: 0.9rem; color: #ccc; margin-bottom: 0.75rem;">
+          ${rec.description}
+        </div>
+        <div style="font-size: 0.85rem; color: #4da3ff;">
+          <i class="bi bi-arrow-right me-1"></i>
+          ${rec.action}
+        </div>
+        <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #999;">
+          Potential impact: ${'⭐'.repeat(parseInt(impactIcon))}
+        </div>
+      </div>
+    `;
+  });
+
+  content.innerHTML = html;
+}
+</script>
+
+{% endblock %}

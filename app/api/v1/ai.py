@@ -11,6 +11,7 @@ from app.models.ai_model import UserAIPreferences
 from app.ai.data.time_series_analyzer import TimeSeriesAnalyzer
 from app.ai.services.prediction_service import PredictionService
 from app.ai.services.anomaly_detection import AnomalyDetectionService
+from app.ai.services.financial_insights import FinancialInsightsService
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -485,3 +486,197 @@ async def get_anomaly_insights(
     result = anomaly_service.get_anomaly_insights(user.id)
 
     return JSONResponse(result)
+
+
+# ============================================================================
+# PHASE 16: SMART FINANCIAL INSIGHTS & RECOMMENDATIONS
+# ============================================================================
+
+@router.get("/insights/comprehensive")
+async def get_comprehensive_insights(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get comprehensive financial insights and recommendations
+
+    Returns:
+        - Spending pattern analysis
+        - Saving opportunities
+        - Budget health assessment
+        - Category trends
+        - Personalized recommendations
+        - Achievements
+        - Alerts
+    """
+    insights_service = FinancialInsightsService(db)
+    result = insights_service.get_comprehensive_insights(user.id)
+
+    return JSONResponse(result)
+
+
+@router.get("/insights/spending-patterns")
+async def get_spending_patterns(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Analyze user's spending patterns and habits
+
+    Returns:
+        - Most active spending day
+        - Highest spending day
+        - Average transaction amount
+        - Spending consistency
+        - Monthly spending phase pattern
+    """
+    insights_service = FinancialInsightsService(db)
+    patterns = insights_service._analyze_spending_patterns(user.id)
+
+    return JSONResponse({
+        'success': True,
+        'patterns': patterns
+    })
+
+
+@router.get("/insights/saving-opportunities")
+async def get_saving_opportunities(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Identify opportunities to save money
+
+    Returns:
+        - High-volume categories with savings potential
+        - Frequent small purchase patterns
+        - Potential monthly savings
+        - Prioritized recommendations
+    """
+    insights_service = FinancialInsightsService(db)
+    opportunities = insights_service._identify_saving_opportunities(user.id)
+
+    return JSONResponse({
+        'success': True,
+        'opportunities': opportunities,
+        'total_opportunities': len(opportunities)
+    })
+
+
+@router.get("/insights/budget-health")
+async def get_budget_health(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Assess overall budget health
+
+    Returns:
+        - Health score (0-100)
+        - Status (excellent/good/fair/poor)
+        - Current and previous savings rate
+        - Expense change percentage
+        - Status message with recommendations
+    """
+    insights_service = FinancialInsightsService(db)
+    health = insights_service._assess_budget_health(user.id)
+
+    return JSONResponse({
+        'success': True,
+        'budget_health': health
+    })
+
+
+@router.get("/insights/category-trends")
+async def get_category_trends(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Analyze spending trends by category over last 6 months
+
+    Returns:
+        - Category-wise trend analysis
+        - Trend direction (increasing/decreasing/stable)
+        - Trend percentage
+        - Average monthly spending per category
+    """
+    insights_service = FinancialInsightsService(db)
+    trends = insights_service._analyze_category_trends(user.id)
+
+    return JSONResponse({
+        'success': True,
+        'trends': trends,
+        'total_categories': len(trends)
+    })
+
+
+@router.get("/insights/recommendations")
+async def get_recommendations(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get personalized financial recommendations
+
+    Returns:
+        - Prioritized recommendations
+        - Action items
+        - Potential impact assessment
+        - Implementation suggestions
+    """
+    insights_service = FinancialInsightsService(db)
+    recommendations = insights_service._generate_recommendations(user.id)
+
+    return JSONResponse({
+        'success': True,
+        'recommendations': recommendations,
+        'total_recommendations': len(recommendations)
+    })
+
+
+@router.get("/insights/achievements")
+async def get_achievements(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get financial achievements and milestones
+
+    Returns:
+        - Positive achievements
+        - Milestone celebrations
+        - Progress indicators
+    """
+    insights_service = FinancialInsightsService(db)
+    achievements = insights_service._identify_achievements(user.id)
+
+    return JSONResponse({
+        'success': True,
+        'achievements': achievements,
+        'total_achievements': len(achievements)
+    })
+
+
+@router.get("/insights/alerts")
+async def get_financial_alerts(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get important financial alerts
+
+    Returns:
+        - Budget health warnings
+        - Spending alerts
+        - Actionable notifications
+        - Severity-based prioritization
+    """
+    insights_service = FinancialInsightsService(db)
+    alerts = insights_service._generate_alerts(user.id)
+
+    return JSONResponse({
+        'success': True,
+        'alerts': alerts,
+        'total_alerts': len(alerts)
+    })

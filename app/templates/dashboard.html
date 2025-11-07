@@ -14,6 +14,9 @@
   <a class="btn ghost" href="/reports/" aria-label="View financial reports and analytics">
     <i class="bi bi-graph-up" aria-hidden="true"></i> Financial Reports
   </a>
+  <a class="btn ghost" href="/insights/" aria-label="View smart financial insights and recommendations">
+    <i class="bi bi-lightbulb" aria-hidden="true"></i> AI Insights
+  </a>
   <a class="btn ghost" href="/currency/settings" aria-label="Change currency settings">
     <i class="bi bi-currency-exchange" aria-hidden="true"></i> Currency
   </a>
@@ -424,14 +427,15 @@
 
 .chart-header {
   background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .chart-header h2 {
   color: #fff;
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
+  margin: 0 0 0.75rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 /* Chart tabs navigation */
@@ -476,12 +480,17 @@
 
 /* Chart display area */
 .chart-display {
-  padding: 2rem;
-  min-height: 400px;
+  padding: 1.5rem;
+  min-height: 200px;
   background: rgba(255, 255, 255, 0.02);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: min-height 0.3s ease;
+}
+
+.chart-display.has-chart {
+  min-height: 400px;
 }
 
 /* Loading skeleton */
@@ -500,14 +509,14 @@
 }
 
 .skeleton-chart {
-  height: 300px;
+  height: 150px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   margin-bottom: 1rem;
 }
 
 .skeleton-legend {
-  height: 60px;
+  height: 40px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
 }
@@ -1099,6 +1108,10 @@ function switchChart(chartType) {
   activeTab.classList.add('active');
   activeTab.setAttribute('aria-selected', 'true');
 
+  // Add has-chart class to expand the chart area
+  const chartArea = document.getElementById('chart-area');
+  chartArea.classList.add('has-chart');
+
   // Show chart actions bar and close button
   document.getElementById('chart-actions').style.display = 'flex';
   document.getElementById('chart-close-container').style.display = 'flex';
@@ -1107,6 +1120,9 @@ function switchChart(chartType) {
 // Close/hide the chart display area only (not the entire section)
 function closeChartSection() {
   const chartArea = document.getElementById('chart-area');
+
+  // Remove has-chart class to collapse the chart area
+  chartArea.classList.remove('has-chart');
 
   // Add fade-out animation to chart area
   chartArea.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
@@ -1134,6 +1150,10 @@ function closeChartSection() {
       tab.classList.remove('active');
       tab.setAttribute('aria-selected', 'false');
     });
+
+    // Hide chart actions bar and close button
+    document.getElementById('chart-actions').style.display = 'none';
+    document.getElementById('chart-close-container').style.display = 'none';
 
     // Show info message
     if (typeof Toast !== 'undefined') {
