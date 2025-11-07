@@ -54,6 +54,7 @@ def update_avatar_column():
                 conn.commit()
 
                 # Copy data with explicit column mapping
+                # Use COALESCE to ensure is_verified has proper boolean value
                 conn.execute(text("""
                     INSERT INTO users_new (
                         id, email, hashed_password, full_name, avatar_url,
@@ -62,7 +63,7 @@ def update_avatar_column():
                     )
                     SELECT
                         id, email, hashed_password, full_name, avatar_url,
-                        is_verified, verification_token, verification_token_expires,
+                        COALESCE(is_verified, 1), verification_token, verification_token_expires,
                         password_reset_token, password_reset_expires, created_at
                     FROM users;
                 """))
