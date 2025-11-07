@@ -53,10 +53,18 @@ def update_avatar_column():
                 """))
                 conn.commit()
 
-                # Copy data
+                # Copy data with explicit column mapping
                 conn.execute(text("""
-                    INSERT INTO users_new
-                    SELECT * FROM users;
+                    INSERT INTO users_new (
+                        id, email, hashed_password, full_name, avatar_url,
+                        is_verified, verification_token, verification_token_expires,
+                        password_reset_token, password_reset_expires, created_at
+                    )
+                    SELECT
+                        id, email, hashed_password, full_name, avatar_url,
+                        is_verified, verification_token, verification_token_expires,
+                        password_reset_token, password_reset_expires, created_at
+                    FROM users;
                 """))
                 conn.commit()
 
