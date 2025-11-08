@@ -1,0 +1,35 @@
+/* Navigation underline fix - must load last */
+.topbar .nav-link,
+.topbar .nav-link:hover,
+.topbar .nav-link:focus,
+.topbar .nav-link:active,
+.topbar .nav-link:visited,
+.topbar .nav-link:link,
+.topbar .nav-link *,
+.topbar .nav-link:hover *,
+.topbar .user-profile-nav,
+.topbar .user-profile-nav:hover,
+.topbar .user-profile-nav:focus,
+.topbar .user-profile-nav:active,
+.topbar .user-profile-nav *,
+.topbar .user-profile-nav:hover *,
+.topbar .user-name-nav,
+.topbar .user-name-nav:hover {
+  text-decoration: none !important;
+  text-decoration-line: none !important;
+  text-decoration-style: none !important;
+  text-decoration-color: transparent !important;
+  border-bottom: none !important;
+  border-bottom-width: 0 !important;
+  border-bottom-style: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.topbar .nav-link::after,
+.topbar .nav-link::before,
+.topbar .user-profile-nav::after,
+.topbar .user-profile-nav::before {
+  content: none !important;
+}
+
