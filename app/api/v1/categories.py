@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Form, Request, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.orm import Session
 from app.deps import current_user
 from app.db.session import get_db
@@ -18,6 +18,22 @@ router = APIRouter(prefix="/categories", tags=["categories"])
 async def page_me(request: Request, user=Depends(current_user), db: Session = Depends(get_db)) -> HTMLResponse:
     cats = list_categories(db, user_id=user.id)
     return render(request, "categories/index.html", {"categories": cats})
+
+# JSON API endpoint for categories list
+@router.get("/api/list")
+async def list_categories_json(user=Depends(current_user), db: Session = Depends(get_db)):
+    """Get categories as JSON for API consumption"""
+    cats = list_categories(db, user_id=user.id)
+    return JSONResponse({
+        'success': True,
+        'categories': [
+            {
+                'id': c.id,
+                'name': c.name
+            }
+            for c in cats
+        ]
+    })
 
 @router.post("/create", response_class=HTMLResponse)
 async def add(request: Request, name: str = Form(...), user=Depends(current_user), db: Session = Depends(get_db)) -> HTMLResponse:

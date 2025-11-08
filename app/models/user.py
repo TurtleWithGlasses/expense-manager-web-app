@@ -36,3 +36,6 @@ class User(Base):
     weekly_reports = relationship("WeeklyReport", back_populates="user", cascade="all, delete-orphan")
     report_preferences = relationship("UserReportPreferences", back_populates="user", uselist=False)
     report_statuses = relationship("ReportStatus", back_populates="user", cascade="all, delete-orphan")
+
+    # Goal relationships - Phase 17
+    financial_goals = relationship("FinancialGoal", back_populates="user", cascade="all, delete-orphan")

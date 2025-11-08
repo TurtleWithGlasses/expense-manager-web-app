@@ -23,6 +23,7 @@ from app.models.user_preferences import UserPreferences
 from app.models.ai_model import AIModel, AISuggestion, UserAIPreferences
 from app.models.weekly_report import WeeklyReport, UserReportPreferences
 from app.models.report_status import ReportStatus
+from app.models.financial_goal import FinancialGoal, GoalProgressLog
 
 app = FastAPI(title="Expense Manager Web")
 
