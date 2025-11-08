@@ -687,7 +687,13 @@ async function uploadAvatar(input) {
     if (data.success) {
       // Update avatar display
       const avatarCircle = document.getElementById('avatar-circle');
-      avatarCircle.innerHTML = `<img src="${data.avatar_url}?t=${Date.now()}" alt="Profile avatar" class="avatar-image">`;
+      avatarCircle.innerHTML = `<img src="${data.avatar_url}" alt="Profile avatar" class="avatar-image">`;
+
+      // Update top navigation avatar if present
+      const navAvatar = document.querySelector('.user-avatar-mini');
+      if (navAvatar) {
+        navAvatar.innerHTML = `<img src="${data.avatar_url}" alt="Profile" class="avatar-mini-img">`;
+      }
 
       // Add remove button if not exists
       const removeBtn = document.querySelector('.btn-danger-outline');
@@ -732,6 +738,11 @@ async function deleteAvatar() {
           // Reset avatar to default
           const avatarCircle = document.getElementById('avatar-circle');
           avatarCircle.innerHTML = '<i class="bi bi-person-fill"></i>';
+
+          const navAvatar = document.querySelector('.user-avatar-mini');
+          if (navAvatar) {
+            navAvatar.innerHTML = '<i class="bi bi-person-circle" aria-hidden="true"></i>';
+          }
 
           // Remove delete button
           const removeBtn = document.querySelector('.btn-danger-outline');
