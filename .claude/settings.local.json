@@ -7,7 +7,10 @@
       "Bash(python run_local.py:*)",
       "Bash(sqlite3:*)",
       "Bash(python:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(timeout 5 python:*)",
+      "Bash(git reset:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

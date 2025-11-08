@@ -11,7 +11,6 @@ This can be run directly in production to add the missing columns including:
 import os
 import sys
 from sqlalchemy import create_engine, text
-from sqlalchemy.exc import OperationalError
 
 def fix_production_schema():
     """Add missing columns to the database tables (email verification, avatar URL, AI columns, and theme column)."""
@@ -72,8 +71,11 @@ def fix_production_schema():
                 {
                     'table': 'users',
                     'name': 'avatar_url',
-                    'definition': 'VARCHAR(500)',
-                    'check_query': "SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'avatar_url'"
+                    'definition': 'TEXT',
+                    'check_query': "SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'avatar_url'",
+                    'type_check_query': "SELECT data_type FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'avatar_url'",
+                    'expected_data_type': 'text',
+                    'alter_statement': "ALTER TABLE users ALTER COLUMN avatar_url TYPE TEXT"
                 }
             ]
             
@@ -131,6 +133,28 @@ def fix_production_schema():
                     result = connection.execute(text(column['check_query']))
                     if result.fetchone():
                         print(f"ℹ️  Column '{column['name']}' in table '{column['table']}' already exists")
+                        
+                        # Optionally enforce the expected data type if provided
+                        type_check_query = column.get('type_check_query')
+                        expected_type = column.get('expected_data_type')
+                        alter_statement = column.get('alter_statement')
+                        if type_check_query and expected_type and alter_statement:
+                            type_result = connection.execute(text(type_check_query))
+                            type_row = type_result.fetchone()
+                            if type_row:
+                                current_type = type_row[0]
+                                # On PostgreSQL the data_type for VARCHAR is 'character varying'
+                                # Ensure avatar_url is promoted to TEXT for base64 avatars
+                                if current_type != expected_type:
+                                    try:
+                                        connection.execute(text(alter_statement))
+                                        connection.commit()
+                                        print(f"✅ Updated column '{column['name']}' in table '{column['table']}' to type TEXT")
+                                    except Exception as alter_err:
+                                        connection.rollback()
+                                        print(f"⚠️  Error altering column '{column['name']}' to TEXT: {alter_err}")
+                                else:
+                                    print(f"ℹ️  Column '{column['name']}' already has expected type '{expected_type}'")
                     else:
                         # Add the column
                         alter_query = f"ALTER TABLE {column['table']} ADD COLUMN {column['name']} {column['definition']}"

@@ -92,7 +92,6 @@ a:hover{
   -moz-text-decoration: none !important;
   border-bottom: 0 solid transparent !important;
   box-shadow: none !important;
-  outline: none !important;
   padding: var(--spacing-2) var(--spacing-3);
   border-radius: var(--radius-base);
   transition: opacity 0.2s ease, background-color 0.2s ease;
@@ -110,11 +109,6 @@ a:hover{
   -moz-text-decoration: none !important;
   border-bottom: 0 solid transparent !important;
   box-shadow: none !important;
-  outline: none !important;
-}
-
-.nav-link:focus-visible{
-  outline: none !important;
 }
 
 /* User Profile Navigation - extends nav-link styling */
