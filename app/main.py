@@ -90,6 +90,10 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == sess["id"]).first()
     if not user:
         return RedirectResponse(url="/login")
+
+    # Refresh user to ensure latest data (including avatar)
+    db.refresh(user)
+
     today = date.today()
     start = today.replace(day=1)
     end = today

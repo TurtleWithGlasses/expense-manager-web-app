@@ -25,6 +25,9 @@ async def settings_page(
 ):
     """Render the settings page"""
 
+    # Refresh user object to ensure we have the latest data (including avatar)
+    db.refresh(user)
+
     # Get user preferences
     user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
     user_theme = user_prefs.theme if user_prefs and user_prefs.theme else 'dark'
