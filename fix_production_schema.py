@@ -24,9 +24,17 @@ def fix_production_schema():
     print(f"🔧 Connecting to database: {database_url[:50]}...")
     
     try:
-        # Create engine
-        engine = create_engine(database_url)
-        
+        # Create engine with connection timeout
+        engine = create_engine(
+            database_url,
+            connect_args={
+                "connect_timeout": 10,
+                "options": "-c statement_timeout=30000"
+            },
+            pool_pre_ping=True,
+            pool_recycle=300
+        )
+
         with engine.connect() as connection:
             print("✅ Connected to database successfully")
             

@@ -18,10 +18,15 @@ if "sqlite" in database_url:
 else:
     # PostgreSQL settings
     engine = create_engine(
-        database_url, 
-        pool_pre_ping=True, 
+        database_url,
+        pool_pre_ping=True,
         future=True,
         pool_size=10,
-        max_overflow=20
+        max_overflow=20,
+        connect_args={
+            "connect_timeout": 10,
+            "options": "-c statement_timeout=30000"
+        },
+        pool_recycle=300
     )
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)

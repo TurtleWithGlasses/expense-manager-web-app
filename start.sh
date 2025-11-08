@@ -20,39 +20,38 @@ import os
 import sys
 try:
     from sqlalchemy import create_engine, text
-    engine = create_engine(os.getenv(\"DATABASE_URL\"))
+    engine = create_engine(
+        os.getenv(\"DATABASE_URL\"),
+        connect_args={\"connect_timeout\": 5},
+        pool_pre_ping=True
+    )
     with engine.connect() as conn:
         conn.execute(text(\"SELECT 1\"))
     sys.exit(0)
-except:
+except Exception as e:
+    print(f\"Connection failed: {e}\", file=sys.stderr)
     sys.exit(1)
-" > /dev/null 2>&1; do sleep 2; done' || {
+" 2>&1; do sleep 2; done' || {
     echo "❌ Database connection timeout after 30 seconds"
     echo "🔄 Proceeding with application startup anyway..."
 }
 
-# Fix database schema if needed
+# Fix database schema if needed (with timeout to prevent hanging)
 echo "🔧 Checking and fixing database schema..."
-if python fix_production_schema.py; then
+if timeout 60 python fix_production_schema.py; then
     echo "✅ Database schema fix completed"
-else
-    echo "⚠️  Database schema fix failed, trying SQL approach..."
-    # Try running the SQL fix directly
-    if command -v psql >/dev/null 2>&1; then
-        echo "🔧 Running SQL schema fix..."
-        psql $DATABASE_URL -f fix_schema.sql || echo "⚠️  SQL schema fix failed"
-    else
-        echo "⚠️  psql not available, skipping SQL schema fix"
-    fi
-fi
 
-# Stamp the database with the latest migration version
-# This updates the alembic_version table without running migrations
-echo "📝 Stamping database with latest migration version..."
-if python stamp_migrations.py; then
-    echo "✅ Database stamped successfully"
+    # Stamp the database with the latest migration version
+    # This updates the alembic_version table without running migrations
+    echo "📝 Stamping database with latest migration version..."
+    if timeout 30 python stamp_migrations.py; then
+        echo "✅ Database stamped successfully"
+    else
+        echo "⚠️  Database stamp failed, migrations may run and fail"
+    fi
 else
-    echo "⚠️  Database stamp failed, migrations may run and fail"
+    echo "⚠️  Database schema fix failed or timed out"
+    echo "⚠️  The application will attempt to run migrations on startup"
 fi
 
 # Start the application
