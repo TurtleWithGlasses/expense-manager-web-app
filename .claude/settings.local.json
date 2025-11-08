@@ -10,7 +10,11 @@
       "Bash(git restore:*)",
       "Bash(timeout 5 python:*)",
       "Bash(git reset:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(alembic heads:*)",
+      "Bash(alembic branches:*)",
+      "Bash(alembic history:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
