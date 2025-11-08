@@ -13,8 +13,20 @@ echo "  ENV=$ENV"
 echo "  DATABASE_URL=$DATABASE_URL"
 
 # Wait for database to be ready (with timeout)
+# Using a simple Python script to test connection instead of alembic
 echo "⏳ Waiting for database connection..."
-timeout 30 bash -c 'until alembic current > /dev/null 2>&1; do sleep 2; done' || {
+timeout 30 bash -c 'until python -c "
+import os
+import sys
+try:
+    from sqlalchemy import create_engine, text
+    engine = create_engine(os.getenv(\"DATABASE_URL\"))
+    with engine.connect() as conn:
+        conn.execute(text(\"SELECT 1\"))
+    sys.exit(0)
+except:
+    sys.exit(1)
+" > /dev/null 2>&1; do sleep 2; done' || {
     echo "❌ Database connection timeout after 30 seconds"
     echo "🔄 Proceeding with application startup anyway..."
 }
