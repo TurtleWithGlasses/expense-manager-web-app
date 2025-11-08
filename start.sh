@@ -34,9 +34,14 @@ else
     fi
 fi
 
-# Skip migrations for now due to broken migration chain
-echo "⚠️  Skipping migrations due to broken migration chain"
-echo "🔧 Schema will be fixed by the Python script above"
+# Stamp the database with the latest migration version
+# This updates the alembic_version table without running migrations
+echo "📝 Stamping database with latest migration version..."
+if python stamp_migrations.py; then
+    echo "✅ Database stamped successfully"
+else
+    echo "⚠️  Database stamp failed, migrations may run and fail"
+fi
 
 # Start the application
 echo "🌐 Starting application server..."

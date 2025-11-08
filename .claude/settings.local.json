@@ -14,7 +14,8 @@
       "Bash(alembic heads:*)",
       "Bash(alembic branches:*)",
       "Bash(alembic history:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(alembic current:*)"
     ],
     "deny": [],
     "ask": []
