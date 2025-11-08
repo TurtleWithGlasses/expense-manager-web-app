@@ -5,6 +5,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import text, func
 from sqlalchemy.orm import Session
+from alembic import command
+from alembic.config import Config
 
 from app.api.routes import api_router
 from app.core.currency import CURRENCIES
@@ -31,6 +33,14 @@ app = FastAPI(title="Expense Manager Web")
 async def startup_event():
     """Initialize database tables on startup"""
     try:
+        # Ensure latest database migrations are applied
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        alembic_ini_path = os.path.join(project_root, "alembic.ini")
+        alembic_cfg = Config(alembic_ini_path)
+        alembic_cfg.set_main_option("script_location", os.path.join(project_root, "alembic"))
+        command.upgrade(alembic_cfg, "head")
+        print("[OK] Database migrations applied")
+
         # Create all tables if they don't exist
         Base.metadata.create_all(bind=engine)
         print("[OK] Database tables initialized successfully")
