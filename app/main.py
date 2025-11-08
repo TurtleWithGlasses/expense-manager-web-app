@@ -33,20 +33,39 @@ app = FastAPI(title="Expense Manager Web")
 async def startup_event():
     """Initialize database tables on startup"""
     try:
-        # Ensure latest database migrations are applied
-        project_root = os.path.dirname(os.path.dirname(__file__))
-        alembic_ini_path = os.path.join(project_root, "alembic.ini")
-        alembic_cfg = Config(alembic_ini_path)
-        alembic_cfg.set_main_option("script_location", os.path.join(project_root, "alembic"))
-        command.upgrade(alembic_cfg, "head")
-        print("[OK] Database migrations applied")
+        from app.core.config import settings
 
-        # Create all tables if they don't exist
-        Base.metadata.create_all(bind=engine)
-        print("[OK] Database tables initialized successfully")
+        # Try to apply migrations, but handle gracefully if they fail
+        try:
+            project_root = os.path.dirname(os.path.dirname(__file__))
+            alembic_ini_path = os.path.join(project_root, "alembic.ini")
+            alembic_cfg = Config(alembic_ini_path)
+            alembic_cfg.set_main_option("script_location", os.path.join(project_root, "alembic"))
+
+            # Check current migration version first
+            from alembic.script import ScriptDirectory
+            from alembic.runtime.migration import MigrationContext
+
+            script = ScriptDirectory.from_config(alembic_cfg)
+            with engine.connect() as connection:
+                context = MigrationContext.configure(connection)
+                current_rev = context.get_current_revision()
+                head_rev = script.get_current_head()
+
+                if current_rev == head_rev:
+                    print(f"[OK] Database already at latest migration ({current_rev})")
+                else:
+                    print(f"[INFO] Upgrading from {current_rev} to {head_rev}")
+                    command.upgrade(alembic_cfg, "head")
+                    print("[OK] Database migrations applied")
+        except Exception as migration_error:
+            print(f"[WARNING] Migration check/upgrade failed: {migration_error}")
+            print("[INFO] Attempting to create tables directly...")
+            # Fallback to creating tables directly
+            Base.metadata.create_all(bind=engine)
+            print("[OK] Database tables created/verified")
 
         # Start report scheduler
-        from app.core.config import settings
         # Start scheduler in production, or if explicitly enabled in development
         enable_scheduler = settings.ENV == "production" or getattr(settings, 'ENABLE_SCHEDULER', False)
         if enable_scheduler:
