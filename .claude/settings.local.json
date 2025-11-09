@@ -15,7 +15,9 @@
       "Bash(alembic branches:*)",
       "Bash(alembic history:*)",
       "Bash(rm:*)",
-      "Bash(alembic current:*)"
+      "Bash(alembic current:*)",
+      "Bash(alembic revision:*)",
+      "Bash(alembic upgrade:*)"
     ],
     "deny": [],
     "ask": []

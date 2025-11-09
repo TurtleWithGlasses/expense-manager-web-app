@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String, ForeignKey, Integer, Boolean, DateTime, Numeric, Text
+from sqlalchemy import String, ForeignKey, Integer, Boolean, DateTime, Numeric, Text, LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
@@ -17,6 +17,7 @@ class AIModel(Base):
     training_data_count: Mapped[int] = mapped_column(Integer, default=0)
     last_trained: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     model_parameters: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON stored as string
+    model_blob: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)  # Serialized ML model (joblib)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="ai_models")

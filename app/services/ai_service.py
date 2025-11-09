@@ -88,11 +88,11 @@ class AICategorizationService:
             # Load user's ML model if not already loaded
             if self.ml_model is None:
                 self.ml_model = CategorizationModel()
-            
-            # Try to load trained model for this user
+
+            # Try to load trained model for this user from database
             if not self.ml_model.is_trained:
-                if not self.ml_model.load_model(user_id):
-                    # No trained model available
+                if not self.ml_model.load_model_from_db(user_id, self.db):
+                    # No trained model available in database
                     return None, 0.0
             
             # Extract features for prediction
@@ -378,7 +378,7 @@ class AICategorizationService:
             # Train model
             model = CategorizationModel()
             training_results = model.train(features_df, labels)
-            
+
             # Add data quality warnings to results
             if training_results['accuracy'] < 0.60:
                 training_results['warning'] = (
@@ -387,41 +387,28 @@ class AICategorizationService:
                     "2) Reducing number of categories, "
                     "3) Ensuring each category has 10+ examples"
                 )
-            
-            # Save model
-            model_path = model.save_model(user_id)
-            
-            # Update AI model metadata in database
-            ai_model = self.db.query(AIModel).filter(
-                AIModel.user_id == user_id,
-                AIModel.model_type == "categorization"
-            ).first()
-            
-            if not ai_model:
-                ai_model = AIModel(
-                    user_id=user_id,
-                    model_name="categorization_v1",
-                    model_type="categorization"
-                )
-                self.db.add(ai_model)
-            
-            ai_model.is_active = True
-            ai_model.accuracy_score = training_results['accuracy']
-            ai_model.training_data_count = training_results['training_samples']
-            ai_model.last_trained = datetime.utcnow()
-            ai_model.model_parameters = json.dumps({
-                'cv_mean': training_results['cv_mean'],
-                'cv_std': training_results['cv_std'],
-                'n_categories': training_results['n_categories']
-            })
-            
+
+            # Save model to database (new method for Railway persistence)
+            model.save_model_to_db(user_id, self.db)
+
+            # Note: The save_model_to_db() method already creates/updates the AIModel record,
+            # so we don't need the duplicate code below anymore.
+            # The model metadata (accuracy, training_data_count, last_trained) is now
+            # automatically saved within save_model_to_db().
+
+            training_results['model_saved'] = 'database'
+            training_results['persistence'] = 'persistent_across_restarts'
+
+            # Old file-based save (kept for backward compatibility in development)
+            # model_path = model.save_model(user_id)
+
             self.db.commit()
-            
+
             return {
                 'success': True,
                 'message': 'Model trained successfully!',
                 'results': training_results,
-                'model_path': model_path
+                'model_location': 'database'
             }
             
         except Exception as e:

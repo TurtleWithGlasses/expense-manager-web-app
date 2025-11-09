@@ -1,6 +1,7 @@
 """Machine Learning Model for Transaction Categorization"""
 
 import joblib
+import io
 import numpy as np
 from pathlib import Path
 from sklearn.ensemble import RandomForestClassifier
@@ -292,20 +293,19 @@ class CategorizationModel:
             print(f"Error during top-k prediction: {e}")
             return []
     
-    def save_model(self, user_id: int, model_dir: str = "models") -> str:
+    def save_model_to_db(self, user_id: int, db) -> bytes:
         """
-        Save trained model to disk
-        
+        Save trained model to database as serialized bytes
+
         Args:
-            user_id: User ID (used in filename)
-            model_dir: Directory to save model in
-        
+            user_id: User ID
+            db: Database session
+
         Returns:
-            Path to saved model file
+            Serialized model as bytes
         """
-        # Create directory if it doesn't exist
-        Path(model_dir).mkdir(parents=True, exist_ok=True)
-        
+        from app.models.ai_model import AIModel
+
         # Package all model components
         model_data = {
             'model': self.model,
@@ -319,34 +319,109 @@ class CategorizationModel:
             'training_date': self.training_date,
             'n_training_samples': self.n_training_samples
         }
-        
+
+        # Serialize to bytes
+        buffer = io.BytesIO()
+        joblib.dump(model_data, buffer)
+        model_blob = buffer.getvalue()
+
+        # Save or update in database
+        ai_model = db.query(AIModel).filter(
+            AIModel.user_id == user_id,
+            AIModel.model_name == "categorization_v1"
+        ).first()
+
+        if ai_model:
+            # Update existing model
+            ai_model.model_blob = model_blob
+            ai_model.accuracy_score = self.accuracy
+            ai_model.training_data_count = self.n_training_samples
+            ai_model.last_trained = datetime.utcnow()
+        else:
+            # Create new model record
+            ai_model = AIModel(
+                user_id=user_id,
+                model_name="categorization_v1",
+                model_type="classification",
+                model_blob=model_blob,
+                accuracy_score=self.accuracy,
+                training_data_count=self.n_training_samples,
+                last_trained=datetime.utcnow(),
+                is_active=True
+            )
+            db.add(ai_model)
+
+        db.commit()
+        print(f"✅ Model saved to database for user {user_id}")
+        print(f"   Accuracy: {self.accuracy:.2%}, Trained on: {self.n_training_samples} samples")
+        print(f"   Model size: {len(model_blob) / 1024:.2f} KB")
+        return model_blob
+
+    def save_model(self, user_id: int, model_dir: str = "models") -> str:
+        """
+        DEPRECATED: Save trained model to disk (legacy method)
+        Use save_model_to_db() for production deployments
+
+        Args:
+            user_id: User ID (used in filename)
+            model_dir: Directory to save model in
+
+        Returns:
+            Path to saved model file
+        """
+        # Create directory if it doesn't exist
+        Path(model_dir).mkdir(parents=True, exist_ok=True)
+
+        # Package all model components
+        model_data = {
+            'model': self.model,
+            'text_vectorizer': self.text_vectorizer,
+            'scaler': self.scaler,
+            'label_encoder': self.label_encoder,
+            'accuracy': self.accuracy,
+            'cv_scores': self.cv_scores,
+            'feature_importances': self.feature_importances,
+            'is_trained': self.is_trained,
+            'training_date': self.training_date,
+            'n_training_samples': self.n_training_samples
+        }
+
         # Save to file
         filepath = Path(model_dir) / f"user_{user_id}_model.joblib"
         joblib.dump(model_data, filepath)
-        
+
         print(f"✅ Model saved to: {filepath}")
         return str(filepath)
     
-    def load_model(self, user_id: int, model_dir: str = "models") -> bool:
+    def load_model_from_db(self, user_id: int, db) -> bool:
         """
-        Load trained model from disk
-        
+        Load trained model from database
+
         Args:
-            user_id: User ID (used in filename)
-            model_dir: Directory to load model from
-        
+            user_id: User ID
+            db: Database session
+
         Returns:
             True if model loaded successfully, False otherwise
         """
-        filepath = Path(model_dir) / f"user_{user_id}_model.joblib"
-        
-        if not filepath.exists():
-            print(f"❌ Model file not found: {filepath}")
-            return False
-        
+        from app.models.ai_model import AIModel
+
         try:
-            model_data = joblib.load(filepath)
-            
+            # Query for user's model
+            ai_model = db.query(AIModel).filter(
+                AIModel.user_id == user_id,
+                AIModel.model_name == "categorization_v1",
+                AIModel.is_active == True
+            ).first()
+
+            if not ai_model or not ai_model.model_blob:
+                print(f"❌ No model found in database for user {user_id}")
+                return False
+
+            # Deserialize from bytes
+            buffer = io.BytesIO(ai_model.model_blob)
+            model_data = joblib.load(buffer)
+
             # Restore all model components
             self.model = model_data['model']
             self.text_vectorizer = model_data['text_vectorizer']
@@ -358,11 +433,55 @@ class CategorizationModel:
             self.is_trained = model_data.get('is_trained', True)
             self.training_date = model_data.get('training_date')
             self.n_training_samples = model_data.get('n_training_samples', 0)
-            
+
+            print(f"✅ Model loaded from database for user {user_id}")
+            print(f"   Accuracy: {self.accuracy:.2%}, Trained on: {self.n_training_samples} samples")
+            print(f"   Model size: {len(ai_model.model_blob) / 1024:.2f} KB")
+            return True
+
+        except Exception as e:
+            print(f"❌ Error loading model from database: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+    def load_model(self, user_id: int, model_dir: str = "models") -> bool:
+        """
+        DEPRECATED: Load trained model from disk (legacy method)
+        Use load_model_from_db() for production deployments
+
+        Args:
+            user_id: User ID (used in filename)
+            model_dir: Directory to load model from
+
+        Returns:
+            True if model loaded successfully, False otherwise
+        """
+        filepath = Path(model_dir) / f"user_{user_id}_model.joblib"
+
+        if not filepath.exists():
+            print(f"❌ Model file not found: {filepath}")
+            return False
+
+        try:
+            model_data = joblib.load(filepath)
+
+            # Restore all model components
+            self.model = model_data['model']
+            self.text_vectorizer = model_data['text_vectorizer']
+            self.scaler = model_data['scaler']
+            self.label_encoder = model_data['label_encoder']
+            self.accuracy = model_data.get('accuracy', 0.0)
+            self.cv_scores = model_data.get('cv_scores', [])
+            self.feature_importances = model_data.get('feature_importances', {})
+            self.is_trained = model_data.get('is_trained', True)
+            self.training_date = model_data.get('training_date')
+            self.n_training_samples = model_data.get('n_training_samples', 0)
+
             print(f"✅ Model loaded successfully from: {filepath}")
             print(f"   Accuracy: {self.accuracy:.2%}, Trained on: {self.n_training_samples} samples")
             return True
-            
+
         except Exception as e:
             print(f"❌ Error loading model: {e}")
             return False
