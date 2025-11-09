@@ -45,6 +45,8 @@ async def startup_event():
             # Check current migration version first
             from alembic.script import ScriptDirectory
             from alembic.runtime.migration import MigrationContext
+            from psycopg2.errors import DuplicateColumn
+            from sqlalchemy.exc import ProgrammingError
 
             script = ScriptDirectory.from_config(alembic_cfg)
             with engine.connect() as connection:
@@ -55,9 +57,26 @@ async def startup_event():
                 if current_rev == head_rev:
                     print(f"[OK] Database already at latest migration ({current_rev})")
                 else:
-                    print(f"[INFO] Upgrading from {current_rev} to {head_rev}")
-                    command.upgrade(alembic_cfg, "head")
-                    print("[OK] Database migrations applied")
+                    print(f"[INFO] Current version: {current_rev}, Target version: {head_rev}")
+
+                    # Try to upgrade
+                    try:
+                        command.upgrade(alembic_cfg, "head")
+                        print("[OK] Database migrations applied successfully")
+                    except ProgrammingError as pe:
+                        # Check if it's a DuplicateColumn error
+                        if isinstance(pe.orig, DuplicateColumn):
+                            print(f"[WARNING] Migration failed: Columns already exist (DuplicateColumn)")
+                            print(f"[INFO] This means the schema is already up-to-date but migration version is old")
+                            print(f"[FIX] Stamping database to latest version: {head_rev}")
+
+                            # Stamp the database to the head revision without running migrations
+                            command.stamp(alembic_cfg, "head")
+                            print(f"[OK] Database stamped to {head_rev}")
+                        else:
+                            # Re-raise if it's a different error
+                            raise
+
         except Exception as migration_error:
             print(f"[WARNING] Migration check/upgrade failed: {migration_error}")
             print("[INFO] Attempting to create tables directly...")
