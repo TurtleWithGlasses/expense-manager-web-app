@@ -2,11 +2,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./app.db"
-    SECRET_KEY: str = "mysecretkey"
+    SECRET_KEY: str = "mysecretkey"  # Override in production via environment variable
     SESSION_COOKIE_NAME: str = "em_session"
     SESSION_MAX_AGE_SECONDS: int = 60 * 60 * 24 * 30
     ENV: str = "development"  # Default to development
-    RESEND_API_KEY: str = "re_XWEw3J25_EkNSTcGKLvNErCd8AVpBhvTP"
+    RESEND_API_KEY: str = ""  # Set via environment variable
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     SMTP_SERVER: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
     SMTP_USERNAME: str = "info@yourbudgetpulse.online"
-    SMTP_PASSWORD: str = "aify lxiz krxq ncyf"
+    SMTP_PASSWORD: str = ""  # Set via environment variable - DO NOT HARDCODE
     FROM_EMAIL: str = "info@yourbudgetpulse.online"  # Use authenticated email as sender
     FROM_NAME: str = "Budget Pulse"
     BASE_URL: str = "http://localhost:8000"  # Default to localhost for development

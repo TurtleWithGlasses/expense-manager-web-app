@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.services.auth import create_user, authenticate_user, verify_email, resend_verification_email, request_password_reset, reset_password
 from app.db.session import get_db
 from app.core.session import set_session, clear_session
+from app.core.rate_limit import limiter
 from app.templates import render
 
 router = APIRouter(tags=["auth"])
@@ -13,10 +14,11 @@ async def login_page(request: Request):
     return render(request, "auth/login.html")
 
 @router.post("/login")
+@limiter.limit("5/15minutes")  # 5 login attempts per 15 minutes per IP
 async def login(
     request: Request,
-    email: str = Form(...), 
-    password: str = Form(...), 
+    email: str = Form(...),
+    password: str = Form(...),
     db: Session = Depends(get_db)
 ):
     try:
@@ -44,9 +46,10 @@ async def register_page(request: Request):
     return render(request, "auth/register.html")
 
 @router.post("/register")
+@limiter.limit("3/hour")  # 3 registration attempts per hour per IP
 async def register(
     request: Request,
-    email: str = Form(...), 
+    email: str = Form(...),
     password: str = Form(...), 
     confirm_password: str = Form(...),
     full_name: str = Form(None), 

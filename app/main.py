@@ -7,10 +7,14 @@ from sqlalchemy import text, func
 from sqlalchemy.orm import Session
 from alembic import command
 from alembic.config import Config
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.api.routes import api_router
 from app.core.currency import CURRENCIES
 from app.core.session import get_session
+from app.core.rate_limit import limiter
+from app.core.security_headers import SecurityHeadersMiddleware
 from app.db.engine import engine
 from app.db.session import get_db
 from app.db.base import Base
@@ -28,6 +32,13 @@ from app.models.report_status import ReportStatus
 from app.models.financial_goal import FinancialGoal, GoalProgressLog
 
 app = FastAPI(title="Expense Manager Web")
+
+# Add security headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Add rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.on_event("startup")
 async def startup_event():
