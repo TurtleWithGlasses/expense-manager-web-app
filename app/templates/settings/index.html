@@ -868,6 +868,15 @@ async function exportData() {
 
 // Delete account
 function confirmDeleteAccount() {
+  // Check if ConfirmModal is available
+  if (typeof ConfirmModal === 'undefined') {
+    console.error('ConfirmModal is not defined');
+    if (confirm('Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be permanently removed.')) {
+      deleteAccount();
+    }
+    return;
+  }
+
   ConfirmModal.show({
     type: 'danger',
     danger: true,
@@ -875,30 +884,33 @@ function confirmDeleteAccount() {
     message: 'Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be permanently removed.',
     confirmText: 'Yes, Delete My Account',
     cancelText: 'Cancel',
-    onConfirm: async () => {
-      try {
-        const response = await fetch('/api/profile/account', {
-          method: 'DELETE'
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          Toast.success('Account deleted successfully. Redirecting...', 'Account Deleted');
-
-          // Wait 2 seconds then redirect to logout
-          setTimeout(() => {
-            window.location.href = '/logout';
-          }, 2000);
-        } else {
-          Toast.error(data.detail || 'Failed to delete account', 'Error');
-        }
-      } catch (error) {
-        console.error('Error deleting account:', error);
-        Toast.error('Failed to delete account', 'Error');
-      }
-    }
+    onConfirm: deleteAccount
   });
+}
+
+// Actual delete account API call
+async function deleteAccount() {
+  try {
+    const response = await fetch('/api/profile/account', {
+      method: 'DELETE'
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      Toast.success('Account deleted successfully. Redirecting...', 'Account Deleted');
+
+      // Wait 2 seconds then redirect to logout
+      setTimeout(() => {
+        window.location.href = '/logout';
+      }, 2000);
+    } else {
+      Toast.error(data.detail || 'Failed to delete account', 'Error');
+    }
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    Toast.error('Failed to delete account', 'Error');
+  }
 }
 </script>
 
