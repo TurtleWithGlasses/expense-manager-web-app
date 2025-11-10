@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Form
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from app.deps import current_user
+from app.deps import current_user, optional_user
 from app.db.session import get_db
 from app.models.user_preferences import UserPreferences
 
@@ -158,10 +158,18 @@ async def set_display_preferences(
 
 @router.get("/preferences", response_class=JSONResponse)
 async def get_display_preferences(
-    user=Depends(current_user),
+    user=Depends(optional_user),
     db: Session = Depends(get_db)
 ):
-    """Get display preferences"""
+    """Get display preferences (works for both authenticated and unauthenticated users)"""
+    # Return defaults if user is not authenticated
+    if not user:
+        return JSONResponse({
+            "compact_mode": False,
+            "animations_enabled": True,
+            "font_size": "medium"
+        })
+
     prefs = db.query(UserPreferences).filter(
         UserPreferences.user_id == user.id
     ).first()
