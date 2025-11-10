@@ -149,14 +149,20 @@ async def forgot_password(
 ):
     """Request password reset"""
     try:
+        print(f"Password reset requested for email: {email}")
         success = await request_password_reset(db, email)
+        print(f"Password reset result: {success}")
         if success:
+            print(f"✅ Password reset email sent to {email}")
             return render(request, "auth/password_reset_sent.html", {"email": email})
         else:
             # Don't reveal if email exists for security
+            print(f"⚠️ User not found for email: {email}, but showing success page for security")
             return render(request, "auth/password_reset_sent.html", {"email": email})
     except Exception as e:
         print(f"❌ Password reset request failed: {e}")
+        import traceback
+        traceback.print_exc()
         return render(request, "auth/forgot_password.html", {"error": "Failed to process password reset request"})
 
 @router.get("/reset-password/{token}", response_class=HTMLResponse)

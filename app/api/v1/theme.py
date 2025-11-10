@@ -13,10 +13,18 @@ router = APIRouter(prefix="/theme", tags=["theme"])
 
 @router.post("/toggle", response_class=JSONResponse)
 async def toggle_theme(
-    user=Depends(current_user),
+    user=Depends(optional_user),
     db: Session = Depends(get_db)
 ):
-    """Toggle between light and dark theme"""
+    """Toggle between light and dark theme (works for both authenticated and unauthenticated users)"""
+    # If user is not authenticated, just return success without saving
+    if not user:
+        return JSONResponse({
+            "success": True,
+            "theme": "light",  # Default toggle response
+            "saved": False
+        })
+
     # Get or create user preferences
     prefs = db.query(UserPreferences).filter(
         UserPreferences.user_id == user.id
@@ -39,7 +47,8 @@ async def toggle_theme(
 
     return JSONResponse({
         "success": True,
-        "theme": new_theme
+        "theme": new_theme,
+        "saved": True
     })
 
 

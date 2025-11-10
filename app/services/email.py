@@ -32,31 +32,33 @@ class EmailService:
 
     async def send_email(self, to_email: str, subject: str, html_content: str, text_content: str = None):
         """Send email using Resend API in production, SMTP in development"""
-        
-        # Skip email sending in development mode
-        if self.is_development:
-            print(f"Development mode: Skipping email to {to_email}")
-            print(f"Subject: {subject}")
-            print(f"Content preview: {html_content[:100]}...")
-            return True
-        
+
+        print(f"📧 Attempting to send email to {to_email}")
+        print(f"   Subject: {subject}")
+        print(f"   SMTP configured: {bool(self.username and self.password)}")
+        print(f"   Resend configured: {bool(self.resend_api_key)}")
+
         # Use Resend API if available (preferred method)
         if self.resend_api_key:
-            print(f"Using Resend API for email...")
+            print(f"✉️ Using Resend API for email...")
             return await self._send_email_resend(to_email, subject, html_content, text_content)
-        
+
         # Fallback to SMTP if Resend is not configured
-        print(f"Using SMTP for email...")
-        
+        if not self.username or not self.password:
+            print(f"❌ SMTP credentials not configured. Please set SMTP_USERNAME and SMTP_PASSWORD in .env")
+            return False
+
+        print(f"📬 Using SMTP for email...")
+
         # Try primary SMTP server first (Google SMTP with TLS)
-        result = await self._try_send_email(to_email, subject, html_content, text_content, 
+        result = await self._try_send_email(to_email, subject, html_content, text_content,
                                           self.smtp_server, self.smtp_port, use_ssl=False)
         if result:
             return True
-            
+
         # Try alternative SMTP server (Google SMTP with SSL)
-        print(f"Trying alternative SMTP server (SSL)...")
-        result = await self._try_send_email(to_email, subject, html_content, text_content, 
+        print(f"🔄 Trying alternative SMTP server (SSL)...")
+        result = await self._try_send_email(to_email, subject, html_content, text_content,
                                           self.smtp_server_alt, self.smtp_port_alt, use_ssl=True)
         return result
 
