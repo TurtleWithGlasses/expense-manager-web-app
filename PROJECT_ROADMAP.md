@@ -503,7 +503,41 @@ Budget Pulse is a comprehensive expense management application featuring AI-powe
 
 ## 📊 Current Status
 
-### **Recent Updates (November 10, 2025)**
+### **Recent Updates (November 11, 2025)**
+
+**Authentication Pages Complete Redesign:**
+- All authentication pages now have consistent modern two-panel layout
+- Left panel: Purple gradient branding with animated background, wallet icon, and feature highlights
+- Right panel: Forms/messages with proper spacing and dark theme support
+- Pages redesigned:
+  - ✅ Forgot Password - Added full dark theme support with proper color contrast
+  - ✅ Reset Password - Complete redesign with two-panel layout and password validation
+  - ✅ Password Reset Success - Redesigned with green success icon and improved button styling
+  - ✅ Password Reset Sent - Fixed light theme readability
+  - ✅ Verification Sent - Modern layout with resend functionality
+  - ✅ Resend Verification - Consistent with other auth pages
+
+**Dark Theme Implementation:**
+- All auth pages now fully support dark mode
+- Text colors adjust automatically: `#e5e7eb` for headings, `#9ca3af` for muted text
+- Form inputs use `#2d3748` background with `#e5e7eb` text in dark mode
+- Proper contrast ratios for accessibility
+- Back buttons and links styled for both themes
+
+**UI/UX Improvements:**
+- Fixed button hover issues - buttons now maintain styling properly
+- Password reset success button uses green gradient matching success theme
+- All buttons have smooth hover animations (translateY with shadow)
+- Security notes and info messages with proper icon styling
+- Responsive design tested on mobile and tablet viewports
+
+**Settings Page Modal Fix:**
+- Fixed delete account modal not appearing properly
+- Added ConfirmModal availability check with fallback to native confirm()
+- Separated modal trigger from API call logic for better debugging
+- Added console logging for troubleshooting
+
+**Previous Session (November 10, 2025):**
 
 **AI/ML Infrastructure (Critical Production Fix):**
 - Fixed AI model persistence by storing models in database instead of filesystem
@@ -511,18 +545,6 @@ Budget Pulse is a comprehensive expense management application featuring AI-powe
 - Added `model_blob` LargeBinary column to `ai_models` table
 - Implemented `save_model_to_db()` and `load_model_from_db()` methods
 - Models now persist across all deployments and restarts
-
-**Auth Pages UI/UX Overhaul:**
-- Redesigned all auth pages to consistent two-panel layout (branding + form)
-- Fixed forgot password page for light theme readability
-- Fixed password reset sent page with proper light theme colors
-- Redesigned verification sent page to match modern auth layout
-- Updated resend verification page design
-- All auth pages now have:
-  - Left: Purple gradient branding panel with wallet icon
-  - Right: Form/message panel with proper light theme colors
-  - Consistent spacing, typography, and hover effects
-  - Full responsive design for mobile devices
 
 **Theme Toggle Fixes:**
 - Fixed 401 errors when toggling theme on auth pages
@@ -576,11 +598,13 @@ Budget Pulse is a comprehensive expense management application featuring AI-powe
 ✅ Security headers on all responses
 ✅ No hardcoded secrets in code
 ✅ Bootstrap Icons loading locally (no CDN dependency)
-✅ All auth pages with consistent light theme design
+✅ All auth pages with consistent modern two-panel design
+✅ Full dark theme support across all auth pages
 ✅ Theme toggle working for authenticated and guest users
 ✅ User registration and login working
 ✅ Category and entry creation working
 ✅ Avatar upload and profile management working
+✅ Delete account modal working with fallback
 
 ### **What Needs Attention** ⏳
 ⏳ Implement structured logging
@@ -803,9 +827,44 @@ Password reset and verification emails weren't being sent. Investigation reveale
 
 ---
 
+#### **Issue #10: Auth Pages Dark Theme Readability** - RESOLVED ✅
+**Status:** ✅ Resolved
+**Date Resolved:** November 11, 2025
+**Solution Implemented:** Complete auth pages redesign with dark theme support
+
+**Problem:**
+- Forgot password page had dark text on dark backgrounds in dark mode
+- Reset password page used old Bootstrap card layout, didn't match app design
+- Password reset success page had button hover issues
+- Inconsistent designs across all auth pages
+
+**Solution:**
+- Redesigned all auth pages to modern two-panel layout:
+  - Left: Purple gradient branding panel with wallet icon and features
+  - Right: Form/message panel with proper theming
+- Added comprehensive dark theme CSS rules:
+  - Container backgrounds: `#0f1419` and `#1a1f2e`
+  - Text colors: `#e5e7eb` (headings), `#9ca3af` (muted)
+  - Form inputs: `#2d3748` background, `#e5e7eb` text
+  - Buttons and links properly themed for both modes
+- Fixed button hover states to maintain styling
+- Added password validation with real-time feedback
+
+**Files Modified:**
+- `app/templates/auth/forgot_password.html` - Added dark theme support
+- `app/templates/auth/reset_password.html` - Complete redesign
+- `app/templates/auth/password_reset_success.html` - Complete redesign
+- `app/templates/settings/index.html` - Fixed delete account modal
+
+**Commits:**
+- `694d152` - Fix auth pages and settings modal issues
+- `92e226b` - Redesign password reset success page
+
+---
+
 ### **Active Issues** ⏳
 
-#### **Issue #10: No Automated Tests**
+#### **Issue #11: No Automated Tests**
 **Impact:** Risk of regressions, hard to validate changes
 
 **Solution:**
@@ -816,7 +875,7 @@ Password reset and verification emails weren't being sent. Investigation reveale
 
 ---
 
-#### **Issue #11: Missing Structured Logging**
+#### **Issue #12: Missing Structured Logging**
 **Impact:** Hard to debug production issues
 
 **Current State:** Uses `print()` statements
