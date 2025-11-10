@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 1.0 (Production)
-**Last Updated:** November 11, 2025
+**Last Updated:** November 10, 2025
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -27,12 +27,12 @@ Budget Pulse is a comprehensive expense management application featuring AI-powe
 **Current State:**
 - **Status:** ✅ Production Ready (Railway)
 - **Features:** 40+ fully implemented features
-- **AI/ML:** 4 advanced AI features operational
+- **AI/ML:** 4 advanced AI features operational (database-persisted models)
 - **Security:** Rate limiting, security headers, no hardcoded secrets
 - **Migration System:** Self-healing with auto-stamping
-- **UI/UX:** Bootstrap Icons served locally (CDN fallback resolved)
+- **UI/UX:** Consistent auth pages with light theme support
 - **Users:** Ready for production use
-- **Last Deploy:** November 11, 2025 - All systems operational
+- **Last Deploy:** November 10, 2025 - All systems operational
 
 ---
 
@@ -503,28 +503,55 @@ Budget Pulse is a comprehensive expense management application featuring AI-powe
 
 ## 📊 Current Status
 
-### **Recent Updates (November 11, 2025)**
+### **Recent Updates (November 10, 2025)**
 
-**UI/UX Improvements:**
-- Fixed Bootstrap Icons not loading by serving locally from `/static/` directory
-- Resolved CDN blocking issues that prevented icons from displaying
-- Enhanced settings page contrast for better readability in dark theme
-- All icons now load reliably across login, registration, dashboard, and settings pages
+**AI/ML Infrastructure (Critical Production Fix):**
+- Fixed AI model persistence by storing models in database instead of filesystem
+- Railway's ephemeral containers were losing ML models on restart/redeploy
+- Added `model_blob` LargeBinary column to `ai_models` table
+- Implemented `save_model_to_db()` and `load_model_from_db()` methods
+- Models now persist across all deployments and restarts
+
+**Auth Pages UI/UX Overhaul:**
+- Redesigned all auth pages to consistent two-panel layout (branding + form)
+- Fixed forgot password page for light theme readability
+- Fixed password reset sent page with proper light theme colors
+- Redesigned verification sent page to match modern auth layout
+- Updated resend verification page design
+- All auth pages now have:
+  - Left: Purple gradient branding panel with wallet icon
+  - Right: Form/message panel with proper light theme colors
+  - Consistent spacing, typography, and hover effects
+  - Full responsive design for mobile devices
+
+**Theme Toggle Fixes:**
+- Fixed 401 errors when toggling theme on auth pages
+- Updated `/theme/toggle` endpoint to use `optional_user`
+- Updated `/theme/preferences` endpoint to work for unauthenticated users
+- Theme now persists only for logged-in users, works gracefully for guests
+
+**Email Debugging Enhancements:**
+- Removed development mode email skip for better local testing
+- Added comprehensive email configuration logging
+- Shows SMTP/Resend configuration status in terminal
+- Clear error messages when credentials are missing
+- Created helper tools: `test_email_config.py`, `GMAIL_SETUP_GUIDE.md`, `FIX_LOCALHOST_CHECKLIST.md`
 
 **Testing Status:**
 - User registration: ✅ Working
-- Email confirmation: ✅ Working
+- Email confirmation: ⚠️ Requires SMTP/Resend configuration
 - User login: ✅ Working
 - Category creation: ✅ Working
 - Entry creation: ✅ Working
 - Profile management: ✅ Working
 - Avatar upload: ✅ Working
+- AI model persistence: ✅ Fixed and deployed
 
 **Next Steps:**
-1. Complete full production testing using TESTING_GUIDE.md checklist
-2. Implement structured logging to replace print statements
-3. Add Sentry integration for error monitoring
-4. Monitor production stability for 24-48 hours
+1. Configure SMTP or Resend API for email sending
+2. Complete full production testing using TESTING_GUIDE.md checklist
+3. Implement structured logging to replace print statements
+4. Add Sentry integration for error monitoring
 
 ### **Production Metrics**
 - **Status:** 🟢 Production Ready
@@ -543,13 +570,14 @@ Budget Pulse is a comprehensive expense management application featuring AI-powe
 ✅ All tables created/verified
 ✅ Report scheduler running
 ✅ Core features operational
-✅ AI services functional
+✅ AI services functional with database-persisted models
 ✅ Self-healing migrations (auto-stamp)
 ✅ Rate limiting on auth endpoints
 ✅ Security headers on all responses
 ✅ No hardcoded secrets in code
 ✅ Bootstrap Icons loading locally (no CDN dependency)
-✅ Settings page contrast improved
+✅ All auth pages with consistent light theme design
+✅ Theme toggle working for authenticated and guest users
 ✅ User registration and login working
 ✅ Category and entry creation working
 ✅ Avatar upload and profile management working
@@ -666,7 +694,118 @@ The settings page (particularly the delete account section) had very low contras
 
 ---
 
-#### **Issue #6: No Automated Tests**
+#### **Issue #6: AI Model Persistence on Railway** - RESOLVED ✅
+**Status:** ✅ Resolved
+**Date Resolved:** November 10, 2025
+**Solution Implemented:** Database-backed ML model storage
+
+Railway uses ephemeral filesystem - ML models saved to local disk were lost on restart/redeploy, causing "Model file not found" errors.
+
+**Solution:**
+- Added `model_blob` LargeBinary column to `ai_models` table (migration `af4ec7fe5872`)
+- Created `save_model_to_db()` method - serializes model to bytes using joblib and BytesIO
+- Created `load_model_from_db()` method - deserializes model from database blob
+- Models now persist across all Railway deployments and container restarts
+
+**Files Modified:**
+- `alembic/versions/af4ec7fe5872_add_model_blob_to_ai_models.py` - New migration
+- `app/models/ai_model.py:20` - Added `model_blob` LargeBinary field
+- `app/ai/models/categorization_model.py:205-264` - Database save/load methods
+- `app/services/ai_service.py:84,187` - Updated to use database storage
+
+**Impact:** Critical fix - AI categorization now works reliably in production
+
+---
+
+#### **Issue #7: Auth Pages Light Theme Readability** - RESOLVED ✅
+**Status:** ✅ Resolved
+**Date Resolved:** November 10, 2025
+**Solution Implemented:** Consistent two-panel auth layout with light theme colors
+
+Multiple auth pages had inconsistent designs with poor readability in light theme:
+- Forgot password page: Dark text on dark background
+- Password reset sent: Old Bootstrap cards with `.text-muted` classes
+- Verification sent: Standalone Bootstrap page, inconsistent styling
+- Resend verification: Old Tailwind-based design
+
+**Solution:**
+- Redesigned all auth pages to consistent two-panel layout:
+  - Left: Purple gradient branding panel with wallet icon and feature list
+  - Right: Form/message panel with proper light theme colors
+- Updated all text colors for light theme readability:
+  - Headings: `#1f2937` (dark gray)
+  - Descriptions: `#4b5563` (medium gray)
+  - Labels: `#374151` (dark gray)
+  - Input backgrounds: `#f9fafb` (light gray)
+  - Container: `#ffffff` (white)
+- Added consistent hover effects and transitions
+- Full responsive design for mobile devices
+
+**Files Modified:**
+- `app/templates/auth/forgot_password.html` - Complete rewrite
+- `app/templates/auth/password_reset_sent.html` - Complete rewrite
+- `app/templates/auth/verification_sent.html` - Complete rewrite
+- `app/templates/auth/resend_verification.html` - Complete rewrite
+
+---
+
+#### **Issue #8: Theme Toggle 401 Errors on Auth Pages** - RESOLVED ✅
+**Status:** ✅ Resolved
+**Date Resolved:** November 10, 2025
+**Solution Implemented:** Optional authentication for theme endpoints
+
+The `/theme/toggle` and `/theme/preferences` endpoints required authentication, causing 401 errors when users tried to toggle theme on login/register pages. Terminal logs showed repeated 401 errors.
+
+**Solution:**
+- Updated both endpoints to use `optional_user` dependency instead of `current_user`
+- `/theme/toggle`: Returns success without saving for unauthenticated users
+- `/theme/preferences`: Returns default preferences for unauthenticated users
+- Theme persists only for logged-in users, works gracefully for guests
+
+**Files Modified:**
+- `app/api/v1/theme.py:7` - Added `optional_user` import
+- `app/api/v1/theme.py:15-52` - Updated `/theme/toggle` endpoint
+- `app/api/v1/theme.py:159-188` - Updated `/theme/preferences` endpoint
+
+**Impact:** Clean terminal logs, no more authentication errors on auth pages
+
+---
+
+#### **Issue #9: Email Sending Not Working Locally** - DIAGNOSED ✅
+**Status:** ⚠️ Diagnosed (Configuration Required)
+**Date Diagnosed:** November 10, 2025
+**Solution:** Enhanced debugging and documentation
+
+Password reset and verification emails weren't being sent. Investigation revealed missing SMTP credentials in `.env` file.
+
+**Solution:**
+- Removed development mode email skip to enable local testing
+- Added comprehensive email configuration logging
+- Created detailed setup guides and helper tools:
+  - `GMAIL_SETUP_GUIDE.md` - Step-by-step Gmail App Password setup
+  - `test_email_config.py` - SMTP connection testing script
+  - `FIX_LOCALHOST_CHECKLIST.md` - Quick troubleshooting guide
+- Terminal now shows clear diagnostic information:
+  - SMTP configured: True/False
+  - Resend configured: True/False
+  - Detailed error messages when credentials are missing
+
+**Files Modified:**
+- `app/services/email.py:33-63` - Enhanced logging, removed dev mode skip
+- `app/api/v1/auth.py:144-166` - Added password reset debugging
+
+**New Files:**
+- `GMAIL_SETUP_GUIDE.md` - Gmail App Password guide
+- `test_email_config.py` - Email testing script
+- `FIX_LOCALHOST_CHECKLIST.md` - Troubleshooting checklist
+
+**Action Required:** Configure SMTP credentials in `.env` or set up Resend API
+
+---
+
+### **Active Issues** ⏳
+
+#### **Issue #10: No Automated Tests**
 **Impact:** Risk of regressions, hard to validate changes
 
 **Solution:**
@@ -677,7 +816,7 @@ The settings page (particularly the delete account section) had very low contras
 
 ---
 
-#### **Issue #7: Missing Structured Logging**
+#### **Issue #11: Missing Structured Logging**
 **Impact:** Hard to debug production issues
 
 **Current State:** Uses `print()` statements
