@@ -9,7 +9,7 @@ class ReportStatus(Base):
     __tablename__ = "report_status"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     report_type = Column(String(20), nullable=False)  # 'weekly', 'monthly', 'annual'
     report_period = Column(String(50), nullable=False)  # 'current', '2024-10', etc.
     is_new = Column(Boolean, default=True, nullable=False)
