@@ -23,19 +23,19 @@ class User(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
-    categories = relationship("Category", back_populates="owner", cascade="all, delete-orphan")
-    entries = relationship("Entry", back_populates="owner", cascade="all, delete-orphan")
-    preferences = relationship("UserPreferences", back_populates="user", uselist=False)
-    
+    categories = relationship("Category", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)
+    entries = relationship("Entry", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)
+    preferences = relationship("UserPreferences", back_populates="user", uselist=False, cascade="all, delete-orphan", passive_deletes=True)
+
     # AI relationships
-    ai_models = relationship("AIModel", back_populates="user", cascade="all, delete-orphan")
-    ai_suggestions = relationship("AISuggestion", back_populates="user", cascade="all, delete-orphan")
-    ai_preferences = relationship("UserAIPreferences", back_populates="user", uselist=False)
-    
+    ai_models = relationship("AIModel", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
+    ai_suggestions = relationship("AISuggestion", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
+    ai_preferences = relationship("UserAIPreferences", back_populates="user", uselist=False, cascade="all, delete-orphan", passive_deletes=True)
+
     # Report relationships
-    weekly_reports = relationship("WeeklyReport", back_populates="user", cascade="all, delete-orphan")
-    report_preferences = relationship("UserReportPreferences", back_populates="user", uselist=False)
-    report_statuses = relationship("ReportStatus", back_populates="user", cascade="all, delete-orphan")
+    weekly_reports = relationship("WeeklyReport", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
+    report_preferences = relationship("UserReportPreferences", back_populates="user", uselist=False, cascade="all, delete-orphan", passive_deletes=True)
+    report_statuses = relationship("ReportStatus", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
 
     # Goal relationships - Phase 17
-    financial_goals = relationship("FinancialGoal", back_populates="user", cascade="all, delete-orphan")
+    financial_goals = relationship("FinancialGoal", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
