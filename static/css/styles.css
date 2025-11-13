@@ -2127,6 +2127,8 @@ select.form-select{
 }
 
 .modal {
+  position: relative;
+  z-index: 10001;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);

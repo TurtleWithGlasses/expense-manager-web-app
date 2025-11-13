@@ -868,6 +868,8 @@ async function exportData() {
 
 // Delete account
 function confirmDeleteAccount() {
+  console.log('confirmDeleteAccount called');
+
   // Check if ConfirmModal is available
   if (typeof ConfirmModal === 'undefined') {
     console.error('ConfirmModal is not defined');
@@ -877,15 +879,37 @@ function confirmDeleteAccount() {
     return;
   }
 
-  ConfirmModal.show({
-    type: 'danger',
-    danger: true,
-    title: 'Delete Account',
-    message: 'Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be permanently removed.',
-    confirmText: 'Yes, Delete My Account',
-    cancelText: 'Cancel',
-    onConfirm: deleteAccount
-  });
+  console.log('ConfirmModal is available, showing modal...');
+
+  try {
+    const modal = ConfirmModal.show({
+      type: 'danger',
+      danger: true,
+      title: 'Delete Account',
+      message: 'Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be permanently removed.',
+      confirmText: 'Yes, Delete My Account',
+      cancelText: 'Cancel',
+      onConfirm: deleteAccount
+    });
+
+    console.log('Modal created:', modal);
+
+    // Check if modal was added to DOM
+    setTimeout(() => {
+      const overlay = document.querySelector('.modal-overlay');
+      const modalElement = document.querySelector('.modal');
+      console.log('Modal overlay in DOM:', overlay);
+      console.log('Modal element in DOM:', modalElement);
+      if (overlay) {
+        console.log('Overlay styles:', window.getComputedStyle(overlay));
+      }
+      if (modalElement) {
+        console.log('Modal styles:', window.getComputedStyle(modalElement));
+      }
+    }, 100);
+  } catch (error) {
+    console.error('Error showing modal:', error);
+  }
 }
 
 // Actual delete account API call
