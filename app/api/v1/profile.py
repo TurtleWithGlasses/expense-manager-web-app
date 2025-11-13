@@ -253,10 +253,14 @@ async def delete_account(
     """Permanently delete user account and all associated data"""
 
     try:
+        print(f"🗑️ Attempting to delete account for user: {user.email} (ID: {user.id})")
+
         # Delete user (cascade will handle related records)
         # No need to delete avatar files since we store in database now
         db.delete(user)
         db.commit()
+
+        print(f"✅ Account successfully deleted for user: {user.email}")
 
         return JSONResponse({
             "success": True,
@@ -264,5 +268,8 @@ async def delete_account(
         })
 
     except Exception as e:
+        print(f"❌ Error deleting account: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to delete account: {str(e)}")
