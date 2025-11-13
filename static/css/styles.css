@@ -2130,12 +2130,23 @@ select.form-select{
   position: relative;
   z-index: 10001;
   background: var(--panel);
-  border: 1px solid var(--border);
+  border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-2xl);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
   max-width: 500px;
   width: 100%;
   animation: modal-scale-in 0.2s ease-out;
+}
+
+/* Make modal more visible in dark theme */
+:root .modal {
+  background: #1a2237;
+}
+
+[data-theme="light"] .modal {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 }
 
 .modal-overlay.modal-exit .modal {
