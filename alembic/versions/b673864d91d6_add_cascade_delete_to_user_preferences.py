@@ -17,14 +17,39 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # SQLite doesn't enforce foreign keys for ALTER, so batch mode will recreate the table
-    # with the new ondelete='CASCADE' constraint from the model
-    # For PostgreSQL in production, this will properly add the CASCADE constraint
-    with op.batch_alter_table('user_preferences', schema=None, recreate='always') as batch_op:
-        pass  # The recreation will pick up the ondelete='CASCADE' from the model
+    # Check if we're using PostgreSQL or SQLite
+    bind = op.get_bind()
+    dialect = bind.dialect.name
+
+    if dialect == 'postgresql':
+        # PostgreSQL: Drop and recreate the foreign key with CASCADE
+        op.drop_constraint('user_preferences_user_id_fkey', 'user_preferences', type_='foreignkey')
+        op.create_foreign_key(
+            'user_preferences_user_id_fkey',
+            'user_preferences', 'users',
+            ['user_id'], ['id'],
+            ondelete='CASCADE'
+        )
+    else:
+        # SQLite: Use batch mode to recreate table
+        with op.batch_alter_table('user_preferences', schema=None, recreate='always') as batch_op:
+            pass  # The recreation will pick up the ondelete='CASCADE' from the model
 
 
 def downgrade() -> None:
-    # Downgrade by recreating without CASCADE
-    with op.batch_alter_table('user_preferences', schema=None, recreate='always') as batch_op:
-        pass  # The recreation will pick up the original constraint
+    # Check if we're using PostgreSQL or SQLite
+    bind = op.get_bind()
+    dialect = bind.dialect.name
+
+    if dialect == 'postgresql':
+        # PostgreSQL: Drop CASCADE and restore original foreign key
+        op.drop_constraint('user_preferences_user_id_fkey', 'user_preferences', type_='foreignkey')
+        op.create_foreign_key(
+            'user_preferences_user_id_fkey',
+            'user_preferences', 'users',
+            ['user_id'], ['id']
+        )
+    else:
+        # SQLite: Use batch mode to recreate table
+        with op.batch_alter_table('user_preferences', schema=None, recreate='always') as batch_op:
+            pass  # The recreation will pick up the original constraint
