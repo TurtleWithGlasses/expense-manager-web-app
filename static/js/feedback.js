@@ -130,27 +130,30 @@ const ConfirmModal = {
     const iconClass = danger ? 'modal-icon-danger' : `modal-icon-${type}`;
     const confirmClass = danger ? 'btn-danger' : 'btn-primary';
 
-    // Build modal HTML
+    // Build modal HTML with inline styles for guaranteed visibility
     overlay.innerHTML = `
-      <div class="modal">
-        <div class="modal-header">
-          <div class="modal-icon ${iconClass}">
+      <div class="modal" style="position: relative !important; z-index: 10001 !important; background: #1e2740 !important; border: 2px solid rgba(255, 255, 255, 0.2) !important; border-radius: 12px !important; box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8) !important; max-width: 500px !important; width: 90% !important; display: block !important; visibility: visible !important; opacity: 1 !important;">
+        <div class="modal-header" style="display: flex !important; align-items: center !important; gap: 1rem !important; padding: 1.5rem !important; border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;">
+          <div class="modal-icon ${iconClass}" style="flex-shrink: 0 !important; width: 48px !important; height: 48px !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 1.5rem !important; border-radius: 50% !important; background: rgba(239, 68, 68, 0.15) !important; color: #ef4444 !important;">
             ${icons[danger ? 'danger' : type] || icons.info}
           </div>
-          <h3 class="modal-title">${title}</h3>
+          <h3 class="modal-title" style="flex: 1 !important; font-size: 1.25rem !important; font-weight: 700 !important; color: #e8ecf3 !important; margin: 0 !important;">${title}</h3>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="padding: 1.5rem !important; color: #9aa3b2 !important; font-size: 1rem !important; line-height: 1.6 !important;">
           ${message}
         </div>
-        <div class="modal-footer">
-          <button class="btn btn-ghost" data-action="cancel">${cancelText}</button>
-          <button class="btn ${confirmClass}" data-action="confirm">${confirmText}</button>
+        <div class="modal-footer" style="display: flex !important; gap: 0.75rem !important; padding: 1.5rem !important; border-top: 1px solid rgba(255, 255, 255, 0.1) !important; justify-content: flex-end !important;">
+          <button class="btn btn-ghost" data-action="cancel" style="padding: 0.625rem 1.25rem !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; border-radius: 8px !important; background: transparent !important; color: #9aa3b2 !important; font-size: 0.95rem !important; cursor: pointer !important; transition: all 0.2s !important;">${cancelText}</button>
+          <button class="btn ${confirmClass}" data-action="confirm" style="padding: 0.625rem 1.25rem !important; border: none !important; border-radius: 8px !important; background: #dc3545 !important; color: white !important; font-size: 0.95rem !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.2s !important;">${confirmText}</button>
         </div>
       </div>
     `;
 
     // Add to body
     document.body.appendChild(overlay);
+
+    // Force reflow to ensure styles are applied
+    overlay.offsetHeight;
 
     // Button handlers
     const confirmBtn = overlay.querySelector('[data-action="confirm"]');
