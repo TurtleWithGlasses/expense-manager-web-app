@@ -1,0 +1,551 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="auth-container">
+  <div class="auth-wrapper">
+    <!-- Left side - Branding -->
+    <div class="auth-branding">
+      <div class="brand-content">
+        <div class="logo-wrapper">
+          <i class="bi bi-wallet2"></i>
+        </div>
+        <h1 class="brand-title">Expense Manager</h1>
+        <p class="brand-subtitle">We're sorry to see you go</p>
+
+        <div class="features">
+          <div class="feature-item">
+            <i class="bi bi-shield-check"></i>
+            <span>Your data is always protected</span>
+          </div>
+          <div class="feature-item">
+            <i class="bi bi-clock-history"></i>
+            <span>You can always create a new account</span>
+          </div>
+          <div class="feature-item">
+            <i class="bi bi-download"></i>
+            <span>Remember to export your data first</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right side - Delete Confirmation -->
+    <div class="auth-form-container">
+      <div class="auth-form-wrapper">
+        <div class="auth-form-header">
+          <div class="icon-wrapper danger-icon" style="margin-bottom: 1.5rem;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          </div>
+          <h2>Delete Account Permanently?</h2>
+          <p>This action cannot be undone. All your data will be permanently deleted.</p>
+        </div>
+
+        <div class="alert alert-danger">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <div>
+            <strong>Warning: Permanent Deletion</strong>
+            <p style="margin-top: 0.5rem; margin-bottom: 0;">
+              Once you delete your account, there is no going back. All your data including:
+            </p>
+            <ul style="margin-top: 0.5rem; margin-bottom: 0; padding-left: 1.25rem;">
+              <li>All financial entries (expenses and income)</li>
+              <li>All categories and customizations</li>
+              <li>AI model training data</li>
+              <li>Reports and insights</li>
+              <li>Profile information</li>
+            </ul>
+            <p style="margin-top: 0.5rem; margin-bottom: 0;">
+              will be <strong>permanently deleted</strong> and cannot be recovered.
+            </p>
+          </div>
+        </div>
+
+        <div class="export-reminder">
+          <i class="bi bi-info-circle"></i>
+          <div>
+            <strong>Don't forget to export your data!</strong>
+            <p style="margin-top: 0.25rem; margin-bottom: 0;">
+              If you want to keep a copy of your data, please go back to settings and export your data first.
+            </p>
+          </div>
+        </div>
+
+        <form method="POST" id="deleteForm" style="margin-top: 2rem;">
+          <div class="action-buttons">
+            <a href="/settings" class="btn-cancel">
+              <i class="bi bi-arrow-left"></i>
+              <span>Cancel, Keep My Account</span>
+            </a>
+
+            <button type="submit" class="btn-delete">
+              <i class="bi bi-trash-fill"></i>
+              <span>Yes, Delete Permanently</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Container and Layout */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background, #f9fafb);
+  padding: 2rem;
+}
+
+.auth-wrapper {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  background: var(--surface, #ffffff);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme support */
+[data-theme="dark"] .auth-container {
+  background: #0f1419;
+}
+
+[data-theme="dark"] .auth-wrapper {
+  background: #1a1f2e;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Branding Section */
+.auth-branding {
+  flex: 1;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  padding: 4rem 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-branding::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  animation: pulse 8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.brand-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  color: white;
+}
+
+.logo-wrapper {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.logo-wrapper i {
+  font-size: 2.5rem;
+  color: white;
+}
+
+.brand-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: -1px;
+}
+
+.brand-subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 3rem;
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+  max-width: 350px;
+  margin: 0 auto;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+  opacity: 0.95;
+}
+
+.feature-item i {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Form Container */
+.auth-form-container {
+  flex: 1;
+  padding: 4rem 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-form-wrapper {
+  width: 100%;
+  max-width: 550px;
+}
+
+.auth-form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-form-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text, #1f2937);
+  margin-bottom: 0.5rem;
+}
+
+.auth-form-header p {
+  color: var(--muted, #4b5563);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+[data-theme="dark"] .auth-form-header h2 {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .auth-form-header p {
+  color: #9ca3af;
+}
+
+.icon-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.danger-icon {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(220, 53, 69, 0.3);
+}
+
+.danger-icon i {
+  font-size: 3.5rem;
+  color: white;
+}
+
+/* Alerts */
+.alert {
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.alert i {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.alert strong {
+  font-size: 1rem;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.alert ul {
+  list-style-type: disc;
+}
+
+.alert-danger {
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.2);
+  color: #b91c1c;
+}
+
+.alert-danger i {
+  color: #dc3545;
+}
+
+.alert-danger strong {
+  color: #991b1b;
+}
+
+[data-theme="dark"] .alert-danger {
+  background: rgba(220, 53, 69, 0.15);
+  border-color: rgba(220, 53, 69, 0.3);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .alert-danger i {
+  color: #ef4444;
+}
+
+[data-theme="dark"] .alert-danger strong {
+  color: #fca5a5;
+}
+
+/* Export Reminder */
+.export-reminder {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 10px;
+  color: var(--text, #1e40af);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.export-reminder i {
+  font-size: 1.25rem;
+  color: #3b82f6;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.export-reminder strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+[data-theme="dark"] .export-reminder {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+}
+
+.btn-cancel,
+.btn-delete {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.btn-cancel {
+  background: var(--input-bg, #f3f4f6);
+  border: 2px solid var(--border, #d1d5db);
+  color: var(--text, #4b5563);
+}
+
+.btn-cancel:hover {
+  background: var(--surface, #e5e7eb);
+  border-color: var(--blue, #3b82f6);
+  color: var(--blue, #3b82f6);
+  text-decoration: none;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .btn-cancel {
+  background: #2d3748;
+  border-color: #4a5568;
+  color: #d1d5db;
+}
+
+[data-theme="dark"] .btn-cancel:hover {
+  background: #374151;
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.btn-delete {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.btn-delete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(220, 53, 69, 0.4);
+}
+
+.btn-delete:active {
+  transform: translateY(0);
+}
+
+.btn-cancel i,
+.btn-delete i {
+  font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+  .auth-wrapper {
+    flex-direction: column;
+  }
+
+  .auth-branding {
+    padding: 3rem 2rem;
+  }
+
+  .brand-title {
+    font-size: 2rem;
+  }
+
+  .features {
+    max-width: 100%;
+  }
+
+  .auth-form-container {
+    padding: 3rem 2rem;
+  }
+
+  .action-buttons {
+    flex-direction: column-reverse;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-container {
+    padding: 1rem;
+  }
+
+  .auth-branding {
+    padding: 2rem 1.5rem;
+  }
+
+  .brand-title {
+    font-size: 1.75rem;
+  }
+
+  .brand-subtitle {
+    font-size: 1rem;
+  }
+
+  .auth-form-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .auth-form-header h2 {
+    font-size: 1.75rem;
+  }
+
+  .danger-icon {
+    width: 80px;
+    height: 80px;
+  }
+
+  .danger-icon i {
+    font-size: 3rem;
+  }
+
+  .alert {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+}
+</style>
+
+<script>
+document.getElementById('deleteForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const deleteBtn = this.querySelector('.btn-delete');
+  const originalText = deleteBtn.innerHTML;
+
+  // Disable button and show loading
+  deleteBtn.disabled = true;
+  deleteBtn.innerHTML = '<i class="bi bi-hourglass-split"></i><span>Deleting...</span>';
+
+  try {
+    const response = await fetch('/api/profile/account', {
+      method: 'DELETE'
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      deleteBtn.innerHTML = '<i class="bi bi-check-circle"></i><span>Account Deleted</span>';
+
+      // Show success toast if available
+      if (typeof Toast !== 'undefined') {
+        Toast.success('Account deleted successfully. Redirecting...', 'Account Deleted');
+      }
+
+      // Redirect to logout after 2 seconds
+      setTimeout(() => {
+        window.location.href = '/logout';
+      }, 2000);
+    } else {
+      deleteBtn.disabled = false;
+      deleteBtn.innerHTML = originalText;
+
+      // Show error toast if available
+      if (typeof Toast !== 'undefined') {
+        Toast.error(data.detail || 'Failed to delete account', 'Error');
+      } else {
+        alert(data.detail || 'Failed to delete account');
+      }
+    }
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    deleteBtn.disabled = false;
+    deleteBtn.innerHTML = originalText;
+
+    // Show error toast if available
+    if (typeof Toast !== 'undefined') {
+      Toast.error('Failed to delete account', 'Error');
+    } else {
+      alert('Failed to delete account');
+    }
+  }
+});
+</script>
+
+{% endblock %}

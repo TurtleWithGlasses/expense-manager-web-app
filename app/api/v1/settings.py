@@ -80,3 +80,28 @@ async def appearance_settings_page(
         "animations_enabled": animations_enabled,
         "font_size": font_size
     })
+
+
+@router.get("/settings/delete-account", response_class=HTMLResponse)
+async def delete_account_page(
+    request: Request,
+    user: User = Depends(current_user)
+):
+    """Render the delete account confirmation page"""
+    return render(request, "settings/delete_account.html", {
+        "user": user
+    })
+
+
+@router.post("/settings/delete-account", response_class=HTMLResponse)
+async def delete_account_confirm(
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Handle account deletion via POST"""
+    # This route will be handled by the JavaScript fetch to /api/profile/account
+    # But we keep it here for completeness
+    return render(request, "settings/delete_account.html", {
+        "user": user
+    })
