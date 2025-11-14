@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 1.0 (Production)
-**Last Updated:** November 10, 2025
+**Last Updated:** November 14, 2025
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -503,7 +503,47 @@ Budget Pulse is a comprehensive expense management application featuring AI-powe
 
 ## 📊 Current Status
 
-### **Recent Updates (November 11, 2025)**
+### **Recent Updates (November 14, 2025)**
+
+**Account Deletion Feature - Complete Implementation:**
+- Implemented dedicated delete account confirmation page with red danger theme
+- Fixed CASCADE delete constraints across all user-related database tables
+- Resolved IntegrityError issues with proper PostgreSQL foreign key configuration
+- Account deletion now properly cascades through all related data
+
+**Technical Implementation:**
+- Created `/settings/delete-account` dedicated confirmation page (replaced modal approach)
+- Two-panel layout with red gradient branding (danger theme) and clear warning messages
+- Lists all data to be deleted: entries, categories, AI models, reports, profile
+- Cancel and Delete buttons with proper confirmation flow
+
+**Database CASCADE Configuration:**
+- Added `passive_deletes=True` to all User model relationships
+- Added `ondelete="CASCADE"` to missing foreign key constraints:
+  - `user_preferences.user_id` - User preferences and theme settings
+  - `report_status.user_id` - Report view tracking status
+- Created three Alembic migrations:
+  - `b673864d91d6` - Add CASCADE to user_preferences
+  - `db983bf509da` - Add CASCADE to report_status
+  - `7dfb33c43cde` - Fix PostgreSQL constraints (production deployment)
+
+**Files Modified:**
+- `app/models/user.py` - Added `passive_deletes=True` to all relationships
+- `app/models/user_preferences.py` - Added `ondelete="CASCADE"` to foreign key
+- `app/models/report_status.py` - Added `ondelete="CASCADE"` to foreign key
+- `app/templates/settings/delete_account.html` - NEW 577-line confirmation page
+- `app/api/v1/settings.py` - Added GET/POST routes for delete account page
+- `app/templates/settings/index.html` - Changed button to link for delete account
+
+**Cascading Deletion Coverage:**
+All user data is now properly deleted when account is deleted:
+- ✅ UserPreferences, UserAIPreferences, UserReportPreferences
+- ✅ Categories and all associated Entries
+- ✅ AIModels, AISuggestions with trained data
+- ✅ WeeklyReports, ReportStatuses
+- ✅ FinancialGoals and progress tracking
+
+**Previous Updates (November 11, 2025)**
 
 **Authentication Pages Complete Redesign:**
 - All authentication pages now have consistent modern two-panel layout
@@ -604,7 +644,8 @@ Budget Pulse is a comprehensive expense management application featuring AI-powe
 ✅ User registration and login working
 ✅ Category and entry creation working
 ✅ Avatar upload and profile management working
-✅ Delete account modal working with fallback
+✅ Account deletion with proper CASCADE configuration
+✅ All user data properly deleted when account is deleted
 
 ### **What Needs Attention** ⏳
 ⏳ Implement structured logging
@@ -862,9 +903,67 @@ Password reset and verification emails weren't being sent. Investigation reveale
 
 ---
 
+#### **Issue #11: Account Deletion IntegrityError** - RESOLVED ✅
+**Status:** ✅ Resolved
+**Date Resolved:** November 14, 2025
+**Solution Implemented:** Complete CASCADE delete configuration with PostgreSQL fixes
+
+**Problem:**
+- Deleting user accounts failed with IntegrityError in production
+- `user_ai_preferences` table: `user_id` NOT NULL constraint violated
+- `report_status` table: Foreign key constraint prevented user deletion
+- PostgreSQL was timing out trying to check foreign key constraints
+- SQLAlchemy ORM was trying to SET user_id=NULL before deletion
+
+**Root Causes:**
+1. Missing `passive_deletes=True` on User model relationships
+2. Missing `ondelete="CASCADE"` on some foreign key constraints:
+   - `user_preferences.user_id` - No CASCADE constraint
+   - `report_status.user_id` - No CASCADE constraint
+3. Previous migrations didn't properly update PostgreSQL constraints
+
+**Solution:**
+- Added `passive_deletes=True` to all User model relationships
+  - Tells SQLAlchemy to rely on database CASCADE instead of ORM-level nullification
+- Added `ondelete="CASCADE"` to missing foreign key constraints:
+  - `UserPreferences.user_id`
+  - `ReportStatus.user_id`
+- Created three Alembic migrations:
+  - `b673864d91d6` - Add CASCADE to user_preferences
+  - `db983bf509da` - Add CASCADE to report_status
+  - `7dfb33c43cde` - Fix PostgreSQL constraints (production fix)
+- Migrations detect database dialect (PostgreSQL vs SQLite) and apply appropriate changes
+- PostgreSQL: Explicitly drops and recreates foreign keys with CASCADE
+- SQLite: Uses batch mode to recreate tables
+
+**UI Implementation:**
+- Replaced modal approach with dedicated `/settings/delete-account` page
+- Two-panel layout with red gradient (danger theme)
+- Clear warning messages listing all data to be deleted
+- Cancel and Delete buttons with proper confirmation flow
+- 577-line template with full dark theme support
+
+**Files Modified:**
+- `app/models/user.py` - Added `passive_deletes=True` to all relationships
+- `app/models/user_preferences.py` - Added `ondelete="CASCADE"`
+- `app/models/report_status.py` - Added `ondelete="CASCADE"`
+- `app/templates/settings/delete_account.html` - NEW confirmation page
+- `app/api/v1/settings.py` - Added GET/POST routes
+- `app/templates/settings/index.html` - Changed button to link
+
+**Commits:**
+- `e42c85d` - Add detailed logging to delete account endpoint
+- `50721dd` - Fix account deletion IntegrityError with cascade delete
+- `2f485df` - Add CASCADE delete to report_status foreign key
+- `a29dc28` - Fix PostgreSQL CASCADE constraints for account deletion
+
+**Result:** Account deletion now works flawlessly in production, properly cascading through all related tables.
+
+---
+
 ### **Active Issues** ⏳
 
-#### **Issue #11: No Automated Tests**
+#### **Issue #12: No Automated Tests**
 **Impact:** Risk of regressions, hard to validate changes
 
 **Solution:**
@@ -875,7 +974,7 @@ Password reset and verification emails weren't being sent. Investigation reveale
 
 ---
 
-#### **Issue #12: Missing Structured Logging**
+#### **Issue #13: Missing Structured Logging**
 **Impact:** Hard to debug production issues
 
 **Current State:** Uses `print()` statements
