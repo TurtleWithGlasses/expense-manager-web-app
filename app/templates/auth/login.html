@@ -57,7 +57,7 @@
         {% endif %}
 
         <form method="post" action="/login" class="auth-form" id="loginForm">
-          <div class="form-group">
+        <div class="form-group">
             <label for="email">Email Address</label>
             <div class="input-wrapper">
               <i class="bi bi-envelope"></i>
@@ -79,7 +79,7 @@
 
           <div class="form-group">
             <label for="password">Password</label>
-            <div class="input-wrapper">
+            <div class="input-wrapper has-toggle">
               <i class="bi bi-lock"></i>
               <input 
                 id="password"
@@ -280,27 +280,32 @@
 
 .input-wrapper {
   position: relative;
+  width: 100%;
   display: flex;
   align-items: center;
+  gap: 0.75rem;
 }
 
 .input-wrapper i {
-  position: absolute;
-  left: 1rem;
+  position: relative;
   color: #6b7280;
   font-size: 1.1rem;
-  z-index: 1;
+  flex-shrink: 0;
 }
 
 .form-control {
   width: 100%;
-  padding: 0.875rem 1rem 0.875rem 3rem;
+  padding: 0.875rem 1rem;
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   color: #ffffff;
   font-size: 1rem;
   transition: all 0.3s ease;
+}
+
+.input-wrapper.has-toggle .form-control {
+  padding-right: 3rem;
 }
 
 .form-control:focus {
@@ -317,6 +322,8 @@
 .toggle-password {
   position: absolute;
   right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   color: #6b7280;
