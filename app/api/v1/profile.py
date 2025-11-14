@@ -18,6 +18,7 @@ from app.models.entry import Entry
 from app.models.category import Category
 from app.models.user_preferences import UserPreferences
 from app.models.weekly_report import UserReportPreferences
+from app.models.report_status import ReportStatus
 
 router = APIRouter()
 
@@ -255,7 +256,19 @@ async def delete_account(
     try:
         print(f"🗑️ Attempting to delete account for user: {user.email} (ID: {user.id})")
 
-        # Delete user (cascade will handle related records)
+        user_id = user.id
+        
+        # Manually delete report_status records first to avoid foreign key constraint issues
+        # This is a defensive measure in case the database constraint doesn't have CASCADE
+        try:
+            deleted_count = db.query(ReportStatus).filter(ReportStatus.user_id == user_id).delete(synchronize_session=False)
+            print(f"🗑️ Deleted {deleted_count} report_status records for user {user_id}")
+            db.flush()  # Flush to ensure the delete is executed before user deletion
+        except Exception as e:
+            print(f"⚠️ Warning: Error deleting report_status records: {e}")
+            # Continue with user deletion anyway - cascade should handle it if DB constraint is correct
+
+        # Delete user (cascade will handle other related records)
         # No need to delete avatar files since we store in database now
         db.delete(user)
         db.commit()
