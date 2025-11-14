@@ -1044,6 +1044,78 @@ Password reset and verification emails weren't being sent. Investigation reveale
 
 ---
 
+#### **Issue #15: Missing Change Password Functionality** ⚠️
+**Impact:** Users cannot change their password after account creation
+**Priority:** MEDIUM-HIGH
+
+**Current State:**
+- Users can reset forgotten passwords via email link
+- No way for logged-in users to change password from settings
+- Users must use "Forgot Password" flow even if they know current password
+- Security best practice: users should be able to change passwords regularly
+
+**Problem:**
+- No self-service password change option in settings
+- Poor user experience - must log out and use forgot password
+- Cannot update password proactively for security reasons
+- Missing standard account security feature
+
+**Proposed Solution:**
+1. **Settings Page Addition:**
+   - Add "Change Password" section in Settings page
+   - Place below Profile Information, above Delete Account
+   - Accordion or expandable section to keep UI clean
+   - Icon: Lock or Key icon for password section
+
+2. **Password Change Form:**
+   - Three input fields:
+     - Current Password (required for verification)
+     - New Password (with strength indicator)
+     - Confirm New Password (must match)
+   - Real-time validation:
+     - Check current password is correct
+     - Validate new password strength (min 8 chars, etc.)
+     - Confirm new password matches
+   - Submit button: "Update Password"
+
+3. **Backend Implementation:**
+   - New API endpoint: `PUT /api/profile/password`
+   - Verify current password with bcrypt
+   - Validate new password meets requirements
+   - Hash new password and update in database
+   - Return success/error response
+   - Optional: Send email notification of password change
+
+4. **Security Features:**
+   - Rate limiting on password change attempts
+   - Require current password verification
+   - Password strength requirements enforced
+   - Optional: Logout other sessions after password change
+   - Optional: Send email notification "Your password was changed"
+
+5. **UI/UX Details:**
+   - Show/hide password toggle buttons
+   - Password strength meter (weak/medium/strong)
+   - Clear error messages for validation failures
+   - Success message with confirmation
+   - Form clears after successful change
+
+**Benefits:**
+- Better user experience and self-service
+- Improved account security (users can change passwords regularly)
+- Standard feature for modern web applications
+- Reduces support requests for password changes
+
+**Files to Create/Modify:**
+- `app/api/v1/profile.py` - Add `PUT /api/profile/password` endpoint
+- `app/templates/settings/index.html` - Add change password section
+- `static/js/settings.js` - Add password change form handling
+- `app/services/auth.py` - Add password verification helper (optional)
+
+**Estimated Time:** 2-3 hours
+
+---
+
 ## 🚀 Future Roadmap
 
 ### **Phase 22: Production Hardening** ✅
