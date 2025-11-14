@@ -987,6 +987,63 @@ Password reset and verification emails weren't being sent. Investigation reveale
 
 ---
 
+#### **Issue #14: Entry Lists Load All Data at Once** ⚠️
+**Impact:** Slow page load times, poor performance with large datasets
+**Priority:** HIGH
+
+**Current State:**
+- Dashboard and Entries pages load entire entry list on initial page load
+- No pagination or lazy loading implemented
+- No sorting controls available
+- Poor UX for users with hundreds of entries
+
+**Problem:**
+- Opening app or entries section loads full list, causing noticeable delay
+- Performance degrades as user adds more entries
+- No way to sort entries by different criteria
+- No limit on data fetched from database
+
+**Proposed Solution:**
+1. **Pagination/Lazy Loading:**
+   - Initial load: Display only 10 entries (configurable)
+   - Add "Load More" or "Expand" button below the list
+   - Clicking button loads next batch of 10 entries
+   - Alternative: Implement infinite scroll
+   - Update backend API to support `limit` and `offset` parameters
+
+2. **Sorting Controls:**
+   - Add "Sort By" dropdown with options:
+     - Date (newest first / oldest first)
+     - Amount (highest to lowest / lowest to highest)
+     - Category (alphabetical A-Z / Z-A)
+   - Add toggle for Ascending/Descending order
+   - Persist sort preferences in UserPreferences table
+   - Update API to support `sort_by` and `order` query parameters
+
+3. **UI Implementation:**
+   - Sorting dropdown in header of entry list
+   - "Load More" button styled consistently with app design
+   - Loading indicator while fetching additional entries
+   - Show entry count: "Showing 10 of 237 entries"
+
+**Benefits:**
+- Faster initial page load (< 1 second vs 3-5 seconds)
+- Better UX for users with large datasets
+- Reduced database query load
+- Improved perceived performance
+- User control over data organization
+
+**Files to Modify:**
+- `app/api/v1/entries.py` - Add pagination and sorting parameters
+- `app/services/entries.py` - Implement pagination logic
+- `app/templates/entries/index.html` - Add sorting controls and load more button
+- `static/js/entries.js` - Handle dynamic loading and sorting
+- `app/models/user_preferences.py` - Add sort preferences fields (optional)
+
+**Estimated Time:** 3-4 hours
+
+---
+
 ## 🚀 Future Roadmap
 
 ### **Phase 22: Production Hardening** ✅
@@ -1077,7 +1134,17 @@ Password reset and verification emails weren't being sent. Investigation reveale
    - Dashboard data
 3. Lazy loading for dashboard components
 4. Optimize large report generation (background jobs)
-5. Add pagination to entry lists (currently loads all)
+5. **Add pagination/lazy loading to entry lists** ⚠️ HIGH PRIORITY
+   - Currently loads all entries on page load, causing slow performance
+   - Initial load: Show only 10 entries
+   - Add "Expand" or "Load More" button below the list
+   - Clicking loads next 10 entries (infinite scroll or paginated)
+   - Implement on both Dashboard and Entries pages
+   - Add sorting controls:
+     - Sort by: Date, Amount, Category
+     - Order: Ascending/Descending
+     - Persist sort preferences in user settings
+   - Benefits: Faster initial page load, better UX for large datasets
 6. Background job queue for heavy operations (Celery + Redis)
 7. Compress static assets (CSS, JS minification)
 8. CDN for static files
