@@ -24,6 +24,102 @@ router = APIRouter(prefix="/entries", tags=["entries"])
 
 # ---------- Page ----------
 
+@router.get("/load-more", response_class=HTMLResponse)
+async def load_more_entries(
+    request: Request,
+    start: str | None = Query(None),
+    end: str | None = Query(None),
+    category: str | None = Query(None),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    sort_by: str = Query("date", regex="^(date|amount|category)$"),
+    order: str = Query("desc", regex="^(asc|desc)$"),
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+) -> HTMLResponse:
+    """AJAX endpoint for loading more entries (returns only entry rows HTML)"""
+    # Parse date parameters
+    start_date = None
+    end_date = None
+    if start:
+        start_date = _date.fromisoformat(start)
+    if end:
+        end_date = _date.fromisoformat(end)
+
+    # Parse category parameter
+    category_id = None
+    if category and category.strip():
+        try:
+            category_id = int(category)
+        except ValueError:
+            category_id = None
+
+    # Use search_entries for filtering if dates or category are provided
+    if start_date and end_date:
+        entries = search_entries(db, user_id=user.id, start=start_date, end=end_date,
+                                category_id=category_id, limit=limit, offset=offset,
+                                sort_by=sort_by, order=order)
+    elif category_id:
+        entries = search_entries(db, user_id=user.id, category_id=category_id,
+                                limit=limit, offset=offset, sort_by=sort_by, order=order)
+    else:
+        entries = list_entries(db, user_id=user.id, limit=limit, offset=offset,
+                              sort_by=sort_by, order=order)
+
+    cats = list_categories(db, user_id=user.id)
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
+
+    # Return only the entry rows (not the full page)
+    return render(request, "entries/_list.html",
+                  {"entries": entries, "categories": cats, "user_currency": user_currency})
+
+
+@router.get("/load-more-mobile", response_class=HTMLResponse)
+async def load_more_mobile_entries(
+    request: Request,
+    start: str | None = Query(None),
+    end: str | None = Query(None),
+    category: str | None = Query(None),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    sort_by: str = Query("date", regex="^(date|amount|category)$"),
+    order: str = Query("desc", regex="^(asc|desc)$"),
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+) -> HTMLResponse:
+    """AJAX endpoint for loading more entries on mobile (returns only mobile cards HTML)"""
+    # Parse date parameters
+    start_date = None
+    end_date = None
+    if start:
+        start_date = _date.fromisoformat(start)
+    if end:
+        end_date = _date.fromisoformat(end)
+
+    # Parse category parameter
+    category_id = None
+    if category and category.strip():
+        try:
+            category_id = int(category)
+        except ValueError:
+            category_id = None
+
+    # Use search_entries for filtering if dates or category are provided
+    if start_date and end_date:
+        entries = search_entries(db, user_id=user.id, start=start_date, end=end_date,
+                                category_id=category_id, limit=limit, offset=offset,
+                                sort_by=sort_by, order=order)
+    elif category_id:
+        entries = search_entries(db, user_id=user.id, category_id=category_id,
+                                limit=limit, offset=offset, sort_by=sort_by, order=order)
+    else:
+        entries = list_entries(db, user_id=user.id, limit=limit, offset=offset,
+                              sort_by=sort_by, order=order)
+
+    # Return only the mobile entry cards (not the full page)
+    return render(request, "entries/_mobile_list.html", {"entries": entries})
+
+
 @router.get("/", response_class=HTMLResponse)
 async def page(
     request: Request,

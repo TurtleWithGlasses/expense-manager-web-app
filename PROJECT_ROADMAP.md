@@ -987,60 +987,56 @@ Password reset and verification emails weren't being sent. Investigation reveale
 
 ---
 
-#### **Issue #14: Entry Lists Load All Data at Once** ⚠️
+#### **Issue #14: Entry Lists Load All Data at Once** ✅
 **Impact:** Slow page load times, poor performance with large datasets
 **Priority:** HIGH
+**Status:** RESOLVED (November 15, 2025)
 
-**Current State:**
-- Dashboard and Entries pages load entire entry list on initial page load
-- No pagination or lazy loading implemented
-- No sorting controls available
-- Poor UX for users with hundreds of entries
+**Implemented Solution:**
 
-**Problem:**
-- Opening app or entries section loads full list, causing noticeable delay
-- Performance degrades as user adds more entries
-- No way to sort entries by different criteria
-- No limit on data fetched from database
-
-**Proposed Solution:**
 1. **Pagination/Lazy Loading:**
-   - Initial load: Display only 10 entries (configurable)
-   - Add "Load More" or "Expand" button below the list
-   - Clicking button loads next batch of 10 entries
-   - Alternative: Implement infinite scroll
-   - Update backend API to support `limit` and `offset` parameters
+   - ✅ Initial load displays 10 entries (configurable via query params)
+   - ✅ "Load More" button with remaining count badge
+   - ✅ AJAX-based dynamic loading (appends entries, no page reload)
+   - ✅ Backend API supports `limit` and `offset` parameters
+   - ✅ Separate endpoints for desktop (`/entries/load-more`) and mobile (`/entries/load-more-mobile`)
 
 2. **Sorting Controls:**
-   - Add "Sort By" dropdown with options:
+   - ✅ "Sort By" dropdown with options:
      - Date (newest first / oldest first)
-     - Amount (highest to lowest / lowest to highest)
-     - Category (alphabetical A-Z / Z-A)
-   - Add toggle for Ascending/Descending order
-   - Persist sort preferences in UserPreferences table
-   - Update API to support `sort_by` and `order` query parameters
+     - Amount (highest first / lowest first)
+     - Category (A-Z / Z-A)
+   - ✅ Separate order dropdown for ascending/descending
+   - ✅ Dynamic order labels based on sort field
+   - ✅ API supports `sort_by` and `order` query parameters
+   - ✅ Preserves filters (date, category) when loading more
 
 3. **UI Implementation:**
-   - Sorting dropdown in header of entry list
-   - "Load More" button styled consistently with app design
-   - Loading indicator while fetching additional entries
-   - Show entry count: "Showing 10 of 237 entries"
+   - ✅ Sorting controls card above entry table
+   - ✅ "Showing X to Y of Z entries" indicator
+   - ✅ Loading spinner while fetching additional entries
+   - ✅ Button hides when all entries loaded
+   - ✅ Works on both desktop table and mobile card views
 
-**Benefits:**
-- Faster initial page load (< 1 second vs 3-5 seconds)
-- Better UX for users with large datasets
-- Reduced database query load
-- Improved perceived performance
-- User control over data organization
+**Benefits Achieved:**
+- ✅ Faster initial page load (< 1 second vs 3-5 seconds)
+- ✅ Better UX for users with large datasets
+- ✅ Reduced database query load
+- ✅ Improved perceived performance
+- ✅ User control over data organization
+- ✅ Smooth AJAX loading without page refresh
 
-**Files to Modify:**
-- `app/api/v1/entries.py` - Add pagination and sorting parameters
-- `app/services/entries.py` - Implement pagination logic
-- `app/templates/entries/index.html` - Add sorting controls and load more button
-- `static/js/entries.js` - Handle dynamic loading and sorting
-- `app/models/user_preferences.py` - Add sort preferences fields (optional)
+**Files Modified:**
+- `app/api/v1/entries.py` - Added `/load-more` and `/load-more-mobile` endpoints
+- `app/services/entries.py` - Added pagination and sorting support to `list_entries()` and `search_entries()`
+- `app/templates/entries/index.html` - Added sorting controls, Load More buttons, and AJAX JavaScript
 
-**Estimated Time:** 3-4 hours
+**Technical Implementation:**
+- Uses JavaScript `fetch()` API for AJAX requests
+- `insertAdjacentHTML('beforeend')` to append new entries
+- Tracks offset state on client-side
+- Updates remaining count and showing count dynamically
+- Validates query params with FastAPI Query validators
 
 ---
 

@@ -262,13 +262,18 @@
 
 <!-- Load More Button -->
 {% if has_more %}
-<div class="text-center my-4">
-  <a href="/entries?{% if start_date %}start={{ start_date }}&{% endif %}{% if end_date %}end={{ end_date }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}offset={{ offset + limit }}&sort_by={{ sort_by }}&order={{ order }}"
-     class="btn btn-primary btn-lg">
+<div class="text-center my-4" id="load-more-container">
+  <button onclick="loadMoreEntries()" class="btn btn-primary btn-lg" id="load-more-btn">
     <i class="bi bi-arrow-down-circle me-2"></i>
     Load More Entries
-    <span class="badge bg-light text-dark ms-2">{{ total_count - showing_to }} remaining</span>
-  </a>
+    <span class="badge bg-light text-dark ms-2" id="remaining-count">{{ total_count - showing_to }} remaining</span>
+  </button>
+  <div id="load-more-loading" style="display: none;" class="mt-2">
+    <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <span class="text-light">Loading more entries...</span>
+  </div>
 </div>
 {% endif %}
 
@@ -280,13 +285,18 @@
 
   <!-- Load More Button for Mobile -->
   {% if has_more %}
-  <div class="text-center my-4">
-    <a href="/entries?{% if start_date %}start={{ start_date }}&{% endif %}{% if end_date %}end={{ end_date }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}offset={{ offset + limit }}&sort_by={{ sort_by }}&order={{ order }}"
-       class="btn btn-primary btn-lg w-100">
+  <div class="text-center my-4" id="load-more-mobile-container">
+    <button onclick="loadMoreMobileEntries()" class="btn btn-primary btn-lg w-100" id="load-more-mobile-btn">
       <i class="bi bi-arrow-down-circle me-2"></i>
       Load More Entries
-      <span class="badge bg-light text-dark ms-2">{{ total_count - showing_to }} remaining</span>
-    </a>
+      <span class="badge bg-light text-dark ms-2" id="remaining-count-mobile">{{ total_count - showing_to }} remaining</span>
+    </button>
+    <div id="load-more-mobile-loading" style="display: none;" class="mt-2">
+      <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <span class="text-light">Loading more entries...</span>
+    </div>
   </div>
   {% endif %}
 </div>
@@ -1287,6 +1297,145 @@ function showToast(message, type = 'info') {
     toast.addEventListener('hidden.bs.toast', () => {
         toast.remove();
     });
+}
+
+// Load More functionality
+let currentOffset = {{ offset }};
+let currentLimit = {{ limit }};
+const totalCount = {{ total_count }};
+const sortBy = "{{ sort_by }}";
+const sortOrder = "{{ order }}";
+const startDate = "{{ start_date or '' }}";
+const endDate = "{{ end_date or '' }}";
+const selectedCategory = "{{ selected_category or '' }}";
+
+async function loadMoreEntries() {
+    const btn = document.getElementById('load-more-btn');
+    const loading = document.getElementById('load-more-loading');
+    const container = document.getElementById('load-more-container');
+    const tbody = document.getElementById('entries-tbody');
+
+    // Show loading state
+    btn.style.display = 'none';
+    loading.style.display = 'block';
+
+    // Calculate new offset
+    const newOffset = currentOffset + currentLimit;
+
+    // Build URL with query parameters
+    const params = new URLSearchParams();
+    params.append('offset', newOffset);
+    params.append('limit', currentLimit);
+    params.append('sort_by', sortBy);
+    params.append('order', sortOrder);
+    if (startDate) params.append('start', startDate);
+    if (endDate) params.append('end', endDate);
+    if (selectedCategory) params.append('category', selectedCategory);
+
+    try {
+        const response = await fetch(`/entries/load-more?${params.toString()}`);
+        if (!response.ok) throw new Error('Failed to load entries');
+
+        const html = await response.text();
+
+        // Append new rows to tbody
+        tbody.insertAdjacentHTML('beforeend', html);
+
+        // Update offset
+        currentOffset = newOffset;
+
+        // Update remaining count
+        const showingTo = Math.min(currentOffset + currentLimit, totalCount);
+        const remaining = totalCount - showingTo;
+
+        if (remaining > 0) {
+            // Still more entries, update count and show button
+            document.getElementById('remaining-count').textContent = `${remaining} remaining`;
+            btn.style.display = 'inline-block';
+            loading.style.display = 'none';
+        } else {
+            // No more entries, hide the load more container
+            container.style.display = 'none';
+        }
+
+        // Update the showing count in the header
+        updateShowingCount(showingTo);
+
+    } catch (error) {
+        console.error('Error loading more entries:', error);
+        showToast('Failed to load more entries', 'error');
+        btn.style.display = 'inline-block';
+        loading.style.display = 'none';
+    }
+}
+
+async function loadMoreMobileEntries() {
+    const btn = document.getElementById('load-more-mobile-btn');
+    const loading = document.getElementById('load-more-mobile-loading');
+    const container = document.getElementById('load-more-mobile-container');
+    const listContainer = document.getElementById('mobile-entries-list');
+
+    // Show loading state
+    btn.style.display = 'none';
+    loading.style.display = 'block';
+
+    // Calculate new offset
+    const newOffset = currentOffset + currentLimit;
+
+    // Build URL with query parameters
+    const params = new URLSearchParams();
+    params.append('offset', newOffset);
+    params.append('limit', currentLimit);
+    params.append('sort_by', sortBy);
+    params.append('order', sortOrder);
+    if (startDate) params.append('start', startDate);
+    if (endDate) params.append('end', endDate);
+    if (selectedCategory) params.append('category', selectedCategory);
+
+    try {
+        const response = await fetch(`/entries/load-more-mobile?${params.toString()}`);
+        if (!response.ok) throw new Error('Failed to load entries');
+
+        const html = await response.text();
+
+        // Append new cards to the list
+        listContainer.insertAdjacentHTML('beforeend', html);
+
+        // Update offset
+        currentOffset = newOffset;
+
+        // Update remaining count
+        const showingTo = Math.min(currentOffset + currentLimit, totalCount);
+        const remaining = totalCount - showingTo;
+
+        if (remaining > 0) {
+            // Still more entries, update count and show button
+            document.getElementById('remaining-count-mobile').textContent = `${remaining} remaining`;
+            btn.style.display = 'block';
+            loading.style.display = 'none';
+        } else {
+            // No more entries, hide the load more container
+            container.style.display = 'none';
+        }
+
+        // Update the showing count in the header
+        updateShowingCount(showingTo);
+
+    } catch (error) {
+        console.error('Error loading more entries:', error);
+        showToast('Failed to load more entries', 'error');
+        btn.style.display = 'block';
+        loading.style.display = 'none';
+    }
+}
+
+function updateShowingCount(showingTo) {
+    // Update the "Showing X to Y of Z entries" text
+    const showingText = document.querySelector('.card-body .text-light');
+    if (showingText) {
+        const showingFrom = 1; // Always starts from 1
+        showingText.innerHTML = `<i class="bi bi-list-ul me-1"></i> Showing ${showingFrom} to ${showingTo} of ${totalCount} entries`;
+    }
 }
 
 // Initialize AI suggestions when page loads
