@@ -195,6 +195,48 @@
   </div>
 </div>
 
+<!-- Sorting and Pagination Controls -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <div class="row align-items-center">
+      <div class="col-md-6 col-12 mb-2 mb-md-0">
+        <small class="text-light" style="opacity: 0.9;">
+          <i class="bi bi-list-ul me-1"></i>
+          Showing {{ showing_from }} to {{ showing_to }} of {{ total_count }} entries
+        </small>
+      </div>
+      <div class="col-md-6 col-12">
+        <form method="GET" action="/entries" class="d-flex gap-2 justify-content-md-end" id="sortingForm">
+          <!-- Preserve filter parameters -->
+          {% if start_date %}<input type="hidden" name="start" value="{{ start_date }}">{% endif %}
+          {% if end_date %}<input type="hidden" name="end" value="{{ end_date }}">{% endif %}
+          {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+          <input type="hidden" name="offset" value="0">
+
+          <select class="form-select form-select-sm" name="sort_by" style="width: auto;" onchange="this.form.submit()">
+            <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Sort by: Date</option>
+            <option value="amount" {% if sort_by == 'amount' %}selected{% endif %}>Sort by: Amount</option>
+            <option value="category" {% if sort_by == 'category' %}selected{% endif %}>Sort by: Category</option>
+          </select>
+
+          <select class="form-select form-select-sm" name="order" style="width: auto;" onchange="this.form.submit()">
+            <option value="desc" {% if order == 'desc' %}selected{% endif %}>
+              {% if sort_by == 'date' %}Newest First
+              {% elif sort_by == 'amount' %}Highest First
+              {% else %}Z-A{% endif %}
+            </option>
+            <option value="asc" {% if order == 'asc' %}selected{% endif %}>
+              {% if sort_by == 'date' %}Oldest First
+              {% elif sort_by == 'amount' %}Lowest First
+              {% else %}A-Z{% endif %}
+            </option>
+          </select>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Desktop Table - Hidden on Mobile -->
 <div class="card shadow d-none d-md-block">
   <div class="card-body p-0">
@@ -218,11 +260,35 @@
   </div>
 </div>
 
+<!-- Load More Button -->
+{% if has_more %}
+<div class="text-center my-4">
+  <a href="/entries?{% if start_date %}start={{ start_date }}&{% endif %}{% if end_date %}end={{ end_date }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}offset={{ offset + limit }}&sort_by={{ sort_by }}&order={{ order }}"
+     class="btn btn-primary btn-lg">
+    <i class="bi bi-arrow-down-circle me-2"></i>
+    Load More Entries
+    <span class="badge bg-light text-dark ms-2">{{ total_count - showing_to }} remaining</span>
+  </a>
+</div>
+{% endif %}
+
 <!-- Mobile Card Layout - Hidden on Desktop -->
 <div class="d-md-none" id="mobile-entries">
   <div id="mobile-entries-list">
     {% include "entries/_mobile_list.html" %}
   </div>
+
+  <!-- Load More Button for Mobile -->
+  {% if has_more %}
+  <div class="text-center my-4">
+    <a href="/entries?{% if start_date %}start={{ start_date }}&{% endif %}{% if end_date %}end={{ end_date }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}offset={{ offset + limit }}&sort_by={{ sort_by }}&order={{ order }}"
+       class="btn btn-primary btn-lg w-100">
+      <i class="bi bi-arrow-down-circle me-2"></i>
+      Load More Entries
+      <span class="badge bg-light text-dark ms-2">{{ total_count - showing_to }} remaining</span>
+    </a>
+  </div>
+  {% endif %}
 </div>
 
 <!-- Add custom styles -->

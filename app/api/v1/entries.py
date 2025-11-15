@@ -11,6 +11,8 @@ from app.services.entries import (
     delete_entry,
     update_entry_amount,
     search_entries,
+    get_entries_count,
+    get_search_entries_count,
 )
 from app.services.categories import list_categories
 from app.services.user_preferences import user_preferences_service
@@ -28,6 +30,10 @@ async def page(
     start: str | None = Query(None),
     end: str | None = Query(None),
     category: str | None = Query(None),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    sort_by: str = Query("date", regex="^(date|amount|category)$"),
+    order: str = Query("desc", regex="^(asc|desc)$"),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
@@ -38,7 +44,7 @@ async def page(
         start_date = _date.fromisoformat(start)
     if end:
         end_date = _date.fromisoformat(end)
-    
+
     # Parse category parameter - convert to int if not empty, otherwise None
     category_id = None
     if category and category.strip():
@@ -46,17 +52,31 @@ async def page(
             category_id = int(category)
         except ValueError:
             category_id = None
-    
+
     # Use search_entries for filtering if dates or category are provided
     if start_date and end_date:
-        entries = search_entries(db, user_id=user.id, start=start_date, end=end_date, category_id=category_id)
+        entries = search_entries(db, user_id=user.id, start=start_date, end=end_date,
+                                category_id=category_id, limit=limit, offset=offset,
+                                sort_by=sort_by, order=order)
+        total_count = get_search_entries_count(db, user_id=user.id, start=start_date,
+                                              end=end_date, category_id=category_id)
     elif category_id:
-        entries = search_entries(db, user_id=user.id, category_id=category_id)
+        entries = search_entries(db, user_id=user.id, category_id=category_id,
+                                limit=limit, offset=offset, sort_by=sort_by, order=order)
+        total_count = get_search_entries_count(db, user_id=user.id, category_id=category_id)
     else:
-        entries = list_entries(db, user_id=user.id)
-    
+        entries = list_entries(db, user_id=user.id, limit=limit, offset=offset,
+                              sort_by=sort_by, order=order)
+        total_count = get_entries_count(db, user_id=user.id)
+
     cats = list_categories(db, user_id=user.id)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
+
+    # Calculate pagination info
+    showing_from = offset + 1 if total_count > 0 else 0
+    showing_to = min(offset + limit, total_count)
+    has_more = showing_to < total_count
+
     return render(request, "entries/index.html",
                   {"entries": entries,
                    "categories": cats,
@@ -64,7 +84,15 @@ async def page(
                    "user_currency": user_currency,
                    "start_date": start,
                    "end_date": end,
-                   "selected_category": str(category_id) if category_id else None})
+                   "selected_category": str(category_id) if category_id else None,
+                   "limit": limit,
+                   "offset": offset,
+                   "sort_by": sort_by,
+                   "order": order,
+                   "total_count": total_count,
+                   "showing_from": showing_from,
+                   "showing_to": showing_to,
+                   "has_more": has_more})
 
 
 # ---------- Create ----------
