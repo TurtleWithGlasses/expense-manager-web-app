@@ -1,3 +1,13 @@
+<div class="mb-2">
+  <small class="text-muted">
+    {% if total_count > 0 %}
+      Showing {{ showing_from }} to {{ showing_to }} of {{ total_count }} expenses
+    {% else %}
+      No expenses in this range
+    {% endif %}
+  </small>
+</div>
+
 <table class="table">
   <thead>
     <tr>
@@ -6,7 +16,7 @@
       <th class="text-end">Amount</th>
     </tr>
   </thead>
-  <tbody>
+  <tbody id="expense-list-tbody">
     {% for e in rows %}
       <tr>
         <td>{{ e.date.isoformat() }}</td>
@@ -30,3 +40,19 @@
     </tr>
   </tfoot>
 </table>
+
+{% if has_more %}
+<div class="text-center mt-3" id="expense-load-more-container">
+  <button onclick="loadMoreExpenses()" class="btn btn-sm btn-outline-danger" id="expense-load-more-btn">
+    <i class="bi bi-arrow-down-circle me-1"></i>
+    Load More
+    <span class="badge bg-danger ms-1" id="expense-remaining-count">{{ total_count - showing_to }}</span>
+  </button>
+  <div id="expense-load-more-loading" style="display: none;" class="mt-2">
+    <div class="spinner-border spinner-border-sm text-danger me-1" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <small class="text-muted">Loading...</small>
+  </div>
+</div>
+{% endif %}

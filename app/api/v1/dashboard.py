@@ -91,6 +91,8 @@ async def expenses_panel(
     start: date | None = Query(None),
     end: date | None = Query(None),
     category: str | None = Query(None),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
@@ -108,16 +110,20 @@ async def expenses_panel(
 
     query = db.query(Entry).filter(
         Entry.user_id == user.id,
-        func.lower(Entry.type) == "expense", 
+        func.lower(Entry.type) == "expense",
         Entry.date >= s,
         Entry.date < e_next,
     )
-    
+
     # Add category filter if specified
     if category_id:
         query = query.filter(Entry.category_id == category_id)
-    
-    rows = query.order_by(Entry.date.asc()).all()
+
+    # Get total count before pagination
+    total_count = query.count()
+
+    # Apply pagination
+    rows = query.order_by(Entry.date.desc()).offset(offset).limit(limit).all()
     
     # Convert each entry amount to user's currency
     converted_rows = []
@@ -140,14 +146,25 @@ async def expenses_panel(
         total_expense += converted_amount
     
     formatted_total = currency_service.format_amount(total_expense, user_currency)
-    
+
+    # Calculate pagination info
+    showing_from = offset + 1 if total_count > 0 else 0
+    showing_to = min(offset + limit, total_count)
+    has_more = showing_to < total_count
+
     return render(
         request,
         "dashboard/_expenses_list.html",
         {
-            "rows": converted_rows, 
+            "rows": converted_rows,
             "total_expense": total_expense,
-            "formatted_total": formatted_total
+            "formatted_total": formatted_total,
+            "limit": limit,
+            "offset": offset,
+            "total_count": total_count,
+            "showing_from": showing_from,
+            "showing_to": showing_to,
+            "has_more": has_more
         },
     )
 
@@ -157,6 +174,8 @@ async def incomes_panel(
     start: date | None = Query(None),
     end: date | None = Query(None),
     category: str | None = Query(None),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
@@ -174,16 +193,20 @@ async def incomes_panel(
 
     query = db.query(Entry).filter(
         Entry.user_id == user.id,
-        func.lower(Entry.type) == "income", 
+        func.lower(Entry.type) == "income",
         Entry.date >= s,
         Entry.date < e_next,
     )
-    
+
     # Add category filter if specified
     if category_id:
         query = query.filter(Entry.category_id == category_id)
-    
-    rows = query.order_by(Entry.date.asc()).all()
+
+    # Get total count before pagination
+    total_count = query.count()
+
+    # Apply pagination
+    rows = query.order_by(Entry.date.desc()).offset(offset).limit(limit).all()
     
     # Convert each entry amount to user's currency
     converted_rows = []
@@ -207,13 +230,24 @@ async def incomes_panel(
         total_income += converted_amount
     
     formatted_total = currency_service.format_amount(total_income, user_currency)
-    
+
+    # Calculate pagination info
+    showing_from = offset + 1 if total_count > 0 else 0
+    showing_to = min(offset + limit, total_count)
+    has_more = showing_to < total_count
+
     return render(
         request,
         "dashboard/_incomes_list.html",
         {
-            "rows": converted_rows, 
+            "rows": converted_rows,
             "total_income": total_income,
-            "formatted_total": formatted_total
+            "formatted_total": formatted_total,
+            "limit": limit,
+            "offset": offset,
+            "total_count": total_count,
+            "showing_from": showing_from,
+            "showing_to": showing_to,
+            "has_more": has_more
         },
     )

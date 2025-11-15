@@ -1014,6 +1014,163 @@
 // Get user's currency symbol from template
 const CURRENCY_SYMBOL = '{% if user_currency %}{{ user_currency.symbol }}{% else %}${% endif %}';
 
+// Dashboard Load More functionality
+let incomeOffset = 0;
+let expenseOffset = 0;
+const paginationLimit = 10;
+
+async function loadMoreIncomes() {
+    const btn = document.getElementById('income-load-more-btn');
+    const loading = document.getElementById('income-load-more-loading');
+    const container = document.getElementById('income-load-more-container');
+    const tbody = document.getElementById('income-list-tbody');
+
+    if (!btn || !loading || !tbody) return;
+
+    // Show loading state
+    btn.style.display = 'none';
+    loading.style.display = 'block';
+
+    // Calculate new offset
+    incomeOffset += paginationLimit;
+
+    // Build URL with query parameters from filters
+    const start = document.getElementById('start').value;
+    const end = document.getElementById('end').value;
+    const category = document.getElementById('category').value;
+
+    const params = new URLSearchParams();
+    params.append('offset', incomeOffset);
+    params.append('limit', paginationLimit);
+    if (start) params.append('start', start);
+    if (end) params.append('end', end);
+    if (category) params.append('category', category);
+
+    try {
+        const response = await fetch(`/dashboard/incomes?${params.toString()}`);
+        if (!response.ok) throw new Error('Failed to load incomes');
+
+        const html = await response.text();
+
+        // Parse the response to extract only the tbody rows
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const newRows = tempDiv.querySelector('#income-list-tbody');
+
+        if (newRows && newRows.children.length > 0) {
+            // Append new rows
+            Array.from(newRows.children).forEach(row => {
+                tbody.appendChild(row);
+            });
+
+            // Check if there are more entries (button will be in the response)
+            const newContainer = tempDiv.querySelector('#income-load-more-container');
+            if (newContainer) {
+                // Update button state
+                const remainingBadge = newContainer.querySelector('#income-remaining-count');
+                if (remainingBadge) {
+                    document.getElementById('income-remaining-count').textContent = remainingBadge.textContent;
+                }
+                btn.style.display = 'inline-block';
+                loading.style.display = 'none';
+            } else {
+                // No more entries, hide container
+                container.style.display = 'none';
+            }
+        } else {
+            // No more rows
+            container.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading more incomes:', error);
+        btn.style.display = 'inline-block';
+        loading.style.display = 'none';
+    }
+}
+
+async function loadMoreExpenses() {
+    const btn = document.getElementById('expense-load-more-btn');
+    const loading = document.getElementById('expense-load-more-loading');
+    const container = document.getElementById('expense-load-more-container');
+    const tbody = document.getElementById('expense-list-tbody');
+
+    if (!btn || !loading || !tbody) return;
+
+    // Show loading state
+    btn.style.display = 'none';
+    loading.style.display = 'block';
+
+    // Calculate new offset
+    expenseOffset += paginationLimit;
+
+    // Build URL with query parameters from filters
+    const start = document.getElementById('start').value;
+    const end = document.getElementById('end').value;
+    const category = document.getElementById('category').value;
+
+    const params = new URLSearchParams();
+    params.append('offset', expenseOffset);
+    params.append('limit', paginationLimit);
+    if (start) params.append('start', start);
+    if (end) params.append('end', end);
+    if (category) params.append('category', category);
+
+    try {
+        const response = await fetch(`/dashboard/expenses?${params.toString()}`);
+        if (!response.ok) throw new Error('Failed to load expenses');
+
+        const html = await response.text();
+
+        // Parse the response to extract only the tbody rows
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const newRows = tempDiv.querySelector('#expense-list-tbody');
+
+        if (newRows && newRows.children.length > 0) {
+            // Append new rows
+            Array.from(newRows.children).forEach(row => {
+                tbody.appendChild(row);
+            });
+
+            // Check if there are more entries (button will be in the response)
+            const newContainer = tempDiv.querySelector('#expense-load-more-container');
+            if (newContainer) {
+                // Update button state
+                const remainingBadge = newContainer.querySelector('#expense-remaining-count');
+                if (remainingBadge) {
+                    document.getElementById('expense-remaining-count').textContent = remainingBadge.textContent;
+                }
+                btn.style.display = 'inline-block';
+                loading.style.display = 'none';
+            } else {
+                // No more entries, hide container
+                container.style.display = 'none';
+            }
+        } else {
+            // No more rows
+            container.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading more expenses:', error);
+        btn.style.display = 'inline-block';
+        loading.style.display = 'none';
+    }
+}
+
+// Reset offsets when filters change
+document.addEventListener('DOMContentLoaded', function() {
+    const filters = document.getElementById('filters');
+    if (filters) {
+        const inputs = filters.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('change', function() {
+                incomeOffset = 0;
+                expenseOffset = 0;
+            });
+        });
+    }
+});
+
 function updateIncomeColor(color) {
   document.documentElement.style.setProperty('--income-color', color);
   localStorage.setItem('income-color', color);
