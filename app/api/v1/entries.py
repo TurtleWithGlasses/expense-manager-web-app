@@ -176,6 +176,7 @@ async def page(
     return render(request, "entries/index.html",
                   {"entries": entries,
                    "categories": cats,
+                   "user": user,
                    "today": _date.today().isoformat(),
                    "user_currency": user_currency,
                    "start_date": start,

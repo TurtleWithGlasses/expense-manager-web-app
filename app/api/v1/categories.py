@@ -17,7 +17,7 @@ router = APIRouter(prefix="/categories", tags=["categories"])
 @router.get("/", response_class=HTMLResponse)
 async def page_me(request: Request, user=Depends(current_user), db: Session = Depends(get_db)) -> HTMLResponse:
     cats = list_categories(db, user_id=user.id)
-    return render(request, "categories/index.html", {"categories": cats})
+    return render(request, "categories/index.html", {"categories": cats, "user": user})
 
 # JSON API endpoint for categories list
 @router.get("/api/list")
