@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 1.0 (Production)
-**Last Updated:** November 14, 2025
+**Last Updated:** November 15, 2025
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -1026,17 +1026,29 @@ Password reset and verification emails weren't being sent. Investigation reveale
 - ✅ User control over data organization
 - ✅ Smooth AJAX loading without page refresh
 
-**Files Modified:**
+**Files Modified - Entries Page:**
 - `app/api/v1/entries.py` - Added `/load-more` and `/load-more-mobile` endpoints
 - `app/services/entries.py` - Added pagination and sorting support to `list_entries()` and `search_entries()`
 - `app/templates/entries/index.html` - Added sorting controls, Load More buttons, and AJAX JavaScript
 
+**Files Modified - Dashboard:**
+- `app/api/v1/dashboard.py` - Added `limit` and `offset` to `/dashboard/incomes` and `/dashboard/expenses`
+- `app/templates/dashboard.html` - Added `loadMoreIncomes()` and `loadMoreExpenses()` JavaScript functions
+- `app/templates/dashboard/_incomes_list.html` - Added entry counter and Load More button
+- `app/templates/dashboard/_expenses_list.html` - Added entry counter and Load More button
+
 **Technical Implementation:**
 - Uses JavaScript `fetch()` API for AJAX requests
-- `insertAdjacentHTML('beforeend')` to append new entries
-- Tracks offset state on client-side
+- Entries page: `insertAdjacentHTML('beforeend')` to append new rows
+- Dashboard: HTML parsing to extract tbody rows from response
+- Tracks offset state on client-side (separate for income/expense on dashboard)
 - Updates remaining count and showing count dynamically
 - Validates query params with FastAPI Query validators
+- Automatic offset reset when filters change (dashboard only)
+
+**Commits:**
+- `52dac4e` - Implement AJAX-based pagination with Load More functionality (Entries page)
+- `6781694` - Add pagination with Load More to dashboard income/expense lists (Dashboard)
 
 ---
 
