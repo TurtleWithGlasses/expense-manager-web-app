@@ -1063,6 +1063,16 @@ async function loadMoreIncomes() {
                 tbody.appendChild(row);
             });
 
+            // Update the "Showing X to Y of Z" counter
+            const showingText = tempDiv.querySelector('.mb-2 .text-muted');
+            if (showingText) {
+                const incomeListContainer = document.getElementById('income-list');
+                const counterElement = incomeListContainer.querySelector('.mb-2 .text-muted');
+                if (counterElement) {
+                    counterElement.textContent = showingText.textContent;
+                }
+            }
+
             // Check if there are more entries (button will be in the response)
             const newContainer = tempDiv.querySelector('#income-load-more-container');
             if (newContainer) {
@@ -1131,6 +1141,16 @@ async function loadMoreExpenses() {
             Array.from(newRows.children).forEach(row => {
                 tbody.appendChild(row);
             });
+
+            // Update the "Showing X to Y of Z" counter
+            const showingText = tempDiv.querySelector('.mb-2 .text-muted');
+            if (showingText) {
+                const expenseListContainer = document.getElementById('expense-list');
+                const counterElement = expenseListContainer.querySelector('.mb-2 .text-muted');
+                if (counterElement) {
+                    counterElement.textContent = showingText.textContent;
+                }
+            }
 
             // Check if there are more entries (button will be in the response)
             const newContainer = tempDiv.querySelector('#expense-load-more-container');

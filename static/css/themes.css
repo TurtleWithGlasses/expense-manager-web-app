@@ -549,3 +549,27 @@
   background-color: #6c757d !important;
   color: #ffffff !important;
 }
+
+/* ==============================================
+   TEXT COLOR OVERRIDES FOR BETTER READABILITY
+   ============================================== */
+
+/* Dark theme (default) - Make success text brighter and more readable */
+.text-success {
+  color: #5cd88c !important; /* Brighter green for better readability on dark backgrounds */
+}
+
+/* Light theme - Use darker green for contrast */
+[data-theme="light"] .text-success {
+  color: #198754 !important; /* Standard Bootstrap success green for light theme */
+}
+
+/* Dark theme - Make danger text more readable */
+.text-danger {
+  color: #ff7b7b !important; /* Slightly brighter red */
+}
+
+/* Light theme - Use standard danger color */
+[data-theme="light"] .text-danger {
+  color: #dc3545 !important; /* Standard Bootstrap danger red */
+}
