@@ -1064,10 +1064,19 @@ async function loadMoreIncomes() {
             });
 
             // Update the "Showing X to Y of Z" counter
-            const showingText = tempDiv.querySelector('#income-summary-text');
+            // Calculate the actual showing count based on loaded rows
+            const totalLoadedRows = tbody.children.length;
             const counterElement = document.getElementById('income-summary-text');
-            if (showingText && counterElement) {
-                counterElement.textContent = showingText.textContent;
+            if (counterElement) {
+                // Extract total count from the response
+                const showingText = tempDiv.querySelector('#income-summary-text');
+                if (showingText) {
+                    const match = showingText.textContent.match(/of (\d+) incomes/);
+                    if (match) {
+                        const totalCount = parseInt(match[1]);
+                        counterElement.textContent = `Showing 1 to ${totalLoadedRows} of ${totalCount} incomes`;
+                    }
+                }
             }
 
             // Check if there are more entries (button will be in the response)
@@ -1140,10 +1149,19 @@ async function loadMoreExpenses() {
             });
 
             // Update the "Showing X to Y of Z" counter
-            const showingText = tempDiv.querySelector('#expense-summary-text');
+            // Calculate the actual showing count based on loaded rows
+            const totalLoadedRows = tbody.children.length;
             const counterElement = document.getElementById('expense-summary-text');
-            if (showingText && counterElement) {
-                counterElement.textContent = showingText.textContent;
+            if (counterElement) {
+                // Extract total count from the response
+                const showingText = tempDiv.querySelector('#expense-summary-text');
+                if (showingText) {
+                    const match = showingText.textContent.match(/of (\d+) expenses/);
+                    if (match) {
+                        const totalCount = parseInt(match[1]);
+                        counterElement.textContent = `Showing 1 to ${totalLoadedRows} of ${totalCount} expenses`;
+                    }
+                }
             }
 
             // Check if there are more entries (button will be in the response)
