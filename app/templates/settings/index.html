@@ -110,6 +110,118 @@
           </div>
         </div>
 
+        <!-- Change Password Card -->
+        <div class="card settings-card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="bi bi-shield-lock"></i>
+              Change Password
+            </h3>
+          </div>
+          <div class="card-body">
+            <form id="change-password-form" onsubmit="changePassword(event)">
+              <div class="form-group">
+                <label class="form-label" for="current-password">
+                  <i class="bi bi-key"></i>
+                  Current Password
+                </label>
+                <div class="password-input-wrapper">
+                  <input
+                    type="password"
+                    id="current-password"
+                    name="current_password"
+                    class="form-input"
+                    placeholder="Enter your current password"
+                    required
+                  >
+                  <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('current-password')">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+                <div id="current-password-error" class="error-message" style="display: none;"></div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="new-password">
+                  <i class="bi bi-lock"></i>
+                  New Password
+                </label>
+                <div class="password-input-wrapper">
+                  <input
+                    type="password"
+                    id="new-password"
+                    name="new_password"
+                    class="form-input"
+                    placeholder="Enter your new password"
+                    required
+                    oninput="validatePasswordStrength()"
+                  >
+                  <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('new-password')">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+                <div id="password-strength" class="password-strength" style="display: none;">
+                  <div class="strength-bar">
+                    <div id="strength-bar-fill" class="strength-bar-fill"></div>
+                  </div>
+                  <span id="strength-text" class="strength-text"></span>
+                </div>
+                <small class="form-helper">Password must be at least 8 characters long</small>
+                <div id="new-password-error" class="error-message" style="display: none;"></div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="confirm-password">
+                  <i class="bi bi-lock-fill"></i>
+                  Confirm New Password
+                </label>
+                <div class="password-input-wrapper">
+                  <input
+                    type="password"
+                    id="confirm-password"
+                    name="confirm_password"
+                    class="form-input"
+                    placeholder="Confirm your new password"
+                    required
+                    oninput="validatePasswordMatch()"
+                  >
+                  <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('confirm-password')">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+                <div id="confirm-password-error" class="error-message" style="display: none;"></div>
+              </div>
+
+              <div class="password-requirements">
+                <p class="requirements-title">Password requirements:</p>
+                <ul class="requirements-list">
+                  <li id="req-length" class="requirement-item">
+                    <i class="bi bi-circle"></i>
+                    <span>At least 8 characters</span>
+                  </li>
+                  <li id="req-uppercase" class="requirement-item">
+                    <i class="bi bi-circle"></i>
+                    <span>One uppercase letter</span>
+                  </li>
+                  <li id="req-lowercase" class="requirement-item">
+                    <i class="bi bi-circle"></i>
+                    <span>One lowercase letter</span>
+                  </li>
+                  <li id="req-number" class="requirement-item">
+                    <i class="bi bi-circle"></i>
+                    <span>One number</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full-width">
+                <i class="bi bi-check-circle"></i>
+                Update Password
+              </button>
+            </form>
+          </div>
+        </div>
+
         <!-- Account Stats Card -->
         <div class="card settings-card">
           <div class="card-header">
@@ -546,6 +658,190 @@
   margin: 0;
 }
 
+/* Password Change Section */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper .form-input {
+  padding-right: 3rem;
+  flex: 1;
+}
+
+.toggle-password-btn {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  font-size: 1.125rem;
+}
+
+.toggle-password-btn:hover {
+  color: var(--text);
+}
+
+.toggle-password-btn:focus {
+  outline: none;
+  color: var(--blue);
+}
+
+.error-message {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid #ef4444;
+  border-radius: var(--radius-sm);
+  color: #ef4444;
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-theme="dark"] .error-message {
+  background: rgba(220, 38, 38, 0.15);
+  color: #fca5a5;
+  border-left-color: #dc2626;
+}
+
+[data-theme="light"] .error-message {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+  border-left-color: #dc2626;
+}
+
+.password-strength {
+  margin-top: 0.75rem;
+}
+
+.strength-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+[data-theme="dark"] .strength-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] .strength-bar {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.strength-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: 3px;
+}
+
+.strength-text {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  display: block;
+}
+
+.strength-weak .strength-bar-fill {
+  width: 33%;
+  background: #ef4444;
+}
+
+.strength-weak .strength-text {
+  color: #ef4444;
+}
+
+.strength-medium .strength-bar-fill {
+  width: 66%;
+  background: #f59e0b;
+}
+
+.strength-medium .strength-text {
+  color: #f59e0b;
+}
+
+.strength-strong .strength-bar-fill {
+  width: 100%;
+  background: #10b981;
+}
+
+.strength-strong .strength-text {
+  color: #10b981;
+}
+
+.password-requirements {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-base);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .password-requirements {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="light"] .password-requirements {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.requirements-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  margin: 0 0 0.75rem 0;
+}
+
+.requirements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.requirement-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--font-size-sm);
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+
+.requirement-item i {
+  font-size: 0.75rem;
+  transition: color 0.2s ease;
+}
+
+.requirement-item.met {
+  color: #10b981;
+}
+
+.requirement-item.met i {
+  color: #10b981;
+}
+
+.requirement-item.met i::before {
+  content: "\f26b"; /* bi-check-circle-fill */
+}
+
+.btn-full-width {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
 /* Light Theme Overrides */
 [data-theme="light"] .stat-item {
   background: rgba(13, 110, 253, 0.05);
@@ -863,6 +1159,177 @@ async function exportData() {
   } catch (error) {
     console.error('Error exporting data:', error);
     Toast.error(error.message || 'Failed to export data', 'Error');
+  }
+}
+
+// Password visibility toggle
+function togglePasswordVisibility(inputId) {
+  const input = document.getElementById(inputId);
+  const btn = input.parentElement.querySelector('.toggle-password-btn');
+  const icon = btn.querySelector('i');
+
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'bi bi-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'bi bi-eye';
+  }
+}
+
+// Password strength validation
+function validatePasswordStrength() {
+  const password = document.getElementById('new-password').value;
+  const strengthDiv = document.getElementById('password-strength');
+  const strengthText = document.getElementById('strength-text');
+
+  if (!password) {
+    strengthDiv.style.display = 'none';
+    return;
+  }
+
+  strengthDiv.style.display = 'block';
+
+  // Check requirements
+  const hasLength = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+
+  // Update requirement indicators
+  updateRequirement('req-length', hasLength);
+  updateRequirement('req-uppercase', hasUppercase);
+  updateRequirement('req-lowercase', hasLowercase);
+  updateRequirement('req-number', hasNumber);
+
+  // Calculate strength
+  let strength = 0;
+  if (hasLength) strength++;
+  if (hasUppercase) strength++;
+  if (hasLowercase) strength++;
+  if (hasNumber) strength++;
+
+  // Update strength display
+  strengthDiv.className = 'password-strength';
+  if (strength <= 2) {
+    strengthDiv.classList.add('strength-weak');
+    strengthText.textContent = 'Weak password';
+  } else if (strength === 3) {
+    strengthDiv.classList.add('strength-medium');
+    strengthText.textContent = 'Medium password';
+  } else {
+    strengthDiv.classList.add('strength-strong');
+    strengthText.textContent = 'Strong password';
+  }
+
+  return strength >= 4;
+}
+
+// Update password requirement indicator
+function updateRequirement(reqId, met) {
+  const reqItem = document.getElementById(reqId);
+  if (met) {
+    reqItem.classList.add('met');
+  } else {
+    reqItem.classList.remove('met');
+  }
+}
+
+// Validate password match
+function validatePasswordMatch() {
+  const newPassword = document.getElementById('new-password').value;
+  const confirmPassword = document.getElementById('confirm-password').value;
+  const errorDiv = document.getElementById('confirm-password-error');
+
+  if (!confirmPassword) {
+    errorDiv.style.display = 'none';
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    errorDiv.textContent = 'Passwords do not match';
+    errorDiv.style.display = 'block';
+    return false;
+  } else {
+    errorDiv.style.display = 'none';
+    return true;
+  }
+}
+
+// Change password
+async function changePassword(event) {
+  event.preventDefault();
+
+  const currentPassword = document.getElementById('current-password').value;
+  const newPassword = document.getElementById('new-password').value;
+  const confirmPassword = document.getElementById('confirm-password').value;
+
+  // Clear previous errors
+  document.getElementById('current-password-error').style.display = 'none';
+  document.getElementById('new-password-error').style.display = 'none';
+  document.getElementById('confirm-password-error').style.display = 'none';
+
+  // Validate new password strength
+  const isStrong = validatePasswordStrength();
+  if (!isStrong) {
+    const errorDiv = document.getElementById('new-password-error');
+    errorDiv.textContent = 'Password must meet all requirements';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  // Validate password match
+  if (newPassword !== confirmPassword) {
+    const errorDiv = document.getElementById('confirm-password-error');
+    errorDiv.textContent = 'Passwords do not match';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  // Check if new password is same as current
+  if (currentPassword === newPassword) {
+    const errorDiv = document.getElementById('new-password-error');
+    errorDiv.textContent = 'New password must be different from current password';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('current_password', currentPassword);
+    formData.append('new_password', newPassword);
+
+    const response = await fetch('/api/profile/password', {
+      method: 'PUT',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      Toast.success('Password changed successfully', 'Success');
+
+      // Reset form
+      document.getElementById('change-password-form').reset();
+      document.getElementById('password-strength').style.display = 'none';
+
+      // Reset requirement indicators
+      ['req-length', 'req-uppercase', 'req-lowercase', 'req-number'].forEach(id => {
+        document.getElementById(id).classList.remove('met');
+      });
+    } else {
+      // Show specific error
+      if (data.detail && data.detail.includes('current password')) {
+        const errorDiv = document.getElementById('current-password-error');
+        errorDiv.textContent = data.detail;
+        errorDiv.style.display = 'block';
+      } else {
+        Toast.error(data.detail || 'Failed to change password', 'Error');
+      }
+    }
+  } catch (error) {
+    console.error('Error changing password:', error);
+    Toast.error('Failed to change password', 'Error');
   }
 }
 

@@ -19,6 +19,10 @@ from app.models.category import Category
 from app.models.user_preferences import UserPreferences
 from app.models.weekly_report import UserReportPreferences
 from app.models.report_status import ReportStatus
+from app.core.security import hash_password, verify_password
+from app.core.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -127,7 +131,7 @@ async def upload_avatar(
         })
 
     except Exception as e:
-        print(f"Error processing image: {e}")
+        logger.error(f"Error processing image: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail="Invalid image file")
 
 
@@ -246,6 +250,61 @@ async def export_user_data(
     )
 
 
+@router.put("/api/profile/password")
+async def change_password(
+    current_password: str = Form(...),
+    new_password: str = Form(...),
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Change user password"""
+
+    try:
+        logger.info(f"Password change attempt for user: {user.email}")
+
+        # Verify current password
+        if not verify_password(current_password, user.hashed_password):
+            logger.warning(f"Failed password change for {user.email}: incorrect current password")
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+        # Validate new password length
+        if len(new_password) < 8:
+            raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+
+        # Check password strength requirements
+        has_uppercase = any(c.isupper() for c in new_password)
+        has_lowercase = any(c.islower() for c in new_password)
+        has_number = any(c.isdigit() for c in new_password)
+
+        if not (has_uppercase and has_lowercase and has_number):
+            raise HTTPException(
+                status_code=400,
+                detail="Password must contain at least one uppercase letter, one lowercase letter, and one number"
+            )
+
+        # Check if new password is same as current
+        if verify_password(new_password, user.hashed_password):
+            raise HTTPException(status_code=400, detail="New password must be different from current password")
+
+        # Hash and update password
+        user.hashed_password = hash_password(new_password)
+        db.commit()
+
+        logger.info(f"Password changed successfully for user: {user.email}")
+
+        return JSONResponse({
+            "success": True,
+            "message": "Password changed successfully"
+        })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error changing password for {user.email}: {e}", exc_info=True)
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to change password")
+
+
 @router.delete("/api/profile/account")
 async def delete_account(
     user: User = Depends(current_user),
@@ -254,7 +313,7 @@ async def delete_account(
     """Permanently delete user account and all associated data"""
 
     try:
-        print(f"🗑️ Attempting to delete account for user: {user.email} (ID: {user.id})")
+        logger.info(f"Attempting to delete account for user: {user.email} (ID: {user.id})")
 
         user_id = user.id
         
@@ -262,10 +321,10 @@ async def delete_account(
         # This is a defensive measure in case the database constraint doesn't have CASCADE
         try:
             deleted_count = db.query(ReportStatus).filter(ReportStatus.user_id == user_id).delete(synchronize_session=False)
-            print(f"🗑️ Deleted {deleted_count} report_status records for user {user_id}")
+            logger.info(f"Deleted {deleted_count} report_status records for user {user_id}")
             db.flush()  # Flush to ensure the delete is executed before user deletion
         except Exception as e:
-            print(f"⚠️ Warning: Error deleting report_status records: {e}")
+            logger.warning(f"Warning: Error deleting report_status records: {e}")
             # Continue with user deletion anyway - cascade should handle it if DB constraint is correct
 
         # Delete user (cascade will handle other related records)
@@ -273,7 +332,7 @@ async def delete_account(
         db.delete(user)
         db.commit()
 
-        print(f"✅ Account successfully deleted for user: {user.email}")
+        logger.info(f"Account successfully deleted for user: {user.email}")
 
         return JSONResponse({
             "success": True,
@@ -281,8 +340,6 @@ async def delete_account(
         })
 
     except Exception as e:
-        print(f"❌ Error deleting account: {type(e).__name__}: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Error deleting account: {type(e).__name__}: {str(e)}", exc_info=True)
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to delete account: {str(e)}")
