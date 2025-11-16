@@ -128,11 +128,22 @@ async def page(
     category: str | None = Query(None),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    sort_by: str = Query("date", regex="^(date|amount|category)$"),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    sort_by: str | None = Query(None, regex="^(date|amount|category)$"),
+    order: str | None = Query(None, regex="^(asc|desc)$"),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
+    # Load user's sort preferences if not explicitly provided
+    if sort_by is None or order is None:
+        saved_sort_by, saved_order = user_preferences_service.get_sort_preference(db, user.id, 'entries')
+        if sort_by is None:
+            sort_by = saved_sort_by
+        if order is None:
+            order = saved_order
+    else:
+        # Save the new sort preference when user changes it
+        user_preferences_service.save_sort_preference(db, user.id, 'entries', sort_by, order)
+
     # Parse date parameters
     start_date = None
     end_date = None

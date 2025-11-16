@@ -93,9 +93,22 @@ async def expenses_panel(
     category: str | None = Query(None),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
+    sort_by: str | None = Query(None, regex="^(date|amount|category)$"),
+    order: str | None = Query(None, regex="^(asc|desc)$"),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
+    # Load user's sort preferences if not explicitly provided
+    if sort_by is None or order is None:
+        saved_sort_by, saved_order = user_preferences_service.get_sort_preference(db, user.id, 'dashboard')
+        if sort_by is None:
+            sort_by = saved_sort_by
+        if order is None:
+            order = saved_order
+    else:
+        # Save the new sort preference when user changes it
+        user_preferences_service.save_sort_preference(db, user.id, 'dashboard', sort_by, order)
+
     s, e = _parse_dates(start, end)
     e_next = e + timedelta(days=1)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
@@ -122,8 +135,21 @@ async def expenses_panel(
     # Get total count before pagination
     total_count = query.count()
 
+    # Apply sorting based on preference
+    if sort_by == 'amount':
+        order_col = Entry.amount
+    elif sort_by == 'category':
+        order_col = Entry.category_id
+    else:  # default to 'date'
+        order_col = Entry.date
+
+    if order == 'asc':
+        query = query.order_by(order_col.asc())
+    else:
+        query = query.order_by(order_col.desc())
+
     # Apply pagination
-    rows = query.order_by(Entry.date.desc()).offset(offset).limit(limit).all()
+    rows = query.offset(offset).limit(limit).all()
     
     # Convert each entry amount to user's currency
     converted_rows = []
@@ -176,9 +202,22 @@ async def incomes_panel(
     category: str | None = Query(None),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
+    sort_by: str | None = Query(None, regex="^(date|amount|category)$"),
+    order: str | None = Query(None, regex="^(asc|desc)$"),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
+    # Load user's sort preferences if not explicitly provided
+    if sort_by is None or order is None:
+        saved_sort_by, saved_order = user_preferences_service.get_sort_preference(db, user.id, 'dashboard')
+        if sort_by is None:
+            sort_by = saved_sort_by
+        if order is None:
+            order = saved_order
+    else:
+        # Save the new sort preference when user changes it
+        user_preferences_service.save_sort_preference(db, user.id, 'dashboard', sort_by, order)
+
     s, e = _parse_dates(start, end)
     e_next = e + timedelta(days=1)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
@@ -205,8 +244,21 @@ async def incomes_panel(
     # Get total count before pagination
     total_count = query.count()
 
+    # Apply sorting based on preference
+    if sort_by == 'amount':
+        order_col = Entry.amount
+    elif sort_by == 'category':
+        order_col = Entry.category_id
+    else:  # default to 'date'
+        order_col = Entry.date
+
+    if order == 'asc':
+        query = query.order_by(order_col.asc())
+    else:
+        query = query.order_by(order_col.desc())
+
     # Apply pagination
-    rows = query.order_by(Entry.date.desc()).offset(offset).limit(limit).all()
+    rows = query.offset(offset).limit(limit).all()
     
     # Convert each entry amount to user's currency
     converted_rows = []

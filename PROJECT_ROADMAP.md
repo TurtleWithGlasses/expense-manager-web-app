@@ -1032,6 +1032,11 @@ Password reset and verification emails weren't being sent. Investigation reveale
    - ✅ Dynamic order labels based on sort field
    - ✅ API supports `sort_by` and `order` query parameters
    - ✅ Preserves filters (date, category) when loading more
+   - ✅ **Sort Preference Persistence** (Added November 16, 2025):
+     - Automatically saves user's sort preferences (sort_by and order)
+     - Loads saved preferences when visiting entries/dashboard pages
+     - Stored per-page (entries vs dashboard) in user_preferences JSON field
+     - Defaults to date descending (newest first) if no preference saved
 
 3. **UI Implementation:**
    - ✅ Sorting controls card above entry table
@@ -1049,15 +1054,18 @@ Password reset and verification emails weren't being sent. Investigation reveale
 - ✅ Smooth AJAX loading without page refresh
 
 **Files Modified - Entries Page:**
-- `app/api/v1/entries.py` - Added `/load-more` and `/load-more-mobile` endpoints
+- `app/api/v1/entries.py` - Added `/load-more` and `/load-more-mobile` endpoints, sort preference loading/saving
 - `app/services/entries.py` - Added pagination and sorting support to `list_entries()` and `search_entries()`
 - `app/templates/entries/index.html` - Added sorting controls, Load More buttons, and AJAX JavaScript
 
 **Files Modified - Dashboard:**
-- `app/api/v1/dashboard.py` - Added `limit` and `offset` to `/dashboard/incomes` and `/dashboard/expenses`
+- `app/api/v1/dashboard.py` - Added `limit` and `offset` to `/dashboard/incomes` and `/dashboard/expenses`, sort preference loading/saving
 - `app/templates/dashboard.html` - Added `loadMoreIncomes()` and `loadMoreExpenses()` JavaScript functions
 - `app/templates/dashboard/_incomes_list.html` - Added entry counter and Load More button
 - `app/templates/dashboard/_expenses_list.html` - Added entry counter and Load More button
+
+**Files Modified - User Preferences (Sort Persistence):**
+- `app/services/user_preferences.py` - Added `get_sort_preference()` and `save_sort_preference()` methods
 
 **Technical Implementation:**
 - Uses JavaScript `fetch()` API for AJAX requests
@@ -1071,6 +1079,7 @@ Password reset and verification emails weren't being sent. Investigation reveale
 **Commits:**
 - `52dac4e` - Implement AJAX-based pagination with Load More functionality (Entries page)
 - `6781694` - Add pagination with Load More to dashboard income/expense lists (Dashboard)
+- November 16, 2025 - Add sort preference persistence for entries and dashboard pages
 
 ---
 
