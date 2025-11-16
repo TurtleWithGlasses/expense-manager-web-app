@@ -200,7 +200,7 @@
   <div class="card-body py-2">
     <div class="row align-items-center">
       <div class="col-md-6 col-12 mb-2 mb-md-0">
-        <small class="text-light" style="opacity: 0.9;">
+        <small id="entries-summary-text" class="text-light" style="opacity: 0.9;">
           <i class="bi bi-list-ul me-1"></i>
           Showing {{ showing_from }} to {{ showing_to }} of {{ total_count }} entries
         </small>
@@ -211,7 +211,8 @@
           {% if start_date %}<input type="hidden" name="start" value="{{ start_date }}">{% endif %}
           {% if end_date %}<input type="hidden" name="end" value="{{ end_date }}">{% endif %}
           {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
-          <input type="hidden" name="offset" value="0">
+          <input type="hidden" name="offset" value="{{ offset }}">
+          <input type="hidden" name="limit" value="{{ limit }}">
 
           <select class="form-select form-select-sm" name="sort_by" style="width: auto;" onchange="this.form.submit()">
             <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Sort by: Date</option>
@@ -1302,7 +1303,7 @@ function showToast(message, type = 'info') {
 // Load More functionality
 let currentOffset = {{ offset }};
 let currentLimit = {{ limit }};
-const totalCount = {{ total_count }};
+let totalCount = {{ total_count }};
 const sortBy = "{{ sort_by }}";
 const sortOrder = "{{ order }}";
 const startDate = "{{ start_date or '' }}";
@@ -1430,13 +1431,40 @@ async function loadMoreMobileEntries() {
 }
 
 function updateShowingCount(showingTo) {
-    // Update the "Showing X to Y of Z entries" text
-    const showingText = document.querySelector('.card-body .text-light');
+    const tbody = document.getElementById('entries-tbody');
+    const rows = tbody ? tbody.querySelectorAll('tr').length : 0;
+
+    // If we've loaded all available entries (no load-more button), align totalCount to visible rows
+    const loadMoreContainer = document.getElementById('load-more-container');
+    const hasMoreVisible = loadMoreContainer && loadMoreContainer.style.display !== 'none';
+
+    let showingFrom = rows > 0 ? 1 : 0;
+    let effectiveShowingTo = showingTo;
+
+    if (!hasMoreVisible) {
+        // All entries are currently visible in the table
+        totalCount = rows;
+        effectiveShowingTo = rows;
+    } else {
+        // Clamp to totalCount in case of rounding
+        effectiveShowingTo = Math.min(showingTo, totalCount);
+    }
+
+    const showingText = document.getElementById('entries-summary-text');
     if (showingText) {
-        const showingFrom = 1; // Always starts from 1
-        showingText.innerHTML = `<i class="bi bi-list-ul me-1"></i> Showing ${showingFrom} to ${showingTo} of ${totalCount} entries`;
+        showingText.innerHTML = `<i class="bi bi-list-ul me-1"></i> Showing ${showingFrom} to ${effectiveShowingTo} of ${totalCount} entries`;
     }
 }
+
+// Recalculate counts after HTMX updates to the entries table (e.g., delete, create)
+document.body.addEventListener('htmx:afterSwap', function (event) {
+    if (event.detail && event.detail.target && event.detail.target.id === 'entries-tbody') {
+        const tbody = document.getElementById('entries-tbody');
+        const rows = tbody ? tbody.querySelectorAll('tr').length : 0;
+        const showingTo = rows;
+        updateShowingCount(showingTo);
+    }
+});
 
 // Initialize AI suggestions when page loads
 document.addEventListener('DOMContentLoaded', function() {

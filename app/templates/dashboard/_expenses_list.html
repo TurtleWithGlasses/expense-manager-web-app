@@ -1,5 +1,5 @@
 <div class="mb-2">
-  <small class="text-muted">
+  <small id="expense-summary-text" class="text-light" style="opacity: 0.85;">
     {% if total_count > 0 %}
       Showing {{ showing_from }} to {{ showing_to }} of {{ total_count }} expenses
     {% else %}
@@ -27,7 +27,7 @@
       </tr>
     {% else %}
       <tr>
-        <td colspan="3" class="text-muted">No expense in this range.</td>
+        <td colspan="3" class="text-light" style="opacity: 0.75;">No expense in this range.</td>
       </tr>
     {% endfor %}
   </tbody>

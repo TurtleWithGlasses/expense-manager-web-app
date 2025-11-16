@@ -218,10 +218,10 @@ async def add(
     db: Session = Depends(get_db),
 ):
     from app.services.user_preferences import user_preferences_service
-    
+
     # Get user's preferred currency (fallback if not provided in form)
     user_currency = currency_code or user_preferences_service.get_user_currency(db, user.id)
-    
+
     d = _date.fromisoformat(date_str) if date_str else _date.today()
 
     # Store the amount AS-IS in the user's currency (no conversion)
@@ -233,10 +233,21 @@ async def add(
         category_id=category_id if category_id else None,
         note=note,
         date=d,
-        currency_code=user_currency
+        currency_code=user_currency,
     )
 
-    entries = list_entries(db, user_id=user.id)
+    # After creating, re-fetch the first page of entries using the user's sort preference
+    sort_by, sort_order = user_preferences_service.get_sort_preference(db, user.id, "entries")
+    default_limit = 10
+    entries = list_entries(
+        db,
+        user_id=user.id,
+        limit=default_limit,
+        offset=0,
+        sort_by=sort_by,
+        order=sort_order,
+    )
+
     user_currency = user_preferences_service.get_user_currency(db, user.id)
     return render(request, "entries/_list.html", {"entries": entries, "user_currency": user_currency})
 
@@ -251,7 +262,17 @@ async def remove(
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
     delete_entry(db, user_id=user.id, entry_id=entry_id)
-    entries = list_entries(db, user_id=user.id)
+    # After deleting, re-fetch the first page of entries using the user's sort preference
+    sort_by, sort_order = user_preferences_service.get_sort_preference(db, user.id, "entries")
+    default_limit = 10
+    entries = list_entries(
+        db,
+        user_id=user.id,
+        limit=default_limit,
+        offset=0,
+        sort_by=sort_by,
+        order=sort_order,
+    )
     user_currency = user_preferences_service.get_user_currency(db, user.id)
     return render(request, "entries/_list.html", {"entries": entries, "user_currency": user_currency})
 

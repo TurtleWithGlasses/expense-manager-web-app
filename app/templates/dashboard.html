@@ -1064,13 +1064,10 @@ async function loadMoreIncomes() {
             });
 
             // Update the "Showing X to Y of Z" counter
-            const showingText = tempDiv.querySelector('.mb-2 .text-muted');
-            if (showingText) {
-                const incomeListContainer = document.getElementById('income-list');
-                const counterElement = incomeListContainer.querySelector('.mb-2 .text-muted');
-                if (counterElement) {
-                    counterElement.textContent = showingText.textContent;
-                }
+            const showingText = tempDiv.querySelector('#income-summary-text');
+            const counterElement = document.getElementById('income-summary-text');
+            if (showingText && counterElement) {
+                counterElement.textContent = showingText.textContent;
             }
 
             // Check if there are more entries (button will be in the response)
@@ -1143,13 +1140,10 @@ async function loadMoreExpenses() {
             });
 
             // Update the "Showing X to Y of Z" counter
-            const showingText = tempDiv.querySelector('.mb-2 .text-muted');
-            if (showingText) {
-                const expenseListContainer = document.getElementById('expense-list');
-                const counterElement = expenseListContainer.querySelector('.mb-2 .text-muted');
-                if (counterElement) {
-                    counterElement.textContent = showingText.textContent;
-                }
+            const showingText = tempDiv.querySelector('#expense-summary-text');
+            const counterElement = document.getElementById('expense-summary-text');
+            if (showingText && counterElement) {
+                counterElement.textContent = showingText.textContent;
             }
 
             // Check if there are more entries (button will be in the response)
