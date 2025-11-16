@@ -15,12 +15,18 @@ from app.core.currency import CURRENCIES
 from app.core.session import get_session
 from app.core.rate_limit import limiter
 from app.core.security_headers import SecurityHeadersMiddleware
+from app.core.logging_config import setup_logging, get_logger
+from app.core.request_logging import RequestLoggingMiddleware
 from app.db.engine import engine
 from app.db.session import get_db
 from app.db.base import Base
 from app.templates import render
 from app.models.entry import Entry
 from app.services.user_preferences import user_preferences_service
+
+# Initialize logging as early as possible
+setup_logging()
+logger = get_logger(__name__)
 
 # Import all models to ensure they are registered with SQLAlchemy
 from app.models.user import User
@@ -32,6 +38,9 @@ from app.models.report_status import ReportStatus
 from app.models.financial_goal import FinancialGoal, GoalProgressLog
 
 app = FastAPI(title="Expense Manager Web")
+
+# Add request logging middleware (should be first for accurate timing)
+app.add_middleware(RequestLoggingMiddleware)
 
 # Add security headers middleware
 app.add_middleware(SecurityHeadersMiddleware)
@@ -66,34 +75,34 @@ async def startup_event():
                 head_rev = script.get_current_head()
 
                 if current_rev == head_rev:
-                    print(f"[OK] Database already at latest migration ({current_rev})")
+                    logger.info(f"Database already at latest migration ({current_rev})")
                 else:
-                    print(f"[INFO] Current version: {current_rev}, Target version: {head_rev}")
+                    logger.info(f"Database migration needed - Current: {current_rev}, Target: {head_rev}")
 
                     # Try to upgrade
                     try:
                         command.upgrade(alembic_cfg, "head")
-                        print("[OK] Database migrations applied successfully")
+                        logger.info("Database migrations applied successfully")
                     except ProgrammingError as pe:
                         # Check if it's a DuplicateColumn error
                         if isinstance(pe.orig, DuplicateColumn):
-                            print(f"[WARNING] Migration failed: Columns already exist (DuplicateColumn)")
-                            print(f"[INFO] This means the schema is already up-to-date but migration version is old")
-                            print(f"[FIX] Stamping database to latest version: {head_rev}")
+                            logger.warning("Migration failed: Columns already exist (DuplicateColumn)")
+                            logger.info("Schema is already up-to-date but migration version is old")
+                            logger.info(f"Stamping database to latest version: {head_rev}")
 
                             # Stamp the database to the head revision without running migrations
                             command.stamp(alembic_cfg, "head")
-                            print(f"[OK] Database stamped to {head_rev}")
+                            logger.info(f"Database stamped to {head_rev}")
                         else:
                             # Re-raise if it's a different error
                             raise
 
         except Exception as migration_error:
-            print(f"[WARNING] Migration check/upgrade failed: {migration_error}")
-            print("[INFO] Attempting to create tables directly...")
+            logger.warning(f"Migration check/upgrade failed: {migration_error}")
+            logger.info("Attempting to create tables directly...")
             # Fallback to creating tables directly
             Base.metadata.create_all(bind=engine)
-            print("[OK] Database tables created/verified")
+            logger.info("Database tables created/verified")
 
         # Start report scheduler
         # Start scheduler in production, or if explicitly enabled in development
@@ -101,10 +110,10 @@ async def startup_event():
         if enable_scheduler:
             from app.services.report_scheduler import report_scheduler
             report_scheduler.start()
-            print(f"[OK] Report scheduler started (ENV: {settings.ENV})")
+            logger.info(f"Report scheduler started (ENV: {settings.ENV})")
 
     except Exception as e:
-        print(f"[ERROR] Database initialization failed: {e}")
+        logger.error(f"Database initialization failed: {e}", exc_info=True)
         # Don't raise the exception to allow the app to start
         # The health check endpoint will catch database issues
 
@@ -118,9 +127,9 @@ async def shutdown_event():
         try:
             from app.services.report_scheduler import report_scheduler
             report_scheduler.stop()
-            print("[OK] Report scheduler stopped")
+            logger.info("Report scheduler stopped")
         except Exception as e:
-            print(f"[WARNING] Error stopping scheduler: {e}")
+            logger.warning(f"Error stopping scheduler: {e}")
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="static"), name="static")

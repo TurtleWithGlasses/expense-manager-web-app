@@ -5,9 +5,11 @@ from app.services.auth import create_user, authenticate_user, verify_email, rese
 from app.db.session import get_db
 from app.core.session import set_session, clear_session
 from app.core.rate_limit import limiter
+from app.core.logging_config import get_logger
 from app.templates import render
 
 router = APIRouter(tags=["auth"])
+logger = get_logger(__name__)
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
@@ -24,21 +26,23 @@ async def login(
     try:
         user = authenticate_user(db, email=email, password=password)
         if not user:
+            logger.warning(f"Login failed for {email}: Invalid credentials")
             return render(request, "auth/login.html", {"error": "Invalid email or password"})
-        
+
+        logger.info(f"User logged in successfully: {email}")
         resp = RedirectResponse(url="/", status_code=303)
         set_session(resp, {"id": user.id, "email": user.email})
         return resp
     except ValueError as e:
         # Email not verified error
-        print(f"❌ Login failed: {e}")
+        logger.warning(f"Login failed for {email}: {e}")
         return render(request, "auth/login.html", {
             "error": str(e),
             "show_resend": True,
             "email": email
         })
     except Exception as e:
-        print(f"❌ Login failed: {e}")
+        logger.error(f"Login failed for {email}: {e}", exc_info=True)
         return render(request, "auth/login.html", {"error": "Login failed. Please try again."})
 
 @router.get("/register", response_class=HTMLResponse)
@@ -56,33 +60,32 @@ async def register(
     db: Session = Depends(get_db)
 ):
     try:
-        print(f"🔍 Attempting to register user: {email}")
-        
+        logger.info(f"Registration attempt for: {email}")
+
         # Validate passwords match
         if password != confirm_password:
-            print("❌ Passwords do not match")
+            logger.warning(f"Registration failed for {email}: Passwords do not match")
             return render(request, "auth/register.html", {"error": "Passwords do not match"})
-        
+
         # Validate password strength (basic)
         if len(password) < 8:
-            print("❌ Password too short")
+            logger.warning(f"Registration failed for {email}: Password too short")
             return render(request, "auth/register.html", {"error": "Password must be at least 8 characters long"})
-        
-        print("✅ Validation passed, creating user...")
+
+        logger.debug("Validation passed, creating user...")
         user = await create_user(db, email=email, password=password, full_name=full_name)
-        print(f"✅ User created successfully: {user.id}")
-        
+        logger.info(f"User created successfully: {user.id} ({email})")
+
         # Redirect to verification sent page instead of dashboard
         resp = RedirectResponse(url="/verification-sent", status_code=303)
-        print("✅ Redirecting to verification sent page")
         return resp
-        
+
     except ValueError as e:
         # User already exists or other validation error
-        print(f"❌ Validation error: {e}")
+        logger.warning(f"Registration validation error for {email}: {e}")
         return render(request, "auth/register.html", {"error": str(e)})
     except Exception as e:
-        print(f"❌ Registration failed: {e}")
+        logger.error(f"Registration failed for {email}: {e}", exc_info=True)
         return render(request, "auth/register.html", {"error": "Registration failed. Please try again."})
 
 @router.post("/logout")
@@ -129,11 +132,13 @@ async def resend_verification(
     try:
         success = await resend_verification_email(db, email)
         if success:
+            logger.info(f"Verification email resent to: {email}")
             return render(request, "auth/verification_sent.html", {"email": email})
         else:
+            logger.warning(f"Resend verification failed for {email}: Email not found or already verified")
             return render(request, "auth/login.html", {"error": "Email not found or already verified"})
     except Exception as e:
-        print(f"❌ Failed to resend verification email: {e}")
+        logger.error(f"Failed to resend verification email to {email}: {e}", exc_info=True)
         return render(request, "auth/login.html", {"error": "Failed to resend verification email"})
 
 @router.get("/forgot-password", response_class=HTMLResponse)
@@ -149,20 +154,17 @@ async def forgot_password(
 ):
     """Request password reset"""
     try:
-        print(f"Password reset requested for email: {email}")
+        logger.info(f"Password reset requested for: {email}")
         success = await request_password_reset(db, email)
-        print(f"Password reset result: {success}")
         if success:
-            print(f"✅ Password reset email sent to {email}")
+            logger.info(f"Password reset email sent to: {email}")
             return render(request, "auth/password_reset_sent.html", {"email": email})
         else:
             # Don't reveal if email exists for security
-            print(f"⚠️ User not found for email: {email}, but showing success page for security")
+            logger.warning(f"Password reset requested for non-existent email: {email} (showing success page for security)")
             return render(request, "auth/password_reset_sent.html", {"email": email})
     except Exception as e:
-        print(f"❌ Password reset request failed: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Password reset request failed for {email}: {e}", exc_info=True)
         return render(request, "auth/forgot_password.html", {"error": "Failed to process password reset request"})
 
 @router.get("/reset-password/{token}", response_class=HTMLResponse)
@@ -202,12 +204,14 @@ async def reset_password_submit(
         # Reset password
         user = reset_password(db, token, password)
         if user:
+            logger.info(f"Password reset successful for user: {user.email}")
             return render(request, "auth/password_reset_success.html")
         else:
+            logger.warning(f"Password reset failed: Invalid or expired token")
             return render(request, "auth/reset_password.html", {"token": token, "error": "Invalid or expired reset link"})
-            
+
     except Exception as e:
-        print(f"❌ Password reset failed: {e}")
+        logger.error(f"Password reset failed: {e}", exc_info=True)
         return render(request, "auth/reset_password.html", {"token": token, "error": "Password reset failed. Please try again."})
 
 @router.get("/test-email")

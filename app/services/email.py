@@ -8,7 +8,10 @@ from datetime import datetime, timedelta
 from typing import Dict
 from sqlalchemy.orm import Session
 from app.core.config import settings
+from app.core.logging_config import get_logger
 from app.models.user import User
+
+logger = get_logger(__name__)
 
 class EmailService:
     def __init__(self):
@@ -33,22 +36,20 @@ class EmailService:
     async def send_email(self, to_email: str, subject: str, html_content: str, text_content: str = None):
         """Send email using Resend API in production, SMTP in development"""
 
-        print(f"📧 Attempting to send email to {to_email}")
-        print(f"   Subject: {subject}")
-        print(f"   SMTP configured: {bool(self.username and self.password)}")
-        print(f"   Resend configured: {bool(self.resend_api_key)}")
+        logger.info(f"Attempting to send email to {to_email} - Subject: {subject}")
+        logger.debug(f"Email config - SMTP: {bool(self.username and self.password)}, Resend: {bool(self.resend_api_key)}")
 
         # Use Resend API if available (preferred method)
         if self.resend_api_key:
-            print(f"✉️ Using Resend API for email...")
+            logger.info("Using Resend API for email delivery")
             return await self._send_email_resend(to_email, subject, html_content, text_content)
 
         # Fallback to SMTP if Resend is not configured
         if not self.username or not self.password:
-            print(f"❌ SMTP credentials not configured. Please set SMTP_USERNAME and SMTP_PASSWORD in .env")
+            logger.error("SMTP credentials not configured. Please set SMTP_USERNAME and SMTP_PASSWORD in .env")
             return False
 
-        print(f"📬 Using SMTP for email...")
+        logger.info("Using SMTP for email delivery")
 
         # Try primary SMTP server first (Google SMTP with TLS)
         result = await self._try_send_email(to_email, subject, html_content, text_content,
@@ -57,7 +58,7 @@ class EmailService:
             return True
 
         # Try alternative SMTP server (Google SMTP with SSL)
-        print(f"🔄 Trying alternative SMTP server (SSL)...")
+        logger.info("Primary SMTP failed, trying alternative SMTP server with SSL")
         result = await self._try_send_email(to_email, subject, html_content, text_content,
                                           self.smtp_server_alt, self.smtp_port_alt, use_ssl=True)
         return result
@@ -65,9 +66,7 @@ class EmailService:
     async def _send_email_resend(self, to_email: str, subject: str, html_content: str, text_content: str = None):
         """Send email using Resend API"""
         try:
-            print(f"Sending email via Resend to {to_email}")
-            print(f"From: {self.resend_from_name} <{self.resend_from_email}>")
-            print(f"Subject: {subject}")
+            logger.debug(f"Sending via Resend - To: {to_email}, From: {self.resend_from_name} <{self.resend_from_email}>, Subject: {subject}")
             
             # Prepare email data for Resend API
             email_data = {
@@ -95,14 +94,14 @@ class EmailService:
                 )
                 
                 if response.status_code == 200:
-                    print(f"Email sent successfully via Resend to {to_email}")
+                    logger.info(f"Email sent successfully via Resend to {to_email}")
                     return True
                 else:
-                    print(f"Resend API error: {response.status_code} - {response.text}")
+                    logger.error(f"Resend API error: {response.status_code} - {response.text}")
                     return False
-                    
+
         except Exception as e:
-            print(f"❌ Resend email sending failed to {to_email}: {e}")
+            logger.error(f"Resend email sending failed to {to_email}: {e}", exc_info=True)
             return False
 
     async def _try_send_email(self, to_email: str, subject: str, html_content: str, text_content: str, 
@@ -113,10 +112,7 @@ class EmailService:
         
         for attempt in range(max_retries):
             try:
-                print(f"📧 Attempting to send email to {to_email} (attempt {attempt + 1}/{max_retries})")
-                print(f"📧 SMTP Server: {smtp_server}:{smtp_port} (SSL: {use_ssl})")
-                print(f"📧 From: {self.from_name} <{self.from_email}>")
-                print(f"📧 Subject: {subject}")
+                logger.debug(f"SMTP attempt {attempt + 1}/{max_retries} - Server: {smtp_server}:{smtp_port} (SSL: {use_ssl}), To: {to_email}, Subject: {subject}")
                 
                 # Create message
                 msg = MIMEMultipart('alternative')
@@ -134,31 +130,26 @@ class EmailService:
 
                 # Send email in thread to avoid blocking
                 def send_smtp():
-                    print(f"🔌 Connecting to SMTP server...")
+                    logger.debug("Connecting to SMTP server...")
                     try:
                         if use_ssl:
                             # Use SSL connection
                             server = smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=30)
-                            print(f"🔌 Connected via SSL to {smtp_server}:{smtp_port}")
+                            logger.debug(f"Connected via SSL to {smtp_server}:{smtp_port}")
                         else:
                             # Use TLS connection
                             server = smtplib.SMTP(smtp_server, smtp_port, timeout=30)
-                            print(f"🔌 Connected to {smtp_server}:{smtp_port}")
-                            print(f"🔐 Starting TLS...")
+                            logger.debug(f"Connected to {smtp_server}:{smtp_port}, starting TLS...")
                             server.starttls()
-                        
-                        print(f"🔑 Logging in with {self.username}...")
+
+                        logger.debug(f"Logging in as {self.username}...")
                         server.login(self.username, self.password)
-                        print(f"📤 Sending message...")
-                        print(f"📧 Message details:")
-                        print(f"   From: {msg['From']}")
-                        print(f"   To: {msg['To']}")
-                        print(f"   Subject: {msg['Subject']}")
+                        logger.debug(f"Sending message - From: {msg['From']}, To: {msg['To']}, Subject: {msg['Subject']}")
                         server.send_message(msg)
-                        print(f"✅ Message sent successfully!")
+                        logger.info(f"Email sent successfully to {to_email}")
                         server.quit()
                     except Exception as e:
-                        print(f"❌ SMTP error: {e}")
+                        logger.error(f"SMTP error: {e}")
                         raise
                 
                 # Run in executor to avoid blocking

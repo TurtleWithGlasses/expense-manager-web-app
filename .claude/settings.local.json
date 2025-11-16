@@ -25,7 +25,11 @@
       "Bash(Where-Object {$_ainWindowTitle -match \"python\"})",
       "Bash(Stop-Process -Force)",
       "Bash(pkill:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(tasklist:*)",
+      "Bash(timeout 10 python:*)"
     ],
     "deny": [],
     "ask": []
