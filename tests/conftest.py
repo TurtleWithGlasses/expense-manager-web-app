@@ -1,26 +1,36 @@
 """
-Pytest configuration and fixtures for AI testing
+Pytest configuration and fixtures for comprehensive testing
 """
 import pytest
 import asyncio
+import os
+from datetime import datetime, timedelta
+from decimal import Decimal
 from unittest.mock import Mock, patch
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from fastapi.testclient import TestClient
 
 from app.main import app
 from app.db.base import Base
+from app.db.session import get_db
 from app.models.user import User
 from app.models.category import Category
 from app.models.entry import Entry
 from app.models.ai_model import UserAIPreferences
+from app.models.user_preferences import UserPreferences
+from app.core.security import hash_password
 
 
-# Test database URL (in-memory SQLite for testing)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+# Test database URL (use in-memory SQLite for testing)
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 # Create test engine
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    echo=False  # Set to True for SQL debugging
+)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -37,30 +47,60 @@ def db_session():
     """Create a fresh database session for each test"""
     # Create tables
     Base.metadata.create_all(bind=engine)
-    
+
     # Create session
     session = TestingSessionLocal()
-    
+
     yield session
-    
+
     # Clean up
     session.close()
     Base.metadata.drop_all(bind=engine)
 
 
+def override_get_db():
+    """Override database dependency for testing"""
+    try:
+        db = TestingSessionLocal()
+        yield db
+    finally:
+        db.close()
+
+
 @pytest.fixture
-def client():
-    """Test client for FastAPI app"""
-    return TestClient(app)
+def client(db_session):
+    """Test client for FastAPI app with overridden database"""
+    app.dependency_overrides[get_db] = override_get_db
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
 def test_user(db_session):
-    """Create a test user"""
+    """Create a test user with proper password hashing"""
     user = User(
         email="test@example.com",
-        hashed_password="hashed_password",
-        is_active=True
+        full_name="Test User",
+        hashed_password=hash_password("testpassword123"),
+        is_verified=True,
+        created_at=datetime.now()
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def test_user_2(db_session):
+    """Create a second test user for isolation testing"""
+    user = User(
+        email="test2@example.com",
+        full_name="Test User 2",
+        hashed_password=hash_password("testpassword456"),
+        is_verified=True,
+        created_at=datetime.now()
     )
     db_session.add(user)
     db_session.commit()
@@ -200,12 +240,32 @@ def mock_ai_service():
 
 
 @pytest.fixture
-def authenticated_client(client, test_user):
-    """Client with authenticated user"""
-    # Mock authentication
-    with patch('app.deps.current_user') as mock_current_user:
-        mock_current_user.return_value = test_user
-        yield client
+def authenticated_client(client, test_user, db_session):
+    """Client with authenticated session cookie"""
+    # Create a session for the user
+    from app.core.session import create_session
+    session_token = create_session(test_user.id)
+
+    # Set the session cookie
+    client.cookies.set("session_token", session_token)
+
+    yield client
+
+    # Clean up
+    client.cookies.clear()
+
+
+@pytest.fixture
+def authenticated_client_2(client, test_user_2, db_session):
+    """Client with authenticated session for second test user"""
+    from app.core.session import create_session
+    session_token = create_session(test_user_2.id)
+
+    client.cookies.set("session_token", session_token)
+
+    yield client
+
+    client.cookies.clear()
 
 
 # Performance testing fixtures
