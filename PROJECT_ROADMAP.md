@@ -1212,33 +1212,151 @@ Password reset and verification emails weren't being sent. Investigation reveale
 - ✅ ~93% coverage of tested service functions
 - ✅ Zero flaky tests (deterministic)
 
-**Remaining Work (Phase 2):**
-- ⏳ Fix integration test fixtures
-- ⏳ Complete auth API integration tests
-- ⏳ Add entries API integration tests
-- ⏳ Add dashboard API integration tests
-- ⏳ Test database migrations (up/down)
-- ⏳ Test AI model accuracy and predictions
-- ⏳ E2E tests for critical user flows
-- ⏳ Load testing for concurrent users
-- ⏳ Test multi-currency calculations
-- ⏳ Test goal tracking edge cases
+**Remaining Work (Phase 2 - Code Quality & Deprecation Fixes):**
+**Priority:** HIGH
+**Estimated Time:** 2-3 hours
 
-**Target Coverage:** 80%+ (currently ~27% overall)
+1. ⏳ **Fix FastAPI Query Deprecation Warnings** (30 minutes)
+   - Replace `regex=` with `pattern=` in Query parameters
+   - Files to update:
+     - `app/api/v1/entries.py` (6 occurrences)
+     - `app/api/v1/dashboard.py` (4 occurrences)
+   - Example change:
+     ```python
+     # Before:
+     sort_by: str = Query("date", regex="^(date|amount|category)$")
 
-**Tools:**
-- pytest ✅
-- pytest-cov ✅
-- pytest-asyncio ✅
-- httpx (for FastAPI testing) ✅
+     # After:
+     sort_by: str = Query("date", pattern="^(date|amount|category)$")
+     ```
+
+2. ⏳ **Fix datetime.utcnow() Deprecation Warnings** (1 hour)
+   - Replace `datetime.utcnow()` with `datetime.now(datetime.UTC)`
+   - Files to update:
+     - `app/services/auth.py` (5 occurrences)
+   - Test files to update (if needed):
+     - `tests/unit/test_auth_service.py`
+   - Python 3.12+ compatibility improvement
+
+3. ⏳ **Configure pytest markers properly** (15 minutes)
+   - Verify markers are registered in `pytest.ini` (already done)
+   - Ensure no "Unknown pytest.mark.unit" warnings
+
+**Remaining Work (Phase 3 - Integration & E2E Tests):**
+**Priority:** MEDIUM-HIGH
+**Estimated Time:** 5-7 hours
+
+4. ⏳ **Fix and Complete Integration Tests** (2-3 hours)
+   - Fix authenticated client fixtures in `conftest.py`
+   - Complete auth API integration tests (17 tests)
+   - Add entries API integration tests (15-20 tests)
+   - Add dashboard API integration tests (10-15 tests)
+   - Add categories API integration tests (8-10 tests)
+   - Target: 50+ integration tests
+
+5. ⏳ **E2E Tests for Critical User Flows** (3-4 hours)
+   - User registration → verification → login flow
+   - Add entry → view on dashboard → edit → delete flow
+   - Create category → assign to entry → delete category flow
+   - Multi-currency entry creation and conversion
+   - Password reset flow
+   - Report generation and download flow
+   - Tools: Playwright or Selenium
+
+**Remaining Work (Phase 4 - Additional Coverage):**
+**Priority:** MEDIUM
+**Estimated Time:** 3-5 hours
+
+6. ⏳ **Service Layer Tests** (2-3 hours)
+   - User preferences service tests
+   - Metrics service tests
+   - Report generation service tests
+   - Goal tracking service tests
+   - Currency service tests
+   - Email service tests (with mocking)
+
+7. ⏳ **Database & Migration Tests** (1-2 hours)
+   - Test database migrations (up/down)
+   - Test migration rollback scenarios
+   - Verify data integrity after migrations
+   - Test foreign key constraints
+
+8. ⏳ **AI/ML Tests** (Optional - LOW Priority)
+   - Test AI model accuracy and predictions
+   - Test categorization suggestions
+   - Test spending insights generation
+
+9. ⏳ **Performance & Load Tests** (Optional - LOW Priority)
+   - Load testing for concurrent users
+   - API response time benchmarks
+   - Database query performance tests
+   - Memory usage profiling
+
+**Target Coverage:** 80%+ (currently ~27% overall, aiming for 60%+ after Phase 3)
+
+**Tools & Dependencies:**
+- pytest ✅ (installed)
+- pytest-cov ✅ (installed)
+- pytest-asyncio ✅ (installed)
+- pytest-mock ✅ (installed)
+- httpx ✅ (for FastAPI testing - installed)
 - factory_boy (test data generation) - to be added
+- Playwright or Selenium (E2E tests) - to be added
+- pytest-xdist (parallel test execution) - optional
 
-**Files Created:**
-- `tests/unit/test_auth_service.py` (24 tests)
-- `tests/unit/test_entries_service.py` (26 tests)
-- `tests/unit/test_categories_service.py` (14 tests)
-- `tests/integration/test_auth_api.py` (17 stubs)
-- `TESTING_IMPLEMENTATION_SUMMARY.md`
+**Files Created (Phase 1):**
+- `tests/conftest.py` (enhanced with comprehensive fixtures)
+- `tests/unit/__init__.py`
+- `tests/unit/test_auth_service.py` (24 tests ✅)
+- `tests/unit/test_entries_service.py` (26 tests ✅)
+- `tests/unit/test_categories_service.py` (14 tests ✅)
+- `tests/integration/test_auth_api.py` (17 stubs - needs work)
+- `pytest.ini` (configured with pythonpath and markers)
+- `TESTING_IMPLEMENTATION_SUMMARY.md` (comprehensive documentation)
+- `TESTING_QUICK_START.md` (quick reference guide)
+
+**Files to Create (Future Phases):**
+- `tests/unit/test_user_preferences_service.py`
+- `tests/unit/test_metrics_service.py`
+- `tests/unit/test_report_service.py`
+- `tests/unit/test_goal_service.py`
+- `tests/unit/test_currency_service.py`
+- `tests/integration/test_entries_api.py`
+- `tests/integration/test_dashboard_api.py`
+- `tests/integration/test_categories_api.py`
+- `tests/e2e/test_user_flows.py`
+- `tests/e2e/test_entry_management.py`
+- `tests/performance/test_load.py`
+
+**Test Execution Commands:**
+```bash
+# Run all unit tests
+pytest tests/unit/ -v
+
+# Run with coverage
+pytest tests/unit/ --cov=app/services --cov-report=html
+
+# Run specific test file
+pytest tests/unit/test_auth_service.py -v
+
+# Run integration tests (when fixed)
+pytest tests/integration/ -v
+
+# Run all tests
+pytest tests/ -v
+
+# Run tests in parallel (faster)
+pytest tests/unit/ -n auto
+```
+
+**Current Status Summary:**
+- ✅ Phase 1: Unit Tests (64 tests, 100% passing)
+- ⏳ Phase 2: Deprecation Fixes (estimated 2-3 hours)
+- ⏳ Phase 3: Integration & E2E Tests (estimated 5-7 hours)
+- ⏳ Phase 4: Additional Coverage (estimated 3-5 hours)
+
+**Total Estimated Remaining Time:** 10-15 hours
+**Total Time Invested So Far:** 5 hours
 
 ---
 
