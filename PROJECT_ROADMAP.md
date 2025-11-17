@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 1.0 (Production)
-**Last Updated:** November 16, 2025
+**Last Updated:** November 17, 2025
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -32,8 +32,9 @@ Budget Pulse is a comprehensive expense management application featuring AI-powe
 - **Migration System:** Self-healing with auto-stamping
 - **UI/UX:** Consistent auth pages with dark/light theme support
 - **Logging:** Structured logging with request tracing
+- **Testing:** 64 unit tests implemented (100% pass rate)
 - **Users:** Ready for production use
-- **Last Update:** November 16, 2025 - Password change feature added, Issue #15 resolved
+- **Last Update:** November 17, 2025 - Testing infrastructure implemented (Issue #12), Calendar view planned (Phase 26)
 
 ---
 
@@ -1190,30 +1191,54 @@ Password reset and verification emails weren't being sent. Investigation reveale
 
 ---
 
-### **Phase 23: Testing & Quality Assurance** ✅
+### **Phase 23: Testing & Quality Assurance** 🔄 IN PROGRESS
 **Priority:** HIGH
-**Status:** Not Started
+**Status:** Phase 1 Complete - 64 Unit Tests Implemented
 **Estimated Time:** 10-12 hours
+**Time Spent:** 5 hours (Phase 1)
 
-**Tasks:**
-1. Set up pytest and coverage tools
-2. Unit tests for services (auth, entries, categories, AI)
-3. Integration tests for API endpoints
-4. Test database migrations (up/down)
-5. Test AI model accuracy and predictions
-6. E2E tests for critical user flows
-7. Load testing for concurrent users
-8. Test multi-currency calculations
-9. Test goal tracking edge cases
+**Completed (Phase 1):**
+1. ✅ Set up pytest and coverage tools
+2. ✅ Enhanced test infrastructure with comprehensive fixtures
+3. ✅ Unit tests for auth service (24 tests - registration, login, password reset)
+4. ✅ Unit tests for entries service (26 tests - CRUD, search, pagination)
+5. ✅ Unit tests for categories service (14 tests - CRUD, user isolation)
+6. ✅ Integration test stubs for auth API (17 tests)
+7. ✅ Documentation (TESTING_IMPLEMENTATION_SUMMARY.md)
 
-**Target Coverage:** 80%+
+**Results:**
+- ✅ 64/64 unit tests passing (100% pass rate)
+- ✅ Average 0.22s per test (13.9s total)
+- ✅ ~93% coverage of tested service functions
+- ✅ Zero flaky tests (deterministic)
+
+**Remaining Work (Phase 2):**
+- ⏳ Fix integration test fixtures
+- ⏳ Complete auth API integration tests
+- ⏳ Add entries API integration tests
+- ⏳ Add dashboard API integration tests
+- ⏳ Test database migrations (up/down)
+- ⏳ Test AI model accuracy and predictions
+- ⏳ E2E tests for critical user flows
+- ⏳ Load testing for concurrent users
+- ⏳ Test multi-currency calculations
+- ⏳ Test goal tracking edge cases
+
+**Target Coverage:** 80%+ (currently ~27% overall)
 
 **Tools:**
-- pytest
-- pytest-cov
-- pytest-asyncio
-- httpx (for FastAPI testing)
-- factory_boy (test data generation)
+- pytest ✅
+- pytest-cov ✅
+- pytest-asyncio ✅
+- httpx (for FastAPI testing) ✅
+- factory_boy (test data generation) - to be added
+
+**Files Created:**
+- `tests/unit/test_auth_service.py` (24 tests)
+- `tests/unit/test_entries_service.py` (26 tests)
+- `tests/unit/test_categories_service.py` (14 tests)
+- `tests/integration/test_auth_api.py` (17 stubs)
+- `TESTING_IMPLEMENTATION_SUMMARY.md`
 
 ---
 
@@ -1281,7 +1306,213 @@ Password reset and verification emails weren't being sent. Investigation reveale
 
 ---
 
-### **Phase 26: Advanced AI Features** 🤖
+### **Phase 26: Calendar View for Financial Entries** 📅
+**Priority:** MEDIUM-HIGH
+**Status:** Not Started
+**Estimated Time:** 8-10 hours
+
+**Overview:**
+Interactive calendar view to visualize income and expense entries by date, providing an intuitive way to see spending patterns and financial activity across months and years.
+
+**Core Features:**
+
+1. **Calendar Display**
+   - Monthly calendar view showing current month by default
+   - Clean grid layout with proper date cells
+   - Week starts on Sunday or Monday (user preference)
+   - Display month name and year at the top
+   - Navigation arrows to switch between months/years
+
+2. **Date Marking System**
+   - Visual indicators on dates with financial activity
+   - Color-coded markers:
+     - **Green dot/badge:** Days with only income entries
+     - **Red dot/badge:** Days with only expense entries
+     - **Split indicator:** Days with both income and expense
+   - Badge shows count if multiple entries (e.g., "3" for 3 entries)
+   - Empty dates have no markers
+
+3. **Interactive Hover Tooltips**
+   - On mouse hover over any date, show tooltip with:
+     - **Date:** Full date (e.g., "November 17, 2025")
+     - **Total Income:** Sum of all income for that day (if any)
+     - **Total Expense:** Sum of all expenses for that day (if any)
+     - **Net:** Income - Expense for the day
+     - **Entry List:**
+       - Show up to 5 entries with icons, category, amount
+       - "View all (X more)" link if more than 5 entries
+   - Tooltip appears instantly (no delay)
+   - Tooltip follows mouse or stays near date cell
+
+4. **Click Interaction**
+   - Clicking on a date opens a modal/sidebar with:
+     - **Date header** with full date
+     - **Summary cards:**
+       - Total Income (green card)
+       - Total Expenses (red card)
+       - Net Balance (blue/gray card)
+     - **Full entry list** for that day:
+       - Entry type icon (income/expense)
+       - Category name with icon
+       - Amount with currency
+       - Note/description (if any)
+       - Time added (optional)
+     - **Quick actions:**
+       - "Add Entry" button for this specific date
+       - Edit/delete buttons for each entry
+     - **Close button** to return to calendar
+
+5. **Navigation Controls**
+   - **Previous/Next Month arrows:** Navigate month by month
+   - **Month dropdown:** Quick select any month
+   - **Year dropdown:** Quick select any year (show ±5 years)
+   - **"Today" button:** Jump back to current month/date
+   - **Week/Month/Year view toggle:** (Future enhancement)
+
+6. **Theme Support (Critical)**
+   - **Dark Theme:**
+     - Calendar background: `#1a1f2e` (card background)
+     - Date cells: `#252b3d` (hover: `#2d3548`)
+     - Text: `#e5e7eb` (bright, readable)
+     - Current date highlight: Blue border `#3b82f6`
+     - Income markers: Bright green `#5cd88c`
+     - Expense markers: Bright red `#ff7b7b`
+     - Borders: `#2a3550` (subtle)
+     - Tooltip background: `#252b3d` with shadow
+
+   - **Light Theme:**
+     - Calendar background: `#ffffff`
+     - Date cells: `#f9fafb` (hover: `#f3f4f6`)
+     - Text: `#1f2937` (dark, readable)
+     - Current date highlight: Blue border `#3b82f6`
+     - Income markers: Green `#10b981`
+     - Expense markers: Red `#ef4444`
+     - Borders: `#e5e7eb` (subtle)
+     - Tooltip background: `#ffffff` with shadow
+
+7. **Data Aggregation**
+   - Backend API endpoint: `GET /calendar/entries?year=2025&month=11`
+   - Response format:
+     ```json
+     {
+       "year": 2025,
+       "month": 11,
+       "dates": {
+         "2025-11-01": {
+           "income_total": 1500.00,
+           "expense_total": 250.00,
+           "net": 1250.00,
+           "entry_count": 3,
+           "entries": [
+             {
+               "id": 123,
+               "type": "income",
+               "amount": 1500.00,
+               "category": "Salary",
+               "note": "Monthly salary",
+               "time": "2025-11-01T09:00:00"
+             }
+           ]
+         }
+       }
+     }
+     ```
+   - Efficiently fetch only current month data
+   - Cache calendar data on frontend
+
+8. **Responsive Design**
+   - Desktop: Full calendar with 7 columns
+   - Tablet: Compact calendar with smaller cells
+   - Mobile:
+     - Stack weeks vertically
+     - Simplified view with list option
+     - Swipe gestures for month navigation
+
+9. **Performance Optimization**
+   - Lazy load calendar data only when calendar page is opened
+   - Pre-fetch adjacent months for smooth navigation
+   - Virtual scrolling for entry lists with many items
+   - Debounce hover events (if needed)
+
+10. **Additional Features**
+    - **Date range highlight:** Click and drag to select multiple dates
+    - **Summary panel:** Show totals for visible month
+    - **Export:** Download calendar as PDF or image
+    - **Recurring entries indicator:** Special icon for recurring transactions
+    - **Budget overlay:** Show daily budget line
+
+**Technical Implementation:**
+
+**Frontend:**
+- Vanilla JavaScript or lightweight library (e.g., FullCalendar.js, date-fns)
+- CSS Grid for calendar layout
+- CSS custom properties for theming
+- Event delegation for click handlers
+- Tooltip library or custom implementation
+
+**Backend:**
+- New API endpoint: `/api/v1/calendar/entries`
+- Service function: `calendar_service.py`
+  - `get_month_entries(user_id, year, month)`
+  - Aggregate data by date
+  - Calculate daily totals
+- Efficient database query with date range filter
+
+**Database:**
+- Use existing `entries` table
+- Index on `(user_id, date)` for fast queries
+- No schema changes needed
+
+**Files to Create:**
+- `app/api/v1/calendar.py` - API endpoints
+- `app/services/calendar_service.py` - Business logic
+- `app/templates/calendar.html` - Calendar page
+- `app/templates/calendar/_entry_modal.html` - Entry detail modal
+- `static/js/calendar.js` - Calendar interactions
+- `static/css/calendar.css` - Calendar styling
+
+**User Experience Flow:**
+1. User clicks "Calendar" in navigation menu
+2. Calendar loads showing current month with data
+3. User sees visual indicators on dates with entries
+4. User hovers over date → sees quick summary tooltip
+5. User clicks date → sees detailed entry list modal
+6. User can add/edit/delete entries from modal
+7. User navigates months using arrows or dropdowns
+8. Calendar updates smoothly with new data
+
+**Benefits:**
+- **Visual overview** of spending patterns by date
+- **Quick access** to daily financial activity
+- **Intuitive navigation** through historical data
+- **Pattern recognition** easier with calendar view
+- **Complements** existing list/table views
+- **Improved UX** for date-based analysis
+
+**Acceptance Criteria:**
+- ✅ Calendar displays current month correctly
+- ✅ Dates with entries show visual markers
+- ✅ Hover shows accurate tooltip with entry summary
+- ✅ Click opens modal with full entry details
+- ✅ Month/year navigation works smoothly
+- ✅ "Today" button returns to current date
+- ✅ Dark and light themes both fully readable
+- ✅ Responsive on mobile, tablet, and desktop
+- ✅ Fast data loading (< 1 second)
+- ✅ No visual glitches or layout issues
+
+**Future Enhancements:**
+- Week view and year view options
+- Drag-and-drop to move entries between dates
+- Mini calendar in sidebar for quick navigation
+- Heatmap overlay for spending intensity
+- Budget progress indicators per day
+- Comparison with previous months
+- Export calendar as image or PDF
+
+---
+
+### **Phase 27: Advanced AI Features** 🤖
 **Priority:** LOW
 **Status:** Not Started
 **Estimated Time:** 15-20 hours
