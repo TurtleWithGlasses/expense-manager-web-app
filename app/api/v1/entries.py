@@ -32,8 +32,8 @@ async def load_more_entries(
     category: str | None = Query(None),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    sort_by: str = Query("date", regex="^(date|amount|category)$"),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    sort_by: str = Query("date", pattern="^(date|amount|category)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
@@ -82,8 +82,8 @@ async def load_more_mobile_entries(
     category: str | None = Query(None),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    sort_by: str = Query("date", regex="^(date|amount|category)$"),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    sort_by: str = Query("date", pattern="^(date|amount|category)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
@@ -128,8 +128,8 @@ async def page(
     category: str | None = Query(None),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    sort_by: str | None = Query(None, regex="^(date|amount|category)$"),
-    order: str | None = Query(None, regex="^(asc|desc)$"),
+    sort_by: str | None = Query(None, pattern="^(date|amount|category)$"),
+    order: str | None = Query(None, pattern="^(asc|desc)$"),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:

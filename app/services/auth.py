@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.core.security import hash_password, verify_password
@@ -18,7 +18,7 @@ async def create_user(db: Session, email: str, password: str, full_name: str = N
     
     # Generate verification token
     verification_token = generate_token()
-    verification_expires = datetime.utcnow() + timedelta(hours=24)
+    verification_expires = (datetime.now(UTC) + timedelta(hours=24)).replace(tzinfo=None)
     
     # Create new user (unverified by default)
     hashed_password = hash_password(password)
@@ -65,7 +65,7 @@ def verify_email(db: Session, token: str):
     """Verify user's email with token"""
     user = db.query(User).filter(
         User.verification_token == token,
-        User.verification_token_expires > datetime.utcnow()
+        User.verification_token_expires > datetime.now(UTC).replace(tzinfo=None)
     ).first()
     
     if not user:
@@ -91,7 +91,7 @@ async def resend_verification_email(db: Session, email: str):
     
     # Generate new token
     verification_token = generate_token()
-    verification_expires = datetime.utcnow() + timedelta(hours=24)
+    verification_expires = (datetime.now(UTC) + timedelta(hours=24)).replace(tzinfo=None)
     
     user.verification_token = verification_token
     user.verification_token_expires = verification_expires
@@ -109,7 +109,7 @@ async def request_password_reset(db: Session, email: str):
     
     # Generate reset token
     reset_token = generate_token()
-    reset_expires = datetime.utcnow() + timedelta(hours=1)
+    reset_expires = (datetime.now(UTC) + timedelta(hours=1)).replace(tzinfo=None)
     
     user.password_reset_token = reset_token
     user.password_reset_expires = reset_expires
@@ -123,7 +123,7 @@ def reset_password(db: Session, token: str, new_password: str):
     """Reset password with token"""
     user = db.query(User).filter(
         User.password_reset_token == token,
-        User.password_reset_expires > datetime.utcnow()
+        User.password_reset_expires > datetime.now(UTC).replace(tzinfo=None)
     ).first()
     
     if not user:

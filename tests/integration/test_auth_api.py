@@ -4,7 +4,7 @@ Tests the complete HTTP request/response cycle for auth endpoints
 """
 import pytest
 from unittest.mock import patch, AsyncMock
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 from app.models.user import User
 from app.core.security import hash_password
@@ -167,7 +167,7 @@ class TestVerifyEmailEndpoint:
             hashed_password=hash_password("password123"),
             is_verified=False,
             verification_token=token,
-            verification_token_expires=datetime.utcnow() + timedelta(hours=24),
+            verification_token_expires=datetime.now(UTC) + timedelta(hours=24),
             created_at=datetime.now()
         )
         db_session.add(user)
@@ -200,7 +200,7 @@ class TestVerifyEmailEndpoint:
             hashed_password=hash_password("password123"),
             is_verified=False,
             verification_token=token,
-            verification_token_expires=datetime.utcnow() - timedelta(hours=1),  # Expired
+            verification_token_expires=datetime.now(UTC) - timedelta(hours=1),  # Expired
             created_at=datetime.now()
         )
         db_session.add(user)
@@ -258,7 +258,7 @@ class TestResetPasswordEndpoint:
             hashed_password=hash_password("oldpassword123"),
             is_verified=True,
             password_reset_token=token,
-            password_reset_expires=datetime.utcnow() + timedelta(hours=1),
+            password_reset_expires=datetime.now(UTC) + timedelta(hours=1),
             created_at=datetime.now()
         )
         db_session.add(user)
@@ -299,7 +299,7 @@ class TestResetPasswordEndpoint:
             hashed_password=hash_password("oldpassword123"),
             is_verified=True,
             password_reset_token=token,
-            password_reset_expires=datetime.utcnow() + timedelta(hours=1),
+            password_reset_expires=datetime.now(UTC) + timedelta(hours=1),
             created_at=datetime.now()
         )
         db_session.add(user)
@@ -331,7 +331,7 @@ class TestResendVerificationEndpoint:
             hashed_password=hash_password("password123"),
             is_verified=False,
             verification_token="oldtoken",
-            verification_token_expires=datetime.utcnow() + timedelta(hours=1),
+            verification_token_expires=datetime.now(UTC) + timedelta(hours=1),
             created_at=datetime.now()
         )
         db_session.add(user)

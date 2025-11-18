@@ -3,7 +3,7 @@ Unit tests for authentication service
 Tests all auth-related business logic functions
 """
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from unittest.mock import patch, AsyncMock
 from sqlalchemy.exc import IntegrityError
 
@@ -93,7 +93,7 @@ class TestCreateUser:
                 password="password123"
             )
 
-        time_diff = user.verification_token_expires - datetime.utcnow()
+        time_diff = user.verification_token_expires - datetime.now(UTC).replace(tzinfo=None)
         # Allow 1 minute variance for test execution time
         assert timedelta(hours=23, minutes=59) <= time_diff <= timedelta(hours=24, minutes=1)
 
@@ -168,7 +168,7 @@ class TestVerifyEmail:
             hashed_password=auth.hash_password("password123"),
             is_verified=False,
             verification_token=token,
-            verification_token_expires=datetime.utcnow() + timedelta(hours=24),
+            verification_token_expires=datetime.now(UTC) + timedelta(hours=24),
             created_at=datetime.now()
         )
         db_session.add(user)
@@ -197,7 +197,7 @@ class TestVerifyEmail:
             hashed_password=auth.hash_password("password123"),
             is_verified=False,
             verification_token=token,
-            verification_token_expires=datetime.utcnow() - timedelta(hours=1),  # Expired
+            verification_token_expires=datetime.now(UTC) - timedelta(hours=1),  # Expired
             created_at=datetime.now()
         )
         db_session.add(user)
@@ -222,7 +222,7 @@ class TestResendVerificationEmail:
             hashed_password=auth.hash_password("password123"),
             is_verified=False,
             verification_token="oldtoken",
-            verification_token_expires=datetime.utcnow() + timedelta(hours=1),
+            verification_token_expires=datetime.now(UTC) + timedelta(hours=1),
             created_at=datetime.now()
         )
         db_session.add(user)
@@ -304,7 +304,7 @@ class TestPasswordReset:
             )
 
         db_session.refresh(test_user)
-        time_diff = test_user.password_reset_expires - datetime.utcnow()
+        time_diff = test_user.password_reset_expires - datetime.now(UTC).replace(tzinfo=None)
         # Allow 1 minute variance
         assert timedelta(minutes=59) <= time_diff <= timedelta(hours=1, minutes=1)
 
@@ -317,7 +317,7 @@ class TestPasswordReset:
             hashed_password=auth.hash_password("oldpassword123"),
             is_verified=True,
             password_reset_token=token,
-            password_reset_expires=datetime.utcnow() + timedelta(hours=1),
+            password_reset_expires=datetime.now(UTC) + timedelta(hours=1),
             created_at=datetime.now()
         )
         db_session.add(user)
@@ -358,7 +358,7 @@ class TestPasswordReset:
             hashed_password=auth.hash_password("oldpassword123"),
             is_verified=True,
             password_reset_token=token,
-            password_reset_expires=datetime.utcnow() - timedelta(hours=1),  # Expired
+            password_reset_expires=datetime.now(UTC) - timedelta(hours=1),  # Expired
             created_at=datetime.now()
         )
         db_session.add(user)

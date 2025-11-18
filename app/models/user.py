@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from sqlalchemy import String, Boolean, DateTime, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
@@ -21,7 +21,7 @@ class User(Base):
     password_reset_expires: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))
 
     categories = relationship("Category", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)
     entries = relationship("Entry", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)

@@ -93,8 +93,8 @@ async def expenses_panel(
     category: str | None = Query(None),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    sort_by: str | None = Query(None, regex="^(date|amount|category)$"),
-    order: str | None = Query(None, regex="^(asc|desc)$"),
+    sort_by: str | None = Query(None, pattern="^(date|amount|category)$"),
+    order: str | None = Query(None, pattern="^(asc|desc)$"),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
@@ -202,8 +202,8 @@ async def incomes_panel(
     category: str | None = Query(None),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    sort_by: str | None = Query(None, regex="^(date|amount|category)$"),
-    order: str | None = Query(None, regex="^(asc|desc)$"),
+    sort_by: str | None = Query(None, pattern="^(date|amount|category)$"),
+    order: str | None = Query(None, pattern="^(asc|desc)$"),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
