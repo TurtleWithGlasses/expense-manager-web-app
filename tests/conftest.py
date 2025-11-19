@@ -253,7 +253,8 @@ def authenticated_client(client, test_user, db_session):
     """Client with authenticated session cookie"""
     # Create a session token using the session serializer
     from app.core.session import serializer, SESSION_COOKIE
-    session_data = {"user_id": test_user.id, "email": test_user.email}
+    # Note: session uses "id", not "user_id" - see app/deps.py current_user()
+    session_data = {"id": test_user.id, "email": test_user.email}
     session_token = serializer.dumps(session_data)
 
     # Set the session cookie
@@ -269,7 +270,8 @@ def authenticated_client(client, test_user, db_session):
 def authenticated_client_2(client, test_user_2, db_session):
     """Client with authenticated session for second test user"""
     from app.core.session import serializer, SESSION_COOKIE
-    session_data = {"user_id": test_user_2.id, "email": test_user_2.email}
+    # Note: session uses "id", not "user_id"
+    session_data = {"id": test_user_2.id, "email": test_user_2.email}
     session_token = serializer.dumps(session_data)
 
     client.cookies.set(SESSION_COOKIE, session_token)
