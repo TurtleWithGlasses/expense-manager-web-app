@@ -22,8 +22,10 @@ from app.models.user_preferences import UserPreferences
 from app.core.security import hash_password
 
 
-# Test database URL (use in-memory SQLite for testing)
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+# Test database URL (use file-based SQLite for testing to share data between sessions)
+import tempfile
+test_db_file = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{test_db_file.name}"
 
 # Create test engine
 engine = create_engine(
@@ -51,25 +53,32 @@ def db_session():
     # Create session
     session = TestingSessionLocal()
 
-    yield session
-
-    # Clean up
-    session.close()
-    Base.metadata.drop_all(bind=engine)
-
-
-def override_get_db():
-    """Override database dependency for testing"""
     try:
-        db = TestingSessionLocal()
-        yield db
+        yield session
+        # Commit any pending transactions so they're visible to other connections
+        session.commit()
+    except Exception:
+        # Rollback on error
+        session.rollback()
+        raise
     finally:
-        db.close()
+        # Clean up
+        session.close()
+        Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
 def client(db_session):
     """Test client for FastAPI app with overridden database"""
+    # Override get_db to return a session that can see committed data
+    def override_get_db():
+        """Override database dependency for testing - uses same engine as test"""
+        try:
+            db = TestingSessionLocal()
+            yield db
+        finally:
+            db.close()
+
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
         yield test_client
@@ -87,7 +96,7 @@ def test_user(db_session):
         created_at=datetime.now()
     )
     db_session.add(user)
-    db_session.commit()
+    db_session.commit()  # Commit immediately so other sessions can see it
     db_session.refresh(user)
     return user
 
@@ -242,12 +251,13 @@ def mock_ai_service():
 @pytest.fixture
 def authenticated_client(client, test_user, db_session):
     """Client with authenticated session cookie"""
-    # Create a session for the user
-    from app.core.session import create_session
-    session_token = create_session(test_user.id)
+    # Create a session token using the session serializer
+    from app.core.session import serializer, SESSION_COOKIE
+    session_data = {"user_id": test_user.id, "email": test_user.email}
+    session_token = serializer.dumps(session_data)
 
     # Set the session cookie
-    client.cookies.set("session_token", session_token)
+    client.cookies.set(SESSION_COOKIE, session_token)
 
     yield client
 
@@ -258,10 +268,11 @@ def authenticated_client(client, test_user, db_session):
 @pytest.fixture
 def authenticated_client_2(client, test_user_2, db_session):
     """Client with authenticated session for second test user"""
-    from app.core.session import create_session
-    session_token = create_session(test_user_2.id)
+    from app.core.session import serializer, SESSION_COOKIE
+    session_data = {"user_id": test_user_2.id, "email": test_user_2.email}
+    session_token = serializer.dumps(session_data)
 
-    client.cookies.set("session_token", session_token)
+    client.cookies.set(SESSION_COOKIE, session_token)
 
     yield client
 

@@ -19,11 +19,11 @@ class TestRegisterEndpoint:
         """Test successful user registration"""
         with patch('app.services.auth.email_service.send_confirmation_email', new=AsyncMock()):
             response = client.post(
-                "/auth/register",
+                "/register",
                 data={
                     "email": "newuser@example.com",
                     "password": "SecurePass123",
-                    "password_confirm": "SecurePass123",
+                    "confirm_password": "SecurePass123",
                     "full_name": "New User"
                 }
             )
@@ -36,11 +36,11 @@ class TestRegisterEndpoint:
         """Test registration with existing email"""
         with patch('app.services.auth.email_service.send_confirmation_email', new=AsyncMock()):
             response = client.post(
-                "/auth/register",
+                "/register",
                 data={
                     "email": test_user.email,
                     "password": "SecurePass123",
-                    "password_confirm": "SecurePass123",
+                    "confirm_password": "SecurePass123",
                     "full_name": "Duplicate User"
                 }
             )
@@ -54,11 +54,11 @@ class TestRegisterEndpoint:
     async def test_register_password_mismatch(self, client, db_session):
         """Test registration with mismatched passwords"""
         response = client.post(
-            "/auth/register",
+            "/register",
             data={
                 "email": "test@example.com",
                 "password": "SecurePass123",
-                "password_confirm": "DifferentPass456",
+                "confirm_password": "DifferentPass456",
                 "full_name": "Test User"
             }
         )
@@ -74,22 +74,23 @@ class TestLoginEndpoint:
     def test_login_success(self, client, db_session, test_user):
         """Test successful login"""
         response = client.post(
-            "/auth/login",
+            "/login",
             data={
                 "email": test_user.email,
                 "password": "testpassword123"
-            }
+            },
+            follow_redirects=False  # Don't follow redirects so we can check the 303
         )
 
-        # Should redirect to dashboard
-        assert response.status_code in [200, 302, 303]
-        # Check for session cookie
-        assert "session_token" in response.cookies or response.status_code == 302
+        # Should redirect to dashboard (303) or home page (302)
+        assert response.status_code in [302, 303]
+        # Check for session cookie (em_session is the cookie name)
+        assert "em_session" in response.cookies
 
     def test_login_invalid_credentials(self, client, db_session, test_user):
         """Test login with incorrect password"""
         response = client.post(
-            "/auth/login",
+            "/login",
             data={
                 "email": test_user.email,
                 "password": "wrongpassword"
@@ -104,7 +105,7 @@ class TestLoginEndpoint:
     def test_login_nonexistent_user(self, client, db_session):
         """Test login with non-existent email"""
         response = client.post(
-            "/auth/login",
+            "/login",
             data={
                 "email": "nonexistent@example.com",
                 "password": "password123"
@@ -128,7 +129,7 @@ class TestLoginEndpoint:
         db_session.commit()
 
         response = client.post(
-            "/auth/login",
+            "/login",
             data={
                 "email": unverified_user.email,
                 "password": "password123"
@@ -147,7 +148,7 @@ class TestLogoutEndpoint:
 
     def test_logout_success(self, client, authenticated_client, db_session):
         """Test successful logout"""
-        response = authenticated_client.post("/auth/logout")
+        response = authenticated_client.post("/logout")
 
         # Should redirect to login page
         assert response.status_code in [200, 302, 303]
@@ -174,7 +175,7 @@ class TestVerifyEmailEndpoint:
         db_session.commit()
 
         # Verify email
-        response = client.get(f"/auth/verify?token={token}")
+        response = client.get(f"/confirm-email/{token}")
 
         # Should redirect or show success
         assert response.status_code in [200, 302, 303]
@@ -185,7 +186,7 @@ class TestVerifyEmailEndpoint:
 
     def test_verify_email_with_invalid_token(self, client, db_session):
         """Test email verification with invalid token"""
-        response = client.get("/auth/verify?token=invalidtoken123")
+        response = client.get("/confirm-email/invalidtoken123")
 
         # Should show error
         assert response.status_code in [200, 400]
@@ -207,7 +208,7 @@ class TestVerifyEmailEndpoint:
         db_session.commit()
 
         # Try to verify with expired token
-        response = client.get(f"/auth/verify?token={token}")
+        response = client.get(f"/confirm-email/{token}")
 
         # Should show error
         assert response.status_code in [200, 400]
@@ -223,7 +224,7 @@ class TestForgotPasswordEndpoint:
         with patch('app.services.auth.email_service.send_password_reset_email',
                    new=AsyncMock(return_value=True)):
             response = client.post(
-                "/auth/forgot-password",
+                "/forgot-password",
                 data={"email": test_user.email}
             )
 
@@ -236,7 +237,7 @@ class TestForgotPasswordEndpoint:
         with patch('app.services.auth.email_service.send_password_reset_email',
                    new=AsyncMock(return_value=False)):
             response = client.post(
-                "/auth/forgot-password",
+                "/forgot-password",
                 data={"email": "nonexistent@example.com"}
             )
 
@@ -266,10 +267,10 @@ class TestResetPasswordEndpoint:
 
         # Reset password
         response = client.post(
-            f"/auth/reset-password?token={token}",
+            f"/reset-password/{token}",
             data={
                 "password": "newpassword456",
-                "password_confirm": "newpassword456"
+                "confirm_password": "newpassword456"
             }
         )
 
@@ -279,10 +280,10 @@ class TestResetPasswordEndpoint:
     def test_reset_password_with_invalid_token(self, client, db_session):
         """Test password reset with invalid token"""
         response = client.post(
-            "/auth/reset-password?token=invalidtoken123",
+            "/reset-password/invalidtoken123",
             data={
                 "password": "newpassword456",
-                "password_confirm": "newpassword456"
+                "confirm_password": "newpassword456"
             }
         )
 
@@ -307,10 +308,10 @@ class TestResetPasswordEndpoint:
 
         # Try to reset with mismatched passwords
         response = client.post(
-            f"/auth/reset-password?token={token}",
+            f"/reset-password/{token}",
             data={
                 "password": "newpassword456",
-                "password_confirm": "differentpassword789"
+                "confirm_password": "differentpassword789"
             }
         )
 
@@ -340,7 +341,7 @@ class TestResendVerificationEndpoint:
         with patch('app.services.auth.email_service.send_confirmation_email',
                    new=AsyncMock(return_value=True)):
             response = client.post(
-                "/auth/resend-verification",
+                "/resend-verification",
                 data={"email": user.email}
             )
 
@@ -353,7 +354,7 @@ class TestResendVerificationEndpoint:
         with patch('app.services.auth.email_service.send_confirmation_email',
                    new=AsyncMock(return_value=False)):
             response = client.post(
-                "/auth/resend-verification",
+                "/resend-verification",
                 data={"email": test_user.email}
             )
 
