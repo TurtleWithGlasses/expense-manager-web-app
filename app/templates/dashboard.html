@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 
+<style>
+/* Initialize color variables immediately to prevent invisible text on page load */
+:root {
+  --income-color: #28a745;
+  --expense-color: #dc3545;
+}
+</style>
+
 <h1 class="h1">Welcome, {{ user.full_name or user.email.split('@')[0] }}</h1>
 
 <!-- Navigation Links - Fixed with proper horizontal layout -->
@@ -367,6 +375,28 @@
   border-radius: 8px;
   padding: 1.5rem;
   backdrop-filter: blur(10px);
+  min-height: auto !important; /* Ensure section can grow */
+  height: auto !important; /* Allow dynamic height */
+  overflow: visible !important; /* Show all content */
+}
+
+#income-list, #expense-list {
+  min-height: auto !important;
+  height: auto !important;
+  max-height: none !important; /* Remove any height restrictions */
+  overflow: visible !important; /* Show all content */
+  opacity: 1 !important; /* Ensure containers are fully visible */
+  animation: none !important; /* Disable any fade-in animations */
+}
+
+#income-list table, #expense-list table {
+  animation: none !important; /* Disable table fade-in animation */
+  opacity: 1 !important;
+}
+
+#income-list tbody, #expense-list tbody {
+  animation: none !important;
+  opacity: 1 !important;
 }
 
 .data-section h2 {
@@ -402,12 +432,23 @@
   text-align: left;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: transparent;
+  color: #e5e7eb; /* Ensure text is visible on dark background */
 }
 
 .data-section th {
   font-weight: 600;
   color: #ccc !important;
   font-size: 0.875rem;
+}
+
+/* Disable fade-in animation for dashboard tables */
+.data-section table,
+.data-section tbody,
+.data-section tbody tr,
+.data-section tbody tr td {
+  animation: none !important; /* Disable any fade-in animations */
+  opacity: 1 !important; /* Force full visibility */
+  visibility: visible !important;
 }
 
 .data-section .total-row {
