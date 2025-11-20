@@ -1992,6 +1992,273 @@ Complete implementation of comprehensive annual financial reports. Currently, th
 
 ---
 
+### **Phase 31: Admin Panel, Documentation & User Feedback** 🛠️
+**Priority:** MEDIUM
+**Status:** Not Started
+**Estimated Time:** 8-12 hours
+
+**Overview:**
+Add administrative capabilities, comprehensive user documentation, and user feedback system to improve platform management and user experience.
+
+---
+
+#### **1. Admin Panel** (4-5 hours)
+**Priority:** MEDIUM-HIGH
+
+**Features:**
+- **Admin Dashboard**
+  - Total user count (active, inactive, verified, unverified)
+  - New user registrations (today, this week, this month)
+  - Active users (logged in within last 7/30 days)
+  - Total entries created (all time, this month)
+  - Total categories created
+  - System health metrics (database size, API response times)
+  - Recent activity timeline
+
+- **User Activity Monitoring** (Non-intrusive)
+  - User registration dates
+  - Last login timestamps
+  - Account status (verified, active, suspended)
+  - Usage statistics per user:
+    - Total entries count
+    - Total categories count
+    - Last entry date
+    - Account age
+  - **NO ACCESS** to private financial data (amounts, specific entries, personal notes)
+
+- **System Statistics**
+  - Most popular features (page views)
+  - Error logs and warnings
+  - API endpoint usage statistics
+  - Peak usage times
+  - Average session duration
+
+- **User Management**
+  - View user list (paginated)
+  - Search users by email
+  - Filter users (active, inactive, verified, unverified)
+  - Account actions:
+    - Suspend account (temporary)
+    - Delete account (with confirmation)
+    - Resend verification email
+    - Reset password (admin-initiated)
+  - User account details (email, name, registration date, status)
+
+**Security & Privacy:**
+- Admin role required (stored in User model: `is_admin` boolean field)
+- Separate admin authentication/authorization
+- Activity logging for all admin actions
+- No access to user's financial entries or amounts
+- Rate limiting on admin endpoints
+- Admin audit trail (who did what, when)
+
+**Technical Implementation:**
+- New admin router: `app/api/v1/admin.py`
+- Admin middleware for authentication
+- Admin service: `app/services/admin_service.py`
+- Database migration: Add `is_admin` field to users table
+- Admin templates: `app/templates/admin/`
+  - `dashboard.html` - Main admin dashboard
+  - `users.html` - User list and management
+  - `stats.html` - System statistics
+  - `logs.html` - Activity logs
+
+**Database Changes:**
+- Add `is_admin` boolean field to `users` table (default: False)
+- Create `admin_activity_logs` table:
+  - id, admin_user_id, action, target_user_id, timestamp, details
+
+**Routes:**
+- `GET /admin/` - Admin dashboard (requires admin role)
+- `GET /admin/users` - User list with filters
+- `GET /admin/users/{user_id}` - User details
+- `POST /admin/users/{user_id}/suspend` - Suspend user
+- `POST /admin/users/{user_id}/activate` - Activate user
+- `DELETE /admin/users/{user_id}` - Delete user account
+- `GET /admin/stats` - System statistics
+- `GET /admin/logs` - Admin activity logs
+
+---
+
+#### **2. Help/Information Page** (2-3 hours)
+**Priority:** MEDIUM
+
+**Features:**
+- **Comprehensive User Guide**
+  - Introduction to Budget Pulse
+  - Getting started guide
+  - Feature overview with screenshots
+
+- **Section-by-Section Documentation**
+  1. **Dashboard** - Understanding your financial overview
+  2. **Entries** - Adding, editing, and managing entries
+  3. **Categories** - Creating and organizing categories
+  4. **Reports** - Generating weekly, monthly, and annual reports
+  5. **AI Insights** - Understanding AI-powered recommendations
+  6. **Goals** - Setting and tracking financial goals
+  7. **Currency** - Multi-currency support
+  8. **Settings** - Customizing your experience
+
+- **FAQs**
+  - Common questions and answers
+  - Troubleshooting tips
+  - Account management
+  - Privacy and security
+
+- **Video Tutorials** (Optional)
+  - Embedded YouTube videos or GIFs
+  - Step-by-step walkthroughs
+
+- **Keyboard Shortcuts**
+  - List of available shortcuts
+  - Quick access tips
+
+- **API Documentation** (Optional)
+  - For power users
+  - API endpoints and usage
+
+**Technical Implementation:**
+- Route: `GET /help` or `GET /docs`
+- Template: `app/templates/help.html`
+- Static assets: `static/images/help/` (screenshots)
+- Organized with collapsible sections/accordion
+- Search functionality to find specific topics
+- Dark/light theme support
+- Mobile-responsive design
+
+**Content Structure:**
+```
+Help Center
+├── Getting Started
+│   ├── Creating Your Account
+│   ├── Adding Your First Entry
+│   └── Setting Up Categories
+├── Features
+│   ├── Dashboard Overview
+│   ├── Managing Entries
+│   ├── Categories
+│   ├── Reports & Analytics
+│   ├── AI Insights
+│   ├── Financial Goals
+│   └── Multi-Currency
+├── Settings
+│   ├── Profile Management
+│   ├── Theme Customization
+│   └── Notifications
+├── FAQs
+├── Troubleshooting
+└── Contact Support
+```
+
+---
+
+#### **3. User Feedback System** (2-4 hours)
+**Priority:** MEDIUM
+
+**Features:**
+- **Feedback Button**
+  - Floating button on all pages (bottom-right corner)
+  - Always accessible, non-intrusive
+  - Icon: 💬 or "Feedback" text
+  - Hover effect to attract attention
+
+- **Feedback Modal/Form**
+  - Quick feedback form (opens on button click)
+  - Fields:
+    - **Feedback Type** (dropdown): Bug Report, Feature Request, General Feedback, Compliment
+    - **Title** (required, max 100 chars)
+    - **Description** (required, textarea, max 1000 chars)
+    - **Current Page URL** (auto-populated)
+    - **Screenshot** (optional file upload)
+    - **Email** (auto-filled if logged in, optional if guest)
+    - **User ID** (auto-populated if logged in)
+  - Submit button with loading state
+  - Success/error messages
+
+- **Feedback Management (Admin)**
+  - Admin panel section to view all feedback
+  - Filter by type, status (new, in progress, resolved)
+  - Mark feedback as resolved
+  - Reply to user feedback via email
+  - Priority labels (low, medium, high, critical)
+
+- **Feedback Storage**
+  - Database table: `user_feedback`
+    - id, user_id (nullable), feedback_type, title, description, page_url, screenshot_url, status, priority, created_at, resolved_at
+  - Store screenshots in database (base64) or cloud storage
+
+- **Email Notifications**
+  - Send confirmation email to user when feedback submitted
+  - Notify admins when new feedback received (optional)
+  - Email user when feedback is resolved (with admin response)
+
+**Technical Implementation:**
+- Feedback API: `app/api/v1/feedback.py`
+  - `POST /feedback/submit` - Submit feedback
+  - `GET /admin/feedback` - List all feedback (admin only)
+  - `PUT /admin/feedback/{id}` - Update feedback status
+  - `POST /admin/feedback/{id}/reply` - Reply to feedback
+- Service: `app/services/feedback_service.py`
+- Database migration: Create `user_feedback` table
+- Frontend: `static/js/feedback.js` (modal handling)
+- CSS: `static/css/feedback.css` (button and modal styling)
+- Template partial: `app/templates/_feedback_button.html`
+
+**User Experience:**
+1. User clicks feedback button
+2. Modal opens with form
+3. User fills in details and submits
+4. Success message shown
+5. User receives confirmation email
+6. Admin reviews feedback in admin panel
+7. Admin resolves and replies
+8. User receives resolution email
+
+---
+
+**Files to Create:**
+- `app/api/v1/admin.py` (admin routes)
+- `app/api/v1/feedback.py` (feedback routes)
+- `app/services/admin_service.py` (admin business logic)
+- `app/services/feedback_service.py` (feedback handling)
+- `app/templates/admin/dashboard.html`
+- `app/templates/admin/users.html`
+- `app/templates/admin/stats.html`
+- `app/templates/admin/logs.html`
+- `app/templates/admin/feedback.html`
+- `app/templates/help.html` (comprehensive guide)
+- `app/templates/_feedback_button.html` (reusable partial)
+- `static/js/feedback.js`
+- `static/css/feedback.css`
+- `static/css/admin.css`
+
+**Database Migrations:**
+- Add `is_admin` boolean to `users` table
+- Create `admin_activity_logs` table
+- Create `user_feedback` table
+
+**Benefits:**
+- Better platform management and oversight
+- Improved user onboarding and self-service support
+- Direct channel for user feedback and feature requests
+- Enhanced user satisfaction and engagement
+- Reduced support burden with comprehensive documentation
+- Transparency and responsiveness to user needs
+
+**Acceptance Criteria:**
+- ✅ Admin panel accessible only to admin users
+- ✅ User activity monitoring without accessing private data
+- ✅ Help page covers all features comprehensively
+- ✅ Search functionality in help page works correctly
+- ✅ Feedback button visible on all pages
+- ✅ Feedback form submits successfully
+- ✅ Admins can view and manage feedback
+- ✅ Email notifications sent for feedback events
+- ✅ Dark/light theme support for all new pages
+- ✅ Mobile-responsive design
+
+---
+
 ## 🏗️ Technical Architecture
 
 ### **Technology Stack**
