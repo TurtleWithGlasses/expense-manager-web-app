@@ -1701,7 +1701,141 @@ Interactive calendar view to visualize income and expense entries by date, provi
 
 ---
 
-### **Phase 27: Advanced AI Features** 🤖
+### **Phase 27: Advanced Annual Reports Implementation** 📊
+**Priority:** MEDIUM
+**Status:** Not Started (Placeholder Page Exists)
+**Estimated Time:** 8-12 hours
+
+**Overview:**
+Complete implementation of comprehensive annual financial reports. Currently, the `/reports/annual` page shows only basic summary cards (total income, expense, balance, year) with a "Coming Soon" placeholder for advanced features.
+
+**Current State:**
+- ✅ Basic annual report endpoint exists (`GET /reports/annual`)
+- ✅ Basic summary cards (income, expense, balance, year)
+- ✅ Email annual report functionality (basic)
+- ❌ Advanced features not implemented (showing placeholder)
+
+**Features to Implement:**
+
+1. **Annual Trends Analysis** (2-3 hours)
+   - Year-over-year spending and income comparison
+   - Growth/decline percentages for each category
+   - Trend line charts showing progression across years
+   - Comparison with previous 2-3 years
+   - Highlight biggest increases/decreases
+
+2. **Seasonal Patterns** (2-3 hours)
+   - Monthly spending patterns across the year
+   - Identify high-spending months vs low-spending months
+   - Seasonal breakdown (Q1, Q2, Q3, Q4)
+   - Month-over-month comparison chart
+   - Average spending per month
+   - Peak spending periods identification
+
+3. **Annual Achievements** (1-2 hours)
+   - Financial milestones reached during the year
+   - Goals completed within the year
+   - Savings milestones
+   - Longest saving streak
+   - Best saving month
+   - Total days with entries
+   - Achievement badges/icons
+
+4. **Category Breakdown (Annual)** (1-2 hours)
+   - Annual spending distribution by category (pie chart)
+   - Top 10 spending categories for the year
+   - Category-wise year-over-year comparison
+   - Percentage of total spending per category
+   - Largest single expense per category
+
+5. **Savings Analysis** (2-3 hours)
+   - Annual savings rate calculation (savings / income × 100)
+   - Month-by-month savings rate chart
+   - Investment potential analysis
+   - Comparison with recommended savings rate (20%)
+   - Projected savings if rate maintained
+   - Savings vs spending ratio
+
+6. **Smart Insights (AI-Powered)** (2-3 hours)
+   - AI-powered recommendations for next year
+   - Spending optimization suggestions
+   - Category budget recommendations based on historical data
+   - Predicted spending for next year
+   - Areas for potential savings
+   - Financial health improvement tips
+
+**Technical Implementation:**
+
+**Backend:**
+- Create `app/services/annual_report_service.py`:
+  - `generate_annual_trends(user_id, year)` - YoY comparison
+  - `get_seasonal_patterns(user_id, year)` - Monthly breakdown
+  - `get_annual_achievements(user_id, year)` - Milestones
+  - `get_annual_category_breakdown(user_id, year)` - Category stats
+  - `calculate_savings_analysis(user_id, year)` - Savings metrics
+  - `generate_smart_insights(user_id, year)` - AI recommendations
+
+**Frontend:**
+- Update `app/templates/reports/annual.html`:
+  - Replace "Coming Soon" section with actual content
+  - Add interactive charts (Chart.js)
+  - Add data tables for detailed breakdowns
+  - Add year selector dropdown (previous 5 years)
+  - Make it printable and PDF-exportable
+
+**Database:**
+- No new tables needed
+- Use existing `entries` table with date range queries
+- Efficient aggregation queries by year/month/category
+
+**Files to Create:**
+- `app/services/annual_report_service.py` (new, ~400 lines)
+
+**Files to Modify:**
+- `app/api/v1/reports_pages.py` - Update `/reports/annual` endpoint to use new service
+- `app/templates/reports/annual.html` - Replace placeholder with actual reports
+
+**Chart Visualizations:**
+1. Year-over-year comparison bar chart
+2. Monthly spending trend line chart
+3. Seasonal spending pie chart
+4. Category breakdown donut chart
+5. Savings rate line chart (by month)
+6. Top 10 categories bar chart
+
+**User Experience Flow:**
+1. User navigates to Reports → Annual Report
+2. Page loads showing current year by default
+3. User can select different years from dropdown
+4. Page displays 6 comprehensive sections with charts
+5. User can scroll through detailed analysis
+6. User can email the report or export as PDF
+7. Charts are interactive (hover for details)
+
+**Acceptance Criteria:**
+- ✅ Shows year-over-year comparison with previous years
+- ✅ Displays monthly spending patterns with charts
+- ✅ Lists annual achievements and milestones
+- ✅ Shows category breakdown with visual charts
+- ✅ Calculates and displays savings rate analysis
+- ✅ Provides AI-powered insights and recommendations
+- ✅ Year selector works for previous 5 years
+- ✅ Email functionality includes full report
+- ✅ Fully responsive on mobile and desktop
+- ✅ Dark/light theme support
+- ✅ Page loads within 2 seconds
+- ✅ Charts are interactive and visually appealing
+
+**Benefits:**
+- Users get comprehensive yearly financial overview
+- Helps users understand long-term spending trends
+- Provides actionable insights for next year
+- Completes the reporting suite (weekly, monthly, annual)
+- Professional-looking annual summary for tax/planning purposes
+
+---
+
+### **Phase 28: Advanced AI Features** 🤖
 **Priority:** LOW
 **Status:** Not Started
 **Estimated Time:** 15-20 hours
@@ -1757,7 +1891,7 @@ Interactive calendar view to visualize income and expense entries by date, provi
 
 ---
 
-### **Phase 27: Social & Collaboration** 👥
+### **Phase 29: Social & Collaboration** 👥
 **Priority:** LOW
 **Status:** Not Started
 **Estimated Time:** 12-15 hours
@@ -1795,7 +1929,7 @@ Interactive calendar view to visualize income and expense entries by date, provi
 
 ---
 
-### **Phase 28: Third-Party Integrations** 🔌
+### **Phase 30: Third-Party Integrations** 🔌
 **Priority:** LOW
 **Status:** Not Started
 **Estimated Time:** 10-15 hours per integration
