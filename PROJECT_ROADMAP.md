@@ -1308,15 +1308,33 @@ Password reset and verification emails weren't being sent. Investigation reveale
 - `Add entries API integration tests (24/24 passing)` - November 19, 2025
 - `Add dashboard API integration tests (23/23 passing)` - November 19, 2025
 
-**Remaining Work (Phase 4 - E2E Tests & Additional Integration Tests):**
-**Priority:** MEDIUM
-**Estimated Time:** 5-7 hours
+**Phase 4 - Categories Integration Tests:** ✅ COMPLETED
+**Priority:** HIGH
+**Estimated Time:** 1-2 hours
+**Time Spent:** 1 hour
+**Date Completed:** November 20, 2025
 
-4. ⏳ **Categories API Integration Tests** (1-2 hours)
-   - Add categories API integration tests (8-10 tests)
-   - Test CRUD operations for categories
-   - Test category assignment to entries
-   - Target: 8-10 additional tests
+**Files Created (Phase 4):**
+- `tests/integration/test_categories_api.py` (21 tests - 380 lines)
+
+**Files Deleted (Phase 4):**
+- `tests/integration/test_complete_workflows.py` (broken stub file with import errors)
+
+**Test Coverage:**
+- Category listing (HTML page and JSON API)
+- Create category (validation, whitespace trimming, error handling)
+- Update category (success, not found, user isolation, validation)
+- Delete category (success, user isolation, idempotency)
+- Category item views (view, edit form, not found, user isolation)
+- Category-Entry integration (assignment, CASCADE behavior on delete)
+- User isolation across all endpoints
+
+**Commits:**
+- `Add categories API integration tests (21/21 passing)` - November 20, 2025
+
+**Remaining Work (Phase 5 - E2E Tests):**
+**Priority:** MEDIUM
+**Estimated Time:** 3-4 hours
 
 5. ⏳ **E2E Tests for Critical User Flows** (3-4 hours)
    - User registration → verification → login flow
@@ -1327,7 +1345,7 @@ Password reset and verification emails weren't being sent. Investigation reveale
    - Report generation and download flow
    - Tools: Playwright or Selenium
 
-**Remaining Work (Phase 5 - Additional Coverage):**
+**Remaining Work (Phase 6 - Additional Coverage):**
 **Priority:** MEDIUM
 **Estimated Time:** 3-5 hours
 
@@ -1368,7 +1386,7 @@ Password reset and verification emails weren't being sent. Investigation reveale
 - Playwright or Selenium (E2E tests) - to be added
 - pytest-xdist (parallel test execution) - optional
 
-**Files Created (Phases 1-3):**
+**Files Created (Phases 1-4):**
 - `tests/conftest.py` (enhanced with comprehensive fixtures)
 - `tests/unit/__init__.py`
 - `tests/unit/test_auth_service.py` (24 tests ✅)
@@ -1377,6 +1395,7 @@ Password reset and verification emails weren't being sent. Investigation reveale
 - `tests/integration/test_auth_api.py` (18 tests ✅)
 - `tests/integration/test_entries_api.py` (24 tests ✅)
 - `tests/integration/test_dashboard_api.py` (23 tests ✅)
+- `tests/integration/test_categories_api.py` (21 tests ✅)
 - `pytest.ini` (configured with pythonpath and markers)
 - `TESTING_IMPLEMENTATION_SUMMARY.md` (comprehensive documentation)
 - `TESTING_QUICK_START.md` (quick reference guide)
@@ -1387,7 +1406,6 @@ Password reset and verification emails weren't being sent. Investigation reveale
 - `tests/unit/test_report_service.py`
 - `tests/unit/test_goal_service.py`
 - `tests/unit/test_currency_service.py`
-- `tests/integration/test_categories_api.py` (Phase 4)
 - `tests/e2e/test_user_flows.py`
 - `tests/e2e/test_entry_management.py`
 - `tests/performance/test_load.py`
@@ -1417,17 +1435,18 @@ pytest tests/unit/ -n auto
 - ✅ Phase 1: Unit Tests (64 tests, 100% passing) - 5 hours
 - ✅ Phase 2: Deprecation Fixes (all warnings eliminated) - 2 hours
 - ✅ Phase 3: Integration Tests (65 tests, 100% passing) - 3 hours
-- ⏳ Phase 4: Categories Integration + E2E Tests (estimated 5-7 hours)
-- ⏳ Phase 5: Additional Coverage (estimated 3-5 hours)
+- ✅ Phase 4: Categories Integration Tests (21 tests, 100% passing) - 1 hour
+- ⏳ Phase 5: E2E Tests (estimated 3-4 hours)
+- ⏳ Phase 6: Additional Coverage (estimated 3-5 hours)
 
-**Total Estimated Remaining Time:** 8-12 hours
-**Total Time Invested So Far:** 10 hours
+**Total Estimated Remaining Time:** 6-9 hours
+**Total Time Invested So Far:** 11 hours
 
 **Testing Metrics:**
-- Total Tests: 129 (64 unit + 65 integration)
+- Total Tests: 150 (64 unit + 86 integration)
 - Pass Rate: 100%
-- Average Test Speed: 0.25s per test
-- Coverage: ~40% (estimated)
+- Average Test Speed: 0.28s per test
+- Coverage: ~45% (estimated)
 
 ---
 
