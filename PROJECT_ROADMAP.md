@@ -2259,6 +2259,420 @@ Help Center
 
 ---
 
+### **Phase 32: Voice Commands & Receipt Scanning** 🎙️📷
+**Priority:** MEDIUM-HIGH
+**Status:** Not Started
+**Estimated Time:** 15-20 hours
+
+**Overview:**
+Add hands-free voice command functionality and intelligent receipt scanning with OCR to make expense tracking faster and more convenient for users.
+
+---
+
+#### **1. Voice Command Functionality** (8-10 hours)
+**Priority:** HIGH
+
+**Core Features:**
+- **Voice-Activated Entry Management**
+  - Add new entries via voice commands
+  - Edit existing entries
+  - Delete entries
+  - Search and filter entries
+  - Create categories
+  - Get spending summaries
+
+**Example Voice Commands:**
+- "Add expense 50 dollars for groceries"
+- "Add income 2000 dollars salary yesterday"
+- "Create category Transportation"
+- "Delete last entry"
+- "Edit last entry amount to 45 dollars"
+- "Show me my total expenses this month"
+- "What did I spend on food this week?"
+
+**Technical Implementation:**
+
+**Frontend (Browser-based):**
+- **Web Speech API** (built into modern browsers)
+  - `SpeechRecognition` API for voice-to-text
+  - `SpeechSynthesis` API for voice feedback
+  - Works on Chrome, Edge, Safari (limited on Firefox)
+  - No external dependencies needed
+  - Free and privacy-friendly (processed locally)
+
+**Voice Command Flow:**
+1. User clicks microphone button or uses hotkey
+2. Browser starts listening (visual indicator shown)
+3. User speaks command: "Add expense 50 dollars for groceries"
+4. Speech recognition converts to text
+5. NLP parser extracts intent and parameters
+6. App executes command via API
+7. Voice feedback confirms action
+
+**Natural Language Processing (NLP):**
+- **Simple Pattern Matching** (Phase 1 - Quick Implementation)
+  - Regex patterns for common commands
+  - Extract keywords: "add", "delete", "edit", "show"
+  - Parse amounts: "$50", "50 dollars", "fifty dollars"
+  - Detect dates: "today", "yesterday", "last Monday"
+  - Identify categories from keywords
+
+- **Advanced NLP** (Phase 2 - Optional Enhancement)
+  - Use spaCy for entity recognition
+  - Extract entities: MONEY, DATE, CATEGORY
+  - Intent classification
+  - Handle variations and synonyms
+
+**Command Parser Examples:**
+```python
+# Pattern: "add [expense|income] [amount] for [category] [date]"
+"add expense 50 dollars for groceries"
+→ {action: "add", type: "expense", amount: 50, category: "groceries", date: today}
+
+"spent 25 on coffee yesterday"
+→ {action: "add", type: "expense", amount: 25, category: "coffee", date: yesterday}
+
+"earned 1500 salary last friday"
+→ {action: "add", type: "income", amount: 1500, category: "salary", date: last_friday}
+```
+
+**UI Components:**
+- Floating microphone button (bottom-right corner)
+- Voice input modal with waveform animation
+- Real-time transcription display
+- Confirmation dialog before executing action
+- Voice feedback for success/error messages
+- Keyboard shortcut (Ctrl/Cmd + Shift + V)
+
+**Supported Commands:**
+
+**Adding Entries:**
+- "Add expense [amount] for [category] [date]"
+- "Spent [amount] on [category] [date]"
+- "Add income [amount] [category] [date]"
+- "Earned [amount] from [category] [date]"
+
+**Editing Entries:**
+- "Edit last entry amount to [amount]"
+- "Change last entry category to [category]"
+- "Update last expense to [amount]"
+
+**Deleting Entries:**
+- "Delete last entry"
+- "Remove last expense"
+- "Undo last entry"
+
+**Categories:**
+- "Create category [name]"
+- "Add new category [name]"
+- "Delete category [name]"
+
+**Queries:**
+- "What's my total for [month]?"
+- "How much did I spend on [category] this week?"
+- "Show me my balance"
+- "List my expenses today"
+
+**Error Handling:**
+- Ambiguous commands → Ask for clarification
+- Unrecognized category → Suggest similar or create new
+- Missing information → Prompt for details
+- Confirmation required for destructive actions
+
+**Privacy & Security:**
+- Voice processing done in browser (local)
+- No audio sent to external servers
+- User can disable voice features in settings
+- Visual indicator when microphone is active
+
+**Technical Stack:**
+- Frontend: Web Speech API (JavaScript)
+- Backend: FastAPI endpoint `/api/voice/command`
+- NLP Service: `app/services/voice_command_service.py`
+- Pattern matching with regex (simple)
+- Optional: spaCy for advanced NLP (Python)
+
+**Database:**
+- No new tables needed
+- Uses existing entries/categories APIs
+- Optional: Store command history for learning
+
+**Files to Create:**
+- `static/js/voice-commands.js` (voice recognition)
+- `app/api/v1/voice.py` (voice command endpoints)
+- `app/services/voice_command_service.py` (NLP parser)
+- `app/templates/_voice_button.html` (UI component)
+- `static/css/voice-commands.css`
+
+**Testing:**
+- Unit tests for command parsing
+- Mock speech recognition in tests
+- Test various command formats
+- Multi-language support (future)
+
+---
+
+#### **2. Receipt Scanning with OCR** (7-10 hours)
+**Priority:** HIGH
+
+**Core Features:**
+- **Camera Receipt Capture**
+  - Take photo of receipt using device camera
+  - Upload existing receipt images
+  - Image preprocessing (crop, rotate, enhance)
+  - Real-time preview with guidelines
+
+- **OCR Text Extraction**
+  - Extract merchant name
+  - Detect total amount
+  - Identify date of purchase
+  - Extract line items (optional)
+  - Multi-language support (English priority)
+
+- **Smart Data Extraction**
+  - Parse extracted text for key information
+  - Identify amount patterns ($XX.XX, €XX,XX)
+  - Detect date formats (MM/DD/YYYY, DD/MM/YYYY)
+  - Merchant name from header
+  - Category suggestion based on merchant
+
+- **Confirmation & Editing**
+  - Show extracted data in confirmation form
+  - User reviews and edits as needed
+  - Pre-filled fields: amount, date, merchant
+  - Suggested category (from merchant name)
+  - Add notes field
+  - Save or discard
+
+**Technical Implementation:**
+
+**OCR Options:**
+
+**Option 1: Tesseract OCR (Open Source, Free)** ⭐ Recommended
+- Python library: `pytesseract`
+- Offline processing (privacy-friendly)
+- Free, no API costs
+- Good accuracy for printed receipts
+- Supports 100+ languages
+- Requires Tesseract installation on server
+
+**Option 2: Google Cloud Vision API** (Paid, Higher Accuracy)
+- Cloud-based OCR
+- Better accuracy than Tesseract
+- Handles handwriting
+- Auto language detection
+- Cost: $1.50 per 1000 images (first 1000/month free)
+- Requires internet connection
+
+**Option 3: AWS Textract** (Paid, Advanced)
+- Specialized for receipts and documents
+- Extracts key-value pairs
+- Identifies tables and forms
+- Higher cost but better structured output
+- Cost: $1.50 per 1000 pages
+
+**Recommended: Start with Tesseract, upgrade to Cloud Vision if needed**
+
+**Image Processing Pipeline:**
+
+1. **Image Upload**
+   - File upload input or camera capture
+   - Supported formats: JPG, PNG, PDF
+   - Max file size: 10MB
+   - Client-side image compression
+
+2. **Preprocessing** (improve OCR accuracy)
+   - Convert to grayscale
+   - Noise reduction
+   - Contrast enhancement
+   - Deskew (straighten tilted images)
+   - Binarization (black & white)
+
+3. **OCR Extraction**
+   - Run Tesseract on preprocessed image
+   - Extract raw text with coordinates
+   - Confidence scores for each word
+
+4. **Text Parsing** (extract structured data)
+   - Find total amount (highest dollar amount, near "total")
+   - Extract date (first date found or near header)
+   - Merchant name (first line, largest text)
+   - Line items (optional)
+
+5. **Data Validation**
+   - Verify amount format
+   - Check date is valid and reasonable
+   - Clean merchant name (remove extra chars)
+
+6. **Category Suggestion**
+   - Match merchant name against known categories
+   - Use existing AI categorization model
+   - Fallback to "Uncategorized"
+
+**Receipt Parser Logic:**
+```python
+def parse_receipt(ocr_text: str) -> dict:
+    # Find total amount
+    amount_pattern = r'\$?\d+\.\d{2}'
+    total_keywords = ['total', 'amount due', 'balance']
+    amount = find_amount_near_keyword(ocr_text, total_keywords)
+
+    # Find date
+    date_pattern = r'\d{1,2}/\d{1,2}/\d{2,4}'
+    date = find_first_date(ocr_text)
+
+    # Find merchant
+    merchant = ocr_text.split('\n')[0].strip()
+
+    # Suggest category
+    category = suggest_category_from_merchant(merchant)
+
+    return {
+        'amount': amount,
+        'date': date,
+        'merchant': merchant,
+        'category': category
+    }
+```
+
+**User Flow:**
+
+1. **Capture Receipt**
+   - User clicks "Scan Receipt" button
+   - Camera opens or file picker shown
+   - User takes photo or uploads image
+   - Image preview displayed
+
+2. **Processing**
+   - Loading spinner shown
+   - Image uploaded to server
+   - OCR processing (2-5 seconds)
+   - Text extraction and parsing
+
+3. **Review & Confirm**
+   - Confirmation modal opens
+   - Extracted data shown:
+     - **Amount:** $45.67 ✏️ (editable)
+     - **Date:** 11/20/2025 ✏️
+     - **Merchant:** Whole Foods ✏️
+     - **Category:** Groceries (suggested) ✏️
+     - **Note:** [optional text field]
+   - Receipt image thumbnail
+   - "Add Entry" or "Cancel" buttons
+
+4. **Save Entry**
+   - Entry created with extracted data
+   - Receipt image stored (optional)
+   - Success message shown
+   - User redirected to entries list
+
+**UI Components:**
+- Camera capture button
+- File upload with drag-and-drop
+- Image preview with crop/rotate tools
+- Loading indicator during processing
+- Confirmation form with editable fields
+- Receipt image thumbnail in entry details
+
+**Storage Options:**
+- **Option 1:** Store receipt images as base64 in database
+- **Option 2:** Upload to cloud storage (AWS S3, Cloudflare R2)
+- **Option 3:** Don't store images (only extracted data)
+
+**Technical Stack:**
+- **OCR Engine:** Tesseract OCR (`pytesseract`)
+- **Image Processing:** Pillow (PIL) or OpenCV
+- **Backend:** FastAPI endpoint `/api/receipts/scan`
+- **Frontend:** Camera API (HTML5) or file upload
+- **Service:** `app/services/receipt_scanner_service.py`
+
+**Files to Create:**
+- `app/api/v1/receipts.py` (receipt endpoints)
+- `app/services/receipt_scanner_service.py` (OCR logic)
+- `static/js/receipt-scanner.js` (camera/upload handling)
+- `app/templates/receipts/scan.html` (scan UI)
+- `static/css/receipt-scanner.css`
+
+**Database Changes:**
+- Add optional `receipt_image` field to `entries` table (TEXT for base64)
+- Or create new `receipts` table:
+  - id, entry_id, image_url, ocr_text, extracted_data (JSON), created_at
+
+**Dependencies to Add:**
+```txt
+pytesseract==0.3.10
+Pillow==10.1.0
+opencv-python==4.8.1 (optional, for advanced preprocessing)
+```
+
+**Error Handling:**
+- Poor image quality → Ask user to retake
+- No text detected → Manual entry fallback
+- Multiple amounts found → Ask user to select
+- Unclear merchant → Let user type manually
+- OCR failure → Graceful fallback to manual entry
+
+**Accuracy Improvements:**
+- Guide users to take clear photos (guidelines overlay)
+- Suggest good lighting and angle
+- Allow manual corrections
+- Learn from corrections (future ML improvement)
+- Support for multiple receipt formats
+
+---
+
+**Combined Benefits:**
+
+**Voice Commands + Receipt Scanning:**
+- Reduces manual data entry by 70-80%
+- Faster expense tracking (seconds vs minutes)
+- Better accessibility for visually impaired users
+- More convenient for mobile users
+- Hands-free operation while multitasking
+- Higher user engagement and retention
+
+**User Experience:**
+- "Hey, I just had lunch. Let me scan the receipt... Done!"
+- "While driving: 'Add expense 30 dollars for gas'"
+- Natural, conversational interface
+- Less friction = more consistent tracking
+
+---
+
+**Implementation Priority:**
+
+**Phase 1 (MVP - 10 hours):**
+1. Basic voice commands (add/delete entries)
+2. Receipt scanning with Tesseract
+3. Simple confirmation UI
+4. Core functionality only
+
+**Phase 2 (Enhancements - 5-10 hours):**
+1. Advanced voice commands (queries, editing)
+2. Improved OCR with preprocessing
+3. Category auto-suggestion
+4. Voice feedback
+5. Multi-language support
+
+---
+
+**Total Estimated Time:** 15-20 hours
+- Voice Commands: 8-10 hours
+- Receipt Scanning: 7-10 hours
+
+**Dependencies:**
+- Tesseract OCR installation on server
+- Web Speech API (browser support check)
+- Camera permissions (mobile/desktop)
+
+**Testing Requirements:**
+- Test voice commands in different browsers
+- Test OCR with various receipt formats
+- Mobile camera testing (iOS/Android)
+- Edge cases (poor lighting, blurry images)
+
+---
+
 ## 🏗️ Technical Architecture
 
 ### **Technology Stack**
