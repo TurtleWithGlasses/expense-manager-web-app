@@ -6,6 +6,14 @@ def list_categories(db: Session, user_id: int):
     return db.query(Category).filter(Category.user_id == user_id).order_by(Category.name).all()
 
 
+def get_category_by_id(db: Session, user_id: int, category_id: int) -> Category | None:
+    """Get a category by ID with user isolation"""
+    return db.query(Category).filter(
+        Category.user_id == user_id,
+        Category.id == category_id
+    ).first()
+
+
 def create_category(db: Session, user_id: int, name: str) -> Category:
     cat = Category(user_id=user_id, name=name)
     db.add(cat)
