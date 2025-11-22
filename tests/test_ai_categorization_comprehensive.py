@@ -14,7 +14,7 @@ from datetime import date, datetime, timedelta
 from sqlalchemy.orm import Session
 from app.ai.models.categorization_model import CategorizationModel
 from app.ai.data.training_pipeline import TrainingDataPipeline
-from app.services.ai_service import AIService
+from app.services.ai_service import AICategorizationService
 from app.models.entry import Entry
 from app.models.category import Category
 from app.models.user import User
@@ -173,13 +173,13 @@ class TestTrainingDataPipeline:
         assert len(labels) == 0
 
 
-class TestAIService:
+class TestAICategorizationService:
     """Test the AI service layer"""
     
     @pytest.mark.asyncio
     async def test_suggest_category_with_trained_model(self, db_session, user_with_trained_model):
         """Test category suggestion with trained model"""
-        ai_service = AIService(db_session)
+        ai_service = AICategorizationService(db_session)
         
         transaction_data = {
             'note': 'Whole Foods Market',
@@ -197,7 +197,7 @@ class TestAIService:
     @pytest.mark.asyncio
     async def test_suggest_category_without_trained_model(self, db_session, user_without_model):
         """Test category suggestion without trained model"""
-        ai_service = AIService(db_session)
+        ai_service = AICategorizationService(db_session)
         
         transaction_data = {
             'note': 'Coffee shop',
@@ -215,7 +215,7 @@ class TestAIService:
     @pytest.mark.asyncio
     async def test_train_user_model(self, db_session, user_with_sufficient_data):
         """Test training a user's model"""
-        ai_service = AIService(db_session)
+        ai_service = AICategorizationService(db_session)
         
         result = await ai_service.train_user_model(user_with_sufficient_data.id)
         
@@ -226,7 +226,7 @@ class TestAIService:
     @pytest.mark.asyncio
     async def test_train_model_insufficient_data(self, db_session, user_with_few_entries):
         """Test training fails gracefully with insufficient data"""
-        ai_service = AIService(db_session)
+        ai_service = AICategorizationService(db_session)
         
         result = await ai_service.train_user_model(user_with_few_entries.id)
         
@@ -236,7 +236,7 @@ class TestAIService:
     @pytest.mark.asyncio
     async def test_get_model_status(self, db_session, user_with_trained_model):
         """Test getting model status"""
-        ai_service = AIService(db_session)
+        ai_service = AICategorizationService(db_session)
         
         status = await ai_service.get_model_status(user_with_trained_model.id)
         
@@ -247,7 +247,7 @@ class TestAIService:
     @pytest.mark.asyncio
     async def test_record_feedback(self, db_session, user_with_entries, sample_suggestion):
         """Test recording user feedback"""
-        ai_service = AIService(db_session)
+        ai_service = AICategorizationService(db_session)
         
         # Accept suggestion
         result = await ai_service.record_feedback(

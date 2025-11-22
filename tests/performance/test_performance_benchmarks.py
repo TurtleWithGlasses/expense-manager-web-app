@@ -14,7 +14,7 @@ import time
 import asyncio
 from datetime import date, timedelta
 from sqlalchemy.orm import Session
-from app.services.ai_service import AIService
+from app.services.ai_service import AICategorizationService
 from app.services.weekly_report_service import WeeklyReportService
 from app.services.monthly_report_service import MonthlyReportService
 from app.services.excel_export import ExcelExportService
@@ -32,7 +32,7 @@ class TestAIPerformance:
     @pytest.mark.performance
     async def test_ai_prediction_response_time(self, db_session, user_with_trained_model):
         """AI predictions should respond within 2 seconds"""
-        ai_service = AIService(db_session)
+        ai_service = AICategorizationService(db_session)
         
         transaction_data = {
             'note': 'Grocery store purchase',
@@ -52,7 +52,7 @@ class TestAIPerformance:
     @pytest.mark.performance
     async def test_model_training_time(self, db_session, user_with_training_data):
         """Model training should complete in reasonable time"""
-        ai_service = AIService(db_session)
+        ai_service = AICategorizationService(db_session)
         
         start_time = time.time()
         result = await ai_service.train_user_model(user_with_training_data.id)
@@ -65,7 +65,7 @@ class TestAIPerformance:
     @pytest.mark.performance
     async def test_batch_predictions(self, db_session, user_with_trained_model):
         """Test performance of multiple consecutive predictions"""
-        ai_service = AIService(db_session)
+        ai_service = AICategorizationService(db_session)
         
         transactions = [
             {'note': f'Purchase {i}', 'amount': 50.0, 'type': 'expense', 'date': date.today()}
@@ -253,7 +253,7 @@ class TestMemoryUsage:
         
         tracemalloc.start()
         
-        ai_service = AIService(db_session)
+        ai_service = AICategorizationService(db_session)
         await ai_service.train_user_model(user_with_training_data.id)
         
         current, peak = tracemalloc.get_traced_memory()
@@ -272,7 +272,7 @@ class TestConcurrency:
     @pytest.mark.performance
     async def test_concurrent_ai_predictions(self, db_session, user_with_trained_model):
         """Test handling multiple concurrent AI prediction requests"""
-        ai_service = AIService(db_session)
+        ai_service = AICategorizationService(db_session)
         
         transactions = [
             {'note': f'Purchase {i}', 'amount': 50.0, 'type': 'expense', 'date': date.today()}
