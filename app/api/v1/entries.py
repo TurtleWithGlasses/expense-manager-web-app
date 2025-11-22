@@ -1,28 +1,26 @@
+"""
+Entries API - HTTP request handlers for entry management.
+
+This module contains thin controller endpoints that delegate to the entries service.
+"""
+
 from datetime import date as _date
 from fastapi import APIRouter, Depends, Form, Query, Request, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from app.deps import current_user
 from app.db.session import get_db
-from app.services.entries import (
-    list_entries,
-    create_entry,
-    delete_entry,
-    update_entry_amount,
-    search_entries,
-    get_entries_count,
-    get_search_entries_count,
-)
+from app.services.entries import entries_service
 from app.services.categories import list_categories
 from app.services.user_preferences import user_preferences_service
 from app.templates import render
-from app.models.entry import Entry
 
 router = APIRouter(prefix="/entries", tags=["entries"])
 
 
-# ---------- Page ----------
+# ===== Page Endpoints =====
 
 @router.get("/load-more", response_class=HTMLResponse)
 async def load_more_entries(
@@ -38,38 +36,30 @@ async def load_more_entries(
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
     """AJAX endpoint for loading more entries (returns only entry rows HTML)"""
-    # Parse date parameters
-    start_date = None
-    end_date = None
-    if start:
-        start_date = _date.fromisoformat(start)
-    if end:
-        end_date = _date.fromisoformat(end)
+    # Parse filters
+    start_date = entries_service.parse_date(start)
+    end_date = entries_service.parse_date(end)
+    category_id = entries_service.parse_category_id(category)
 
-    # Parse category parameter
-    category_id = None
-    if category and category.strip():
-        try:
-            category_id = int(category)
-        except ValueError:
-            category_id = None
-
-    # Use search_entries for filtering if dates or category are provided
+    # Get entries based on filters
     if start_date and end_date:
-        entries = search_entries(db, user_id=user.id, start=start_date, end=end_date,
-                                category_id=category_id, limit=limit, offset=offset,
-                                sort_by=sort_by, order=order)
+        entries = entries_service.search_entries(
+            db, user.id, start=start_date, end=end_date, category_id=category_id,
+            limit=limit, offset=offset, sort_by=sort_by, order=order
+        )
     elif category_id:
-        entries = search_entries(db, user_id=user.id, category_id=category_id,
-                                limit=limit, offset=offset, sort_by=sort_by, order=order)
+        entries = entries_service.search_entries(
+            db, user.id, category_id=category_id,
+            limit=limit, offset=offset, sort_by=sort_by, order=order
+        )
     else:
-        entries = list_entries(db, user_id=user.id, limit=limit, offset=offset,
-                              sort_by=sort_by, order=order)
+        entries = entries_service.list_entries(
+            db, user.id, limit=limit, offset=offset, sort_by=sort_by, order=order
+        )
 
     cats = list_categories(db, user_id=user.id)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
 
-    # Return only the entry rows (not the full page)
     return render(request, "entries/_list.html",
                   {"entries": entries, "categories": cats, "user_currency": user_currency})
 
@@ -88,35 +78,27 @@ async def load_more_mobile_entries(
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
     """AJAX endpoint for loading more entries on mobile (returns only mobile cards HTML)"""
-    # Parse date parameters
-    start_date = None
-    end_date = None
-    if start:
-        start_date = _date.fromisoformat(start)
-    if end:
-        end_date = _date.fromisoformat(end)
+    # Parse filters
+    start_date = entries_service.parse_date(start)
+    end_date = entries_service.parse_date(end)
+    category_id = entries_service.parse_category_id(category)
 
-    # Parse category parameter
-    category_id = None
-    if category and category.strip():
-        try:
-            category_id = int(category)
-        except ValueError:
-            category_id = None
-
-    # Use search_entries for filtering if dates or category are provided
+    # Get entries based on filters
     if start_date and end_date:
-        entries = search_entries(db, user_id=user.id, start=start_date, end=end_date,
-                                category_id=category_id, limit=limit, offset=offset,
-                                sort_by=sort_by, order=order)
+        entries = entries_service.search_entries(
+            db, user.id, start=start_date, end=end_date, category_id=category_id,
+            limit=limit, offset=offset, sort_by=sort_by, order=order
+        )
     elif category_id:
-        entries = search_entries(db, user_id=user.id, category_id=category_id,
-                                limit=limit, offset=offset, sort_by=sort_by, order=order)
+        entries = entries_service.search_entries(
+            db, user.id, category_id=category_id,
+            limit=limit, offset=offset, sort_by=sort_by, order=order
+        )
     else:
-        entries = list_entries(db, user_id=user.id, limit=limit, offset=offset,
-                              sort_by=sort_by, order=order)
+        entries = entries_service.list_entries(
+            db, user.id, limit=limit, offset=offset, sort_by=sort_by, order=order
+        )
 
-    # Return only the mobile entry cards (not the full page)
     return render(request, "entries/_mobile_list.html", {"entries": entries})
 
 
@@ -133,126 +115,112 @@ async def page(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    # Load user's sort preferences if not explicitly provided
-    if sort_by is None or order is None:
-        saved_sort_by, saved_order = user_preferences_service.get_sort_preference(db, user.id, 'entries')
-        if sort_by is None:
-            sort_by = saved_sort_by
-        if order is None:
-            order = saved_order
-    else:
-        # Save the new sort preference when user changes it
-        user_preferences_service.save_sort_preference(db, user.id, 'entries', sort_by, order)
+    """Main entries page with filtering, sorting, and pagination"""
+    # Get sort preferences
+    sort_by, order = entries_service.get_sort_preferences(
+        db, user.id, sort_by, order, 'entries'
+    )
 
-    # Parse date parameters
-    start_date = None
-    end_date = None
-    if start:
-        start_date = _date.fromisoformat(start)
-    if end:
-        end_date = _date.fromisoformat(end)
+    # Parse filters
+    start_date = entries_service.parse_date(start)
+    end_date = entries_service.parse_date(end)
+    category_id = entries_service.parse_category_id(category)
 
-    # Parse category parameter - convert to int if not empty, otherwise None
-    category_id = None
-    if category and category.strip():
-        try:
-            category_id = int(category)
-        except ValueError:
-            category_id = None
-
-    # Use search_entries for filtering if dates or category are provided
+    # Get entries and total count
     if start_date and end_date:
-        entries = search_entries(db, user_id=user.id, start=start_date, end=end_date,
-                                category_id=category_id, limit=limit, offset=offset,
-                                sort_by=sort_by, order=order)
-        total_count = get_search_entries_count(db, user_id=user.id, start=start_date,
-                                              end=end_date, category_id=category_id)
+        entries = entries_service.search_entries(
+            db, user.id, start=start_date, end=end_date, category_id=category_id,
+            limit=limit, offset=offset, sort_by=sort_by, order=order
+        )
+        total_count = entries_service.get_search_entries_count(
+            db, user.id, start=start_date, end=end_date, category_id=category_id
+        )
     elif category_id:
-        entries = search_entries(db, user_id=user.id, category_id=category_id,
-                                limit=limit, offset=offset, sort_by=sort_by, order=order)
-        total_count = get_search_entries_count(db, user_id=user.id, category_id=category_id)
+        entries = entries_service.search_entries(
+            db, user.id, category_id=category_id,
+            limit=limit, offset=offset, sort_by=sort_by, order=order
+        )
+        total_count = entries_service.get_search_entries_count(
+            db, user.id, category_id=category_id
+        )
     else:
-        entries = list_entries(db, user_id=user.id, limit=limit, offset=offset,
-                              sort_by=sort_by, order=order)
-        total_count = get_entries_count(db, user_id=user.id)
+        entries = entries_service.list_entries(
+            db, user.id, limit=limit, offset=offset, sort_by=sort_by, order=order
+        )
+        total_count = entries_service.get_entries_count(db, user.id)
+
+    # Calculate pagination info
+    pagination = entries_service.calculate_pagination_info(offset, limit, total_count)
 
     cats = list_categories(db, user_id=user.id)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
 
-    # Calculate pagination info
-    showing_from = offset + 1 if total_count > 0 else 0
-    showing_to = min(offset + limit, total_count)
-    has_more = showing_to < total_count
-
-    return render(request, "entries/index.html",
-                  {"entries": entries,
-                   "categories": cats,
-                   "user": user,
-                   "today": _date.today().isoformat(),
-                   "user_currency": user_currency,
-                   "start_date": start,
-                   "end_date": end,
-                   "selected_category": str(category_id) if category_id else None,
-                   "limit": limit,
-                   "offset": offset,
-                   "sort_by": sort_by,
-                   "order": order,
-                   "total_count": total_count,
-                   "showing_from": showing_from,
-                   "showing_to": showing_to,
-                   "has_more": has_more})
+    return render(request, "entries/index.html", {
+        "entries": entries,
+        "categories": cats,
+        "user": user,
+        "today": _date.today().isoformat(),
+        "user_currency": user_currency,
+        "start_date": start,
+        "end_date": end,
+        "selected_category": str(category_id) if category_id else None,
+        "limit": limit,
+        "offset": offset,
+        "sort_by": sort_by,
+        "order": order,
+        **pagination
+    })
 
 
-# ---------- Create ----------
+# ===== Create Entry =====
 
 @router.post("/create", response_class=HTMLResponse)
 async def add(
     request: Request,
     type: str = Form(...),
-    amount: float = Form(...),  # This amount is already in user's currency
+    amount: float = Form(...),
     category_id: int | None = Form(None),
     note: str | None = Form(None),
     date_str: str | None = Form(None),
-    currency_code: str | None = Form(None),  # Accept currency from form
+    currency_code: str | None = Form(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    from app.services.user_preferences import user_preferences_service
-
-    # Get user's preferred currency (fallback if not provided in form)
+    """Create a new entry"""
+    # Get user's preferred currency
     user_currency = currency_code or user_preferences_service.get_user_currency(db, user.id)
 
-    d = _date.fromisoformat(date_str) if date_str else _date.today()
+    # Parse date
+    d = entries_service.parse_date(date_str) or _date.today()
 
-    # Store the amount AS-IS in the user's currency (no conversion)
-    create_entry(
+    # Create entry
+    entries_service.create_entry(
         db,
         user_id=user.id,
         type=type,
-        amount=float(amount),  # Raw amount in user's currency
+        amount=float(amount),
+        date=d,
         category_id=category_id if category_id else None,
         note=note,
-        date=d,
         currency_code=user_currency,
     )
 
-    # After creating, re-fetch the first page of entries using the user's sort preference
-    sort_by, sort_order = user_preferences_service.get_sort_preference(db, user.id, "entries")
-    default_limit = 10
-    entries = list_entries(
-        db,
-        user_id=user.id,
-        limit=default_limit,
-        offset=0,
-        sort_by=sort_by,
-        order=sort_order,
+    # Return first page of entries
+    sort_by, sort_order = entries_service.get_sort_preferences(
+        db, user.id, None, None, "entries"
+    )
+    entries = entries_service.list_entries(
+        db, user.id, limit=10, offset=0, sort_by=sort_by, order=sort_order
     )
 
     user_currency = user_preferences_service.get_user_currency(db, user.id)
-    return render(request, "entries/_list.html", {"entries": entries, "user_currency": user_currency})
+    return render(request, "entries/_list.html", {
+        "entries": entries,
+        "user_currency": user_currency
+    })
 
 
-# ---------- Delete ----------
+# ===== Delete Entry =====
 
 @router.post("/delete/{entry_id}", response_class=HTMLResponse)
 async def remove(
@@ -261,23 +229,25 @@ async def remove(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    delete_entry(db, user_id=user.id, entry_id=entry_id)
-    # After deleting, re-fetch the first page of entries using the user's sort preference
-    sort_by, sort_order = user_preferences_service.get_sort_preference(db, user.id, "entries")
-    default_limit = 10
-    entries = list_entries(
-        db,
-        user_id=user.id,
-        limit=default_limit,
-        offset=0,
-        sort_by=sort_by,
-        order=sort_order,
+    """Delete an entry"""
+    entries_service.delete_entry(db, user.id, entry_id)
+
+    # Return first page of entries
+    sort_by, sort_order = entries_service.get_sort_preferences(
+        db, user.id, None, None, "entries"
     )
+    entries = entries_service.list_entries(
+        db, user.id, limit=10, offset=0, sort_by=sort_by, order=sort_order
+    )
+
     user_currency = user_preferences_service.get_user_currency(db, user.id)
-    return render(request, "entries/_list.html", {"entries": entries, "user_currency": user_currency})
+    return render(request, "entries/_list.html", {
+        "entries": entries,
+        "user_currency": user_currency
+    })
 
 
-# ---------- Inline edit: amount cell ----------
+# ===== Inline Edit: Amount Cell =====
 
 @router.get("/edit_amount/{entry_id}", response_class=HTMLResponse)
 async def edit_amount_cell(
@@ -286,13 +256,12 @@ async def edit_amount_cell(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    e = db.query(Entry).filter(
-        Entry.user_id == user.id, Entry.id == entry_id
-    ).first()
-    if not e:
+    """Get edit form for amount cell"""
+    entry = entries_service.get_entry_by_id(db, user.id, entry_id)
+    if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
-    # returns the edit fragment for the amount cell
-    return render(request, "entries/_cell_amount_edit.html", {"e": e})
+
+    return render(request, "entries/_cell_amount_edit.html", {"e": entry})
 
 
 @router.post("/update_amount/{entry_id}", response_class=HTMLResponse)
@@ -303,11 +272,12 @@ async def update_amount_cell(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    e = update_entry_amount(db, user_id=user.id, entry_id=entry_id, new_amount=amount)
-    if not e:
+    """Update entry amount"""
+    entry = entries_service.update_entry_amount(db, user.id, entry_id, amount)
+    if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
-    # return the display cell (amount) only
-    return render(request, "entries/_cell_amount.html", {"e": e})
+
+    return render(request, "entries/_cell_amount.html", {"e": entry})
 
 
 @router.get("/cell_amount/{entry_id}", response_class=HTMLResponse)
@@ -317,14 +287,16 @@ async def amount_cell_display(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    e = db.query(Entry).filter(
-        Entry.user_id == user.id, Entry.id == entry_id
-    ).first()
-    if not e:
+    """Get display view for amount cell"""
+    entry = entries_service.get_entry_by_id(db, user.id, entry_id)
+    if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
-    return render(request, "entries/_cell_amount.html", {"e": e})
 
-# === Row display (used for Cancel) ===
+    return render(request, "entries/_cell_amount.html", {"e": entry})
+
+
+# ===== Row Display and Edit =====
+
 @router.get("/row/{entry_id}", response_class=HTMLResponse)
 async def row_display(
     request: Request,
@@ -332,14 +304,22 @@ async def row_display(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    e = db.query(Entry).filter(Entry.user_id == user.id, Entry.id == entry_id).first()
-    if not e:
+    """Get display view for entry row"""
+    entry = entries_service.get_entry_by_id(db, user.id, entry_id)
+    if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
+
     cats = list_categories(db, user_id=user.id)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
-    return render(request, "entries/_row.html", {"e": e, "categories": cats, "user_currency": user_currency, "wrap": True})
 
-# === Row edit (GET) ===
+    return render(request, "entries/_row.html", {
+        "e": entry,
+        "categories": cats,
+        "user_currency": user_currency,
+        "wrap": True
+    })
+
+
 @router.get("/edit/{entry_id}", response_class=HTMLResponse)
 async def row_edit(
     request: Request,
@@ -347,68 +327,74 @@ async def row_edit(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    e = db.query(Entry).filter(Entry.user_id == user.id, Entry.id == entry_id).first()
-    if not e:
+    """Get edit form for entry row"""
+    entry = entries_service.get_entry_by_id(db, user.id, entry_id)
+    if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
-    cats = list_categories(db, user_id=user.id)
-    return render(request, "entries/_row_edit.html", {"e": e, "categories": cats, "wrap": True})
 
-# === Row update (POST) ===
+    cats = list_categories(db, user_id=user.id)
+
+    return render(request, "entries/_row_edit.html", {
+        "e": entry,
+        "categories": cats,
+        "wrap": True
+    })
+
+
 @router.post("/update/{entry_id}", response_class=HTMLResponse)
-async def update_entry(
+async def update_entry_endpoint(
     request: Request,
     entry_id: int,
     type: str = Form(...),
     amount: float = Form(...),
     category_id: int | None = Form(None),
     note: str | None = Form(None),
-    date: str = Form(...),  # accept as string
+    date: str = Form(...),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    e = db.query(Entry).filter(
-        Entry.user_id == user.id, Entry.id == entry_id
-    ).first()
-    if not e:
+    """Update an entry"""
+    # Parse date
+    parsed_date = entries_service.parse_date(date)
+    if not parsed_date:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+
+    # Update entry
+    entry = entries_service.update_entry(
+        db,
+        user.id,
+        entry_id,
+        type=type,
+        amount=float(amount),
+        date=parsed_date,
+        category_id=category_id or None,
+        note=note
+    )
+
+    if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
-
-    # update fields (preserve currency_code)
-    e.type = type
-    e.amount = float(amount)
-    e.category_id = category_id or None
-    e.note = note
-    e.date = _date.fromisoformat(date)
-    # Note: currency_code is preserved from the original entry
-
-    db.add(e)
-    db.commit()
-    db.refresh(e)
 
     cats = list_categories(db, user_id=user.id)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
-    return render(
-        request,
-        "entries/_row.html",
-        {"e": e, "categories": cats, "user_currency": user_currency, "wrap": True}
-    )
+
+    return render(request, "entries/_row.html", {
+        "e": entry,
+        "categories": cats,
+        "user_currency": user_currency,
+        "wrap": True
+    })
 
 
-# ---------- API Endpoints for Bulk Operations ----------
-
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+# ===== JSON API Endpoints =====
 
 @router.get("/uncategorized", response_class=JSONResponse)
 async def get_uncategorized_entries(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    """Get all uncategorized entries for the current user."""
+    """Get all uncategorized entries for the current user"""
     try:
-        entries = db.query(Entry).filter(
-            Entry.user_id == user.id,
-            Entry.category_id.is_(None)
-        ).order_by(Entry.date.desc()).all()
+        entries = entries_service.get_uncategorized_entries(db, user.id)
 
         entries_data = [
             {
@@ -438,6 +424,7 @@ async def get_uncategorized_entries(
 class UpdateCategoryRequest(BaseModel):
     category_id: int
 
+
 @router.put("/{entry_id}/category", response_class=JSONResponse)
 async def update_entry_category(
     entry_id: int,
@@ -445,12 +432,14 @@ async def update_entry_category(
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    """Update category for a specific entry."""
+    """Update category for a specific entry"""
     try:
-        entry = db.query(Entry).filter(
-            Entry.id == entry_id,
-            Entry.user_id == user.id
-        ).first()
+        entry = entries_service.update_entry(
+            db,
+            user.id,
+            entry_id,
+            category_id=request_data.category_id
+        )
 
         if not entry:
             return JSONResponse({
@@ -458,15 +447,11 @@ async def update_entry_category(
                 "message": "Entry not found"
             }, status_code=404)
 
-        entry.category_id = request_data.category_id
-        db.commit()
-
         return JSONResponse({
             "success": True,
             "message": "Category updated successfully"
         })
     except Exception as error:
-        db.rollback()
         return JSONResponse({
             "success": False,
             "message": str(error)
