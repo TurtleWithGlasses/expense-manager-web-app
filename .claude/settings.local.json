@@ -31,7 +31,7 @@
       "Bash(tasklist:*)",
       "Bash(timeout 10 python:*)",
       "Bash(timeout 5 ping:*)",
-      "Bash(.venvScriptspython.exe -m pytest tests/unit/test_auth_service.py -v --tb=short)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_auth_service.py -v --tb=short)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_auth_service.py -v --tb=short)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_entries_service.py -v --tb=short)",
       "Bash(.venv/Scripts/python.exe -c \"import sys; sys.path.insert(0, ''.''); from app.services import entries; print(entries.create_entry.__code__.co_filename)\")",

@@ -1450,7 +1450,844 @@ pytest tests/unit/ -n auto
 
 ---
 
-### **Phase 24: Mobile Responsiveness & PWA** 📱
+### **Phase 24: API & Service Layer Refactoring** 🏗️
+**Priority:** HIGH
+**Status:** Not Started
+**Estimated Time:** 12-16 hours
+
+**Overview:**
+Critical refactoring to separate business logic from API layer, create proper service abstractions, and prepare the codebase for mobile apps, better testing, and future scalability. This phase is a **prerequisite** for mobile app development and should be completed before adding new major features.
+
+---
+
+#### **Problem Statement**
+
+**Current Issues:**
+- ❌ Business logic scattered in API endpoints (database queries, sorting, filtering)
+- ❌ Direct `db.query()` calls in route handlers
+- ❌ Data transformation logic (currency conversion, pagination) in API layer
+- ❌ Helper functions living in API files instead of services
+- ❌ Difficult to reuse logic across different endpoints
+- ❌ Hard to test business logic without HTTP layer
+- ❌ Not ready for JSON APIs needed by mobile apps
+- ❌ Code duplication across similar endpoints
+
+**Example of Current Problem:**
+```python
+# app/api/v1/dashboard.py (CURRENT - BAD)
+@router.get("/expenses")
+async def expenses_list(...):
+    # 50+ lines of business logic in API!
+    query = db.query(Entry).filter(...)  # ❌ DB query in API
+    if sort_by == 'amount':              # ❌ Sorting logic in API
+        order_col = Entry.amount
+    rows = query.offset(offset).limit(limit).all()
+
+    for row in rows:                     # ❌ Data transformation in API
+        converted_amount = await currency_service.convert_amount(...)
+
+    return render(...)                   # Only this should be in API!
+```
+
+**Impact:**
+- Cannot easily create JSON endpoints for mobile apps
+- Business logic cannot be tested independently
+- Code duplication when creating similar endpoints
+- Harder to maintain as app grows
+
+---
+
+#### **Target Architecture**
+
+**After Refactoring (GOOD):**
+
+```
+┌─────────────────────────────────────────────────────┐
+│ API Layer (app/api/v1/)                             │
+│ - HTTP request/response handling                    │
+│ - Input validation (basic)                          │
+│ - Call service methods                              │
+│ - Format responses (HTML or JSON)                   │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ Service Layer (app/services/)                       │
+│ - Business logic                                    │
+│ - Database queries                                  │
+│ - Data transformation                               │
+│ - Complex validations                               │
+│ - Returns Pydantic models or dicts                  │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ Repository/Model Layer (app/models/)                │
+│ - Database models                                   │
+│ - Simple CRUD operations                            │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+#### **Phase Breakdown**
+
+### **Step 1: Create Pydantic Schemas** (3-4 hours)
+**Priority:** HIGH - Foundation for everything else
+
+**Create `app/schemas/` directory structure:**
+
+**Files to Create:**
+```
+app/schemas/
+├── __init__.py
+├── entry.py          # Entry request/response models
+├── category.py       # Category models
+├── dashboard.py      # Dashboard response models
+├── user.py           # User models
+├── goal.py           # Goal models
+└── report.py         # Report models
+```
+
+**Example Schema (`app/schemas/entry.py`):**
+```python
+from pydantic import BaseModel, Field, field_validator
+from datetime import date
+from decimal import Decimal
+
+# Request schemas (input validation)
+class EntryCreate(BaseModel):
+    amount: Decimal = Field(..., gt=0, description="Entry amount")
+    type: str = Field(..., pattern="^(income|expense)$")
+    category_id: int | None = None
+    date: date
+    note: str | None = Field(None, max_length=255)
+    currency_code: str = Field("USD", min_length=3, max_length=3)
+
+class EntryUpdate(BaseModel):
+    amount: Decimal | None = Field(None, gt=0)
+    category_id: int | None = None
+    date: date | None = None
+    note: str | None = None
+
+# Response schemas (output serialization)
+class EntryResponse(BaseModel):
+    id: int
+    amount: Decimal
+    type: str
+    category_id: int | None
+    category_name: str | None
+    date: date
+    note: str | None
+    currency_code: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True  # Allow ORM models
+
+class EntryListResponse(BaseModel):
+    entries: list[EntryResponse]
+    total_count: int
+    offset: int
+    limit: int
+    has_more: bool
+
+# Similar schemas for other models...
+```
+
+**Benefits:**
+- ✅ Type safety at API boundaries
+- ✅ Automatic validation
+- ✅ Auto-generated OpenAPI docs
+- ✅ Clear contracts between layers
+- ✅ Easy to serialize to JSON for mobile
+
+---
+
+### **Step 2: Refactor Dashboard Service** (4-5 hours)
+**Priority:** HIGH - Most complex endpoint, biggest impact
+
+**Current State:**
+- `app/api/v1/dashboard.py` has ~200 lines with business logic
+- Direct database queries in routes
+- Currency conversion loops in API
+- Pagination logic in API
+
+**Create: `app/services/dashboard_service.py`**
+
+**New Service Structure:**
+```python
+class DashboardService:
+    """Service for dashboard data operations"""
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    async def get_summary(
+        self,
+        user_id: int,
+        start_date: date,
+        end_date: date,
+        category_id: int | None = None,
+        user_currency: str = "USD"
+    ) -> dict:
+        """Get dashboard summary (income, expense, balance)"""
+        # All business logic here
+        pass
+
+    async def get_expenses(
+        self,
+        user_id: int,
+        start_date: date,
+        end_date: date,
+        category_id: int | None = None,
+        sort_by: str = "date",
+        order: str = "desc",
+        limit: int = 10,
+        offset: int = 0,
+        user_currency: str = "USD"
+    ) -> dict:
+        """Get paginated expenses with filtering and sorting"""
+        # Build query
+        query = self._build_expense_query(
+            user_id, start_date, end_date, category_id
+        )
+
+        # Apply sorting
+        query = self._apply_sorting(query, sort_by, order)
+
+        # Get total count
+        total_count = query.count()
+
+        # Paginate
+        rows = query.offset(offset).limit(limit).all()
+
+        # Convert currencies
+        converted_rows = await self._convert_entries(
+            rows, user_currency
+        )
+
+        return {
+            "entries": converted_rows,
+            "total_count": total_count,
+            "total_expense": sum(e["amount"] for e in converted_rows),
+            "showing_from": offset + 1 if total_count > 0 else 0,
+            "showing_to": min(offset + limit, total_count),
+            "has_more": (offset + limit) < total_count
+        }
+
+    async def get_incomes(self, ...) -> dict:
+        """Get paginated incomes (similar to expenses)"""
+        pass
+
+    # Private helper methods
+    def _build_expense_query(self, ...):
+        """Build expense query with filters"""
+        pass
+
+    def _apply_sorting(self, query, sort_by, order):
+        """Apply sorting to query"""
+        pass
+
+    async def _convert_entries(self, rows, target_currency):
+        """Convert entry amounts to target currency"""
+        pass
+```
+
+**Refactored API (`app/api/v1/dashboard.py`):**
+```python
+@router.get("/expenses", response_class=HTMLResponse)
+async def expenses_list(
+    request: Request,
+    start: date | None = Query(None),
+    end: date | None = Query(None),
+    category: str | None = Query(None),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    sort_by: str = Query("date"),
+    order: str = Query("desc"),
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    # Parse inputs
+    start_date, end_date = parse_date_range(start, end)
+    category_id = parse_int(category)
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
+
+    # Call service (all logic moved here!)
+    service = DashboardService(db)
+    result = await service.get_expenses(
+        user_id=user.id,
+        start_date=start_date,
+        end_date=end_date,
+        category_id=category_id,
+        sort_by=sort_by,
+        order=order,
+        limit=limit,
+        offset=offset,
+        user_currency=user_currency
+    )
+
+    # Return HTML
+    return render(request, "dashboard/_expenses_list.html", result)
+
+# NEW: JSON endpoint for mobile (same service!)
+@router.get("/api/expenses", response_model=EntryListResponse)
+async def expenses_list_json(
+    start: date | None = Query(None),
+    end: date | None = Query(None),
+    category: int | None = Query(None),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    sort_by: str = Query("date"),
+    order: str = Query("desc"),
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    start_date, end_date = parse_date_range(start, end)
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
+
+    service = DashboardService(db)
+    result = await service.get_expenses(
+        user.id, start_date, end_date, category,
+        sort_by, order, limit, offset, user_currency
+    )
+
+    # Return JSON (automatic with response_model!)
+    return result
+```
+
+**Files to Modify:**
+- `app/api/v1/dashboard.py` - Simplify to 50-70 lines (from 200+)
+- Create `app/services/dashboard_service.py` - 300-400 lines
+
+**Testing:**
+- Update existing integration tests
+- Add new service layer unit tests
+- Verify HTML responses unchanged
+- Test new JSON endpoints
+
+---
+
+### **Step 3: Refactor Entries Service** (3-4 hours)
+**Priority:** HIGH
+
+**Current State:**
+- `app/api/v1/entries.py` has 450+ lines
+- Multiple `db.query()` calls in routes
+- Entry CRUD logic mixed with HTTP handling
+
+**Enhance: `app/services/entries.py`**
+
+**Current Service (Partial):**
+```python
+def list_entries(db: Session, user_id: int):
+    return db.query(Entry).filter(Entry.user_id == user_id).all()
+
+def create_entry(db: Session, user_id: int, **kwargs) -> Entry:
+    entry = Entry(user_id=user_id, **kwargs)
+    db.add(entry)
+    db.commit()
+    return entry
+```
+
+**Enhanced Service:**
+```python
+class EntryService:
+    """Comprehensive entry management service"""
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def list_entries(
+        self,
+        user_id: int,
+        filters: EntryFilters | None = None,
+        sort: SortOptions | None = None,
+        pagination: PaginationOptions | None = None
+    ) -> EntryListResponse:
+        """List entries with filtering, sorting, pagination"""
+        query = self._build_query(user_id, filters)
+
+        if sort:
+            query = self._apply_sort(query, sort)
+
+        total = query.count()
+
+        if pagination:
+            query = query.offset(pagination.offset).limit(pagination.limit)
+
+        entries = query.all()
+
+        return EntryListResponse(
+            entries=[EntryResponse.from_orm(e) for e in entries],
+            total_count=total,
+            offset=pagination.offset if pagination else 0,
+            limit=pagination.limit if pagination else total,
+            has_more=pagination and (pagination.offset + pagination.limit) < total
+        )
+
+    def create_entry(self, user_id: int, data: EntryCreate) -> EntryResponse:
+        """Create new entry with validation"""
+        # Validate category belongs to user
+        if data.category_id:
+            self._validate_category_ownership(user_id, data.category_id)
+
+        entry = Entry(
+            user_id=user_id,
+            **data.model_dump()
+        )
+        self.db.add(entry)
+        self.db.commit()
+        self.db.refresh(entry)
+
+        return EntryResponse.from_orm(entry)
+
+    def update_entry(
+        self,
+        user_id: int,
+        entry_id: int,
+        data: EntryUpdate
+    ) -> EntryResponse:
+        """Update entry with validation"""
+        entry = self._get_user_entry(user_id, entry_id)
+
+        for field, value in data.model_dump(exclude_unset=True).items():
+            setattr(entry, field, value)
+
+        self.db.commit()
+        self.db.refresh(entry)
+
+        return EntryResponse.from_orm(entry)
+
+    def delete_entry(self, user_id: int, entry_id: int) -> bool:
+        """Delete entry"""
+        entry = self._get_user_entry(user_id, entry_id)
+        self.db.delete(entry)
+        self.db.commit()
+        return True
+
+    def get_uncategorized_entries(
+        self,
+        user_id: int,
+        limit: int = 50
+    ) -> list[EntryResponse]:
+        """Get entries without category"""
+        entries = self.db.query(Entry).filter(
+            Entry.user_id == user_id,
+            Entry.category_id.is_(None)
+        ).limit(limit).all()
+
+        return [EntryResponse.from_orm(e) for e in entries]
+
+    # Private helpers
+    def _get_user_entry(self, user_id: int, entry_id: int) -> Entry:
+        """Get entry with user ownership check"""
+        entry = self.db.query(Entry).filter(
+            Entry.user_id == user_id,
+            Entry.id == entry_id
+        ).first()
+
+        if not entry:
+            raise HTTPException(status_code=404, detail="Entry not found")
+
+        return entry
+
+    def _validate_category_ownership(self, user_id: int, category_id: int):
+        """Ensure category belongs to user"""
+        from app.models.category import Category
+        category = self.db.query(Category).filter(
+            Category.user_id == user_id,
+            Category.id == category_id
+        ).first()
+
+        if not category:
+            raise HTTPException(
+                status_code=400,
+                detail="Category not found or does not belong to user"
+            )
+```
+
+**Files to Modify:**
+- `app/api/v1/entries.py` - Simplify to 150-200 lines (from 450+)
+- `app/services/entries.py` - Expand from 50 to 300+ lines
+
+---
+
+### **Step 4: Create Utility/Helper Modules** (2-3 hours)
+**Priority:** MEDIUM
+
+**Current Issue:**
+Helper functions scattered across API files:
+- `_parse_dates()` in multiple files
+- `_sum_amount()` duplicated
+- Category parsing repeated
+- Date range logic duplicated
+
+**Create: `app/utils/` directory**
+
+**Files to Create:**
+```
+app/utils/
+├── __init__.py
+├── date_utils.py      # Date parsing, range calculation
+├── parsers.py         # Input parsing helpers
+├── formatters.py      # Output formatting
+└── validators.py      # Custom validators
+```
+
+**Example (`app/utils/date_utils.py`):**
+```python
+from datetime import date, timedelta
+
+def parse_date_range(
+    start: str | date | None,
+    end: str | date | None
+) -> tuple[date, date]:
+    """Parse date range, defaulting to current month"""
+    today = date.today()
+
+    if not start or not end:
+        month_start = today.replace(day=1)
+        next_month = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
+        month_end = next_month - timedelta(days=1)
+        return month_start, month_end
+
+    if isinstance(start, str):
+        start = date.fromisoformat(start)
+    if isinstance(end, str):
+        end = date.fromisoformat(end)
+
+    return start, end
+
+def get_current_month_range() -> tuple[date, date]:
+    """Get start and end of current month"""
+    today = date.today()
+    month_start = today.replace(day=1)
+    next_month = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
+    month_end = next_month - timedelta(days=1)
+    return month_start, month_end
+
+def get_date_range_for_period(period: str) -> tuple[date, date]:
+    """Get date range for named period (today, week, month, year)"""
+    today = date.today()
+
+    if period == "today":
+        return today, today
+    elif period == "week":
+        week_start = today - timedelta(days=today.weekday())
+        week_end = week_start + timedelta(days=6)
+        return week_start, week_end
+    elif period == "month":
+        return get_current_month_range()
+    elif period == "year":
+        year_start = today.replace(month=1, day=1)
+        year_end = today.replace(month=12, day=31)
+        return year_start, year_end
+
+    raise ValueError(f"Invalid period: {period}")
+```
+
+**Example (`app/utils/parsers.py`):**
+```python
+def parse_int_or_none(value: str | int | None) -> int | None:
+    """Safely parse string to int or return None"""
+    if value is None or value == "":
+        return None
+
+    if isinstance(value, int):
+        return value
+
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
+
+def parse_category_id(category: str | int | None) -> int | None:
+    """Parse category parameter"""
+    if not category or (isinstance(category, str) and not category.strip()):
+        return None
+
+    return parse_int_or_none(category)
+```
+
+---
+
+### **Step 5: Add JSON API Endpoints** (2-3 hours)
+**Priority:** HIGH - Enables mobile apps
+
+**Once services are clean, add JSON endpoints:**
+
+**Pattern:**
+- Keep HTML endpoints: `/entries/`, `/dashboard/`, etc.
+- Add JSON endpoints: `/api/entries`, `/api/dashboard`, etc.
+- Same service layer, different response format
+
+**New JSON Endpoints to Create:**
+
+```python
+# app/api/v1/entries.py
+
+@router.post("/api/entries", response_model=EntryResponse, status_code=201)
+async def create_entry_json(
+    data: EntryCreate,
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Create entry (JSON API for mobile)"""
+    service = EntryService(db)
+    return service.create_entry(user.id, data)
+
+@router.get("/api/entries", response_model=EntryListResponse)
+async def list_entries_json(
+    start: date | None = None,
+    end: date | None = None,
+    category_id: int | None = None,
+    type: str | None = None,
+    sort_by: str = "date",
+    order: str = "desc",
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """List entries with filters (JSON API for mobile)"""
+    service = EntryService(db)
+    filters = EntryFilters(
+        start_date=start,
+        end_date=end,
+        category_id=category_id,
+        type=type
+    )
+    sort_opts = SortOptions(field=sort_by, order=order)
+    pagination = PaginationOptions(offset=offset, limit=limit)
+
+    return service.list_entries(user.id, filters, sort_opts, pagination)
+
+@router.get("/api/entries/{entry_id}", response_model=EntryResponse)
+async def get_entry_json(
+    entry_id: int,
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Get single entry (JSON API for mobile)"""
+    service = EntryService(db)
+    return service.get_entry(user.id, entry_id)
+
+@router.put("/api/entries/{entry_id}", response_model=EntryResponse)
+async def update_entry_json(
+    entry_id: int,
+    data: EntryUpdate,
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Update entry (JSON API for mobile)"""
+    service = EntryService(db)
+    return service.update_entry(user.id, entry_id, data)
+
+@router.delete("/api/entries/{entry_id}", status_code=204)
+async def delete_entry_json(
+    entry_id: int,
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete entry (JSON API for mobile)"""
+    service = EntryService(db)
+    service.delete_entry(user.id, entry_id)
+    return Response(status_code=204)
+```
+
+**Similar JSON endpoints for:**
+- `/api/categories`
+- `/api/dashboard/summary`
+- `/api/dashboard/expenses`
+- `/api/dashboard/incomes`
+- `/api/goals`
+- `/api/reports`
+
+---
+
+### **Step 6: Update Tests** (2-3 hours)
+**Priority:** HIGH - Ensure nothing breaks
+
+**Test Updates Needed:**
+
+1. **Unit Tests for Services**
+   - Create `tests/unit/test_dashboard_service.py`
+   - Create `tests/unit/test_entry_service.py`
+   - Test business logic independently of HTTP
+
+2. **Update Integration Tests**
+   - Existing HTML endpoint tests should still pass
+   - Add new tests for JSON endpoints
+   - Create `tests/integration/test_json_api.py`
+
+3. **Schema Validation Tests**
+   - Test Pydantic model validation
+   - Test serialization/deserialization
+
+**Example Service Unit Test:**
+```python
+# tests/unit/test_dashboard_service.py
+import pytest
+from datetime import date
+from app.services.dashboard_service import DashboardService
+
+class TestDashboardService:
+    def test_get_expenses_with_filters(self, db_session, test_user):
+        """Test expense retrieval with date/category filters"""
+        service = DashboardService(db_session)
+
+        result = service.get_expenses(
+            user_id=test_user.id,
+            start_date=date(2025, 1, 1),
+            end_date=date(2025, 1, 31),
+            category_id=1,
+            sort_by="amount",
+            order="desc",
+            limit=10,
+            offset=0,
+            user_currency="USD"
+        )
+
+        assert "entries" in result
+        assert "total_count" in result
+        assert result["has_more"] in [True, False]
+```
+
+---
+
+## **Implementation Timeline**
+
+### **Week 1: Foundation (6-8 hours)**
+- Day 1-2: Create Pydantic schemas (3-4h)
+- Day 3-4: Create utility modules (2-3h)
+- Day 5: Set up testing infrastructure (1h)
+
+### **Week 2: Core Refactoring (6-8 hours)**
+- Day 1-2: Refactor Dashboard service (4-5h)
+- Day 3-4: Refactor Entries service (3-4h)
+- Day 5: Testing and fixes (1h)
+
+### **Week 3: JSON APIs & Polish (3-4 hours)**
+- Day 1-2: Add JSON endpoints (2-3h)
+- Day 3: Final testing and documentation (1h)
+
+**Total: 12-16 hours over 3 weeks**
+
+---
+
+## **Files to Create**
+
+### **New Files:**
+```
+app/schemas/
+├── __init__.py
+├── entry.py
+├── category.py
+├── dashboard.py
+├── user.py
+├── goal.py
+└── report.py
+
+app/utils/
+├── __init__.py
+├── date_utils.py
+├── parsers.py
+├── formatters.py
+└── validators.py
+
+app/services/
+├── dashboard_service.py (NEW)
+└── entry_service.py (ENHANCE existing)
+
+tests/unit/
+├── test_dashboard_service.py
+└── test_entry_service.py
+
+tests/integration/
+└── test_json_api.py
+```
+
+### **Files to Modify:**
+```
+app/api/v1/
+├── dashboard.py (200 lines → 70 lines)
+├── entries.py (450 lines → 200 lines)
+├── categories.py (enhance with JSON)
+├── goals.py (enhance with JSON)
+└── reports.py (enhance with JSON)
+
+app/services/
+├── entries.py (50 lines → 300 lines)
+└── categories.py (enhance)
+```
+
+---
+
+## **Benefits After Refactoring**
+
+### **Immediate Benefits:**
+✅ **Cleaner code** - Each layer has one responsibility
+✅ **Better testability** - Test business logic without HTTP
+✅ **Code reusability** - One service for web + mobile
+✅ **Type safety** - Pydantic validation everywhere
+✅ **Auto-generated docs** - OpenAPI specs from schemas
+✅ **Easier debugging** - Clear separation of concerns
+
+### **Long-term Benefits:**
+✅ **Mobile-ready** - JSON APIs ready for React Native/Flutter
+✅ **Scalable** - Easy to add new features
+✅ **Maintainable** - Changes isolated to correct layer
+✅ **Team-friendly** - Clear patterns for contributors
+✅ **Future-proof** - Ready for microservices if needed
+
+---
+
+## **Risk Mitigation**
+
+### **Risks:**
+- ⚠️ Breaking existing HTML endpoints
+- ⚠️ Test failures during refactoring
+- ⚠️ Performance regressions
+- ⚠️ Merge conflicts if working on other features
+
+### **Mitigation Strategies:**
+1. **Incremental approach** - One service at a time
+2. **Comprehensive testing** - Run tests after each change
+3. **Feature flags** - Toggle between old/new implementations
+4. **Code reviews** - Review each refactored service
+5. **Performance monitoring** - Track API response times
+6. **Rollback plan** - Keep old code until fully tested
+
+---
+
+## **Success Criteria**
+
+### **Phase Complete When:**
+✅ All Pydantic schemas created and validated
+✅ Dashboard service fully refactored with tests
+✅ Entries service fully refactored with tests
+✅ Utility modules created and in use
+✅ JSON API endpoints working for mobile
+✅ All existing tests passing (150+ tests)
+✅ New service unit tests passing (20+ tests)
+✅ Code coverage maintained or improved (>45%)
+✅ API response times same or better
+✅ Documentation updated
+
+---
+
+## **Next Steps After Completion**
+
+This refactoring **enables**:
+- ✅ Phase 25+: Mobile app development (React Native/Flutter)
+- ✅ Phase 32: Voice commands & Receipt scanning
+- ✅ Better performance optimization
+- ✅ Easier feature additions
+- ✅ Microservices architecture (future)
+
+---
+
+### **Phase 25: Mobile Responsiveness & PWA** 📱
 **Priority:** MEDIUM
 **Status:** Partially Complete
 **Estimated Time:** 6-8 hours
