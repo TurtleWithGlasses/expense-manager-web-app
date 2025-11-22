@@ -9,12 +9,14 @@ This service handles:
 - User preference handling
 """
 
-from datetime import date, datetime
+from datetime import date
 from typing import Optional, Literal
 from sqlalchemy.orm import Session
 
 from app.models.entry import Entry
 from app.core.currency import currency_service
+from app.core.parsers import parse_date as parse_date_util, parse_category_id as parse_category_id_util
+from app.core.pagination import calculate_pagination_info as calculate_pagination_info_util
 from app.services.user_preferences import user_preferences_service
 from app.services.report_status_service import ReportStatusService
 
@@ -33,19 +35,7 @@ class EntriesService:
         Returns:
             Date object or None
         """
-        if date_str is None or date_str == "":
-            return None
-
-        if isinstance(date_str, date):
-            return date_str
-
-        if isinstance(date_str, str):
-            try:
-                return datetime.fromisoformat(date_str).date()
-            except (ValueError, AttributeError):
-                return None
-
-        return None
+        return parse_date_util(date_str)
 
     @staticmethod
     def parse_category_id(category: str | int | None) -> int | None:
@@ -58,21 +48,7 @@ class EntriesService:
         Returns:
             Integer category ID or None
         """
-        if category is None:
-            return None
-
-        if isinstance(category, int):
-            return category
-
-        if isinstance(category, str):
-            if not category.strip():
-                return None
-            try:
-                return int(category)
-            except ValueError:
-                return None
-
-        return None
+        return parse_category_id_util(category)
 
     @staticmethod
     def get_sort_preferences(
@@ -128,18 +104,7 @@ class EntriesService:
         Returns:
             Dictionary with pagination info
         """
-        showing_from = offset + 1 if total_count > 0 else 0
-        showing_to = min(offset + limit, total_count)
-        has_more = showing_to < total_count
-
-        return {
-            "showing_from": showing_from,
-            "showing_to": showing_to,
-            "has_more": has_more,
-            "total_count": total_count,
-            "limit": limit,
-            "offset": offset
-        }
+        return calculate_pagination_info_util(offset, limit, total_count)
 
     @staticmethod
     def list_entries(

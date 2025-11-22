@@ -8,14 +8,15 @@ This service handles:
 - Date range parsing and validation
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Optional, Literal
+from datetime import date, timedelta
+from typing import Literal
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.models.entry import Entry
 from app.core.currency import currency_service
+from app.core.parsers import parse_date, parse_category_id
+from app.core.pagination import calculate_pagination_info
 from app.services.user_preferences import user_preferences_service
 from app.services.metrics import range_summary_multi_currency
 
@@ -40,48 +41,18 @@ class DashboardService:
         """
         today = date.today()
 
-        if not start or not end:
+        # Parse using utility
+        parsed_start = parse_date(start)
+        parsed_end = parse_date(end)
+
+        if not parsed_start or not parsed_end:
             # Default to current month
             month_start = today.replace(day=1)
             next_month = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
             month_end = next_month - timedelta(days=1)
             return month_start, month_end
 
-        # Convert strings to dates if needed
-        if isinstance(start, str):
-            start = datetime.fromisoformat(start).date()
-        if isinstance(end, str):
-            end = datetime.fromisoformat(end).date()
-
-        return start, end
-
-    @staticmethod
-    def parse_category_id(category: str | int | None) -> int | None:
-        """
-        Parse category parameter to integer ID.
-
-        Args:
-            category: Category ID as string, int, or None
-
-        Returns:
-            Integer category ID or None
-        """
-        if category is None:
-            return None
-
-        if isinstance(category, int):
-            return category
-
-        # String - try to convert
-        if isinstance(category, str):
-            if not category.strip():
-                return None
-            try:
-                return int(category)
-            except ValueError:
-                return None
-
-        return None
+        return parsed_start, parsed_end
 
     @staticmethod
     async def get_summary(
@@ -110,7 +81,7 @@ class DashboardService:
         s, e = DashboardService.parse_date_range(start_date, end_date)
 
         # Parse category
-        cat_id = DashboardService.parse_category_id(category_id)
+        cat_id = parse_category_id(category_id)
 
         # Get user currency if not provided
         if not user_currency:
@@ -290,7 +261,7 @@ class DashboardService:
         s, e = DashboardService.parse_date_range(start_date, end_date)
 
         # Parse category
-        cat_id = DashboardService.parse_category_id(category_id)
+        cat_id = parse_category_id(category_id)
 
         # Get user currency if not provided
         if not user_currency:
@@ -330,10 +301,8 @@ class DashboardService:
             entries, user_currency
         )
 
-        # Calculate pagination info
-        showing_from = offset + 1 if total_count > 0 else 0
-        showing_to = min(offset + limit, total_count)
-        has_more = showing_to < total_count
+        # Calculate pagination info using utility
+        pagination_info = calculate_pagination_info(offset, limit, total_count)
 
         return {
             "entries": converted_rows,
@@ -341,13 +310,8 @@ class DashboardService:
             "formatted_total": currency_service.format_amount(
                 total_amount, user_currency
             ),
-            "limit": limit,
-            "offset": offset,
-            "total_count": total_count,
-            "showing_from": showing_from,
-            "showing_to": showing_to,
-            "has_more": has_more,
-            "currency_code": user_currency
+            "currency_code": user_currency,
+            **pagination_info
         }
 
     @staticmethod

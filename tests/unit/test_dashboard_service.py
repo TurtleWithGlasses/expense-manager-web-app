@@ -62,35 +62,6 @@ class TestDateRangeParsing:
 
 
 @pytest.mark.unit
-class TestCategoryIdParsing:
-    """Tests for category ID parsing logic"""
-
-    def test_parse_category_id_with_none(self):
-        """Test that None returns None"""
-        assert DashboardService.parse_category_id(None) is None
-
-    def test_parse_category_id_with_int(self):
-        """Test that int returns same int"""
-        assert DashboardService.parse_category_id(5) == 5
-
-    def test_parse_category_id_with_valid_string(self):
-        """Test parsing valid string to int"""
-        assert DashboardService.parse_category_id("10") == 10
-
-    def test_parse_category_id_with_empty_string(self):
-        """Test that empty string returns None"""
-        assert DashboardService.parse_category_id("") is None
-
-    def test_parse_category_id_with_whitespace(self):
-        """Test that whitespace string returns None"""
-        assert DashboardService.parse_category_id("   ") is None
-
-    def test_parse_category_id_with_invalid_string(self):
-        """Test that invalid string returns None"""
-        assert DashboardService.parse_category_id("abc") is None
-
-
-@pytest.mark.unit
 class TestGetSummary:
     """Tests for dashboard summary calculation"""
 
