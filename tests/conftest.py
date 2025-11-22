@@ -305,6 +305,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "ai: mark test as AI-related")
     config.addinivalue_line("markers", "performance: mark test as performance test")
     config.addinivalue_line("markers", "integration: mark test as integration test")
+    config.addinivalue_line("markers", "e2e: mark test as end-to-end test")
     config.addinivalue_line("markers", "slow: mark test as slow running")
 
 
@@ -317,5 +318,7 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(pytest.mark.performance)
         if "integration" in item.nodeid or "api" in item.nodeid:
             item.add_marker(pytest.mark.integration)
+        if "e2e" in item.nodeid:
+            item.add_marker(pytest.mark.e2e)
         if "ai" in item.nodeid:
             item.add_marker(pytest.mark.ai)
