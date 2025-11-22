@@ -9,7 +9,7 @@ from datetime import date as date_type
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.deps import current_user
+from app.deps import current_user_jwt
 from app.db.session import get_db
 from app.services.dashboard import dashboard_service
 from app.core.responses import success_response
@@ -22,7 +22,7 @@ async def get_summary(
     start: str | None = Query(None, description="Start date (ISO format)"),
     end: str | None = Query(None, description="End date (ISO format)"),
     category_id: int | None = Query(None, description="Filter by category ID"),
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """
@@ -58,7 +58,7 @@ async def get_expenses_list(
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     sort_by: str | None = Query(None, description="Sort field (date, amount, category)"),
     order: str | None = Query(None, description="Sort order (asc, desc)"),
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """
@@ -118,7 +118,7 @@ async def get_incomes_list(
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     sort_by: str | None = Query(None, description="Sort field (date, amount, category)"),
     order: str | None = Query(None, description="Sort order (asc, desc)"),
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """

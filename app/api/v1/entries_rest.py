@@ -9,7 +9,7 @@ from datetime import date as date_type
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.deps import current_user
+from app.deps import current_user_jwt
 from app.db.session import get_db
 from app.services.entries import entries_service
 from app.services.user_preferences import user_preferences_service
@@ -35,7 +35,7 @@ async def list_entries(
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     sort_by: str = Query("date", description="Sort field"),
     order: str = Query("desc", description="Sort order (asc/desc)"),
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """
@@ -92,7 +92,7 @@ async def list_entries(
 @router.get("/{entry_id}")
 async def get_entry(
     entry_id: int,
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """
@@ -115,7 +115,7 @@ async def get_entry(
 @router.post("")
 async def create_entry(
     entry_data: EntryCreate,
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """
@@ -151,7 +151,7 @@ async def create_entry(
 async def update_entry(
     entry_id: int,
     entry_data: EntryUpdate,
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """
@@ -187,7 +187,7 @@ async def update_entry(
 @router.delete("/{entry_id}")
 async def delete_entry(
     entry_id: int,
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """
@@ -211,7 +211,7 @@ async def delete_entry(
 @router.get("/uncategorized/list")
 async def list_uncategorized_entries(
     limit: int | None = Query(None, ge=1, le=100, description="Limit results"),
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """

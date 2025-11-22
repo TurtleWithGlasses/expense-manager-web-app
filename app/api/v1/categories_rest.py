@@ -8,7 +8,7 @@ All endpoints return standardized JSON responses.
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.deps import current_user
+from app.deps import current_user_jwt
 from app.db.session import get_db
 from app.services.categories import (
     list_categories,
@@ -29,7 +29,7 @@ router = APIRouter(prefix="/api/categories", tags=["categories-rest"])
 
 @router.get("")
 async def list_categories_api(
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """
@@ -49,7 +49,7 @@ async def list_categories_api(
 @router.get("/{category_id}")
 async def get_category(
     category_id: int,
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """
@@ -72,7 +72,7 @@ async def get_category(
 @router.post("")
 async def create_category_api(
     category_data: CategoryCreate,
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """
@@ -97,7 +97,7 @@ async def create_category_api(
 async def update_category(
     category_id: int,
     category_data: CategoryUpdate,
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """
@@ -128,7 +128,7 @@ async def update_category(
 @router.delete("/{category_id}")
 async def delete_category_api(
     category_id: int,
-    user=Depends(current_user),
+    user=Depends(current_user_jwt),
     db: Session = Depends(get_db),
 ):
     """

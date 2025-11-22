@@ -38,7 +38,9 @@
       "Bash(cat:*)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_entries_service.py::TestCreateEntry -v --tb=line)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/unit/ -v --tb=line)",
-      "Bash(.venv/Scripts/python.exe -m pytest:*)"
+      "Bash(.venv/Scripts/python.exe -m pytest:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(.venv/Scripts/pip install:*)"
     ],
     "deny": [],
     "ask": []
