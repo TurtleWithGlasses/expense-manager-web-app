@@ -3,6 +3,7 @@ from datetime import date
 from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text, func
 from sqlalchemy.orm import Session
 from alembic import command
@@ -39,7 +40,49 @@ from app.models.financial_goal import FinancialGoal, GoalProgressLog
 
 app = FastAPI(title="Expense Manager Web")
 
-# Add request logging middleware (should be first for accurate timing)
+# Configure CORS for mobile/external API clients
+# Import settings to get CORS configuration
+from app.core.config import settings as app_settings
+
+# Default allowed origins for development
+default_origins = [
+    "http://localhost:3000",  # React development
+    "http://localhost:8080",  # Vue development
+    "http://localhost:4200",  # Angular development
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:4200",
+]
+
+# Use environment-configured origins if provided, otherwise use defaults
+cors_origins = app_settings.CORS_ALLOWED_ORIGINS
+if cors_origins:
+    allowed_origins = [origin.strip() for origin in cors_origins.split(",")]
+else:
+    allowed_origins = default_origins
+
+# Add CORS middleware
+# This should be added early in the middleware stack
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,  # Allow cookies for session-based auth
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=[
+        "Authorization",  # For JWT Bearer tokens
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "User-Agent",
+        "DNT",
+        "Cache-Control",
+        "X-Requested-With",
+    ],
+    expose_headers=["Content-Length", "X-Total-Count"],
+    max_age=3600,  # Cache preflight requests for 1 hour
+)
+
+# Add request logging middleware (should be after CORS for accurate timing)
 app.add_middleware(RequestLoggingMiddleware)
 
 # Add security headers middleware

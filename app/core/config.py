@@ -7,6 +7,11 @@ class Settings(BaseSettings):
     SESSION_MAX_AGE_SECONDS: int = 60 * 60 * 24 * 30
     ENV: str = "development"  # Default to development
     RESEND_API_KEY: str = ""  # Set via environment variable
+
+    # CORS Configuration
+    # Comma-separated list of allowed origins for CORS
+    # Example: "https://app.example.com,https://mobile.example.com"
+    CORS_ALLOWED_ORIGINS: str = ""  # Empty means use defaults
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
