@@ -71,7 +71,11 @@ def get_calendar_data(
 
         # Get category info
         category_name = entry.category.name if entry.category else 'Uncategorized'
-        category_icon = entry.category.icon if entry.category else '📝'
+        # Categories don't have icons, use a generic icon based on type
+        if entry.type == EntryType.INCOME:
+            category_icon = '💰'
+        else:
+            category_icon = '💸'
 
         # Add to appropriate total
         amount = float(entry.amount)
@@ -244,7 +248,11 @@ def get_date_entries(
 
         # Get category info
         category_name = entry.category.name if entry.category else 'Uncategorized'
-        category_icon = entry.category.icon if entry.category else '📝'
+        # Categories don't have icons, use a generic icon based on type
+        if entry.type == EntryType.INCOME:
+            category_icon = '💰'
+        else:
+            category_icon = '💸'
 
         # Calculate totals
         if entry.type == EntryType.INCOME:
