@@ -92,51 +92,54 @@ async def monthly_reports_page(
 @router.get("/annual", response_class=HTMLResponse)
 async def annual_reports_page(
     request: Request,
+    year: int = None,
     user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
-    """Annual reports page"""
+    """Comprehensive annual reports page with advanced analytics"""
     try:
-        # For now, generate a basic annual summary
-        from app.services.metrics import range_summary_multi_currency
-        from datetime import date, timedelta
-        
-        # Get current year data
-        current_year = date.today().year
-        year_start = date(current_year, 1, 1)
-        year_end = date(current_year, 12, 31)
-        
-        # Get user's currency
+        from app.services.annual_reports import get_comprehensive_annual_report
         from app.models.user_preferences import UserPreferences
+        from datetime import date
+
+        # Get year parameter or use current year
+        current_year = year if year else date.today().year
+
+        # Get user's currency
         user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
         user_currency = user_prefs.currency_code if user_prefs and user_prefs.currency_code else 'USD'
-        
-        # Generate basic annual summary
-        annual_summary = await range_summary_multi_currency(db, user.id, year_start, year_end, user_currency)
-        
-        # Create a basic annual report structure
+
+        # Generate comprehensive annual report
+        report_data = get_comprehensive_annual_report(db, user.id, current_year)
+
+        # Create report structure
         annual_report = {
             'period': {
-                'start': year_start.isoformat(),
-                'end': year_end.isoformat(),
+                'start': date(current_year, 1, 1).isoformat(),
+                'end': date(current_year, 12, 31).isoformat(),
                 'year': current_year
             },
             'currency': user_currency,
-            'summary': annual_summary,
-            'show_income': True,
+            'summary': report_data['summary'],
+            'year_over_year': report_data['year_over_year'],
+            'monthly_breakdown': report_data['monthly_breakdown'],
+            'seasonal_analysis': report_data['seasonal_analysis'],
+            'category_analysis': report_data['category_analysis'],
+            'achievements': report_data['achievements'],
             'generated_at': datetime.utcnow().isoformat()
         }
-        
+
         return render(request, "reports/annual.html", {
             "user": user,
             "report": annual_report,
+            "current_year": current_year,
             "request": request
         })
     except Exception as e:
         print(f"ERROR in annual_reports_page: {e}")
         import traceback
         traceback.print_exc()
-        
+
         return render(request, "reports/annual.html", {
             "user": user,
             "report": None,

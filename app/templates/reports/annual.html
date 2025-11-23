@@ -15,7 +15,30 @@
                     </h1>
                     <p class="text-light mb-0">{% if report %}{{ report.period.year }}{% else %}{{ "now"|default("2025") }}{% endif %} Year Summary</p>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center">
+                    <!-- Year Selector -->
+                    {% if report %}
+                    <div class="btn-group" role="group">
+                        <a href="/reports/annual?year={{ current_year - 1 }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            {{ current_year }}
+                        </button>
+                        <ul class="dropdown-menu">
+                            {% for y in range(current_year - 5, current_year + 2) %}
+                            <li>
+                                <a class="dropdown-item {% if y == current_year %}active{% endif %}"
+                                   href="/reports/annual?year={{ y }}">{{ y }}</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <a href="/reports/annual?year={{ current_year + 1 }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+
                     <button class="btn btn-warning" onclick="emailAnnualReport()">
                         <i class="bi bi-envelope me-1"></i>
                         Email Report
@@ -106,73 +129,231 @@
                 </div>
             </div>
             
-            <!-- Coming Soon Message -->
+            <!-- Year-over-Year Comparison -->
+            {% if report.year_over_year %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Year-over-Year Comparison
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="border rounded p-3">
+                                <div class="text-muted small mb-1">Income Change</div>
+                                <h4 class="mb-0 {% if report.year_over_year.income_change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if report.year_over_year.income_change >= 0 %}+{% endif %}{{ '%.1f'|format(report.year_over_year.income_change) }}%
+                                </h4>
+                                <small class="text-muted">vs {{ report.period.year - 1 }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3">
+                                <div class="text-muted small mb-1">Expense Change</div>
+                                <h4 class="mb-0 {% if report.year_over_year.expense_change <= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if report.year_over_year.expense_change >= 0 %}+{% endif %}{{ '%.1f'|format(report.year_over_year.expense_change) }}%
+                                </h4>
+                                <small class="text-muted">vs {{ report.period.year - 1 }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3">
+                                <div class="text-muted small mb-1">Savings Change</div>
+                                <h4 class="mb-0 {% if report.year_over_year.savings_change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if report.year_over_year.savings_change >= 0 %}+{% endif %}{{ '%.1f'|format(report.year_over_year.savings_change) }}%
+                                </h4>
+                                <small class="text-muted">vs {{ report.period.year - 1 }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Monthly Trends Chart -->
+            {% if report.monthly_breakdown %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar3 me-2"></i>
+                        Monthly Trends
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyTrendsChart" height="80"></canvas>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Seasonal Analysis -->
+            {% if report.seasonal_analysis %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-snow me-2"></i>
+                        Seasonal Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for quarter in report.seasonal_analysis.quarters %}
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h6 class="mb-2">{{ quarter.name }}</h6>
+                                <div class="mb-2">
+                                    <small class="text-muted">Income:</small>
+                                    <div class="text-success fw-bold">{{ '%.2f'|format(quarter.income) }}</div>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted">Expenses:</small>
+                                    <div class="text-danger fw-bold">{{ '%.2f'|format(quarter.expense) }}</div>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Net:</small>
+                                    <div class="{% if quarter.net >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                        {{ '%.2f'|format(quarter.net) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Category Analysis -->
+            {% if report.category_analysis %}
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-pie-chart me-2"></i>
+                                Top Spending Categories
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="categoryChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-ol me-2"></i>
+                                Category Breakdown
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th class="text-end">Amount</th>
+                                            <th class="text-end">% of Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for cat in report.category_analysis.top_categories[:5] %}
+                                        <tr>
+                                            <td>{{ cat.category }}</td>
+                                            <td class="text-end">{{ '%.2f'|format(cat.total) }}</td>
+                                            <td class="text-end">{{ '%.1f'|format(cat.percentage) }}%</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Achievements -->
+            {% if report.achievements %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trophy me-2"></i>
+                        Financial Achievements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 text-center">
+                                <i class="bi bi-star-fill text-warning fs-3 mb-2"></i>
+                                <h6 class="text-muted mb-1">Best Saving Month</h6>
+                                <div class="fw-bold">{{ report.achievements.best_saving_month.month }}</div>
+                                <div class="text-success">{{ '%.2f'|format(report.achievements.best_saving_month.amount) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 text-center">
+                                <i class="bi bi-graph-up-arrow text-success fs-3 mb-2"></i>
+                                <h6 class="text-muted mb-1">Positive Balance Streak</h6>
+                                <div class="fw-bold fs-4">{{ report.achievements.positive_months_streak }}</div>
+                                <div class="text-muted small">months in a row</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 text-center">
+                                <i class="bi bi-piggy-bank-fill text-info fs-3 mb-2"></i>
+                                <h6 class="text-muted mb-1">Average Savings Rate</h6>
+                                <div class="fw-bold fs-4">{{ '%.1f'|format(report.summary.savings_rate) }}%</div>
+                                <div class="text-muted small">of income saved</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Savings Rate Analysis -->
             <div class="card">
-                <div class="card-body text-center py-5">
-                    <i class="bi bi-tools fs-1 text-warning mb-3"></i>
-                    <h3 class="text-white mb-3">Advanced Annual Reports Coming Soon!</h3>
-                    <p class="text-light mb-4">
-                        We're working on comprehensive annual financial reports that will include:
-                    </p>
-                    
-                    <div class="row g-4 mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-down-arrow me-2"></i>
+                        Savings Rate Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <div class="border rounded p-3">
-                                <i class="bi bi-graph-up text-primary fs-2 mb-2"></i>
-                                <h6 class="text-white">Annual Trends</h6>
-                                <p class="text-light small mb-0">Year-over-year spending and income analysis</p>
+                            <div class="border rounded p-3 text-center">
+                                <div class="text-muted small mb-1">Current Savings Rate</div>
+                                <h3 class="mb-0 text-primary">{{ '%.1f'|format(report.summary.savings_rate) }}%</h3>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="border rounded p-3">
-                                <i class="bi bi-calendar3 text-success fs-2 mb-2"></i>
-                                <h6 class="text-white">Seasonal Patterns</h6>
-                                <p class="text-light small mb-0">Monthly spending patterns and seasonal insights</p>
+                            <div class="border rounded p-3 text-center">
+                                <div class="text-muted small mb-1">Total Saved</div>
+                                <h3 class="mb-0 text-success">{{ '%.2f'|format(report.summary.balance) }}</h3>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="border rounded p-3">
-                                <i class="bi bi-trophy text-warning fs-2 mb-2"></i>
-                                <h6 class="text-white">Annual Achievements</h6>
-                                <p class="text-light small mb-0">Year-long financial milestones and goals</p>
+                            <div class="border rounded p-3 text-center">
+                                <div class="text-muted small mb-1">Monthly Average Savings</div>
+                                <h3 class="mb-0 text-info">{{ '%.2f'|format(report.summary.balance / 12) }}</h3>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="row g-4">
-                        <div class="col-md-4">
-                            <div class="border rounded p-3">
-                                <i class="bi bi-pie-chart text-info fs-2 mb-2"></i>
-                                <h6 class="text-white">Category Breakdown</h6>
-                                <p class="text-light small mb-0">Annual spending distribution by category</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="border rounded p-3">
-                                <i class="bi bi-graph-down-arrow text-danger fs-2 mb-2"></i>
-                                <h6 class="text-white">Savings Analysis</h6>
-                                <p class="text-light small mb-0">Annual savings rate and investment potential</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="border rounded p-3">
-                                <i class="bi bi-lightbulb text-warning fs-2 mb-2"></i>
-                                <h6 class="text-white">Smart Insights</h6>
-                                <p class="text-light small mb-0">AI-powered recommendations for next year</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <p class="text-light mb-3">In the meantime, check out your monthly reports for detailed analysis!</p>
-                        <a href="/reports/monthly" class="btn btn-success me-2">
-                            <i class="bi bi-calendar-month me-1"></i>
-                            View Monthly Reports
-                        </a>
-                        <a href="/reports/weekly" class="btn btn-primary">
-                            <i class="bi bi-calendar-week me-1"></i>
-                            View Weekly Reports
-                        </a>
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        {% if report.summary.savings_rate >= 20 %}
+                        <strong>Excellent!</strong> You're saving {{ '%.1f'|format(report.summary.savings_rate) }}% of your income, which is above the recommended 20%.
+                        {% elif report.summary.savings_rate >= 10 %}
+                        <strong>Good job!</strong> You're saving {{ '%.1f'|format(report.summary.savings_rate) }}% of your income. Consider increasing to 20% for optimal financial health.
+                        {% else %}
+                        <strong>Room for improvement:</strong> Your savings rate is {{ '%.1f'|format(report.summary.savings_rate) }}%. Financial experts recommend saving at least 10-20% of your income.
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -181,6 +362,7 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 function emailAnnualReport() {
     fetch('/reports/annual/email', {
@@ -198,5 +380,145 @@ function emailAnnualReport() {
         alert('Failed to send email. Please try again.');
     });
 }
+
+{% if report and report.monthly_breakdown %}
+// Monthly Trends Chart
+const monthlyCtx = document.getElementById('monthlyTrendsChart');
+if (monthlyCtx) {
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: {{ report.monthly_breakdown.months | map(attribute='name') | list | tojson }},
+            datasets: [
+                {
+                    label: 'Income',
+                    data: {{ report.monthly_breakdown.months | map(attribute='income') | list | tojson }},
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Expenses',
+                    data: {{ report.monthly_breakdown.months | map(attribute='expense') | list | tojson }},
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Net Balance',
+                    data: {{ report.monthly_breakdown.months | map(attribute='balance') | list | tojson }},
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: getComputedStyle(document.documentElement).getPropertyValue('--text').trim()
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim(),
+                        callback: function(value) {
+                            return '$' + value.toFixed(0);
+                        }
+                    },
+                    grid: {
+                        color: getComputedStyle(document.documentElement).getPropertyValue('--border').trim()
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim()
+                    },
+                    grid: {
+                        color: getComputedStyle(document.documentElement).getPropertyValue('--border').trim()
+                    }
+                }
+            }
+        }
+    });
+}
+{% endif %}
+
+{% if report and report.category_analysis %}
+// Category Pie Chart
+const categoryCtx = document.getElementById('categoryChart');
+if (categoryCtx) {
+    const topCategories = {{ report.category_analysis.top_categories[:10] | tojson }};
+
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: topCategories.map(c => c.category),
+            datasets: [{
+                data: topCategories.map(c => c.total),
+                backgroundColor: [
+                    'rgb(239, 68, 68)',
+                    'rgb(249, 115, 22)',
+                    'rgb(245, 158, 11)',
+                    'rgb(234, 179, 8)',
+                    'rgb(132, 204, 22)',
+                    'rgb(34, 197, 94)',
+                    'rgb(20, 184, 166)',
+                    'rgb(6, 182, 212)',
+                    'rgb(14, 165, 233)',
+                    'rgb(59, 130, 246)'
+                ],
+                borderWidth: 2,
+                borderColor: getComputedStyle(document.documentElement).getPropertyValue('--panel').trim()
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: getComputedStyle(document.documentElement).getPropertyValue('--text').trim(),
+                        padding: 10,
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const percentage = topCategories[context.dataIndex].percentage;
+                            return label + ': $' + value.toFixed(2) + ' (' + percentage.toFixed(1) + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+{% endif %}
 </script>
 {% endblock %}
