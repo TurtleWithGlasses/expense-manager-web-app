@@ -11,7 +11,7 @@ from decimal import Decimal
 
 from app.models.entry import Entry, EntryType
 from app.models.category import Category
-from app.models.financial_goal import FinancialGoal
+from app.models.financial_goal import FinancialGoal, GoalStatus
 
 
 def get_annual_summary(db: Session, user_id: int, year: int) -> Dict:
@@ -272,7 +272,7 @@ def get_annual_achievements(db: Session, user_id: int, year: int) -> Dict:
     # Get completed goals for the year
     completed_goals = db.query(FinancialGoal).filter(
         FinancialGoal.user_id == user_id,
-        FinancialGoal.is_completed == True,
+        FinancialGoal.status == GoalStatus.COMPLETED,
         extract('year', FinancialGoal.target_date) == year
     ).count()
 
