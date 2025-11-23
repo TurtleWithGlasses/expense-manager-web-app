@@ -13,24 +13,16 @@
 
   <!-- Calendar Days -->
   <div class="calendar-body">
-    {% set first_day_obj = calendar_data.first_day | parse_date %}
-    {% set last_day_obj = calendar_data.last_day | parse_date %}
-    {% set first_weekday = first_day_obj.weekday() %}
-    {% set first_weekday = (first_weekday + 1) % 7 %}  {# Convert Monday=0 to Sunday=0 #}
-    {% set total_days = (last_day_obj - first_day_obj).days + 1 %}
-
     {# Empty cells before first day of month #}
     {% for i in range(first_weekday) %}
     <div class="calendar-date empty"></div>
     {% endfor %}
 
     {# Actual days of the month #}
-    {% for day_num in range(1, total_days + 1) %}
-      {% set current_date_obj = first_day_obj | add_days(day_num - 1) %}
-      {% set current_date = current_date_obj.isoformat() %}
-      {% set date_data = calendar_data.dates.get(current_date, {}) %}
-      {% set is_today = current_date == today %}
-      {% set has_entries = date_data.entry_count > 0 if date_data else false %}
+    {% for date_item in calendar_dates %}
+      {% set date_data = date_item.data %}
+      {% set is_today = date_item.is_today %}
+      {% set has_entries = date_item.has_entries %}
 
       {# Determine date marker type #}
       {% set has_income = date_data.income_total > 0 if date_data else false %}
@@ -46,14 +38,14 @@
 
       <div
         class="calendar-date {% if is_today %}today{% endif %} {% if has_entries %}has-entries{% endif %}"
-        data-date="{{ current_date }}"
+        data-date="{{ date_item.date }}"
         {% if has_entries %}
-          onclick="showDateDetail('{{ current_date }}')"
+          onclick="showDateDetail('{{ date_item.date }}')"
           role="button"
           tabindex="0"
         {% endif %}
       >
-        <div class="date-number">{{ day_num }}</div>
+        <div class="date-number">{{ date_item.day_num }}</div>
 
         {% if has_entries %}
         <div class="date-markers">
@@ -66,7 +58,7 @@
         <!-- Tooltip content -->
         <div class="date-tooltip">
           <div class="tooltip-header">
-            <strong>{{ current_date_obj.strftime('%B %d, %Y') }}</strong>
+            <strong>{{ date_item.date_display }}</strong>
           </div>
           <div class="tooltip-content">
             {% if date_data.income_total > 0 %}
@@ -125,7 +117,7 @@
     {% endfor %}
 
     {# Empty cells after last day of month to complete the grid #}
-    {% set total_cells_used = first_weekday + total_days %}
+    {% set total_cells_used = first_weekday + calendar_dates|length %}
     {% set cells_in_last_week = total_cells_used % 7 %}
     {% if cells_in_last_week > 0 %}
       {% for i in range(7 - cells_in_last_week) %}
@@ -134,8 +126,3 @@
     {% endif %}
   </div>
 </div>
-
-<!-- Custom Jinja2 filters for date operations -->
-<script>
-  {# These are handled server-side, this is just a comment #}
-</script>

@@ -91,6 +91,33 @@ def calendar_view(
         next_month = display_month + 1
         next_year = display_year
 
+    # Pre-calculate calendar grid data to avoid Jinja2 filter issues
+    first_day = datetime.strptime(calendar_data['first_day'], "%Y-%m-%d").date()
+    last_day = datetime.strptime(calendar_data['last_day'], "%Y-%m-%d").date()
+
+    # Calculate first weekday (convert Monday=0 to Sunday=0)
+    first_weekday = (first_day.weekday() + 1) % 7
+
+    # Calculate total days in month
+    total_days = (last_day - first_day).days + 1
+
+    # Generate list of all dates in the month with metadata
+    calendar_dates = []
+    for day_num in range(1, total_days + 1):
+        current_date = first_day + timedelta(days=day_num - 1)
+        date_str = current_date.isoformat()
+        date_data = calendar_data['dates'].get(date_str, {})
+
+        calendar_dates.append({
+            'day_num': day_num,
+            'date': date_str,
+            'date_obj': current_date,
+            'date_display': current_date.strftime('%B %d, %Y'),
+            'is_today': date_str == today.isoformat(),
+            'has_entries': date_data.get('entry_count', 0) > 0,
+            'data': date_data
+        })
+
     return templates.TemplateResponse(
         "calendar/index.html",
         {
@@ -106,6 +133,8 @@ def calendar_view(
             "prev_year": prev_year,
             "next_month": next_month,
             "next_year": next_year,
+            "first_weekday": first_weekday,
+            "calendar_dates": calendar_dates,
         }
     )
 

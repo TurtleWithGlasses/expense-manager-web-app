@@ -43,7 +43,8 @@
       "Bash(.venv/Scripts/pip install:*)",
       "Bash(.venv/Scripts/alembic.exe revision:*)",
       "Bash(.venv/Scripts/alembic.exe upgrade:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(railway logs:*)"
     ],
     "deny": [],
     "ask": []
