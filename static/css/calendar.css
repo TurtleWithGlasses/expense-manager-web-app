@@ -44,8 +44,8 @@
 }
 
 .summary-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1.5rem;
   display: flex;
@@ -56,7 +56,7 @@
 
 .summary-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .summary-icon {
@@ -71,23 +71,23 @@
 }
 
 .income-card .summary-icon {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--green);
 }
 
 .expense-card .summary-icon {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--red);
 }
 
 .net-card .summary-icon {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background: rgba(77, 163, 255, 0.15);
+  color: var(--blue);
 }
 
 .count-card .summary-icon {
-  background: rgba(156, 163, 175, 0.1);
-  color: #9ca3af;
+  background: rgba(156, 163, 175, 0.15);
+  color: var(--text-secondary);
 }
 
 .summary-content {
@@ -103,15 +103,15 @@
 .summary-value {
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .summary-value.positive {
-  color: #10b981;
+  color: var(--green);
 }
 
 .summary-value.negative {
-  color: #ef4444;
+  color: var(--red);
 }
 
 /* ========================================
@@ -134,9 +134,9 @@
 }
 
 .btn-nav {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
   width: 40px;
   height: 40px;
   border-radius: 8px;
@@ -148,14 +148,15 @@
 }
 
 .btn-nav:hover {
-  background: var(--hover-bg);
+  background: var(--surface);
+  border-color: var(--border-hover);
   transform: scale(1.05);
 }
 
 .calendar-current-month h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text);
   margin: 0;
 }
 
@@ -170,8 +171,8 @@
    ======================================== */
 
 .calendar-grid-wrapper {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
@@ -187,7 +188,7 @@
   gap: 0.5rem;
   margin-bottom: 0.75rem;
   padding-bottom: 0.75rem;
-  border-bottom: 2px solid var(--border-color);
+  border-bottom: 2px solid var(--border);
 }
 
 .calendar-day-name {
@@ -207,11 +208,11 @@
 
 .calendar-date {
   aspect-ratio: 1;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0.5rem;
   position: relative;
-  background: var(--surface-bg);
+  background: var(--surface);
   transition: all 0.2s ease;
   cursor: default;
 }
@@ -223,30 +224,31 @@
 
 .calendar-date.has-entries {
   cursor: pointer;
-  background: var(--card-bg);
+  background: var(--panel);
 }
 
 .calendar-date.has-entries:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   z-index: 10;
-  border-color: var(--primary-color);
+  border-color: var(--blue);
+  background: var(--panel);
 }
 
 .calendar-date.today {
-  border: 2px solid #3b82f6;
-  background: rgba(59, 130, 246, 0.05);
+  border: 2px solid var(--blue);
+  background: rgba(77, 163, 255, 0.1);
 }
 
 .calendar-date.today .date-number {
-  color: #3b82f6;
+  color: var(--blue);
   font-weight: 700;
 }
 
 .date-number {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text);
   text-align: center;
   margin-bottom: 0.25rem;
 }
@@ -267,22 +269,22 @@
 }
 
 .date-marker.income {
-  background: #10b981;
+  background: var(--green);
 }
 
 .date-marker.expense {
-  background: #ef4444;
+  background: var(--red);
 }
 
 .date-marker.mixed {
-  background: linear-gradient(90deg, #10b981 50%, #ef4444 50%);
+  background: linear-gradient(90deg, var(--green) 50%, var(--red) 50%);
 }
 
 .entry-count {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-secondary);
-  background: var(--hover-bg);
+  background: rgba(255, 255, 255, 0.1);
   padding: 0.125rem 0.375rem;
   border-radius: 4px;
 }
@@ -297,12 +299,12 @@
   left: 50%;
   transform: translateX(-50%);
   margin-top: 0.5rem;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0.75rem;
   min-width: 250px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
@@ -318,11 +320,11 @@
 .tooltip-header {
   margin-bottom: 0.5rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
 }
 
 .tooltip-header strong {
-  color: var(--text-primary);
+  color: var(--text);
   font-size: 0.875rem;
 }
 
@@ -346,28 +348,28 @@
 
 .tooltip-value {
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .tooltip-value.positive {
-  color: #10b981;
+  color: var(--green);
 }
 
 .tooltip-value.negative {
-  color: #ef4444;
+  color: var(--red);
 }
 
 .tooltip-row.income .tooltip-label {
-  color: #10b981;
+  color: var(--green);
 }
 
 .tooltip-row.expense .tooltip-label {
-  color: #ef4444;
+  color: var(--red);
 }
 
 .tooltip-divider {
   height: 1px;
-  background: var(--border-color);
+  background: var(--border);
   margin: 0.5rem 0;
 }
 
@@ -378,7 +380,7 @@
   margin-bottom: 0.375rem;
   padding: 0.25rem;
   border-radius: 4px;
-  background: var(--surface-bg);
+  background: var(--surface);
 }
 
 .entry-icon {
@@ -388,7 +390,7 @@
 
 .entry-category {
   flex: 1;
-  color: var(--text-primary);
+  color: var(--text);
   font-size: 0.8125rem;
 }
 
@@ -398,11 +400,11 @@
 }
 
 .entry-amount.income {
-  color: #10b981;
+  color: var(--green);
 }
 
 .entry-amount.expense {
-  color: #ef4444;
+  color: var(--red);
 }
 
 .tooltip-more {
@@ -416,7 +418,7 @@
 .tooltip-action {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
   text-align: center;
 }
 
@@ -435,8 +437,8 @@
   gap: 2rem;
   flex-wrap: wrap;
   padding: 1rem;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 
@@ -454,15 +456,15 @@
 }
 
 .legend-marker.income-marker {
-  background: #10b981;
+  background: var(--green);
 }
 
 .legend-marker.expense-marker {
-  background: #ef4444;
+  background: var(--red);
 }
 
 .legend-marker.mixed-marker {
-  background: linear-gradient(90deg, #10b981 50%, #ef4444 50%);
+  background: linear-gradient(90deg, var(--green) 50%, var(--red) 50%);
 }
 
 .legend-label {
@@ -485,7 +487,7 @@
 .date-detail-title h3 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text);
   margin-bottom: 0.25rem;
 }
 
@@ -505,18 +507,18 @@
 }
 
 .detail-summary-card.income {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.15);
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .detail-summary-card.expense {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.15);
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .detail-summary-card.net {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(77, 163, 255, 0.15);
+  border: 1px solid rgba(77, 163, 255, 0.3);
 }
 
 .card-icon {
@@ -524,15 +526,15 @@
 }
 
 .detail-summary-card.income .card-icon {
-  color: #10b981;
+  color: var(--green);
 }
 
 .detail-summary-card.expense .card-icon {
-  color: #ef4444;
+  color: var(--red);
 }
 
 .detail-summary-card.net .card-icon {
-  color: #3b82f6;
+  color: var(--blue);
 }
 
 .card-content {
@@ -548,7 +550,7 @@
 .card-value {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .date-detail-entries {
@@ -558,7 +560,7 @@
 .entries-header {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text);
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
@@ -572,8 +574,8 @@
 }
 
 .entry-item {
-  background: var(--surface-bg);
-  border: 1px solid var(--border-color);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1rem;
   display: flex;
@@ -583,16 +585,16 @@
 }
 
 .entry-item:hover {
-  background: var(--hover-bg);
+  background: var(--panel);
   transform: translateX(4px);
 }
 
 .entry-item.income {
-  border-left: 3px solid #10b981;
+  border-left: 3px solid var(--green);
 }
 
 .entry-item.expense {
-  border-left: 3px solid #ef4444;
+  border-left: 3px solid var(--red);
 }
 
 .entry-item .entry-icon {
@@ -606,7 +608,7 @@
 
 .entry-details .entry-category {
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text);
   margin-bottom: 0.25rem;
 }
 
@@ -625,7 +627,7 @@
 .amount-value {
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .amount-currency {
@@ -658,6 +660,61 @@
   font-size: 1.125rem;
   color: var(--text-secondary);
   margin-bottom: 1.5rem;
+}
+
+/* ========================================
+   Modal Overrides for Dark Theme
+   ======================================== */
+
+/* Override Bootstrap modal styles for dark theme */
+#dateDetailModal .modal-content {
+  background-color: var(--panel) !important;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+#dateDetailModal .modal-header {
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+#dateDetailModal .modal-title {
+  color: var(--text);
+}
+
+#dateDetailModal .modal-body {
+  background-color: var(--panel);
+  color: var(--text);
+}
+
+#dateDetailModal .modal-footer {
+  background-color: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+#dateDetailModal .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+#dateDetailModal .text-muted {
+  color: var(--text-secondary) !important;
+}
+
+/* Fix list group items in modal */
+#dateDetailModal .list-group-item {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+#dateDetailModal .list-group-item:hover {
+  background-color: var(--panel);
+}
+
+/* Fix badge colors */
+#dateDetailModal .badge {
+  color: #fff !important;
 }
 
 /* ========================================

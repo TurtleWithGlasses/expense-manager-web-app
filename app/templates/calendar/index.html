@@ -1,112 +1,106 @@
 {% extends "base.html" %}
 
+{% block title %}Calendar - Expense Manager{% endblock %}
+
 {% block content %}
-<div class="calendar-container">
-  <!-- Page Header -->
-  <div class="page-header">
-    <h1 class="page-title">
-      <i class="bi bi-calendar3"></i> Calendar View
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+      <i class="bi bi-calendar3"></i> Financial Calendar
     </h1>
-    <p class="page-subtitle">
-      Visualize your financial activity across the month
-    </p>
   </div>
 
-  <!-- Month Summary Cards -->
-  <div class="month-summary-cards">
-    <div class="summary-card income-card">
-      <div class="summary-icon">
-        <i class="bi bi-arrow-down-circle"></i>
-      </div>
-      <div class="summary-content">
-        <div class="summary-label">Total Income</div>
-        <div class="summary-value">${{ "%.2f"|format(month_summary.total_income) }}</div>
+  <!-- Month Navigation -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row align-items-center">
+        <div class="col-md-4">
+          <div class="btn-group" role="group">
+            <a href="/calendar?year={{ prev_year }}&month={{ prev_month }}"
+               class="btn btn-outline-primary">
+              <i class="bi bi-chevron-left"></i> Previous
+            </a>
+            <a href="/calendar" class="btn btn-outline-primary">
+              Today
+            </a>
+            <a href="/calendar?year={{ next_year }}&month={{ next_month }}"
+               class="btn btn-outline-primary">
+              Next <i class="bi bi-chevron-right"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="col-md-4 text-center">
+          <h2 class="h4 mb-0">{{ calendar_data.month_name }} {{ current_year }}</h2>
+        </div>
+
+        <div class="col-md-4 text-end">
+          {% if available_months %}
+          <select class="form-select d-inline-block w-auto"
+                  onchange="window.location.href='/calendar?year=' + this.value.split('-')[0] + '&month=' + this.value.split('-')[1]">
+            <option value="">Jump to month...</option>
+            {% for month_opt in available_months %}
+            <option value="{{ month_opt.year }}-{{ month_opt.month }}"
+                    {% if month_opt.year == current_year and month_opt.month == current_month %}selected{% endif %}>
+              {{ month_opt.display }}
+            </option>
+            {% endfor %}
+          </select>
+          {% endif %}
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="summary-card expense-card">
-      <div class="summary-icon">
-        <i class="bi bi-arrow-up-circle"></i>
-      </div>
-      <div class="summary-content">
-        <div class="summary-label">Total Expenses</div>
-        <div class="summary-value">${{ "%.2f"|format(month_summary.total_expense) }}</div>
-      </div>
-    </div>
-
-    <div class="summary-card net-card">
-      <div class="summary-icon">
-        <i class="bi bi-graph-up"></i>
-      </div>
-      <div class="summary-content">
-        <div class="summary-label">Net Balance</div>
-        <div class="summary-value {% if month_summary.net >= 0 %}positive{% else %}negative{% endif %}">
-          ${{ "%.2f"|format(month_summary.net) }}
+  <!-- Month Summary -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="summary-card income-card">
+        <div class="summary-icon">
+          <i class="bi bi-arrow-down-circle"></i>
+        </div>
+        <div class="summary-content">
+          <div class="summary-label">Total Income</div>
+          <div class="summary-value">${{ "%.2f"|format(month_summary.total_income) }}</div>
         </div>
       </div>
     </div>
 
-    <div class="summary-card count-card">
-      <div class="summary-icon">
-        <i class="bi bi-list-ul"></i>
-      </div>
-      <div class="summary-content">
-        <div class="summary-label">Total Entries</div>
-        <div class="summary-value">{{ month_summary.entry_count }}</div>
+    <div class="col-md-3">
+      <div class="summary-card expense-card">
+        <div class="summary-icon">
+          <i class="bi bi-arrow-up-circle"></i>
+        </div>
+        <div class="summary-content">
+          <div class="summary-label">Total Expenses</div>
+          <div class="summary-value">${{ "%.2f"|format(month_summary.total_expense) }}</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Calendar Navigation -->
-  <div class="calendar-nav">
-    <div class="calendar-nav-controls">
-      <!-- Previous Month -->
-      <a
-        href="/calendar?year={{ prev_year }}&month={{ prev_month }}"
-        class="btn btn-nav"
-        aria-label="Previous month"
-      >
-        <i class="bi bi-chevron-left"></i>
-      </a>
-
-      <!-- Month/Year Display -->
-      <div class="calendar-current-month">
-        <h2>{{ calendar_data.month_name }} {{ calendar_data.year }}</h2>
+    <div class="col-md-3">
+      <div class="summary-card net-card">
+        <div class="summary-icon">
+          <i class="bi bi-graph-up"></i>
+        </div>
+        <div class="summary-content">
+          <div class="summary-label">Net Balance</div>
+          <div class="summary-value {% if month_summary.net >= 0 %}positive{% else %}negative{% endif %}">${{ "%.2f"|format(month_summary.net) }}</div>
+        </div>
       </div>
-
-      <!-- Next Month -->
-      <a
-        href="/calendar?year={{ next_year }}&month={{ next_month }}"
-        class="btn btn-nav"
-        aria-label="Next month"
-      >
-        <i class="bi bi-chevron-right"></i>
-      </a>
     </div>
 
-    <div class="calendar-nav-actions">
-      <!-- Today Button -->
-      <a href="/calendar" class="btn btn-secondary">
-        <i class="bi bi-calendar-check"></i> Today
-      </a>
-
-      <!-- Month Picker -->
-      {% if available_months %}
-      <div class="dropdown">
-        <button class="btn btn-secondary dropdown-toggle" type="button" id="monthPicker" data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="bi bi-calendar3-range"></i> Jump to Month
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="monthPicker">
-          {% for month_item in available_months[:12] %}
-          <li>
-            <a class="dropdown-item" href="/calendar?year={{ month_item.year }}&month={{ month_item.month }}">
-              {{ month_item.display }}
-            </a>
-          </li>
-          {% endfor %}
-        </ul>
+    <div class="col-md-3">
+      <div class="summary-card count-card">
+        <div class="summary-icon">
+          <i class="bi bi-receipt"></i>
+        </div>
+        <div class="summary-content">
+          <div class="summary-label">Transactions</div>
+          <div class="summary-value">{{ month_summary.entry_count }}</div>
+        </div>
       </div>
-      {% endif %}
     </div>
   </div>
 
@@ -114,48 +108,42 @@
   <div class="calendar-grid-wrapper">
     {% include "calendar/calendar_grid.html" %}
   </div>
-
-  <!-- Legend -->
-  <div class="calendar-legend">
-    <div class="legend-item">
-      <span class="legend-marker income-marker"></span>
-      <span class="legend-label">Income only</span>
-    </div>
-    <div class="legend-item">
-      <span class="legend-marker expense-marker"></span>
-      <span class="legend-label">Expenses only</span>
-    </div>
-    <div class="legend-item">
-      <span class="legend-marker mixed-marker"></span>
-      <span class="legend-label">Both income & expenses</span>
-    </div>
-  </div>
 </div>
 
 <!-- Date Detail Modal -->
-<div class="modal fade" id="dateDetailModal" tabindex="-1" aria-labelledby="dateDetailModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="dateDetailModalLabel">Date Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="dateDetailContent">
-        <!-- Content loaded via HTMX -->
-        <div class="text-center py-4">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      </div>
+<div class="modal fade" id="dateDetailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" id="dateDetailContent">
+      <!-- Content loaded via HTMX -->
     </div>
   </div>
 </div>
 
-<!-- Calendar Styles -->
-<link rel="stylesheet" href="/static/css/calendar.css?v=1">
+<script>
+function showDateDetail(dateStr) {
+  // Use HTMX to load date detail
+  htmx.ajax('GET', '/calendar/date/' + dateStr, {
+    target: '#dateDetailContent',
+    swap: 'innerHTML'
+  }).then(() => {
+    const modal = new bootstrap.Modal(document.getElementById('dateDetailModal'));
+    modal.show();
+  });
+}
 
-<!-- Calendar JavaScript -->
-<script src="/static/js/calendar.js?v=1"></script>
+// Add keyboard navigation for calendar dates
+document.addEventListener('DOMContentLoaded', function() {
+  const calendarDates = document.querySelectorAll('.calendar-date.has-entries');
 
+  calendarDates.forEach(dateEl => {
+    dateEl.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const dateStr = this.dataset.date;
+        showDateDetail(dateStr);
+      }
+    });
+  });
+});
+</script>
 {% endblock %}
