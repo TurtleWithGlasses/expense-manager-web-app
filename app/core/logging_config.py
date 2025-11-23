@@ -145,8 +145,19 @@ def setup_logging(
 
     # Set log levels for third-party libraries to reduce noise
     logging.getLogger("uvicorn").setLevel(logging.INFO)
-    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("uvicorn.error").setLevel(logging.INFO)
+
+    # Configure uvicorn.access logger for HTTP request logging
+    uvicorn_access_logger = logging.getLogger("uvicorn.access")
+    if env == "production":
+        # Suppress access logs in production
+        uvicorn_access_logger.setLevel(logging.WARNING)
+    else:
+        # Enable access logs in development
+        uvicorn_access_logger.setLevel(logging.INFO)
+        # Let uvicorn handle its own formatting by allowing it to propagate
+        uvicorn_access_logger.propagate = True
+
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
     logging.getLogger("alembic").setLevel(logging.INFO)
