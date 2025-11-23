@@ -142,29 +142,29 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <div class="border rounded p-3">
-                                <div class="text-muted small mb-1">Income Change</div>
+                                <div class="text-secondary small mb-1">Income Change</div>
                                 <h4 class="mb-0 {% if report.year_over_year.changes.income.percentage >= 0 %}text-success{% else %}text-danger{% endif %}">
                                     {% if report.year_over_year.changes.income.percentage >= 0 %}+{% endif %}{{ '%.1f'|format(report.year_over_year.changes.income.percentage) }}%
                                 </h4>
-                                <small class="text-muted">vs {{ report.period.year - 1 }}</small>
+                                <small class="text-secondary">vs {{ report.period.year - 1 }}</small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="border rounded p-3">
-                                <div class="text-muted small mb-1">Expense Change</div>
+                                <div class="text-secondary small mb-1">Expense Change</div>
                                 <h4 class="mb-0 {% if report.year_over_year.changes.expense.percentage <= 0 %}text-success{% else %}text-danger{% endif %}">
                                     {% if report.year_over_year.changes.expense.percentage >= 0 %}+{% endif %}{{ '%.1f'|format(report.year_over_year.changes.expense.percentage) }}%
                                 </h4>
-                                <small class="text-muted">vs {{ report.period.year - 1 }}</small>
+                                <small class="text-secondary">vs {{ report.period.year - 1 }}</small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="border rounded p-3">
-                                <div class="text-muted small mb-1">Balance Change</div>
+                                <div class="text-secondary small mb-1">Balance Change</div>
                                 <h4 class="mb-0 {% if report.year_over_year.changes.balance.amount >= 0 %}text-success{% else %}text-danger{% endif %}">
                                     {% if report.year_over_year.changes.balance.amount >= 0 %}+{% endif %}${{ '%.2f'|format(report.year_over_year.changes.balance.amount) }}
                                 </h4>
-                                <small class="text-muted">vs {{ report.period.year - 1 }}</small>
+                                <small class="text-secondary">vs {{ report.period.year - 1 }}</small>
                             </div>
                         </div>
                     </div>
@@ -204,15 +204,15 @@
                             <div class="border rounded p-3">
                                 <h6 class="mb-2">{{ quarter.name }}</h6>
                                 <div class="mb-2">
-                                    <small class="text-muted">Income:</small>
+                                    <small class="text-secondary">Income:</small>
                                     <div class="text-success fw-bold">{{ '%.2f'|format(quarter.income) }}</div>
                                 </div>
                                 <div class="mb-2">
-                                    <small class="text-muted">Expenses:</small>
+                                    <small class="text-secondary">Expenses:</small>
                                     <div class="text-danger fw-bold">{{ '%.2f'|format(quarter.expense) }}</div>
                                 </div>
                                 <div>
-                                    <small class="text-muted">Net:</small>
+                                    <small class="text-secondary">Net:</small>
                                     <div class="{% if quarter.balance >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
                                         {{ '%.2f'|format(quarter.balance) }}
                                     </div>
@@ -291,29 +291,29 @@
                         <div class="col-md-4">
                             <div class="border rounded p-3 text-center">
                                 <i class="bi bi-star-fill text-warning fs-3 mb-2"></i>
-                                <h6 class="text-muted mb-1">Best Saving Month</h6>
+                                <h6 class="text-secondary mb-1">Best Saving Month</h6>
                                 {% if report.achievements.best_saving_month %}
                                 <div class="fw-bold">{{ report.achievements.best_saving_month.month_name }}</div>
                                 <div class="text-success">{{ '%.2f'|format(report.achievements.best_saving_month.balance) }}</div>
                                 {% else %}
-                                <div class="text-muted">N/A</div>
+                                <div class="text-secondary">N/A</div>
                                 {% endif %}
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="border rounded p-3 text-center">
                                 <i class="bi bi-graph-up-arrow text-success fs-3 mb-2"></i>
-                                <h6 class="text-muted mb-1">Positive Balance Streak</h6>
+                                <h6 class="text-secondary mb-1">Positive Balance Streak</h6>
                                 <div class="fw-bold fs-4">{{ report.achievements.longest_saving_streak }}</div>
-                                <div class="text-muted small">months in a row</div>
+                                <div class="text-secondary small">months in a row</div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="border rounded p-3 text-center">
                                 <i class="bi bi-piggy-bank-fill text-info fs-3 mb-2"></i>
-                                <h6 class="text-muted mb-1">Average Savings Rate</h6>
+                                <h6 class="text-secondary mb-1">Average Savings Rate</h6>
                                 <div class="fw-bold fs-4">{{ '%.1f'|format(report.summary.savings_rate) }}%</div>
-                                <div class="text-muted small">of income saved</div>
+                                <div class="text-secondary small">of income saved</div>
                             </div>
                         </div>
                     </div>
@@ -333,19 +333,19 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <div class="border rounded p-3 text-center">
-                                <div class="text-muted small mb-1">Current Savings Rate</div>
+                                <div class="text-secondary small mb-1">Current Savings Rate</div>
                                 <h3 class="mb-0 text-primary">{{ '%.1f'|format(report.summary.savings_rate) }}%</h3>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="border rounded p-3 text-center">
-                                <div class="text-muted small mb-1">Total Saved</div>
+                                <div class="text-secondary small mb-1">Total Saved</div>
                                 <h3 class="mb-0 text-success">{{ '%.2f'|format(report.summary.balance) }}</h3>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="border rounded p-3 text-center">
-                                <div class="text-muted small mb-1">Monthly Average Savings</div>
+                                <div class="text-secondary small mb-1">Monthly Average Savings</div>
                                 <h3 class="mb-0 text-info">{{ '%.2f'|format(report.summary.balance / 12) }}</h3>
                             </div>
                         </div>
