@@ -1,0 +1,141 @@
+<!-- Calendar Grid -->
+<div class="calendar-grid">
+  <!-- Day Headers -->
+  <div class="calendar-header">
+    <div class="calendar-day-name">Sun</div>
+    <div class="calendar-day-name">Mon</div>
+    <div class="calendar-day-name">Tue</div>
+    <div class="calendar-day-name">Wed</div>
+    <div class="calendar-day-name">Thu</div>
+    <div class="calendar-day-name">Fri</div>
+    <div class="calendar-day-name">Sat</div>
+  </div>
+
+  <!-- Calendar Days -->
+  <div class="calendar-body">
+    {% set first_day_obj = calendar_data.first_day | parse_date %}
+    {% set last_day_obj = calendar_data.last_day | parse_date %}
+    {% set first_weekday = first_day_obj.weekday() %}
+    {% set first_weekday = (first_weekday + 1) % 7 %}  {# Convert Monday=0 to Sunday=0 #}
+    {% set total_days = (last_day_obj - first_day_obj).days + 1 %}
+
+    {# Empty cells before first day of month #}
+    {% for i in range(first_weekday) %}
+    <div class="calendar-date empty"></div>
+    {% endfor %}
+
+    {# Actual days of the month #}
+    {% for day_num in range(1, total_days + 1) %}
+      {% set current_date_obj = first_day_obj | add_days(day_num - 1) %}
+      {% set current_date = current_date_obj.isoformat() %}
+      {% set date_data = calendar_data.dates.get(current_date, {}) %}
+      {% set is_today = current_date == today %}
+      {% set has_entries = date_data.entry_count > 0 if date_data else false %}
+
+      {# Determine date marker type #}
+      {% set has_income = date_data.income_total > 0 if date_data else false %}
+      {% set has_expense = date_data.expense_total > 0 if date_data else false %}
+      {% set marker_class = '' %}
+      {% if has_income and has_expense %}
+        {% set marker_class = 'mixed' %}
+      {% elif has_income %}
+        {% set marker_class = 'income' %}
+      {% elif has_expense %}
+        {% set marker_class = 'expense' %}
+      {% endif %}
+
+      <div
+        class="calendar-date {% if is_today %}today{% endif %} {% if has_entries %}has-entries{% endif %}"
+        data-date="{{ current_date }}"
+        {% if has_entries %}
+          onclick="showDateDetail('{{ current_date }}')"
+          role="button"
+          tabindex="0"
+        {% endif %}
+      >
+        <div class="date-number">{{ day_num }}</div>
+
+        {% if has_entries %}
+        <div class="date-markers">
+          <span class="date-marker {{ marker_class }}"></span>
+          {% if date_data.entry_count > 1 %}
+          <span class="entry-count">{{ date_data.entry_count }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Tooltip content -->
+        <div class="date-tooltip">
+          <div class="tooltip-header">
+            <strong>{{ current_date_obj.strftime('%B %d, %Y') }}</strong>
+          </div>
+          <div class="tooltip-content">
+            {% if date_data.income_total > 0 %}
+            <div class="tooltip-row income">
+              <span class="tooltip-label">
+                <i class="bi bi-arrow-down-circle"></i> Income:
+              </span>
+              <span class="tooltip-value">${{ "%.2f"|format(date_data.income_total) }}</span>
+            </div>
+            {% endif %}
+
+            {% if date_data.expense_total > 0 %}
+            <div class="tooltip-row expense">
+              <span class="tooltip-label">
+                <i class="bi bi-arrow-up-circle"></i> Expense:
+              </span>
+              <span class="tooltip-value">${{ "%.2f"|format(date_data.expense_total) }}</span>
+            </div>
+            {% endif %}
+
+            <div class="tooltip-row net">
+              <span class="tooltip-label">
+                <i class="bi bi-graph-up"></i> Net:
+              </span>
+              <span class="tooltip-value {% if date_data.net >= 0 %}positive{% else %}negative{% endif %}">
+                ${{ "%.2f"|format(date_data.net) }}
+              </span>
+            </div>
+
+            <div class="tooltip-divider"></div>
+
+            <!-- Show first 3 entries -->
+            {% for entry in date_data.entries[:3] %}
+            <div class="tooltip-entry">
+              <span class="entry-icon">{{ entry.category_icon }}</span>
+              <span class="entry-category">{{ entry.category_name }}</span>
+              <span class="entry-amount {% if entry.type == 'income' %}income{% else %}expense{% endif %}">
+                ${{ "%.2f"|format(entry.amount) }}
+              </span>
+            </div>
+            {% endfor %}
+
+            {% if date_data.entry_count > 3 %}
+            <div class="tooltip-more">
+              +{{ date_data.entry_count - 3 }} more entries
+            </div>
+            {% endif %}
+
+            <div class="tooltip-action">
+              <small><i class="bi bi-hand-index-thumb"></i> Click to view all</small>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    {# Empty cells after last day of month to complete the grid #}
+    {% set total_cells_used = first_weekday + total_days %}
+    {% set cells_in_last_week = total_cells_used % 7 %}
+    {% if cells_in_last_week > 0 %}
+      {% for i in range(7 - cells_in_last_week) %}
+      <div class="calendar-date empty"></div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+
+<!-- Custom Jinja2 filters for date operations -->
+<script>
+  {# These are handled server-side, this is just a comment #}
+</script>

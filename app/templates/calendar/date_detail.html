@@ -1,0 +1,101 @@
+<!-- Date Detail Modal Content -->
+<div class="date-detail-container">
+  <!-- Date Header -->
+  <div class="date-detail-header">
+    <div class="date-detail-title">
+      <h3>{{ date_data.date_display }}</h3>
+      <p class="text-muted">{{ date_data.day_name }}</p>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="date-detail-summary">
+    <div class="detail-summary-card income">
+      <div class="card-icon">
+        <i class="bi bi-arrow-down-circle"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-label">Income</div>
+        <div class="card-value">${{ "%.2f"|format(date_data.total_income) }}</div>
+      </div>
+    </div>
+
+    <div class="detail-summary-card expense">
+      <div class="card-icon">
+        <i class="bi bi-arrow-up-circle"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-label">Expenses</div>
+        <div class="card-value">${{ "%.2f"|format(date_data.total_expense) }}</div>
+      </div>
+    </div>
+
+    <div class="detail-summary-card net">
+      <div class="card-icon">
+        <i class="bi bi-graph-up"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-label">Net</div>
+        <div class="card-value {% if date_data.net >= 0 %}positive{% else %}negative{% endif %}">
+          ${{ "%.2f"|format(date_data.net) }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Entries List -->
+  {% if date_data.entries %}
+  <div class="date-detail-entries">
+    <h4 class="entries-header">
+      <i class="bi bi-list-ul"></i>
+      Entries ({{ date_data.entry_count }})
+    </h4>
+
+    <div class="entries-list">
+      {% for entry in date_data.entries %}
+      <div class="entry-item {% if entry.type == 'income' %}income{% else %}expense{% endif %}">
+        <div class="entry-icon">
+          {{ entry.category_icon }}
+        </div>
+        <div class="entry-details">
+          <div class="entry-category">{{ entry.category_name }}</div>
+          {% if entry.note or entry.description %}
+          <div class="entry-note">{{ entry.note or entry.description }}</div>
+          {% endif %}
+        </div>
+        <div class="entry-amount">
+          <span class="amount-value">
+            ${{ "%.2f"|format(entry.amount) }}
+          </span>
+          <span class="amount-currency">{{ entry.currency_code }}</span>
+        </div>
+        <div class="entry-actions">
+          <a href="/entries/{{ entry.id }}/edit" class="btn btn-sm btn-ghost" title="Edit entry">
+            <i class="bi bi-pencil"></i>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Quick Action -->
+  <div class="date-detail-actions">
+    <a href="/entries/new?date={{ date_data.date }}" class="btn btn-primary w-100">
+      <i class="bi bi-plus-circle"></i> Add Entry for This Date
+    </a>
+  </div>
+
+  {% else %}
+  <!-- No Entries State -->
+  <div class="no-entries-state">
+    <div class="empty-icon">
+      <i class="bi bi-inbox"></i>
+    </div>
+    <p class="empty-message">No entries for this date</p>
+    <a href="/entries/new?date={{ date_data.date }}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Add Entry
+    </a>
+  </div>
+  {% endif %}
+</div>

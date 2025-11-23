@@ -1,0 +1,737 @@
+/**
+ * Calendar View Styles
+ * Phase 26: Calendar View Implementation
+ */
+
+/* ========================================
+   Calendar Container
+   ======================================== */
+
+.calendar-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* ========================================
+   Month Summary Cards
+   ======================================== */
+
+.month-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.summary-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.income-card .summary-icon {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.expense-card .summary-icon {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.net-card .summary-icon {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.count-card .summary-icon {
+  background: rgba(156, 163, 175, 0.1);
+  color: #9ca3af;
+}
+
+.summary-content {
+  flex: 1;
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.summary-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.summary-value.positive {
+  color: #10b981;
+}
+
+.summary-value.negative {
+  color: #ef4444;
+}
+
+/* ========================================
+   Calendar Navigation
+   ======================================== */
+
+.calendar-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.calendar-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-nav {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-nav:hover {
+  background: var(--hover-bg);
+  transform: scale(1.05);
+}
+
+.calendar-current-month h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.calendar-nav-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* ========================================
+   Calendar Grid
+   ======================================== */
+
+.calendar-grid-wrapper {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-grid {
+  width: 100%;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.calendar-day-name {
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.calendar-date {
+  aspect-ratio: 1;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.5rem;
+  position: relative;
+  background: var(--surface-bg);
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.calendar-date.empty {
+  background: transparent;
+  border-color: transparent;
+}
+
+.calendar-date.has-entries {
+  cursor: pointer;
+  background: var(--card-bg);
+}
+
+.calendar-date.has-entries:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  border-color: var(--primary-color);
+}
+
+.calendar-date.today {
+  border: 2px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.calendar-date.today .date-number {
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.date-number {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.date-markers {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.date-marker {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.date-marker.income {
+  background: #10b981;
+}
+
+.date-marker.expense {
+  background: #ef4444;
+}
+
+.date-marker.mixed {
+  background: linear-gradient(90deg, #10b981 50%, #ef4444 50%);
+}
+
+.entry-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--hover-bg);
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+}
+
+/* ========================================
+   Date Tooltip
+   ======================================== */
+
+.date-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 0.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem;
+  min-width: 250px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.calendar-date.has-entries:hover .date-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tooltip-header {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tooltip-header strong {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.tooltip-content {
+  font-size: 0.8125rem;
+}
+
+.tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.375rem;
+}
+
+.tooltip-label {
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tooltip-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tooltip-value.positive {
+  color: #10b981;
+}
+
+.tooltip-value.negative {
+  color: #ef4444;
+}
+
+.tooltip-row.income .tooltip-label {
+  color: #10b981;
+}
+
+.tooltip-row.expense .tooltip-label {
+  color: #ef4444;
+}
+
+.tooltip-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 0.5rem 0;
+}
+
+.tooltip-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+  background: var(--surface-bg);
+}
+
+.entry-icon {
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.entry-category {
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+}
+
+.entry-amount {
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+
+.entry-amount.income {
+  color: #10b981;
+}
+
+.entry-amount.expense {
+  color: #ef4444;
+}
+
+.tooltip-more {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-style: italic;
+  text-align: center;
+  margin-top: 0.375rem;
+}
+
+.tooltip-action {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.tooltip-action small {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+/* ========================================
+   Calendar Legend
+   ======================================== */
+
+.calendar-legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-marker.income-marker {
+  background: #10b981;
+}
+
+.legend-marker.expense-marker {
+  background: #ef4444;
+}
+
+.legend-marker.mixed-marker {
+  background: linear-gradient(90deg, #10b981 50%, #ef4444 50%);
+}
+
+.legend-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* ========================================
+   Date Detail Modal
+   ======================================== */
+
+.date-detail-container {
+  padding: 0.5rem;
+}
+
+.date-detail-header {
+  margin-bottom: 1.5rem;
+}
+
+.date-detail-title h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.date-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-summary-card {
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.detail-summary-card.income {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.detail-summary-card.expense {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.detail-summary-card.net {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.card-icon {
+  font-size: 1.5rem;
+}
+
+.detail-summary-card.income .card-icon {
+  color: #10b981;
+}
+
+.detail-summary-card.expense .card-icon {
+  color: #ef4444;
+}
+
+.detail-summary-card.net .card-icon {
+  color: #3b82f6;
+}
+
+.card-content {
+  flex: 1;
+}
+
+.card-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.card-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.date-detail-entries {
+  margin-bottom: 1.5rem;
+}
+
+.entries-header {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.entries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.entry-item {
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s ease;
+}
+
+.entry-item:hover {
+  background: var(--hover-bg);
+  transform: translateX(4px);
+}
+
+.entry-item.income {
+  border-left: 3px solid #10b981;
+}
+
+.entry-item.expense {
+  border-left: 3px solid #ef4444;
+}
+
+.entry-item .entry-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.entry-details {
+  flex: 1;
+}
+
+.entry-details .entry-category {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.entry-note {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.entry-item .entry-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+}
+
+.amount-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.amount-currency {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.entry-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.date-detail-actions {
+  margin-top: 1.5rem;
+}
+
+/* No Entries State */
+.no-entries-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: var(--text-tertiary);
+  margin-bottom: 1rem;
+}
+
+.empty-message {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+
+@media (max-width: 768px) {
+  .month-summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .calendar-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .calendar-nav-controls,
+  .calendar-nav-actions {
+    justify-content: center;
+  }
+
+  .calendar-day-name {
+    font-size: 0.75rem;
+  }
+
+  .calendar-date {
+    padding: 0.375rem;
+  }
+
+  .date-number {
+    font-size: 0.875rem;
+  }
+
+  .date-tooltip {
+    position: fixed;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    max-width: 90vw;
+    margin: 0;
+  }
+
+  .detail-summary-card {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .month-summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .summary-value {
+    font-size: 1.5rem;
+  }
+
+  .calendar-grid-wrapper {
+    padding: 0.75rem;
+  }
+
+  .calendar-header {
+    gap: 0.25rem;
+  }
+
+  .calendar-body {
+    gap: 0.25rem;
+  }
+
+  .date-markers {
+    flex-direction: column;
+  }
+}

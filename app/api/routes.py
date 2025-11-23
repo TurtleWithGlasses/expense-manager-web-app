@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, categories, entries, metrics, dashboard, ai, reports, weekly_reports, reports_pages, report_status, theme, profile, settings, insights_pages, goals, goals_pages
+from app.api.v1 import auth, categories, entries, metrics, dashboard, ai, reports, weekly_reports, reports_pages, report_status, theme, profile, settings, insights_pages, goals, goals_pages, calendar_pages
 from app.api.v1 import entries_rest, categories_rest, dashboard_rest, auth_rest
 from app.api.currency import router as currency_router
 
@@ -19,6 +19,7 @@ api_router.include_router(reports_pages.router)
 api_router.include_router(insights_pages.router)
 api_router.include_router(goals.router)
 api_router.include_router(goals_pages.router)
+api_router.include_router(calendar_pages.router)
 api_router.include_router(report_status.router)
 api_router.include_router(theme.router)
 api_router.include_router(currency_router)
