@@ -176,6 +176,13 @@ def setup_logging(
         f"JSON Logs: {enable_json_logs}, Log File: {log_file or 'None'}"
     )
 
+    # Debug: Log uvicorn.access logger configuration in development
+    if env != "production":
+        uvicorn_access_test = logging.getLogger("uvicorn.access")
+        logger.debug(f"uvicorn.access logger level: {uvicorn_access_test.level}")
+        logger.debug(f"uvicorn.access logger handlers: {len(uvicorn_access_test.handlers)}")
+        logger.debug(f"uvicorn.access logger propagate: {uvicorn_access_test.propagate}")
+
 
 def get_logger(name: str) -> logging.Logger:
     """
