@@ -40,7 +40,9 @@
       "Bash(.venv/Scripts/python.exe -m pytest tests/unit/ -v --tb=line)",
       "Bash(.venv/Scripts/python.exe -m pytest:*)",
       "Bash(.venv/Scripts/python.exe:*)",
-      "Bash(.venv/Scripts/pip install:*)"
+      "Bash(.venv/Scripts/pip install:*)",
+      "Bash(.venv/Scripts/alembic.exe revision:*)",
+      "Bash(.venv/Scripts/alembic.exe upgrade:*)"
     ],
     "deny": [],
     "ask": []
