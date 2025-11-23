@@ -153,10 +153,16 @@ def setup_logging(
         # Suppress access logs in production
         uvicorn_access_logger.setLevel(logging.WARNING)
     else:
-        # Enable access logs in development
+        # Enable access logs in development (env can be "dev" or "development")
         uvicorn_access_logger.setLevel(logging.INFO)
-        # Let uvicorn handle its own formatting by allowing it to propagate
-        uvicorn_access_logger.propagate = True
+        # Add a simple handler that just outputs uvicorn's pre-formatted messages
+        access_handler = logging.StreamHandler(sys.stdout)
+        access_handler.setLevel(logging.INFO)
+        access_formatter = logging.Formatter("%(message)s")
+        access_handler.setFormatter(access_formatter)
+        uvicorn_access_logger.addHandler(access_handler)
+        # Don't propagate to root to avoid our custom formatter reformatting uvicorn's messages
+        uvicorn_access_logger.propagate = False
 
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
