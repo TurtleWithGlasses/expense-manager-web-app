@@ -12,3 +12,4 @@ class Category(Base):
 
     owner = relationship("User", back_populates="categories")
     entries = relationship("Entry", back_populates="category", foreign_keys="Entry.category_id")
+    recurring_payments = relationship("RecurringPayment", back_populates="category", cascade="all, delete-orphan")

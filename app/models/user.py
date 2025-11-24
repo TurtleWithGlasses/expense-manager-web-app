@@ -39,3 +39,7 @@ class User(Base):
 
     # Goal relationships - Phase 17
     financial_goals = relationship("FinancialGoal", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
+
+    # Recurring payment relationships - Phase 28
+    recurring_payments = relationship("RecurringPayment", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)
+    payment_reminders = relationship("PaymentReminder", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)

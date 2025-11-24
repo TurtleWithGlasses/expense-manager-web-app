@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+
+{% block title %}Bills & Subscriptions - Expense Manager{% endblock %}
+
+{% block content %}
+<style>
+  /* Dark theme support */
+  .card {
+    background-color: var(--panel);
+    color: var(--text);
+  }
+
+  .card-header {
+    background-color: var(--surface);
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table {
+    color: var(--text);
+  }
+
+  .table tbody tr {
+    background-color: transparent !important;
+  }
+
+  .table tbody td {
+    background-color: transparent !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  .table thead th {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  .modal-content {
+    background-color: var(--panel);
+    color: var(--text);
+  }
+
+  .modal-header {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-footer {
+    border-top: 1px solid var(--border);
+  }
+
+  .form-control, .form-select {
+    background-color: var(--surface);
+    color: var(--text);
+    border-color: var(--border);
+  }
+
+  .form-control:focus, .form-select:focus {
+    background-color: var(--surface);
+    color: var(--text);
+    border-color: var(--primary);
+  }
+
+  .form-label {
+    color: var(--text);
+  }
+
+  .text-muted {
+    color: var(--text-secondary) !important;
+  }
+
+  .alert {
+    background-color: var(--surface);
+    border-color: var(--border);
+  }
+
+  /* Make modal scrollable using Bootstrap helper */
+  #addPaymentModal .modal-body {
+    overflow-y: auto;
+    max-height: none;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-2">
+          <li class="breadcrumb-item"><a href="/intelligence">Budget Intelligence</a></li>
+          <li class="breadcrumb-item active">Bills & Subscriptions</li>
+        </ol>
+      </nav>
+      <h1 class="h3 mb-0" style="color: var(--text);">
+        <i class="bi bi-calendar-check"></i> Bills & Subscriptions
+      </h1>
+      <p class="text-muted mb-0">Manage your recurring payments and get AI warnings before they're due</p>
+    </div>
+    <div>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+        <i class="bi bi-plus-circle"></i> Add Payment
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card border-primary">
+        <div class="card-body text-center">
+          <h6 class="text-muted">Total Payments</h6>
+          <h2 class="text-primary">{{ total_payments }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-warning">
+        <div class="card-body text-center">
+          <h6 class="text-muted">Monthly Cost</h6>
+          <h2 class="text-warning">{{ format_currency(total_monthly_cost) }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-danger">
+        <div class="card-body text-center">
+          <h6 class="text-muted">Annual Cost</h6>
+          <h2 class="text-danger">{{ format_currency(total_annual_cost) }}</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Warnings - Upcoming Payments -->
+  {% if reminders %}
+  <div class="card mb-4 border-warning">
+    <div class="card-header bg-warning text-dark">
+      <h5 class="mb-0 text-dark">
+        <i class="bi bi-bell-fill"></i> AI Warnings: Upcoming Payments (Next 14 Days)
+      </h5>
+    </div>
+    <div class="card-body">
+      {% for reminder in reminders %}
+      <div class="alert alert-{{ 'danger' if reminder.urgency == 'urgent' else 'warning' }} mb-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="alert-heading mb-1">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              {{ reminder.name }}
+            </h6>
+            <p class="mb-0">
+              <strong>{{ format_currency(reminder.amount) }}</strong>
+              · Due in <strong>{{ reminder.days_until_due }} days</strong>
+              ({{ reminder.due_date }})
+              · Category: <span class="badge bg-secondary">{{ reminder.category_name }}</span>
+            </p>
+          </div>
+          <div>
+            <span class="badge bg-{{ 'danger' if reminder.urgency == 'urgent' else 'warning' }} text-dark fs-6">
+              {{ reminder.urgency|upper }}
+            </span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- All Bills & Subscriptions -->
+  {% if payments %}
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Your Bills & Subscriptions ({{ total_payments }})</h5>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th class="text-end">Amount</th>
+            <th class="text-center">Frequency</th>
+            <th>Next Due</th>
+            <th class="text-center">Status</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for payment in payments %}
+          <tr>
+            <td>
+              <strong>{{ payment.name }}</strong>
+              {% if payment.description %}
+              <br><small class="text-muted">{{ payment.description }}</small>
+              {% endif %}
+            </td>
+            <td>
+              <i class="bi bi-tag"></i> {{ payment.category_name }}
+            </td>
+            <td class="text-end">
+              <strong>{{ format_currency(payment.amount) }}</strong>
+            </td>
+            <td class="text-center">
+              <span class="badge bg-info">{{ payment.frequency|capitalize }}</span>
+              <br>
+              <small class="text-muted">Due day: {{ payment.due_day }}</small>
+            </td>
+            <td>
+              {% if payment.next_due_date %}
+              <strong>{{ payment.next_due_date }}</strong>
+              <br>
+              <small class="text-muted">
+                {% if payment.days_until_due < 0 %}
+                <span class="text-danger">{{ payment.days_until_due|abs }} days overdue</span>
+                {% elif payment.days_until_due == 0 %}
+                <span class="text-warning">Due today!</span>
+                {% elif payment.days_until_due <= 7 %}
+                <span class="text-warning">In {{ payment.days_until_due }} days</span>
+                {% else %}
+                In {{ payment.days_until_due }} days
+                {% endif %}
+              </small>
+              {% else %}
+              <span class="text-muted">Ended</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              {% if payment.is_active %}
+              <span class="badge bg-success">Active</span>
+              {% else %}
+              <span class="badge bg-secondary">Paused</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm" role="group">
+                <button class="btn btn-outline-primary" onclick="editPayment({{ payment.id }})" title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-outline-warning" onclick="togglePayment({{ payment.id }}, {{ payment.is_active|lower }})" title="{{ 'Pause' if payment.is_active else 'Resume' }}">
+                  <i class="bi bi-{{ 'pause' if payment.is_active else 'play' }}-circle"></i>
+                </button>
+                <button class="btn btn-outline-danger" onclick="deletePayment({{ payment.id }}, '{{ payment.name }}')" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Info Cards -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0 text-white"><i class="bi bi-info-circle"></i> How It Works</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>User-Managed System:</strong> You have full control over your bills and subscriptions.</p>
+          <ul>
+            <li>Add each bill/subscription manually</li>
+            <li>Select the category (won't auto-detect food, coffee, etc.)</li>
+            <li>Set the amount, frequency, and due date</li>
+            <li>Bills appear on your calendar</li>
+          </ul>
+          <p class="mb-0"><strong>AI Role:</strong> AI only warns you about upcoming payments based on what you've added.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0 text-white"><i class="bi bi-calendar-check"></i> Features</h5>
+        </div>
+        <div class="card-body">
+          <ul class="mb-0">
+            <li><strong>Calendar Integration:</strong> See bills on your calendar view</li>
+            <li><strong>Smart Reminders:</strong> Get AI warnings before bills are due</li>
+            <li><strong>Flexible Frequencies:</strong> Weekly, biweekly, monthly, quarterly, annual</li>
+            <li><strong>Pause/Resume:</strong> Temporarily pause payments without deleting them</li>
+            <li><strong>Cost Tracking:</strong> See total monthly and annual costs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- Empty State -->
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-calendar-x fs-1 mb-3 d-block" style="color: var(--text-secondary);"></i>
+      <h5 style="color: var(--text);">No Bills or Subscriptions Yet</h5>
+      <p class="text-muted">
+        Add your first recurring payment to get started. AI will warn you before it's due!
+      </p>
+      <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+        <i class="bi bi-plus-circle"></i> Add Your First Payment
+      </button>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Add Payment Modal -->
+<div class="modal fade" id="addPaymentModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Bill or Subscription</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addPaymentForm">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="name" class="form-label">Name *</label>
+              <input type="text" class="form-control" id="name" name="name" required placeholder="e.g., Netflix, Electric Bill">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="category_id" class="form-label">Category *</label>
+              <div class="input-group">
+                <select class="form-select" id="category_id" name="category_id" required>
+                  <option value="">Select a category</option>
+                  {% for category in categories %}
+                  <option value="{{ category.id }}">{{ category.name }}</option>
+                  {% endfor %}
+                </select>
+                <a href="/categories" target="_blank" class="btn btn-outline-secondary" title="Add new category in a new tab">
+                  <i class="bi bi-plus-circle"></i>
+                </a>
+              </div>
+              <small class="form-text text-muted">Don't have the right category? Click <i class="bi bi-plus-circle"></i> to add one</small>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="description" class="form-label">Description (Optional)</label>
+            <textarea class="form-control" id="description" name="description" rows="2" placeholder="Additional notes..."></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="amount" class="form-label">Amount *</label>
+              <input type="number" class="form-control" id="amount" name="amount" step="0.01" min="0.01" required placeholder="0.00">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="frequency" class="form-label">Frequency *</label>
+              <select class="form-select" id="frequency" name="frequency" required onchange="updateDueDayLabel()">
+                <option value="">Select frequency</option>
+                <option value="WEEKLY">Weekly</option>
+                <option value="BIWEEKLY">Biweekly (Every 2 weeks)</option>
+                <option value="MONTHLY">Monthly</option>
+                <option value="QUARTERLY">Quarterly (Every 3 months)</option>
+                <option value="ANNUALLY">Annually</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="due_day" class="form-label" id="dueDayLabel">Due Day *</label>
+              <input type="number" class="form-control" id="due_day" name="due_day" min="1" max="31" required>
+              <small class="form-text text-muted" id="dueDayHelp">Day of month (1-31) for monthly/quarterly/annual</small>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="start_date" class="form-label">Start Date *</label>
+              <input type="date" class="form-control" id="start_date" name="start_date" required>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="end_date" class="form-label">End Date (Optional)</label>
+              <input type="date" class="form-control" id="end_date" name="end_date">
+              <small class="form-text text-muted">Leave empty for ongoing payments</small>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="remind_days_before" class="form-label">Remind Me (Days Before)</label>
+              <input type="number" class="form-control" id="remind_days_before" name="remind_days_before" min="0" max="30" value="3">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitPayment()">
+          <i class="bi bi-check-circle"></i> Add Payment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Update due day label based on frequency
+function updateDueDayLabel() {
+  const frequency = document.getElementById('frequency').value;
+  const dueDayLabel = document.getElementById('dueDayLabel');
+  const dueDayHelp = document.getElementById('dueDayHelp');
+  const dueDayInput = document.getElementById('due_day');
+
+  if (frequency === 'WEEKLY' || frequency === 'BIWEEKLY') {
+    dueDayLabel.textContent = 'Day of Week *';
+    dueDayHelp.textContent = 'Day of week (0=Monday, 6=Sunday)';
+    dueDayInput.max = 6;
+    dueDayInput.value = 0;
+  } else {
+    dueDayLabel.textContent = 'Due Day *';
+    dueDayHelp.textContent = 'Day of month (1-31) for monthly/quarterly/annual';
+    dueDayInput.max = 31;
+    dueDayInput.value = 1;
+  }
+}
+
+// Submit new payment
+async function submitPayment() {
+  const form = document.getElementById('addPaymentForm');
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  const data = {
+    name: document.getElementById('name').value,
+    category_id: parseInt(document.getElementById('category_id').value),
+    description: document.getElementById('description').value || null,
+    amount: parseFloat(document.getElementById('amount').value),
+    frequency: document.getElementById('frequency').value,
+    due_day: parseInt(document.getElementById('due_day').value),
+    start_date: document.getElementById('start_date').value,
+    end_date: document.getElementById('end_date').value || null,
+    remind_days_before: parseInt(document.getElementById('remind_days_before').value)
+  };
+
+  try {
+    const response = await fetch('/api/v1/recurring-payments/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (response.ok) {
+      alert('Payment added successfully!');
+      location.reload();
+    } else {
+      const error = await response.json();
+      alert('Error: ' + (error.detail || 'Failed to add payment'));
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+// Toggle payment active status
+async function togglePayment(paymentId, isActive) {
+  const action = isActive ? 'pause' : 'resume';
+  if (!confirm(`Are you sure you want to ${action} this payment?`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/v1/recurring-payments/${paymentId}/toggle`, {
+      method: 'POST'
+    });
+
+    if (response.ok) {
+      alert(`Payment ${action}d successfully!`);
+      location.reload();
+    } else {
+      alert('Error toggling payment');
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+// Delete payment
+async function deletePayment(paymentId, name) {
+  if (!confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/v1/recurring-payments/${paymentId}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      alert('Payment deleted successfully!');
+      location.reload();
+    } else {
+      alert('Error deleting payment');
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+// Edit payment (placeholder - would open modal with pre-filled data)
+function editPayment(paymentId) {
+  alert('Edit functionality coming soon! Payment ID: ' + paymentId);
+  // TODO: Fetch payment details and open modal with pre-filled form
+}
+
+// Set today as default start date
+document.addEventListener('DOMContentLoaded', function() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('start_date').value = today;
+});
+</script>
+
+{% endblock %}

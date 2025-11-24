@@ -1,5 +1,5 @@
 """
-Calendar service for aggregating financial entries by date
+Calendar service for aggregating financial entries by date and showing upcoming bills
 """
 
 from datetime import date, datetime, timedelta
@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.models.entry import Entry, EntryType
 from app.models.category import Category
+from app.services.recurring_payment_service import RecurringPaymentService
 
 
 def get_calendar_data(
@@ -110,6 +111,41 @@ def get_calendar_data(
         dates_data[date_key]['income_total'] = round(dates_data[date_key]['income_total'], 2)
         dates_data[date_key]['expense_total'] = round(dates_data[date_key]['expense_total'], 2)
         dates_data[date_key]['net'] = round(dates_data[date_key]['net'], 2)
+
+    # Add upcoming bills & subscriptions to calendar
+    recurring_service = RecurringPaymentService(db)
+    payments = recurring_service.get_user_recurring_payments(user_id, include_inactive=False)
+
+    for payment in payments:
+        next_due = recurring_service.calculate_next_due_date(payment, first_day)
+
+        # If due date falls within this month, add it to the calendar
+        if next_due and first_day <= next_due <= last_day:
+            due_date_str = next_due.isoformat()
+
+            # Initialize date if not exists
+            if due_date_str not in dates_data:
+                dates_data[due_date_str] = {
+                    'income_total': 0.0,
+                    'expense_total': 0.0,
+                    'net': 0.0,
+                    'entry_count': 0,
+                    'entries': []
+                }
+
+            # Add bill/subscription as a special entry type
+            dates_data[due_date_str]['entries'].append({
+                'id': f'bill_{payment.id}',
+                'type': 'bill',  # Special type for bills
+                'amount': float(payment.amount),
+                'currency_code': payment.currency_code,
+                'category_name': payment.category.name if payment.category else 'Uncategorized',
+                'category_icon': '📅',  # Calendar icon for bills
+                'note': payment.name,
+                'description': f"Due: {payment.name}",
+                'is_recurring': True,
+                'frequency': payment.frequency.value
+            })
 
     return {
         'year': year,

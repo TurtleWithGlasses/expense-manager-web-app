@@ -3,6 +3,56 @@
 {% block title %}Duplicate Detection - Expense Manager{% endblock %}
 
 {% block content %}
+<style>
+  /* Dark theme support - ensure dark backgrounds and readable text */
+  .card {
+    background-color: var(--panel) !important;
+    color: var(--text);
+  }
+
+  .card-header {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-body {
+    background-color: var(--panel) !important;
+    color: var(--text);
+  }
+
+  .table {
+    color: var(--text);
+  }
+
+  .table tbody tr {
+    background-color: transparent !important;
+  }
+
+  .table tbody td {
+    background-color: transparent !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  .table thead th {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  h1, h2, h3, h4, h5, h6, p, strong {
+    color: var(--text);
+  }
+
+  .text-muted {
+    color: var(--text-secondary) !important;
+  }
+
+  .bg-info {
+    background-color: var(--surface) !important;
+  }
+</style>
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>

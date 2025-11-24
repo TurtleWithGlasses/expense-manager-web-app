@@ -3,6 +3,36 @@
 {% block title %}Budget Intelligence - Expense Manager{% endblock %}
 
 {% block content %}
+<style>
+  /* Dark theme support - ensure dark backgrounds and readable text */
+  .card {
+    background-color: var(--panel) !important;
+    color: var(--text);
+  }
+
+  .card-header {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-body {
+    background-color: var(--panel) !important;
+    color: var(--text);
+  }
+
+  .bg-info.bg-opacity-10, .bg-primary.bg-opacity-10 {
+    background-color: var(--surface) !important;
+  }
+
+  h1, h2, h3, h4, h5, h6, p, li, strong {
+    color: var(--text);
+  }
+
+  .text-muted, .card-subtitle {
+    color: var(--text-secondary) !important;
+  }
+</style>
 <div class="container-fluid py-4">
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -45,59 +75,33 @@
       </div>
     </div>
 
-    <!-- Recurring Bills -->
+    <!-- Bills & Subscriptions (Combined) -->
     <div class="col">
       <div class="card h-100 border-warning">
         <div class="card-body d-flex flex-column" style="color: var(--text);">
           <div class="d-flex align-items-center mb-3">
             <div class="me-3">
-              <i class="bi bi-arrow-repeat fs-2 text-warning"></i>
+              <i class="bi bi-calendar-check fs-2 text-warning"></i>
             </div>
             <div>
-              <h6 class="card-subtitle mb-1" style="color: var(--text-secondary);">Recurring Bills</h6>
+              <h6 class="card-subtitle mb-1" style="color: var(--text-secondary);">Bills & Subscriptions</h6>
               <h3 class="mb-0" style="color: var(--text);">{{ recurring_bills_count }}</h3>
             </div>
           </div>
-          <p class="small mb-2" style="color: var(--text-secondary);">Detected patterns</p>
+          <p class="small mb-2" style="color: var(--text-secondary);">Active payments</p>
           {% if bill_reminders_count > 0 %}
           <p class="mb-0">
             <span class="badge bg-warning text-dark fs-6">{{ bill_reminders_count }} Due Soon</span>
           </p>
           {% else %}
-          <p class="mb-0 small" style="color: var(--text-secondary);">No bills due soon</p>
+          <p class="mb-0 small" style="color: var(--text-secondary);">No payments due soon</p>
           {% endif %}
-          <div class="mt-auto pt-3">
-            <a href="/intelligence/recurring-bills" class="btn btn-sm btn-warning w-100">
-              View Bills <i class="bi bi-arrow-right"></i>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Subscriptions -->
-    <div class="col">
-      <div class="card h-100 border-info">
-        <div class="card-body d-flex flex-column" style="color: var(--text);">
-          <div class="d-flex align-items-center mb-3">
-            <div class="me-3">
-              <i class="bi bi-credit-card fs-2 text-info"></i>
-            </div>
-            <div>
-              <h6 class="card-subtitle mb-1" style="color: var(--text-secondary);">Subscriptions</h6>
-              <h3 class="mb-0" style="color: var(--text);">{{ subscriptions_count }}</h3>
-            </div>
-          </div>
-          <p class="small mb-2" style="color: var(--text-secondary);">Total cost</p>
-          <p class="mb-0" style="color: var(--text);">
-            <strong class="fs-5">{{ format_currency(subscription_monthly_cost) }}</strong><br>
-            <span class="small" style="color: var(--text-secondary);">/ month</span>
-          </p>
-          <p class="mb-0 small" style="color: var(--text-secondary);">
-            ({{ format_currency(subscription_annual_cost) }} / year)
+          <p class="mb-0 mt-2" style="color: var(--text);">
+            <strong class="fs-6">{{ format_currency(subscription_monthly_cost) }}</strong><span class="small" style="color: var(--text-secondary);">/mo</span><br>
+            <span class="small" style="color: var(--text-secondary);">({{ format_currency(subscription_annual_cost) }}/year)</span>
           </p>
           <div class="mt-auto pt-3">
-            <a href="/intelligence/subscriptions" class="btn btn-sm btn-info w-100">
+            <a href="/intelligence/bills-subscriptions" class="btn btn-sm btn-warning w-100">
               Manage <i class="bi bi-arrow-right"></i>
             </a>
           </div>
@@ -105,13 +109,13 @@
       </div>
     </div>
 
-    <!-- Duplicates -->
+    <!-- Duplicates (moved to 3rd position) -->
     <div class="col">
-      <div class="card h-100 border-danger">
+      <div class="card h-100 border-info">
         <div class="card-body d-flex flex-column" style="color: var(--text);">
           <div class="d-flex align-items-center mb-3">
             <div class="me-3">
-              <i class="bi bi-files fs-2 text-danger"></i>
+              <i class="bi bi-files fs-2 text-info"></i>
             </div>
             <div>
               <h6 class="card-subtitle mb-1" style="color: var(--text-secondary);">Duplicates</h6>
@@ -121,7 +125,7 @@
           <p class="small mb-2" style="color: var(--text-secondary);">Potential duplicates found</p>
           {% if duplicates_count > 0 %}
           <p class="mb-0">
-            <span class="badge bg-danger fs-6">Review Needed</span>
+            <span class="badge bg-info fs-6">Review Needed</span>
           </p>
           {% else %}
           <p class="mb-0 text-success">
@@ -129,13 +133,14 @@
           </p>
           {% endif %}
           <div class="mt-auto pt-3">
-            <a href="/intelligence/duplicates" class="btn btn-sm btn-danger w-100">
+            <a href="/intelligence/duplicates" class="btn btn-sm btn-info w-100">
               Review <i class="bi bi-arrow-right"></i>
             </a>
           </div>
         </div>
       </div>
     </div>
+
   </div>
 
   <!-- Feature Descriptions -->
@@ -146,11 +151,10 @@
           <h5 class="mb-0"><i class="bi bi-info-circle text-info"></i> What is Budget Intelligence?</h5>
         </div>
         <div class="card-body" style="color: var(--text);">
-          <p style="color: var(--text);">Budget Intelligence uses AI and machine learning to analyze your spending patterns and provide actionable insights:</p>
+          <p style="color: var(--text);">Budget Intelligence helps you make smarter financial decisions:</p>
           <ul style="color: var(--text);">
             <li class="mb-2"><strong>Smart Budget Recommendations:</strong> Get personalized budget suggestions based on your spending history</li>
-            <li class="mb-2"><strong>Recurring Bill Detection:</strong> Automatically identify recurring bills and get reminders before they're due</li>
-            <li class="mb-2"><strong>Subscription Tracking:</strong> Monitor all your subscriptions and see their total cost impact</li>
+            <li class="mb-2"><strong>Bills & Subscriptions:</strong> Manage your recurring payments, set due dates, and get AI warnings when payments are due</li>
             <li class="mb-2"><strong>Duplicate Detection:</strong> Find potential duplicate transactions to keep your records clean</li>
           </ul>
         </div>
@@ -163,12 +167,12 @@
           <h5 class="mb-0"><i class="bi bi-graph-up text-primary"></i> How It Works</h5>
         </div>
         <div class="card-body" style="color: var(--text);">
-          <p style="color: var(--text);">Our intelligent algorithms analyze your financial data to:</p>
+          <p style="color: var(--text);">Take control of your finances:</p>
           <ol style="color: var(--text);">
-            <li class="mb-2"><strong>Learn Your Patterns:</strong> Study your spending habits across categories and time periods</li>
-            <li class="mb-2"><strong>Identify Trends:</strong> Detect recurring transactions, subscriptions, and anomalies</li>
-            <li class="mb-2"><strong>Make Predictions:</strong> Forecast upcoming bills and recommend optimal budgets</li>
-            <li class="mb-2"><strong>Provide Alerts:</strong> Notify you when you're approaching budget limits or bills are due</li>
+            <li class="mb-2"><strong>Set Your Bills:</strong> Add your recurring payments and subscriptions manually for full control</li>
+            <li class="mb-2"><strong>Get AI Warnings:</strong> Receive smart reminders before bills are due to avoid late payments</li>
+            <li class="mb-2"><strong>Track Your Budget:</strong> AI analyzes your spending to suggest realistic budgets</li>
+            <li class="mb-2"><strong>Stay Organized:</strong> See upcoming bills on your calendar and in reminders</li>
           </ol>
           <p class="mb-0 mt-3" style="color: var(--text);">
             <i class="bi bi-shield-check text-success"></i>

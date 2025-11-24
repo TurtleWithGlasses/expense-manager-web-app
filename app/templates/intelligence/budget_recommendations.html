@@ -4,6 +4,23 @@
 
 {% block content %}
 <style>
+  /* Dark theme support - ensure dark backgrounds and readable text */
+  .card {
+    background-color: var(--panel) !important;
+    color: var(--text);
+  }
+
+  .card-header {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-body {
+    background-color: var(--panel) !important;
+    color: var(--text);
+  }
+
   /* Override Bootstrap table default white background */
   .recommendations-table tbody tr {
     background-color: transparent !important;
@@ -11,14 +28,25 @@
   .recommendations-table tbody td {
     background-color: transparent !important;
     border-color: var(--border) !important;
+    color: var(--text);
   }
   .recommendations-table thead th {
     background-color: var(--surface) !important;
     border-color: var(--border) !important;
+    color: var(--text);
   }
   .recommendations-table tfoot th {
     background-color: var(--surface) !important;
     border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  h1, h2, h3, h4, h5, h6, p, strong {
+    color: var(--text);
+  }
+
+  .text-muted {
+    color: var(--text-secondary) !important;
   }
 </style>
 <div class="container-fluid py-4">
