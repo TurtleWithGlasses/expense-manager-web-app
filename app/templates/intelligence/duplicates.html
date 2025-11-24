@@ -66,7 +66,7 @@
         </h6>
         <div>
           <strong class="text-danger">
-            Total: ${{ "%.2f"|format(dup.total_amount) }}
+            Total: {{ format_currency(dup.total_amount) }}
           </strong>
         </div>
       </div>
@@ -94,7 +94,7 @@
                 <span class="badge bg-light text-dark">{{ entry.category }}</span>
               </td>
               <td class="text-end">
-                <strong>${{ "%.2f"|format(entry.amount) }}</strong>
+                <strong>{{ format_currency(entry.amount) }}</strong>
               </td>
               <td>
                 <span class="badge bg-{{ 'success' if entry.type == 'income' else 'danger' }}">

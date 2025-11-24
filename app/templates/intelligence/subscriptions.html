@@ -32,7 +32,7 @@
       <div class="card border-warning">
         <div class="card-body text-center" style="color: var(--text);">
           <h6 style="color: var(--text-secondary);">Monthly Cost</h6>
-          <h2 class="text-warning">${{ "%.2f"|format(total_monthly_cost) }}</h2>
+          <h2 class="text-warning">{{ format_currency(total_monthly_cost) }}</h2>
         </div>
       </div>
     </div>
@@ -40,7 +40,7 @@
       <div class="card border-danger">
         <div class="card-body text-center" style="color: var(--text);">
           <h6 style="color: var(--text-secondary);">Annual Cost</h6>
-          <h2 class="text-danger">${{ "%.2f"|format(total_annual_cost) }}</h2>
+          <h2 class="text-danger">{{ format_currency(total_annual_cost) }}</h2>
         </div>
       </div>
     </div>
@@ -78,22 +78,22 @@
               <i class="bi bi-tag"></i> {{ sub.category_name }}
             </td>
             <td class="text-end">
-              <strong>${{ "%.2f"|format(sub.avg_amount) }}</strong>
+              <strong>{{ format_currency(sub.avg_amount) }}</strong>
             </td>
             <td class="text-center">
               <span class="badge bg-primary">{{ sub.frequency|capitalize }}</span>
             </td>
             <td class="text-end">
               {% if sub.frequency == 'monthly' %}
-              ${{ "%.2f"|format(sub.avg_amount) }}
+              {{ format_currency(sub.avg_amount) }}
               {% elif sub.frequency == 'weekly' %}
-              ${{ "%.2f"|format(sub.avg_amount * 4) }}
+              {{ format_currency(sub.avg_amount * 4) }}
               {% else %}
-              ${{ "%.2f"|format(sub.avg_amount * 2) }}
+              {{ format_currency(sub.avg_amount * 2) }}
               {% endif %}
             </td>
             <td class="text-end">
-              <strong class="text-danger">${{ "%.2f"|format(sub.annual_cost) }}</strong>
+              <strong class="text-danger">{{ format_currency(sub.annual_cost) }}</strong>
             </td>
             <td>
               <small>{{ sub.predicted_next_date }}</small>
@@ -120,10 +120,10 @@
           <tr>
             <th colspan="4" class="text-end">Totals:</th>
             <th class="text-end">
-              <strong class="text-warning">${{ "%.2f"|format(total_monthly_cost) }}</strong>
+              <strong class="text-warning">{{ format_currency(total_monthly_cost) }}</strong>
             </th>
             <th class="text-end">
-              <strong class="text-danger">${{ "%.2f"|format(total_annual_cost) }}</strong>
+              <strong class="text-danger">{{ format_currency(total_annual_cost) }}</strong>
             </th>
             <th colspan="2"></th>
           </tr>
@@ -142,13 +142,12 @@
         <div class="col-md-6">
           <h6 style="color: var(--text);"><i class="bi bi-calculator text-info"></i> Cost Analysis</h6>
           <p style="color: var(--text);">
-            You're spending <strong>${{ "%.2f"|format(total_monthly_cost) }}</strong> per month
+            You're spending <strong>{{ format_currency(total_monthly_cost) }}</strong> per month
             on {{ count }} subscription{{ "s" if count != 1 else "" }}.
           </p>
           <p class="mb-0" style="color: var(--text);">
-            That's <strong>${{ "%.2f"|format(total_annual_cost) }}</strong> per year,
-            or approximately <strong>{{ "%.1f"|format(total_monthly_cost / 30) }}%</strong>
-            of a $100 daily budget.
+            That's <strong>{{ format_currency(total_annual_cost) }}</strong> per year,
+            or approximately <strong>{{ format_currency(total_monthly_cost / 30) }}</strong> per day.
           </p>
         </div>
         <div class="col-md-6">

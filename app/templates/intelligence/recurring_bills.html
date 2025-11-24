@@ -36,7 +36,7 @@
               {{ reminder.description }}
             </h6>
             <p class="mb-0">
-              <strong>${{ "%.2f"|format(reminder.avg_amount) }}</strong>
+              <strong>{{ format_currency(reminder.avg_amount) }}</strong>
               · Due in <strong>{{ reminder.days_until_due }} days</strong>
               ({{ reminder.predicted_next_date }})
             </p>
@@ -83,7 +83,7 @@
               <i class="bi bi-tag"></i> {{ bill.category_name }}
             </td>
             <td class="text-end">
-              <strong>${{ "%.2f"|format(bill.avg_amount) }}</strong>
+              <strong>{{ format_currency(bill.avg_amount) }}</strong>
             </td>
             <td class="text-center">
               <span class="badge bg-info">{{ bill.frequency|capitalize }}</span>

@@ -33,7 +33,7 @@
           </div>
           <p class="small mb-2" style="color: var(--text-secondary);">Categories analyzed</p>
           <p class="mb-0" style="color: var(--text);">
-            <strong class="fs-5">${{ "%.2f"|format(total_recommended_budget) }}</strong><br>
+            <strong class="fs-5">{{ format_currency(total_recommended_budget) }}</strong><br>
             <span class="small" style="color: var(--text-secondary);">/ month recommended</span>
           </p>
           <div class="mt-auto pt-3">
@@ -90,11 +90,11 @@
           </div>
           <p class="small mb-2" style="color: var(--text-secondary);">Total cost</p>
           <p class="mb-0" style="color: var(--text);">
-            <strong class="fs-5">${{ "%.2f"|format(subscription_monthly_cost) }}</strong><br>
+            <strong class="fs-5">{{ format_currency(subscription_monthly_cost) }}</strong><br>
             <span class="small" style="color: var(--text-secondary);">/ month</span>
           </p>
           <p class="mb-0 small" style="color: var(--text-secondary);">
-            (${{ "%.2f"|format(subscription_annual_cost) }} / year)
+            ({{ format_currency(subscription_annual_cost) }} / year)
           </p>
           <div class="mt-auto pt-3">
             <a href="/intelligence/subscriptions" class="btn btn-sm btn-info w-100">

@@ -15,8 +15,25 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.deps import current_user
 from app.services.budget_intelligence_service import BudgetIntelligenceService
+from app.services.user_preferences import user_preferences_service
+from app.core.currency import CURRENCIES, currency_service
 from app.models.user import User
 from app.templates import render
+
+
+def _get_currency_helpers(db: Session, user_id: int):
+    """Return currency metadata and formatter for the user's preference."""
+    currency_code = user_preferences_service.get_user_currency(db, user_id)
+    currency_info = CURRENCIES.get(currency_code, CURRENCIES['USD'])
+
+    def format_currency(amount: float):
+        return currency_service.format_amount(amount, currency_code)
+
+    return {
+        "user_currency_code": currency_code,
+        "user_currency": currency_info,
+        "format_currency": format_currency,
+    }
 
 router = APIRouter(prefix="/intelligence", tags=["Budget Intelligence Pages"])
 
@@ -39,6 +56,8 @@ def intelligence_dashboard(
     subscription_summary = service.get_subscription_summary(user.id)
     duplicates = service.find_duplicate_transactions(user.id, days_window=30)
 
+    currency_ctx = _get_currency_helpers(db, user.id)
+
     return render(
         request,
         "intelligence/dashboard.html",
@@ -51,7 +70,8 @@ def intelligence_dashboard(
             "subscriptions_count": subscription_summary['count'],
             "subscription_monthly_cost": subscription_summary['total_monthly_cost'],
             "subscription_annual_cost": subscription_summary['total_annual_cost'],
-            "duplicates_count": len(duplicates)
+            "duplicates_count": len(duplicates),
+            **currency_ctx,
         }
     )
 
@@ -68,12 +88,16 @@ def budget_recommendations_page(
     service = BudgetIntelligenceService(db)
     data = service.get_budget_recommendations(user.id)
 
+    currency_ctx = _get_currency_helpers(db, user.id)
+
     return render(
         request,
         "intelligence/budget_recommendations.html",
         {
             "user": user,
             **data
+            ,
+            **currency_ctx
         }
     )
 
@@ -91,6 +115,8 @@ def recurring_bills_page(
     recurring_bills = service.detect_recurring_bills(user.id)
     reminders = service.get_upcoming_bill_reminders(user.id, days_ahead=14)
 
+    currency_ctx = _get_currency_helpers(db, user.id)
+
     return render(
         request,
         "intelligence/recurring_bills.html",
@@ -98,7 +124,8 @@ def recurring_bills_page(
             "user": user,
             "recurring_bills": recurring_bills,
             "bill_reminders": reminders,
-            "total_bills": len(recurring_bills)
+            "total_bills": len(recurring_bills),
+            **currency_ctx,
         }
     )
 
@@ -115,12 +142,15 @@ def subscriptions_page(
     service = BudgetIntelligenceService(db)
     data = service.get_subscription_summary(user.id)
 
+    currency_ctx = _get_currency_helpers(db, user.id)
+
     return render(
         request,
         "intelligence/subscriptions.html",
         {
             "user": user,
-            **data
+            **data,
+            **currency_ctx,
         }
     )
 
@@ -137,6 +167,8 @@ def duplicates_page(
     service = BudgetIntelligenceService(db)
     duplicates = service.find_duplicate_transactions(user.id, days_window=60)
 
+    currency_ctx = _get_currency_helpers(db, user.id)
+
     return render(
         request,
         "intelligence/duplicates.html",
@@ -144,6 +176,7 @@ def duplicates_page(
             "user": user,
             "duplicates": duplicates,
             "total_duplicates": len(duplicates),
-            "days_analyzed": 60
+            "days_analyzed": 60,
+            **currency_ctx,
         }
     )
