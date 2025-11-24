@@ -32,7 +32,7 @@ class Entry(Base):
 
     owner = relationship("User", back_populates="entries")
     category = relationship("Category", back_populates="entries", foreign_keys=[category_id])
-    
+
     # AI relationships
     ai_suggestions = relationship("AISuggestion", back_populates="entry", cascade="all, delete-orphan")
     ai_suggested_category = relationship("Category", foreign_keys=[ai_suggested_category_id])
