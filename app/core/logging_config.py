@@ -145,19 +145,8 @@ def setup_logging(
 
     # Set log levels for third-party libraries to reduce noise
     logging.getLogger("uvicorn").setLevel(logging.INFO)
+    logging.getLogger("uvicorn.access").setLevel(logging.INFO)  # Enable access logs in development
     logging.getLogger("uvicorn.error").setLevel(logging.INFO)
-
-    # Configure uvicorn.access logger for HTTP request logging
-    uvicorn_access_logger = logging.getLogger("uvicorn.access")
-    if env == "production":
-        # Suppress access logs in production
-        uvicorn_access_logger.setLevel(logging.WARNING)
-    else:
-        # Enable access logs in development (env can be "dev" or "development")
-        uvicorn_access_logger.setLevel(logging.INFO)
-        # Allow propagation so uvicorn can add its own handler and output logs
-        uvicorn_access_logger.propagate = True
-
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
     logging.getLogger("alembic").setLevel(logging.INFO)
@@ -169,13 +158,6 @@ def setup_logging(
         f"Logging initialized - Level: {log_level}, Environment: {env}, "
         f"JSON Logs: {enable_json_logs}, Log File: {log_file or 'None'}"
     )
-
-    # Debug: Log uvicorn.access logger configuration in development
-    if env != "production":
-        uvicorn_access_test = logging.getLogger("uvicorn.access")
-        logger.debug(f"uvicorn.access logger level: {uvicorn_access_test.level}")
-        logger.debug(f"uvicorn.access logger handlers: {len(uvicorn_access_test.handlers)}")
-        logger.debug(f"uvicorn.access logger propagate: {uvicorn_access_test.propagate}")
 
 
 def get_logger(name: str) -> logging.Logger:

@@ -43,12 +43,12 @@ class BudgetIntelligenceService:
         # Analyze last 3 months of spending
         three_months_ago = datetime.now() - timedelta(days=90)
 
-        # Get spending by category and month
-        monthly_spending = self.db.query(
+        # Fetch individual expense entries and aggregate per month in Python to remain DB-agnostic
+        expense_rows = self.db.query(
             Entry.category_id,
             Category.name.label('category_name'),
-            func.strftime('%Y-%m', Entry.date).label('month'),
-            func.sum(Entry.amount).label('total')
+            Entry.date,
+            Entry.amount
         ).join(
             Category, Entry.category_id == Category.id
         ).filter(
@@ -57,37 +57,26 @@ class BudgetIntelligenceService:
                 Entry.type == 'expense',
                 Entry.date >= three_months_ago
             )
-        ).group_by(
-            Entry.category_id,
-            func.strftime('%Y-%m', Entry.date)
         ).all()
 
-        # Group by category
+        # Group by category/month
         category_data = defaultdict(lambda: {
             'name': '',
-            'monthly_amounts': [],
+            'monthly_totals': defaultdict(float),
             'entry_count': 0
         })
 
-        for row in monthly_spending:
-            category_data[row.category_id]['name'] = row.category_name
-            category_data[row.category_id]['monthly_amounts'].append(float(row.total))
+        for row in expense_rows:
+            month_key = row.date.strftime('%Y-%m')
+            category_info = category_data[row.category_id]
+            category_info['name'] = row.category_name
+            category_info['monthly_totals'][month_key] += float(row.amount)
+            category_info['entry_count'] += 1
 
-        # Count entries per category
-        entry_counts = self.db.query(
-            Entry.category_id,
-            func.count(Entry.id).label('count')
-        ).filter(
-            and_(
-                Entry.user_id == user_id,
-                Entry.type == 'expense',
-                Entry.date >= three_months_ago
-            )
-        ).group_by(Entry.category_id).all()
-
-        for row in entry_counts:
-            if row.category_id in category_data:
-                category_data[row.category_id]['entry_count'] = row.count
+        # Convert monthly totals dict to list for downstream calculations
+        for data in category_data.values():
+            data['monthly_amounts'] = list(data['monthly_totals'].values())
+            del data['monthly_totals']
 
         recommendations = []
         total_recommended = 0

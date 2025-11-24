@@ -10,33 +10,35 @@ This middleware:
 
 import time
 import uuid
-from typing import Callable
 
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.core.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 
-class RequestLoggingMiddleware(BaseHTTPMiddleware):
+class RequestLoggingMiddleware:
     """
     Middleware to log all HTTP requests with unique request IDs.
     """
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
         # Generate unique request ID
         request_id = str(uuid.uuid4())
 
-        # Store request ID in request state for access in route handlers
-        request.state.request_id = request_id
-
         # Get basic request info
-        method = request.method
-        endpoint = request.url.path
-        query_params = str(request.url.query) if request.url.query else ""
+        method = scope["method"]
+        endpoint = scope["path"]
+        query_string = scope.get("query_string", b"").decode("utf-8")
 
         # Skip logging for health check and static files to reduce noise
         skip_logging = (
@@ -50,46 +52,58 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
         # Log request start (unless skipped)
         if not skip_logging:
+            # Get client info
+            client = scope.get("client")
+            client_ip = client[0] if client else "unknown"
+
+            # Get headers
+            headers = dict(scope.get("headers", []))
+            user_agent = headers.get(b"user-agent", b"unknown").decode("utf-8", errors="ignore")
+
             logger.info(
                 f"Request started: {method} {endpoint}",
                 extra={
                     "request_id": request_id,
                     "method": method,
                     "endpoint": endpoint,
-                    "query_params": query_params,
-                    "client_ip": request.client.host if request.client else "unknown",
-                    "user_agent": request.headers.get("user-agent", "unknown"),
+                    "query_params": query_string,
+                    "client_ip": client_ip,
+                    "user_agent": user_agent,
                 }
             )
 
+        # Create a wrapper for send to capture the response status
+        status_code = None
+
+        async def send_wrapper(message):
+            nonlocal status_code
+            if message["type"] == "http.response.start":
+                status_code = message["status"]
+                # Add request ID to response headers
+                headers = list(message.get("headers", []))
+                headers.append((b"x-request-id", request_id.encode()))
+                message["headers"] = headers
+            await send(message)
+
         # Process request
         try:
-            response = await call_next(request)
+            await self.app(scope, receive, send_wrapper)
 
             # Calculate duration
             duration_ms = (time.time() - start_time) * 1000
 
             # Log request completion (unless skipped)
-            if not skip_logging:
-                # Try to get user ID from request state if available
-                user_id = getattr(request.state, "user_id", None)
-
+            if not skip_logging and status_code is not None:
                 logger.info(
-                    f"Request completed: {method} {endpoint} - {response.status_code}",
+                    f"Request completed: {method} {endpoint} - {status_code}",
                     extra={
                         "request_id": request_id,
                         "method": method,
                         "endpoint": endpoint,
-                        "status_code": response.status_code,
+                        "status_code": status_code,
                         "duration": duration_ms,
-                        "user_id": user_id,
                     }
                 )
-
-            # Add request ID to response headers for debugging
-            response.headers["X-Request-ID"] = request_id
-
-            return response
 
         except Exception as e:
             # Calculate duration
@@ -113,7 +127,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
 def get_request_id(request: Request) -> str:
     """
-    Get the request ID from the request state.
+    Get the request ID from the request headers.
 
     Args:
         request: FastAPI/Starlette request object
@@ -121,4 +135,4 @@ def get_request_id(request: Request) -> str:
     Returns:
         Request ID string, or "unknown" if not found
     """
-    return getattr(request.state, "request_id", "unknown")
+    return request.headers.get("x-request-id", "unknown")
