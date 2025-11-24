@@ -79,6 +79,22 @@
     overflow-y: auto;
     max-height: none;
   }
+
+  /* Ensure summary cards stay in one row */
+  .summary-cards-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+  }
+
+  .summary-cards-row > div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .summary-cards-row .card {
+    width: 100%;
+  }
 </style>
 
 <div class="container-fluid py-4">
@@ -104,28 +120,28 @@
   </div>
 
   <!-- Summary Cards -->
-  <div class="row mb-4">
-    <div class="col-md-4">
-      <div class="card border-primary">
+  <div class="summary-cards-row mb-4">
+    <div>
+      <div class="card border-primary h-100">
         <div class="card-body text-center">
-          <h6 class="text-muted">Total Payments</h6>
-          <h2 class="text-primary">{{ total_payments }}</h2>
+          <h6 class="text-muted mb-2">Total Payments</h6>
+          <h2 class="text-primary mb-0">{{ total_payments }}</h2>
         </div>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="card border-warning">
+    <div>
+      <div class="card border-warning h-100">
         <div class="card-body text-center">
-          <h6 class="text-muted">Monthly Cost</h6>
-          <h2 class="text-warning">{{ format_currency(total_monthly_cost) }}</h2>
+          <h6 class="text-muted mb-2">Monthly Cost</h6>
+          <h2 class="text-warning mb-0">{{ format_currency(total_monthly_cost) }}</h2>
         </div>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="card border-danger">
+    <div>
+      <div class="card border-danger h-100">
         <div class="card-body text-center">
-          <h6 class="text-muted">Annual Cost</h6>
-          <h2 class="text-danger">{{ format_currency(total_annual_cost) }}</h2>
+          <h6 class="text-muted mb-2">Annual Cost</h6>
+          <h2 class="text-danger mb-0">{{ format_currency(total_annual_cost) }}</h2>
         </div>
       </div>
     </div>

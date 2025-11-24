@@ -43,3 +43,7 @@ class User(Base):
     # Recurring payment relationships - Phase 28
     recurring_payments = relationship("RecurringPayment", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)
     payment_reminders = relationship("PaymentReminder", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)
+
+    # Payment history relationships - Phase 29
+    payment_occurrences = relationship("PaymentOccurrence", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)
+    payment_link_suggestions = relationship("PaymentLinkSuggestion", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)

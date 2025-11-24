@@ -17,6 +17,7 @@ from app.db.session import get_db
 from app.deps import current_user
 from app.services.budget_intelligence_service import BudgetIntelligenceService
 from app.services.recurring_payment_service import RecurringPaymentService
+from app.services.payment_history_service import PaymentHistoryService  # Phase 29
 from app.services.user_preferences import user_preferences_service
 from app.core.currency import CURRENCIES, currency_service
 from app.models.user import User
@@ -118,8 +119,11 @@ def bills_subscriptions_page(
     - Select categories for bills/subscriptions
     - Set due dates and amounts
     - Get AI warnings for upcoming payments
+    - View payment history (Phase 29)
+    - Get auto-linking suggestions (Phase 29)
     """
     payment_service = RecurringPaymentService(db)
+    history_service = PaymentHistoryService(db)
 
     # Get all recurring payments
     payments = payment_service.get_user_recurring_payments(user.id, include_inactive=False)
@@ -129,6 +133,9 @@ def bills_subscriptions_page(
 
     # Get payment summary
     summary = payment_service.get_payment_summary(user.id)
+
+    # Get auto-linking suggestions (Phase 29)
+    suggestions = history_service.get_active_suggestions(user.id, min_confidence=0.6)
 
     # Get user's categories for the form
     from app.models.category import Category
@@ -166,6 +173,7 @@ def bills_subscriptions_page(
             "total_monthly_cost": summary['total_monthly_cost'],
             "total_annual_cost": summary['total_annual_cost'],
             "categories": categories,
+            "link_suggestions": suggestions,  # Phase 29
             **currency_ctx,
         }
     )

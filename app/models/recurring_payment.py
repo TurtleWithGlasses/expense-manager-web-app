@@ -60,6 +60,8 @@ class RecurringPayment(Base):
     # Relationships
     owner = relationship("User", back_populates="recurring_payments")
     category = relationship("Category", back_populates="recurring_payments")
+    reminders = relationship("PaymentReminder", back_populates="payment", cascade="all, delete-orphan")
+    occurrences = relationship("PaymentOccurrence", back_populates="recurring_payment", cascade="all, delete-orphan")  # Phase 29
 
 
 class PaymentReminder(Base):
@@ -90,5 +92,5 @@ class PaymentReminder(Base):
 
     # Relationships
     owner = relationship("User", back_populates="payment_reminders")
-    recurring_payment = relationship("RecurringPayment")
+    payment = relationship("RecurringPayment", back_populates="reminders")
     paid_entry = relationship("Entry", foreign_keys=[paid_entry_id])

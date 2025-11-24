@@ -44,7 +44,12 @@
       "Bash(.venv/Scripts/alembic.exe revision:*)",
       "Bash(.venv/Scripts/alembic.exe upgrade:*)",
       "Bash(dir:*)",
-      "Bash(railway logs:*)"
+      "Bash(railway logs:*)",
+      "Bash(timeout 3 ping:*)",
+      "Bash(railway link:*)",
+      "Bash(.venv/Scripts/alembic.exe history:*)",
+      "Bash(.venv/Scripts/alembic.exe current:*)",
+      "Bash(timeout 10 .venv/Scripts/python.exe:*)"
     ],
     "deny": [],
     "ask": []

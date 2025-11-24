@@ -38,6 +38,7 @@ from app.models.weekly_report import WeeklyReport, UserReportPreferences
 from app.models.report_status import ReportStatus
 from app.models.financial_goal import FinancialGoal, GoalProgressLog
 from app.models.recurring_payment import RecurringPayment, PaymentReminder
+from app.models.payment_history import PaymentOccurrence, PaymentLinkSuggestion  # Phase 29
 
 app = FastAPI(title="Expense Manager Web")
 
