@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Recurring Bills - Expense Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-2">
+          <li class="breadcrumb-item"><a href="/intelligence">Budget Intelligence</a></li>
+          <li class="breadcrumb-item active">Recurring Bills</li>
+        </ol>
+      </nav>
+      <h1 class="h3 mb-0">
+        <i class="bi bi-arrow-repeat"></i> Recurring Bills & Reminders
+      </h1>
+    </div>
+  </div>
+
+  <!-- Upcoming Reminders -->
+  {% if bill_reminders %}
+  <div class="card mb-4 border-warning">
+    <div class="card-header bg-warning text-dark">
+      <h5 class="mb-0">
+        <i class="bi bi-bell-fill"></i> Upcoming Bills (Next 14 Days)
+      </h5>
+    </div>
+    <div class="card-body">
+      {% for reminder in bill_reminders %}
+      <div class="alert alert-{{ 'danger' if reminder.urgency == 'urgent' else 'warning' }} mb-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="alert-heading mb-1">
+              <i class="bi bi-tag"></i>
+              {{ reminder.description }}
+            </h6>
+            <p class="mb-0">
+              <strong>${{ "%.2f"|format(reminder.avg_amount) }}</strong>
+              · Due in <strong>{{ reminder.days_until_due }} days</strong>
+              ({{ reminder.predicted_next_date }})
+            </p>
+          </div>
+          <div>
+            <span class="badge bg-{{ 'danger' if reminder.urgency == 'urgent' else 'warning' }} text-dark">
+              {{ reminder.urgency|upper }}
+            </span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- All Recurring Bills -->
+  {% if recurring_bills %}
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">All Detected Recurring Bills ({{ total_bills }})</h5>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Category</th>
+            <th class="text-end">Avg Amount</th>
+            <th class="text-center">Frequency</th>
+            <th>Last Date</th>
+            <th>Next Due</th>
+            <th class="text-center">Confidence</th>
+            <th class="text-center">Occurrences</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for bill in recurring_bills %}
+          <tr>
+            <td>
+              <strong>{{ bill.description }}</strong>
+            </td>
+            <td>
+              <i class="bi bi-tag"></i> {{ bill.category_name }}
+            </td>
+            <td class="text-end">
+              <strong>${{ "%.2f"|format(bill.avg_amount) }}</strong>
+            </td>
+            <td class="text-center">
+              <span class="badge bg-info">{{ bill.frequency|capitalize }}</span>
+              <br>
+              <small class="text-muted">Every {{ "%.0f"|format(bill.avg_interval_days) }} days</small>
+            </td>
+            <td>
+              <small>{{ bill.last_date }}</small>
+            </td>
+            <td>
+              <strong>{{ bill.predicted_next_date }}</strong>
+              <br>
+              <small class="text-muted">
+                {% if bill.days_until_due < 0 %}
+                <span class="text-danger">{{ bill.days_until_due|abs }} days overdue</span>
+                {% elif bill.days_until_due == 0 %}
+                <span class="text-warning">Due today!</span>
+                {% elif bill.days_until_due <= 7 %}
+                <span class="text-warning">In {{ bill.days_until_due }} days</span>
+                {% else %}
+                In {{ bill.days_until_due }} days
+                {% endif %}
+              </small>
+            </td>
+            <td class="text-center">
+              <span class="badge bg-{{ 'success' if bill.confidence == 'high' else 'secondary' }}">
+                {{ bill.confidence|capitalize }}
+              </span>
+            </td>
+            <td class="text-center">
+              <span class="badge bg-light text-dark">{{ bill.occurrences }}x</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+      <h5>No Recurring Bills Detected</h5>
+      <p class="text-muted">
+        We need at least 6 months of data with 3+ recurring transactions to detect patterns.
+      </p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

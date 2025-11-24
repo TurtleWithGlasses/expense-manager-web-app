@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Subscriptions - Expense Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-2">
+          <li class="breadcrumb-item"><a href="/intelligence">Budget Intelligence</a></li>
+          <li class="breadcrumb-item active">Subscriptions</li>
+        </ol>
+      </nav>
+      <h1 class="h3 mb-0">
+        <i class="bi bi-credit-card"></i> Subscription Tracker
+      </h1>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card border-info">
+        <div class="card-body text-center" style="color: var(--text);">
+          <h6 style="color: var(--text-secondary);">Active Subscriptions</h6>
+          <h2 class="text-info">{{ count }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-warning">
+        <div class="card-body text-center" style="color: var(--text);">
+          <h6 style="color: var(--text-secondary);">Monthly Cost</h6>
+          <h2 class="text-warning">${{ "%.2f"|format(total_monthly_cost) }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-danger">
+        <div class="card-body text-center" style="color: var(--text);">
+          <h6 style="color: var(--text-secondary);">Annual Cost</h6>
+          <h2 class="text-danger">${{ "%.2f"|format(total_annual_cost) }}</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subscriptions List -->
+  {% if subscriptions %}
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Your Subscriptions</h5>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Category</th>
+            <th class="text-end">Amount</th>
+            <th class="text-center">Billing Cycle</th>
+            <th class="text-end">Monthly Cost</th>
+            <th class="text-end">Annual Cost</th>
+            <th>Next Charge</th>
+            <th class="text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sub in subscriptions %}
+          <tr>
+            <td>
+              <strong>{{ sub.description }}</strong>
+              <br>
+              <small class="text-muted">{{ sub.occurrences }} payments detected</small>
+            </td>
+            <td>
+              <i class="bi bi-tag"></i> {{ sub.category_name }}
+            </td>
+            <td class="text-end">
+              <strong>${{ "%.2f"|format(sub.avg_amount) }}</strong>
+            </td>
+            <td class="text-center">
+              <span class="badge bg-primary">{{ sub.frequency|capitalize }}</span>
+            </td>
+            <td class="text-end">
+              {% if sub.frequency == 'monthly' %}
+              ${{ "%.2f"|format(sub.avg_amount) }}
+              {% elif sub.frequency == 'weekly' %}
+              ${{ "%.2f"|format(sub.avg_amount * 4) }}
+              {% else %}
+              ${{ "%.2f"|format(sub.avg_amount * 2) }}
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <strong class="text-danger">${{ "%.2f"|format(sub.annual_cost) }}</strong>
+            </td>
+            <td>
+              <small>{{ sub.predicted_next_date }}</small>
+              <br>
+              <small class="text-muted">
+                {% if sub.days_until_due <= 7 %}
+                <span class="text-warning">In {{ sub.days_until_due }} days</span>
+                {% else %}
+                In {{ sub.days_until_due }} days
+                {% endif %}
+              </small>
+            </td>
+            <td class="text-center">
+              {% if sub.is_confirmed %}
+              <span class="badge bg-success">Confirmed</span>
+              {% else %}
+              <span class="badge bg-secondary">Potential</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light">
+          <tr>
+            <th colspan="4" class="text-end">Totals:</th>
+            <th class="text-end">
+              <strong class="text-warning">${{ "%.2f"|format(total_monthly_cost) }}</strong>
+            </th>
+            <th class="text-end">
+              <strong class="text-danger">${{ "%.2f"|format(total_annual_cost) }}</strong>
+            </th>
+            <th colspan="2"></th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Insights Card -->
+  <div class="card mt-4">
+    <div class="card-header bg-info text-white">
+      <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Subscription Insights</h5>
+    </div>
+    <div class="card-body" style="color: var(--text);">
+      <div class="row">
+        <div class="col-md-6">
+          <h6 style="color: var(--text);"><i class="bi bi-calculator text-info"></i> Cost Analysis</h6>
+          <p style="color: var(--text);">
+            You're spending <strong>${{ "%.2f"|format(total_monthly_cost) }}</strong> per month
+            on {{ count }} subscription{{ "s" if count != 1 else "" }}.
+          </p>
+          <p class="mb-0" style="color: var(--text);">
+            That's <strong>${{ "%.2f"|format(total_annual_cost) }}</strong> per year,
+            or approximately <strong>{{ "%.1f"|format(total_monthly_cost / 30) }}%</strong>
+            of a $100 daily budget.
+          </p>
+        </div>
+        <div class="col-md-6">
+          <h6 style="color: var(--text);"><i class="bi bi-info-circle text-primary"></i> Tips</h6>
+          <ul class="small mb-0" style="color: var(--text);">
+            <li>Review subscriptions you no longer use</li>
+            <li>Look for annual billing discounts</li>
+            <li>Consider bundled services to save money</li>
+            <li>Set reminders before free trials end</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="card">
+    <div class="card-body text-center py-5" style="color: var(--text);">
+      <i class="bi bi-inbox fs-1 mb-3 d-block" style="color: var(--text-secondary);"></i>
+      <h5 style="color: var(--text);">No Subscriptions Detected</h5>
+      <p style="color: var(--text-secondary);">
+        We haven't detected any subscription-like recurring charges in your transactions yet.
+      </p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
