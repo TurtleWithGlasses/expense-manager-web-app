@@ -3,6 +3,30 @@
 {% block title %}Subscriptions - Expense Manager{% endblock %}
 
 {% block content %}
+<style>
+  .subscriptions-table tbody tr {
+    background-color: transparent !important;
+    color: var(--text);
+  }
+
+  .subscriptions-table tbody td {
+    background-color: transparent !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  .subscriptions-table thead th,
+  .subscriptions-table tfoot th {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  .subscriptions-table small,
+  .subscriptions-table .text-muted {
+    color: var(--text-secondary) !important;
+  }
+</style>
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -53,7 +77,7 @@
       <h5 class="mb-0">Your Subscriptions</h5>
     </div>
     <div class="table-responsive">
-      <table class="table table-hover mb-0">
+      <table class="table table-hover mb-0 subscriptions-table">
         <thead>
           <tr>
             <th>Service</th>

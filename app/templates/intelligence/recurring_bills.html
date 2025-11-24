@@ -3,6 +3,38 @@
 {% block title %}Recurring Bills - Expense Manager{% endblock %}
 
 {% block content %}
+<style>
+  .recurring-table tbody tr {
+    background-color: transparent !important;
+    color: var(--text);
+  }
+
+  .recurring-table tbody td {
+    background-color: transparent !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  .recurring-table thead th {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  .recurring-table tfoot th {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  .recurring-table small {
+    color: var(--text-secondary) !important;
+  }
+
+  .recurring-table .text-muted {
+    color: var(--text-secondary) !important;
+  }
+</style>
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -60,7 +92,7 @@
       <h5 class="mb-0">All Detected Recurring Bills ({{ total_bills }})</h5>
     </div>
     <div class="table-responsive">
-      <table class="table table-hover mb-0">
+      <table class="table table-hover mb-0 recurring-table">
         <thead>
           <tr>
             <th>Description</th>
