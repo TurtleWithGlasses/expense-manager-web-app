@@ -12,6 +12,8 @@ from app.db.session import get_db
 from app.deps import current_user
 from app.models.user import User
 from app.services import calendar_service
+from app.services.user_preferences import user_preferences_service
+from app.core.currency import currency_service
 
 router = APIRouter(prefix="/calendar", tags=["calendar"])
 templates = Jinja2Templates(directory="app/templates")
@@ -29,6 +31,16 @@ def add_days_filter(date_obj, days):
 
 templates.env.filters['parse_date'] = parse_date_filter
 templates.env.filters['add_days'] = add_days_filter
+
+
+def _get_currency_formatter(db: Session, user_id: int):
+    """Get currency formatter for the user's currency preference."""
+    currency_code = user_preferences_service.get_user_currency(db, user_id)
+
+    def format_currency(amount: float):
+        return currency_service.format_amount(amount, currency_code)
+
+    return format_currency
 
 
 @router.get("", response_class=HTMLResponse)
@@ -118,6 +130,9 @@ def calendar_view(
             'data': date_data
         })
 
+    # Get currency formatter
+    format_currency = _get_currency_formatter(db, user.id)
+
     return templates.TemplateResponse(
         "calendar/index.html",
         {
@@ -135,6 +150,7 @@ def calendar_view(
             "next_year": next_year,
             "first_weekday": first_weekday,
             "calendar_dates": calendar_dates,
+            "format_currency": format_currency,
         }
     )
 
@@ -165,12 +181,16 @@ def calendar_date_detail(
         target_date=target_date
     )
 
+    # Get currency formatter
+    format_currency = _get_currency_formatter(db, user.id)
+
     return templates.TemplateResponse(
         "calendar/date_detail.html",
         {
             "request": request,
             "user": user,
             "date_data": date_data,
+            "format_currency": format_currency,
         }
     )
 
@@ -210,6 +230,9 @@ def get_month_data_api(
 
     today = date.today()
 
+    # Get currency formatter
+    format_currency = _get_currency_formatter(db, user.id)
+
     return templates.TemplateResponse(
         "calendar/calendar_grid.html",
         {
@@ -220,5 +243,6 @@ def get_month_data_api(
             "current_year": year,
             "current_month": month,
             "today": today.isoformat(),
+            "format_currency": format_currency,
         }
     )

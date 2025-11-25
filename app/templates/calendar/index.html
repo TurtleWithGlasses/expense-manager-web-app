@@ -83,7 +83,7 @@
         </div>
         <div class="summary-content">
           <div class="summary-label">Total Income</div>
-          <div class="summary-value">${{ "%.2f"|format(month_summary.total_income) }}</div>
+          <div class="summary-value">{{ format_currency(month_summary.total_income) }}</div>
         </div>
       </div>
     </div>
@@ -95,7 +95,7 @@
         </div>
         <div class="summary-content">
           <div class="summary-label">Total Expenses</div>
-          <div class="summary-value">${{ "%.2f"|format(month_summary.total_expense) }}</div>
+          <div class="summary-value">{{ format_currency(month_summary.total_expense) }}</div>
         </div>
       </div>
     </div>
@@ -107,7 +107,7 @@
         </div>
         <div class="summary-content">
           <div class="summary-label">Net Balance</div>
-          <div class="summary-value {% if month_summary.net >= 0 %}positive{% else %}negative{% endif %}">${{ "%.2f"|format(month_summary.net) }}</div>
+          <div class="summary-value {% if month_summary.net >= 0 %}positive{% else %}negative{% endif %}">{{ format_currency(month_summary.net) }}</div>
         </div>
       </div>
     </div>

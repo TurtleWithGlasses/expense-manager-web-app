@@ -18,7 +18,7 @@
         </div>
         <div class="card-content">
           <div class="card-label">Income</div>
-          <div class="card-value">${{ "%.2f"|format(date_data.total_income) }}</div>
+          <div class="card-value">{{ format_currency(date_data.total_income) }}</div>
         </div>
       </div>
     </div>
@@ -30,7 +30,7 @@
         </div>
         <div class="card-content">
           <div class="card-label">Expenses</div>
-          <div class="card-value">${{ "%.2f"|format(date_data.total_expense) }}</div>
+          <div class="card-value">{{ format_currency(date_data.total_expense) }}</div>
         </div>
       </div>
     </div>
@@ -43,7 +43,7 @@
         <div class="card-content">
           <div class="card-label">Net</div>
           <div class="card-value {% if date_data.net >= 0 %}positive{% else %}negative{% endif %}">
-            ${{ "%.2f"|format(date_data.net) }}
+            {{ format_currency(date_data.net) }}
           </div>
         </div>
       </div>
@@ -103,9 +103,8 @@
           <div class="text-end ms-3">
             <h5 class="mb-0 {% if entry.type == 'income' %}text-success{% elif entry.type == 'bill' %}text-warning{% else %}text-danger{% endif %}">
               {% if entry.type == 'income' %}+{% elif entry.type != 'bill' %}-{% endif %}
-              ${{ "%.2f"|format(entry.amount) }}
+              {{ format_currency(entry.amount) }}
             </h5>
-            <small class="text-muted">{{ entry.currency_code }}</small>
           </div>
         </div>
 
