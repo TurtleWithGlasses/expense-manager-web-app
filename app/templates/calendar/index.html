@@ -3,6 +3,27 @@
 {% block title %}Calendar - Expense Manager{% endblock %}
 
 {% block content %}
+<style>
+  /* Ensure summary cards stay in one row */
+  .calendar-summary-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .calendar-summary-row > div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Responsive: stack on mobile */
+  @media (max-width: 768px) {
+    .calendar-summary-row {
+      flex-wrap: wrap;
+    }
+  }
+</style>
 <div class="container-fluid py-4">
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -54,8 +75,8 @@
   </div>
 
   <!-- Month Summary -->
-  <div class="row mb-4">
-    <div class="col-md-3">
+  <div class="calendar-summary-row">
+    <div>
       <div class="summary-card income-card">
         <div class="summary-icon">
           <i class="bi bi-arrow-down-circle"></i>
@@ -67,7 +88,7 @@
       </div>
     </div>
 
-    <div class="col-md-3">
+    <div>
       <div class="summary-card expense-card">
         <div class="summary-icon">
           <i class="bi bi-arrow-up-circle"></i>
@@ -79,7 +100,7 @@
       </div>
     </div>
 
-    <div class="col-md-3">
+    <div>
       <div class="summary-card net-card">
         <div class="summary-icon">
           <i class="bi bi-graph-up"></i>
@@ -91,7 +112,7 @@
       </div>
     </div>
 
-    <div class="col-md-3">
+    <div>
       <div class="summary-card count-card">
         <div class="summary-icon">
           <i class="bi bi-receipt"></i>
@@ -107,6 +128,26 @@
   <!-- Calendar Grid -->
   <div class="calendar-grid-wrapper">
     {% include "calendar/calendar_grid.html" %}
+  </div>
+
+  <!-- Calendar Legend -->
+  <div class="calendar-legend">
+    <div class="legend-item">
+      <div class="legend-marker income-marker"></div>
+      <span class="legend-label">Income</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-marker expense-marker"></div>
+      <span class="legend-label">Expenses</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-marker mixed-marker"></div>
+      <span class="legend-label">Mixed (Income & Expenses)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-marker bill-marker"></div>
+      <span class="legend-label">Bills & Subscriptions Due</span>
+    </div>
   </div>
 </div>
 

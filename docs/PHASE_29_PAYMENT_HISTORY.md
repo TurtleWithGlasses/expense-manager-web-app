@@ -396,23 +396,33 @@ User Clicks Accept
 6. **No Payment Methods**: Doesn't track credit card vs bank account
 7. **No Receipt Storage**: Can't attach receipt images
 
+## Completed Enhancements
+
+### Calendar Integration ✓ (Completed)
+Bills & subscriptions now appear on the calendar view at their due dates:
+- ✓ Users see all upcoming bills when viewing the calendar
+- ✓ Visual representation with pulsing yellow markers for bill due dates
+- ✓ Hover tooltips show bill details (name, amount, frequency)
+- ✓ Click on calendar dates to view detailed bill information
+- ✓ Color-coded markers: yellow for bills, green for income, red for expenses
+- ✓ Dark theme support with readable fonts and proper contrast
+- ✓ Calendar legend showing all marker types
+- ✓ Bills displayed first in tooltips and date detail modals
+- ✓ Special styling for bills (warning color, no edit/delete buttons)
+- ✓ Link to manage bills from calendar date details
+
 ## Future Enhancements
 
 ### Phase 30+ Features
-1. **Calendar Integration**: Bills & subscriptions appear on calendar view at their due dates
-   - Users see all upcoming bills when viewing the calendar
-   - Visual representation of payment due dates
-   - Click on calendar entries to view payment details
-   - Color-coded by payment status (paid, pending, overdue)
-2. **Payment Analytics Dashboard**: Comprehensive payment trends visualization
-3. **Bulk Payment Recording**: Record multiple payments at once
-4. **Payment Reminders**: Proactive reminders based on history
-5. **Automatic Suggestion Generation**: Daily background job
-6. **Payment Forecasting**: Predict future payment amounts (utilities)
-7. **Receipt Upload**: Attach receipts to payment occurrences
-8. **Payment Methods**: Track which card/account used
-9. **CSV Export**: Export payment history
-10. **Variable Amount Tracking**: Handle bills with changing amounts
+1. **Payment Analytics Dashboard**: Comprehensive payment trends visualization
+2. **Bulk Payment Recording**: Record multiple payments at once
+3. **Payment Reminders**: Proactive reminders based on history
+4. **Automatic Suggestion Generation**: Daily background job
+5. **Payment Forecasting**: Predict future payment amounts (utilities)
+6. **Receipt Upload**: Attach receipts to payment occurrences
+7. **Payment Methods**: Track which card/account used
+8. **CSV Export**: Export payment history
+9. **Variable Amount Tracking**: Handle bills with changing amounts
 
 ### Advanced Features
 1. **Machine Learning**: Improve match scoring with ML

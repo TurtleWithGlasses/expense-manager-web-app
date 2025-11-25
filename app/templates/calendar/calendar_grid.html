@@ -24,9 +24,10 @@
       {% set is_today = date_item.is_today %}
       {% set has_entries = date_item.has_entries %}
 
-      {# Determine date marker type #}
+      {# Determine date marker type and check for bills #}
       {% set has_income = date_data.income_total > 0 if date_data else false %}
       {% set has_expense = date_data.expense_total > 0 if date_data else false %}
+      {% set has_bills = date_data.entries|selectattr('type', 'equalto', 'bill')|list|length > 0 if date_data and date_data.entries else false %}
       {% set marker_class = '' %}
       {% if has_income and has_expense %}
         {% set marker_class = 'mixed' %}
@@ -37,7 +38,7 @@
       {% endif %}
 
       <div
-        class="calendar-date {% if is_today %}today{% endif %} {% if has_entries %}has-entries{% endif %}"
+        class="calendar-date {% if is_today %}today{% endif %} {% if has_entries %}has-entries{% endif %} {% if has_bills %}has-bills{% endif %}"
         data-date="{{ date_item.date }}"
         {% if has_entries %}
           onclick="showDateDetail('{{ date_item.date }}')"
@@ -49,7 +50,12 @@
 
         {% if has_entries %}
         <div class="date-markers">
+          {% if marker_class %}
           <span class="date-marker {{ marker_class }}"></span>
+          {% endif %}
+          {% if has_bills %}
+          <span class="date-marker bill" title="Bill/Subscription Due"></span>
+          {% endif %}
           {% if date_data.entry_count > 1 %}
           <span class="entry-count">{{ date_data.entry_count }}</span>
           {% endif %}
@@ -90,12 +96,21 @@
 
             <div class="tooltip-divider"></div>
 
-            <!-- Show first 3 entries -->
-            {% for entry in date_data.entries[:3] %}
-            <div class="tooltip-entry">
+            <!-- Show first 3 entries (bills first, then regular entries) -->
+            {% set bills = date_data.entries|selectattr('type', 'equalto', 'bill')|list %}
+            {% set regular_entries = date_data.entries|rejectattr('type', 'equalto', 'bill')|list %}
+            {% set all_entries = bills + regular_entries %}
+
+            {% for entry in all_entries[:3] %}
+            <div class="tooltip-entry {% if entry.type == 'bill' %}bill-entry{% endif %}">
               <span class="entry-icon">{{ entry.category_icon }}</span>
-              <span class="entry-category">{{ entry.category_name }}</span>
-              <span class="entry-amount {% if entry.type == 'income' %}income{% else %}expense{% endif %}">
+              <span class="entry-category">
+                {{ entry.category_name }}
+                {% if entry.type == 'bill' %}
+                <br><small class="bill-label">📅 {{ entry.frequency|upper if entry.frequency else 'BILL' }}</small>
+                {% endif %}
+              </span>
+              <span class="entry-amount {% if entry.type == 'income' %}income{% elif entry.type == 'bill' %}bill{% else %}expense{% endif %}">
                 ${{ "%.2f"|format(entry.amount) }}
               </span>
             </div>

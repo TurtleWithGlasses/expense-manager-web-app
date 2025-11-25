@@ -280,6 +280,29 @@
   background: linear-gradient(90deg, var(--green) 50%, var(--red) 50%);
 }
 
+.date-marker.bill {
+  background: var(--warning, #fbbf24);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+  animation: pulse-bill 2s ease-in-out infinite;
+}
+
+@keyframes pulse-bill {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.8);
+  }
+}
+
+.calendar-date.has-bills {
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.calendar-date.has-bills:hover {
+  border-color: var(--warning, #fbbf24);
+}
+
 .entry-count {
   font-size: 0.75rem;
   font-weight: 600;
@@ -407,6 +430,25 @@
   color: var(--red);
 }
 
+.entry-amount.bill {
+  color: var(--warning, #fbbf24);
+  font-weight: 700;
+}
+
+.tooltip-entry.bill-entry {
+  background: rgba(251, 191, 36, 0.1);
+  border-left: 3px solid var(--warning, #fbbf24);
+  padding-left: 0.5rem;
+}
+
+.bill-label {
+  color: var(--warning, #fbbf24);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .tooltip-more {
   color: var(--text-secondary);
   font-size: 0.75rem;
@@ -465,6 +507,11 @@
 
 .legend-marker.mixed-marker {
   background: linear-gradient(90deg, var(--green) 50%, var(--red) 50%);
+}
+
+.legend-marker.bill-marker {
+  background: var(--warning, #fbbf24);
+  box-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
 }
 
 .legend-label {

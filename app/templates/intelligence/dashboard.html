@@ -32,6 +32,31 @@
   .text-muted, .card-subtitle {
     color: var(--text-secondary) !important;
   }
+
+  /* Ensure cards stay in one row with equal sizes */
+  .intelligence-cards-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .intelligence-cards-row > div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .intelligence-cards-row .card {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Responsive: stack on mobile */
+  @media (max-width: 768px) {
+    .intelligence-cards-row {
+      flex-wrap: wrap;
+    }
+  }
 </style>
 <div class="container-fluid py-4">
   <!-- Header -->
@@ -47,9 +72,9 @@
   </div>
 
   <!-- Overview Cards -->
-  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 mb-4">
+  <div class="intelligence-cards-row">
     <!-- Budget Recommendations -->
-    <div class="col">
+    <div>
       <div class="card h-100 border-primary">
         <div class="card-body d-flex flex-column" style="color: var(--text);">
           <div class="d-flex align-items-center mb-3">
@@ -76,7 +101,7 @@
     </div>
 
     <!-- Bills & Subscriptions (Combined) -->
-    <div class="col">
+    <div>
       <div class="card h-100 border-warning">
         <div class="card-body d-flex flex-column" style="color: var(--text);">
           <div class="d-flex align-items-center mb-3">
@@ -110,7 +135,7 @@
     </div>
 
     <!-- Duplicates (moved to 3rd position) -->
-    <div class="col">
+    <div>
       <div class="card h-100 border-info">
         <div class="card-body d-flex flex-column" style="color: var(--text);">
           <div class="d-flex align-items-center mb-3">
