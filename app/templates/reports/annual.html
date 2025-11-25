@@ -71,58 +71,133 @@
             </div>
             {% else %}
             <!-- Basic Annual Summary -->
-            <div class="row g-4 mb-4">
-                <div class="col-md-3">
+            <style>
+            .annual-summary-row {
+                display: flex;
+                flex-wrap: nowrap;
+                gap: 1rem;
+                margin-bottom: 2rem;
+            }
+
+            .annual-summary-row > div {
+                flex: 1;
+                min-width: 0;
+            }
+
+            @media (max-width: 768px) {
+                .annual-summary-row {
+                    flex-wrap: wrap;
+                }
+            }
+
+            .year-card {
+                background: var(--warning, #fbbf24) !important;
+            }
+
+            .year-card h6,
+            .year-card h3 {
+                color: #ffffff !important;
+                font-weight: 600;
+                text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            }
+
+            .year-comparison-row {
+                display: flex;
+                flex-wrap: nowrap;
+                gap: 1rem;
+            }
+
+            .year-comparison-row > div {
+                flex: 1;
+                min-width: 0;
+            }
+
+            @media (max-width: 768px) {
+                .year-comparison-row {
+                    flex-wrap: wrap;
+                }
+            }
+
+            .seasonal-breakdown-row {
+                display: flex;
+                flex-wrap: nowrap;
+                gap: 1rem;
+            }
+
+            .seasonal-breakdown-row > div {
+                flex: 1;
+                min-width: 0;
+            }
+
+            @media (max-width: 992px) {
+                .seasonal-breakdown-row {
+                    flex-wrap: wrap;
+                }
+
+                .seasonal-breakdown-row > div {
+                    flex: 1 1 calc(50% - 0.5rem);
+                }
+            }
+
+            @media (max-width: 576px) {
+                .seasonal-breakdown-row > div {
+                    flex: 1 1 100%;
+                }
+            }
+            </style>
+
+            <div class="annual-summary-row">
+                <div>
                     <div class="card bg-success text-white">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="card-title text-white mb-1">Total Income</h6>
-                                    <h3 class="mb-0">{{ '%.2f'|format(report.summary.total_income) }}</h3>
+                                    <h3 class="mb-0">{{ format_currency(report.summary.total_income) }}</h3>
                                 </div>
                                 <i class="bi bi-cash-coin fs-1 opacity-50"></i>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="col-md-3">
+
+                <div>
                     <div class="card bg-danger text-white">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="card-title text-white mb-1">Total Expenses</h6>
-                                    <h3 class="mb-0">{{ '%.2f'|format(report.summary.total_expense) }}</h3>
+                                    <h3 class="mb-0">{{ format_currency(report.summary.total_expense) }}</h3>
                                 </div>
                                 <i class="bi bi-cart-dash fs-1 opacity-50"></i>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="col-md-3">
+
+                <div>
                     <div class="card bg-info text-white">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="card-title text-white mb-1">Net Balance</h6>
-                                    <h3 class="mb-0">{{ '%.2f'|format(report.summary.balance) }}</h3>
+                                    <h3 class="mb-0">{{ format_currency(report.summary.balance) }}</h3>
                                 </div>
                                 <i class="bi bi-piggy-bank fs-1 opacity-50"></i>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="col-md-3">
-                    <div class="card bg-warning text-dark">
+
+                <div>
+                    <div class="card year-card text-white">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="card-title text-dark mb-1">Year</h6>
+                                    <h6 class="card-title mb-1">YEAR</h6>
                                     <h3 class="mb-0">{{ report.period.year }}</h3>
                                 </div>
-                                <i class="bi bi-calendar-year fs-1 opacity-50"></i>
+                                <i class="bi bi-calendar-year fs-1" style="opacity: 0.5;"></i>
                             </div>
                         </div>
                     </div>
@@ -139,8 +214,8 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
+                    <div class="year-comparison-row">
+                        <div>
                             <div class="border rounded p-3">
                                 <div class="small mb-1" style="color: var(--text-secondary);">Income Change</div>
                                 <h4 class="mb-0 {% if report.year_over_year.changes.income.percentage >= 0 %}text-success{% else %}text-danger{% endif %}">
@@ -149,7 +224,7 @@
                                 <small style="color: var(--text-secondary);">vs {{ report.period.year - 1 }}</small>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div>
                             <div class="border rounded p-3">
                                 <div class="small mb-1" style="color: var(--text-secondary);">Expense Change</div>
                                 <h4 class="mb-0 {% if report.year_over_year.changes.expense.percentage <= 0 %}text-success{% else %}text-danger{% endif %}">
@@ -158,11 +233,11 @@
                                 <small style="color: var(--text-secondary);">vs {{ report.period.year - 1 }}</small>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div>
                             <div class="border rounded p-3">
                                 <div class="small mb-1" style="color: var(--text-secondary);">Balance Change</div>
                                 <h4 class="mb-0 {% if report.year_over_year.changes.balance.amount >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                    {% if report.year_over_year.changes.balance.amount >= 0 %}+{% endif %}${{ '%.2f'|format(report.year_over_year.changes.balance.amount) }}
+                                    {% if report.year_over_year.changes.balance.amount >= 0 %}+{% endif %}{{ format_currency(report.year_over_year.changes.balance.amount) }}
                                 </h4>
                                 <small style="color: var(--text-secondary);">vs {{ report.period.year - 1 }}</small>
                             </div>
@@ -197,24 +272,24 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
+                    <div class="seasonal-breakdown-row">
                         {% for quarter_key in ['Q1', 'Q2', 'Q3', 'Q4'] %}
                         {% set quarter = report.seasonal_analysis.quarters[quarter_key] %}
-                        <div class="col-md-3">
+                        <div>
                             <div class="border rounded p-3">
                                 <h6 class="mb-2">{{ quarter.name }}</h6>
                                 <div class="mb-2">
                                     <small style="color: var(--text-secondary);">Income:</small>
-                                    <div class="text-success fw-bold">{{ '%.2f'|format(quarter.income) }}</div>
+                                    <div class="text-success fw-bold">{{ format_currency(quarter.income) }}</div>
                                 </div>
                                 <div class="mb-2">
                                     <small style="color: var(--text-secondary);">Expenses:</small>
-                                    <div class="text-danger fw-bold">{{ '%.2f'|format(quarter.expense) }}</div>
+                                    <div class="text-danger fw-bold">{{ format_currency(quarter.expense) }}</div>
                                 </div>
                                 <div>
                                     <small style="color: var(--text-secondary);">Net:</small>
                                     <div class="{% if quarter.balance >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
-                                        {{ '%.2f'|format(quarter.balance) }}
+                                        {{ format_currency(quarter.balance) }}
                                     </div>
                                 </div>
                             </div>
@@ -264,7 +339,7 @@
                                         {% for cat in report.category_analysis.top_10[:5] %}
                                         <tr>
                                             <td>{{ cat.name }}</td>
-                                            <td class="text-end">{{ '%.2f'|format(cat.amount) }}</td>
+                                            <td class="text-end">{{ format_currency(cat.amount) }}</td>
                                             <td class="text-end">{{ '%.1f'|format(cat.percentage) }}%</td>
                                         </tr>
                                         {% endfor %}
@@ -294,7 +369,7 @@
                                 <h6 class="mb-1" style="color: var(--text-secondary);">Best Saving Month</h6>
                                 {% if report.achievements.best_saving_month %}
                                 <div class="fw-bold">{{ report.achievements.best_saving_month.month_name }}</div>
-                                <div class="text-success">{{ '%.2f'|format(report.achievements.best_saving_month.balance) }}</div>
+                                <div class="text-success">{{ format_currency(report.achievements.best_saving_month.balance) }}</div>
                                 {% else %}
                                 <div style="color: var(--text-secondary);">N/A</div>
                                 {% endif %}
@@ -340,13 +415,13 @@
                         <div class="col-md-4">
                             <div class="border rounded p-3 text-center">
                                 <div class="small mb-1" style="color: var(--text-secondary);">Total Saved</div>
-                                <h3 class="mb-0 text-success">{{ '%.2f'|format(report.summary.balance) }}</h3>
+                                <h3 class="mb-0 text-success">{{ format_currency(report.summary.balance) }}</h3>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="border rounded p-3 text-center">
                                 <div class="small mb-1" style="color: var(--text-secondary);">Monthly Average Savings</div>
-                                <h3 class="mb-0 text-info">{{ '%.2f'|format(report.summary.balance / 12) }}</h3>
+                                <h3 class="mb-0 text-info">{{ format_currency(report.summary.balance / 12) }}</h3>
                             </div>
                         </div>
                     </div>
@@ -387,6 +462,25 @@ function emailAnnualReport() {
 }
 
 {% if report and report.monthly_breakdown %}
+// Currency formatting for charts
+const currencyInfo = {{ user_currency | tojson }};
+const currencySymbol = currencyInfo.symbol || '$';
+const currencyPosition = currencyInfo.position || 'before';
+const currencyDecimals = currencyInfo.decimal_places || 2;
+
+function formatChartCurrency(amount) {
+    const formatted = currencyDecimals === 0 
+        ? amount.toFixed(0) 
+        : amount.toFixed(currencyDecimals);
+    const withCommas = parseFloat(formatted).toLocaleString('en-US', {
+        minimumFractionDigits: currencyDecimals,
+        maximumFractionDigits: currencyDecimals
+    });
+    return currencyPosition === 'before' 
+        ? currencySymbol + withCommas 
+        : withCommas + ' ' + currencySymbol;
+}
+
 // Monthly Trends Chart
 const monthlyCtx = document.getElementById('monthlyTrendsChart');
 if (monthlyCtx) {
@@ -439,7 +533,7 @@ if (monthlyCtx) {
                     intersect: false,
                     callbacks: {
                         label: function(context) {
-                            return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
+                            return context.dataset.label + ': ' + formatChartCurrency(context.parsed.y);
                         }
                     }
                 }
@@ -450,7 +544,7 @@ if (monthlyCtx) {
                     ticks: {
                         color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim(),
                         callback: function(value) {
-                            return '$' + value.toFixed(0);
+                            return formatChartCurrency(value);
                         }
                     },
                     grid: {
@@ -519,7 +613,7 @@ if (categoryCtx) {
                             const label = context.label || '';
                             const value = context.parsed || 0;
                             const percentage = topCategories[context.dataIndex].percentage;
-                            return label + ': $' + value.toFixed(2) + ' (' + percentage.toFixed(1) + '%)';
+                            return label + ': ' + formatChartCurrency(value) + ' (' + percentage.toFixed(1) + '%)';
                         }
                     }
                 }

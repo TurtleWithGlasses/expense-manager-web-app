@@ -1,0 +1,539 @@
+/* Payment Analytics Dashboard Styles */
+
+/* Analytics Cards Row */
+.analytics-cards-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.analytics-cards-row > div {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Responsive: stack on mobile */
+@media (max-width: 768px) {
+  .analytics-cards-row {
+    flex-wrap: wrap;
+  }
+}
+
+/* Analytics Card Styles */
+.analytics-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  background: var(--surface, #1f2937);
+  border: 1px solid var(--border, #374151);
+  transition: all 0.3s ease;
+}
+
+.analytics-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.analytics-card .card-icon {
+  font-size: 2.5rem;
+  opacity: 0.9;
+}
+
+.analytics-card .card-content {
+  flex: 1;
+}
+
+.analytics-card .card-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #9ca3af);
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.analytics-card .card-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text, #f3f4f6);
+  line-height: 1.2;
+}
+
+.analytics-card .card-detail {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #9ca3af);
+  margin-top: 0.25rem;
+}
+
+/* Card Color Variants */
+.analytics-card.success-card {
+  border-left: 4px solid var(--success, #22c55e);
+}
+
+.analytics-card.success-card .card-icon {
+  color: var(--success, #22c55e);
+}
+
+.analytics-card.warning-card {
+  border-left: 4px solid var(--warning, #fbbf24);
+}
+
+.analytics-card.warning-card .card-icon {
+  color: var(--warning, #fbbf24);
+}
+
+.analytics-card.danger-card {
+  border-left: 4px solid var(--danger, #ef4444);
+}
+
+.analytics-card.danger-card .card-icon {
+  color: var(--danger, #ef4444);
+}
+
+.analytics-card.info-card {
+  border-left: 4px solid var(--info, #3b82f6);
+}
+
+.analytics-card.info-card .card-icon {
+  color: var(--info, #3b82f6);
+}
+
+/* Card Headers */
+.card-header {
+  background: var(--surface, #1f2937);
+  border-bottom: 1px solid var(--border, #374151);
+  padding: 1rem 1.25rem;
+  color: var(--text, #f3f4f6);
+}
+
+.card-header h5 {
+  color: var(--text, #f3f4f6);
+  margin: 0;
+}
+
+/* Card Body */
+.card-body {
+  background: var(--panel, #111827);
+  color: var(--text, #f3f4f6);
+}
+
+/* Projection Items */
+.projection-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border, #374151);
+}
+
+.projection-item:last-child {
+  border-bottom: none;
+}
+
+.projection-label {
+  font-size: 0.95rem;
+  color: var(--text-secondary, #9ca3af);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.projection-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text, #f3f4f6);
+}
+
+.projection-value.primary {
+  color: var(--info, #3b82f6);
+}
+
+.projection-value.secondary {
+  color: var(--success, #22c55e);
+}
+
+.projection-detail {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border, #374151);
+}
+
+/* Frequency Breakdown */
+.frequency-breakdown {
+  padding-top: 1rem;
+}
+
+.frequency-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: var(--surface, #1f2937);
+  border-radius: 0.375rem;
+  border: 1px solid var(--border, #374151);
+}
+
+.frequency-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #9ca3af);
+  font-weight: 500;
+}
+
+.frequency-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text, #f3f4f6);
+}
+
+/* Spending Comparison */
+.spending-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.comparison-item {
+  padding: 1rem;
+  background: var(--surface, #1f2937);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border, #374151);
+}
+
+.comparison-header {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #9ca3af);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.comparison-amount {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text, #f3f4f6);
+  margin-bottom: 0.25rem;
+}
+
+.comparison-percentage {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #9ca3af);
+  margin-bottom: 0.75rem;
+}
+
+.comparison-bar {
+  height: 8px;
+  background: var(--surface-dark, #0f172a);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.bar-fill.recurring-fill {
+  background: linear-gradient(90deg, var(--info, #3b82f6), var(--info-light, #60a5fa));
+}
+
+.bar-fill.onetime-fill {
+  background: linear-gradient(90deg, var(--warning, #fbbf24), var(--warning-light, #fcd34d));
+}
+
+.comparison-total {
+  padding: 1rem;
+  background: var(--surface, #1f2937);
+  border-radius: 0.5rem;
+  border: 2px solid var(--border-strong, #4b5563);
+  text-align: center;
+}
+
+.total-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #9ca3af);
+  margin-bottom: 0.5rem;
+}
+
+.total-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text, #f3f4f6);
+}
+
+/* Category List */
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.category-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.category-icon {
+  font-size: 1.25rem;
+}
+
+.category-name {
+  font-size: 0.95rem;
+  color: var(--text, #f3f4f6);
+  font-weight: 500;
+}
+
+.category-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: right;
+}
+
+.category-amount {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text, #f3f4f6);
+}
+
+.category-percentage {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #9ca3af);
+  min-width: 50px;
+}
+
+.category-bar {
+  height: 6px;
+  background: var(--surface-dark, #0f172a);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.category-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--info, #3b82f6), var(--info-light, #60a5fa));
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Table Styles */
+.table {
+  color: var(--text, #f3f4f6);
+  margin-bottom: 0;
+}
+
+.table thead th {
+  border-bottom: 2px solid var(--border, #374151);
+  color: var(--text-secondary, #9ca3af);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1rem 0.75rem;
+  background: var(--surface, #1f2937);
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--border, #374151);
+}
+
+.table tbody tr:hover {
+  background: var(--surface, #1f2937);
+}
+
+.table td {
+  padding: 1rem 0.75rem;
+  vertical-align: middle;
+}
+
+/* Reliability Badge */
+.reliability-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.reliability-badge.excellent {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--success, #22c55e);
+}
+
+.reliability-badge.good {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--info, #3b82f6);
+}
+
+.reliability-badge.fair {
+  background: rgba(251, 191, 36, 0.2);
+  color: var(--warning, #fbbf24);
+}
+
+.reliability-badge.poor {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--danger, #ef4444);
+}
+
+/* Badge Styles */
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+}
+
+.badge.bg-success {
+  background-color: var(--success, #22c55e) !important;
+  color: #fff;
+}
+
+.badge.bg-warning {
+  background-color: var(--warning, #fbbf24) !important;
+  color: #111827;
+}
+
+.badge.bg-danger {
+  background-color: var(--danger, #ef4444) !important;
+  color: #fff;
+}
+
+.badge.bg-info {
+  background-color: var(--info, #3b82f6) !important;
+  color: #fff;
+}
+
+.badge.bg-secondary {
+  background-color: var(--text-secondary, #6b7280) !important;
+  color: #fff;
+}
+
+/* Button Styles */
+.btn {
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: var(--primary, #3b82f6);
+  border-color: var(--primary, #3b82f6);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark, #2563eb);
+  border-color: var(--primary-dark, #2563eb);
+}
+
+.btn-outline-primary {
+  color: var(--primary, #3b82f6);
+  border-color: var(--primary, #3b82f6);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary, #3b82f6);
+  border-color: var(--primary, #3b82f6);
+  color: #fff;
+}
+
+.btn-outline-secondary {
+  color: var(--text-secondary, #9ca3af);
+  border-color: var(--border, #374151);
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--surface, #1f2937);
+  border-color: var(--border, #374151);
+  color: var(--text, #f3f4f6);
+}
+
+.btn-outline-success {
+  color: var(--success, #22c55e);
+  border-color: var(--success, #22c55e);
+}
+
+.btn-outline-success:hover {
+  background-color: var(--success, #22c55e);
+  border-color: var(--success, #22c55e);
+  color: #fff;
+}
+
+/* Alert Styles */
+.alert {
+  border-radius: 0.5rem;
+  border: 1px solid var(--border, #374151);
+}
+
+.alert-info {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--info, #3b82f6);
+  border-left: 4px solid var(--info, #3b82f6);
+}
+
+/* Chart Container */
+canvas {
+  max-height: 400px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+  .analytics-card .card-value {
+    font-size: 1.5rem;
+  }
+
+  .projection-value {
+    font-size: 1.25rem;
+  }
+
+  .comparison-amount {
+    font-size: 1.5rem;
+  }
+
+  .total-value {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-cards-row > div {
+    flex: 1 1 100%;
+  }
+
+  .analytics-card {
+    padding: 1rem;
+  }
+
+  .analytics-card .card-icon {
+    font-size: 2rem;
+  }
+
+  .analytics-card .card-value {
+    font-size: 1.25rem;
+  }
+
+  .category-stats {
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-end;
+  }
+
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+}
+
+/* Payment Analytics specific styles - use existing CSS variables from base theme */
+/* Do not override root theme variables */

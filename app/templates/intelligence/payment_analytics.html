@@ -1,0 +1,506 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Analytics - Expense Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+      <i class="bi bi-graph-up-arrow"></i> Payment Analytics
+    </h1>
+    <a href="/intelligence/dashboard" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Back to Intelligence
+    </a>
+  </div>
+
+  <!-- Period Selector -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <h5 class="mb-0">Analysis Period: <strong>{{ period_display }}</strong></h5>
+        </div>
+        <div class="col-md-6 text-end">
+          <div class="btn-group" role="group">
+            <a href="/intelligence/payment-analytics?period=3months"
+               class="btn {% if current_period == '3months' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+              3 Months
+            </a>
+            <a href="/intelligence/payment-analytics?period=6months"
+               class="btn {% if current_period == '6months' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+              6 Months
+            </a>
+            <a href="/intelligence/payment-analytics?period=12months"
+               class="btn {% if current_period == '12months' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+              12 Months
+            </a>
+            <a href="/intelligence/payment-analytics?period=all"
+               class="btn {% if current_period == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+              All Time
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Statistics Overview -->
+  <div class="analytics-cards-row mb-4">
+    <div>
+      <div class="analytics-card success-card">
+        <div class="card-icon">
+          <i class="bi bi-check-circle"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-label">On-Time Rate</div>
+          <div class="card-value">{{ "%.1f"|format(payment_statistics.on_time_rate) }}%</div>
+          <div class="card-detail">{{ payment_statistics.on_time_count }} of {{ payment_statistics.total_occurrences }} payments</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="analytics-card warning-card">
+        <div class="card-icon">
+          <i class="bi bi-clock-history"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-label">Late Payments</div>
+          <div class="card-value">{{ payment_statistics.late_count }}</div>
+          <div class="card-detail">{{ "%.1f"|format(payment_statistics.late_rate) }}% of total</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="analytics-card danger-card">
+        <div class="card-icon">
+          <i class="bi bi-x-circle"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-label">Missed Payments</div>
+          <div class="card-value">{{ payment_statistics.missed_count }}</div>
+          <div class="card-detail">{{ "%.1f"|format(payment_statistics.missed_rate) }}% of total</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="analytics-card info-card">
+        <div class="card-icon">
+          <i class="bi bi-cash-stack"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-label">Total Paid</div>
+          <div class="card-value">{{ format_currency(payment_statistics.total_paid) }}</div>
+          <div class="card-detail">
+            {% if payment_statistics.average_days_late > 0 %}
+            Avg {{ "%.1f"|format(payment_statistics.average_days_late) }} days late
+            {% else %}
+            All payments on time
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cost Projections -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-calculator"></i> Cost Projections
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="projection-item">
+            <div class="projection-label">
+              <i class="bi bi-calendar-month"></i> Projected Monthly Cost
+            </div>
+            <div class="projection-value primary">
+              {{ format_currency(cost_projection.monthly_projection) }}
+            </div>
+          </div>
+          <div class="projection-item">
+            <div class="projection-label">
+              <i class="bi bi-calendar-range"></i> Projected Annual Cost
+            </div>
+            <div class="projection-value secondary">
+              {{ format_currency(cost_projection.annual_projection) }}
+            </div>
+          </div>
+          <div class="projection-detail mt-3">
+            <small class="text-muted">
+              <i class="bi bi-info-circle"></i>
+              Based on {{ cost_projection.active_payment_count }} active recurring payment(s)
+            </small>
+          </div>
+
+          <!-- Frequency Breakdown -->
+          <div class="frequency-breakdown mt-4">
+            <h6 class="text-muted mb-3">By Frequency:</h6>
+            {% if cost_projection.by_frequency.monthly > 0 %}
+            <div class="frequency-item">
+              <span class="frequency-label">Monthly</span>
+              <span class="frequency-value">{{ format_currency(cost_projection.by_frequency.monthly) }}</span>
+            </div>
+            {% endif %}
+            {% if cost_projection.by_frequency.weekly > 0 %}
+            <div class="frequency-item">
+              <span class="frequency-label">Weekly</span>
+              <span class="frequency-value">{{ format_currency(cost_projection.by_frequency.weekly) }}</span>
+            </div>
+            {% endif %}
+            {% if cost_projection.by_frequency.quarterly > 0 %}
+            <div class="frequency-item">
+              <span class="frequency-label">Quarterly</span>
+              <span class="frequency-value">{{ format_currency(cost_projection.by_frequency.quarterly) }}</span>
+            </div>
+            {% endif %}
+            {% if cost_projection.by_frequency.annually > 0 %}
+            <div class="frequency-item">
+              <span class="frequency-label">Annually</span>
+              <span class="frequency-value">{{ format_currency(cost_projection.by_frequency.annually) }}</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-pie-chart"></i> Recurring vs One-Time Spending
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="spending-comparison">
+            <div class="comparison-item recurring">
+              <div class="comparison-header">
+                <i class="bi bi-arrow-repeat"></i> Recurring Payments
+              </div>
+              <div class="comparison-amount">
+                {{ format_currency(recurring_vs_onetime.recurring_total) }}
+              </div>
+              <div class="comparison-percentage">
+                {{ "%.1f"|format(recurring_vs_onetime.recurring_percentage) }}% of total spending
+              </div>
+              <div class="comparison-bar">
+                <div class="bar-fill recurring-fill" style="width: {{ recurring_vs_onetime.recurring_percentage }}%"></div>
+              </div>
+            </div>
+
+            <div class="comparison-item onetime">
+              <div class="comparison-header">
+                <i class="bi bi-receipt"></i> One-Time Expenses
+              </div>
+              <div class="comparison-amount">
+                {{ format_currency(recurring_vs_onetime.onetime_total) }}
+              </div>
+              <div class="comparison-percentage">
+                {{ "%.1f"|format(recurring_vs_onetime.onetime_percentage) }}% of total spending
+              </div>
+              <div class="comparison-bar">
+                <div class="bar-fill onetime-fill" style="width: {{ recurring_vs_onetime.onetime_percentage }}%"></div>
+              </div>
+            </div>
+
+            <div class="comparison-total mt-4">
+              <div class="total-label">Total Spending ({{ period_display }})</div>
+              <div class="total-value">{{ format_currency(recurring_vs_onetime.total_spending) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Trends Chart -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">
+        <i class="bi bi-graph-up"></i> Payment Trends Over Time
+      </h5>
+    </div>
+    <div class="card-body">
+      <canvas id="paymentTrendsChart" height="80"></canvas>
+    </div>
+  </div>
+
+  <!-- Category Spending Breakdown -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-tag"></i> Spending by Category
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if category_breakdown %}
+          <div class="category-list">
+            {% for category in category_breakdown[:8] %}
+            <div class="category-item">
+              <div class="category-info">
+                <span class="category-icon">{{ category.category_icon }}</span>
+                <span class="category-name">{{ category.category_name }}</span>
+              </div>
+              <div class="category-stats">
+                <div class="category-amount">{{ format_currency(category.total_spent) }}</div>
+                <div class="category-percentage">{{ "%.1f"|format(category.percentage) }}%</div>
+              </div>
+            </div>
+            <div class="category-bar">
+              <div class="category-bar-fill" style="width: {{ category.percentage }}%"></div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No category data available for this period.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-bar-chart"></i> Category Distribution
+          </h5>
+        </div>
+        <div class="card-body">
+          <canvas id="categoryChart" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Reliability by Bill -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">
+        <i class="bi bi-clipboard-check"></i> Payment Reliability by Bill/Subscription
+      </h5>
+    </div>
+    <div class="card-body">
+      {% if payment_reliability %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Bill/Subscription</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Frequency</th>
+              <th class="text-center">Total</th>
+              <th class="text-center">On-Time</th>
+              <th class="text-center">Late</th>
+              <th class="text-center">Missed</th>
+              <th class="text-end">On-Time Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for bill in payment_reliability %}
+            <tr {% if not bill.is_active %}class="text-muted"{% endif %}>
+              <td>
+                <strong>{{ bill.name }}</strong>
+                {% if not bill.is_active %}
+                <span class="badge bg-secondary ms-2">Inactive</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="me-1">{{ bill.category_icon }}</span>
+                {{ bill.category_name }}
+              </td>
+              <td>{{ format_currency(bill.amount) }}</td>
+              <td><span class="badge bg-info">{{ bill.frequency|upper }}</span></td>
+              <td class="text-center">{{ bill.total_occurrences }}</td>
+              <td class="text-center"><span class="badge bg-success">{{ bill.on_time_count }}</span></td>
+              <td class="text-center">
+                {% if bill.late_count > 0 %}
+                <span class="badge bg-warning text-dark">{{ bill.late_count }}</span>
+                {% else %}
+                <span class="text-muted">0</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% if bill.missed_count > 0 %}
+                <span class="badge bg-danger">{{ bill.missed_count }}</span>
+                {% else %}
+                <span class="text-muted">0</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <span class="reliability-badge {% if bill.on_time_rate >= 90 %}excellent{% elif bill.on_time_rate >= 70 %}good{% elif bill.on_time_rate >= 50 %}fair{% else %}poor{% endif %}">
+                  {{ "%.1f"|format(bill.on_time_rate) }}%
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No payment reliability data available yet. Start tracking your bills and subscriptions to see analytics here.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="card">
+    <div class="card-body">
+      <h5 class="mb-3">
+        <i class="bi bi-lightning"></i> Quick Actions
+      </h5>
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="/intelligence/bills-subscriptions" class="btn btn-primary">
+          <i class="bi bi-calendar-check"></i> Manage Bills & Subscriptions
+        </a>
+        <a href="/intelligence/payment-history" class="btn btn-outline-primary">
+          <i class="bi bi-clock-history"></i> View Payment History
+        </a>
+        <a href="/entries/add" class="btn btn-outline-success">
+          <i class="bi bi-plus-circle"></i> Record Payment
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// Payment Trends Chart
+const trendsCtx = document.getElementById('paymentTrendsChart').getContext('2d');
+new Chart(trendsCtx, {
+  type: 'line',
+  data: {
+    labels: {{ trends_labels|tojson }},
+    datasets: [
+      {
+        label: 'Amount Due',
+        data: {{ trends_due|tojson }},
+        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4
+      },
+      {
+        label: 'Amount Paid',
+        data: {{ trends_paid|tojson }},
+        borderColor: 'rgba(34, 197, 94, 1)',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+        labels: {
+          color: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#000',
+          font: {
+            size: 12
+          }
+        }
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          color: getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || 'rgba(0,0,0,0.1)'
+        },
+        ticks: {
+          color: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#000'
+        }
+      },
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || 'rgba(0,0,0,0.1)'
+        },
+        ticks: {
+          color: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#000'
+        }
+      }
+    }
+  }
+});
+
+// Category Pie Chart
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+new Chart(categoryCtx, {
+  type: 'doughnut',
+  data: {
+    labels: {{ category_labels|tojson }},
+    datasets: [{
+      data: {{ category_values|tojson }},
+      backgroundColor: [
+        'rgba(59, 130, 246, 0.8)',
+        'rgba(34, 197, 94, 0.8)',
+        'rgba(251, 191, 36, 0.8)',
+        'rgba(239, 68, 68, 0.8)',
+        'rgba(168, 85, 247, 0.8)',
+        'rgba(236, 72, 153, 0.8)',
+        'rgba(20, 184, 166, 0.8)',
+        'rgba(251, 146, 60, 0.8)',
+        'rgba(139, 92, 246, 0.8)',
+        'rgba(6, 182, 212, 0.8)'
+      ],
+      borderColor: getComputedStyle(document.documentElement).getPropertyValue('--panel').trim() || '#fff',
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'right',
+        labels: {
+          color: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#000',
+          font: {
+            size: 11
+          },
+          padding: 10
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const label = context.label || '';
+            const value = context.parsed || 0;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return label + ': ' + percentage + '%';
+          }
+        }
+      }
+    }
+  }
+});
+</script>
+{% endblock %}

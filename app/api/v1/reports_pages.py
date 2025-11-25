@@ -99,15 +99,21 @@ async def annual_reports_page(
     """Comprehensive annual reports page with advanced analytics"""
     try:
         from app.services.annual_reports import get_comprehensive_annual_report
-        from app.models.user_preferences import UserPreferences
+        from app.services.user_preferences import user_preferences_service
+        from app.core.currency import currency_service
         from datetime import date
 
         # Get year parameter or use current year
         current_year = year if year else date.today().year
 
         # Get user's currency
-        user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
-        user_currency = user_prefs.currency_code if user_prefs and user_prefs.currency_code else 'USD'
+        currency_code = user_preferences_service.get_user_currency(db, user.id)
+        from app.core.currency import CURRENCIES
+        currency_info = CURRENCIES.get(currency_code, CURRENCIES['USD'])
+
+        # Create currency formatter
+        def format_currency(amount: float):
+            return currency_service.format_amount(amount, currency_code)
 
         # Generate comprehensive annual report
         report_data = get_comprehensive_annual_report(db, user.id, current_year)
@@ -119,7 +125,7 @@ async def annual_reports_page(
                 'end': date(current_year, 12, 31).isoformat(),
                 'year': current_year
             },
-            'currency': user_currency,
+            'currency': currency_code,
             'summary': report_data['summary'],
             'year_over_year': report_data['year_over_year'],
             'monthly_breakdown': report_data['monthly_breakdown'],
@@ -133,6 +139,9 @@ async def annual_reports_page(
             "user": user,
             "report": annual_report,
             "current_year": current_year,
+            "format_currency": format_currency,
+            "user_currency_code": currency_code,
+            "user_currency": currency_info,
             "request": request
         })
     except Exception as e:
