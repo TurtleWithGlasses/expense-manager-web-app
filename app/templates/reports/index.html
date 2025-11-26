@@ -377,15 +377,22 @@ function emailAnnualReport() {
 function viewReport(type, period) {
     // Mark report as viewed before navigating
     markReportAsViewed(type, period);
-    
+
     if (period === 'current') {
         // Navigate to the main report page for current period
         window.location.href = `/reports/${type}`;
     } else {
-        // For now, all reports are current - redirect to main report page
-        // TODO: Implement historical report storage and retrieval
-        console.warn(`Historical report ${type}/${period} not yet implemented. Redirecting to current ${type} report.`);
-        window.location.href = `/reports/${type}`;
+        // Navigate to historical report page with period parameter
+        if (type === 'annual') {
+            // For annual reports, period is just the year (e.g., '2024')
+            window.location.href = `/reports/annual?year=${period}`;
+        } else if (type === 'monthly') {
+            // For monthly reports, period is 'YYYY-MM' (e.g., '2024-10')
+            window.location.href = `/reports/monthly?period=${period}`;
+        } else if (type === 'weekly') {
+            // For weekly reports, period is 'YYYY-WNN' (e.g., '2024-W45')
+            window.location.href = `/reports/weekly?period=${period}`;
+        }
     }
 }
 

@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Payment History - Expense Manager{% endblock %}
+
+{% block content %}
+<style>
+  /* Dark theme support */
+  .card {
+    background-color: var(--panel);
+    color: var(--text);
+  }
+
+  .card-header {
+    background-color: var(--surface);
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table {
+    color: var(--text);
+  }
+
+  .table tbody tr {
+    background-color: transparent !important;
+  }
+
+  .table tbody td {
+    background-color: transparent !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  .table thead th {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  .form-control, .form-select {
+    background-color: var(--surface);
+    color: var(--text);
+    border-color: var(--border);
+  }
+
+  .form-control:focus, .form-select:focus {
+    background-color: var(--surface);
+    color: var(--text);
+    border-color: var(--primary);
+  }
+
+  .text-muted {
+    color: var(--text-secondary) !important;
+  }
+
+  .timeline-item {
+    border-left: 3px solid var(--border);
+    padding-left: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+
+  .timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -8px;
+    top: 5px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background-color: var(--surface);
+    border: 2px solid var(--border);
+  }
+
+  .timeline-item.paid::before {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+
+  .timeline-item.late::before {
+    background-color: #ffc107;
+    border-color: #ffc107;
+  }
+
+  .timeline-item.skipped::before {
+    background-color: #6c757d;
+    border-color: #6c757d;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0" style="color: var(--text);">
+      <i class="bi bi-clock-history"></i> Payment History
+    </h1>
+    <div>
+      <a href="/intelligence/bills-subscriptions" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Bills
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Statistics -->
+  {% if payment_stats %}
+  <div class="d-flex flex-nowrap gap-3 mb-4" style="overflow-x: auto;">
+    <div class="flex-fill" style="min-width: 200px;">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <h6 class="text-muted mb-2">Total Payments</h6>
+          <h3 class="mb-0">{{ payment_stats.total_payments }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="flex-fill" style="min-width: 200px;">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <h6 class="text-muted mb-2">On-Time Payments</h6>
+          <h3 class="mb-0 text-success">{{ payment_stats.on_time_payments }}</h3>
+          <small class="text-muted">{{ payment_stats.on_time_rate }}%</small>
+        </div>
+      </div>
+    </div>
+    <div class="flex-fill" style="min-width: 200px;">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <h6 class="text-muted mb-2">Late Payments</h6>
+          <h3 class="mb-0 text-warning">{{ payment_stats.late_payments }}</h3>
+          <small class="text-muted">{{ ((payment_stats.late_payments / payment_stats.total_payments * 100) if payment_stats.total_payments > 0 else 0)|round(1) }}%</small>
+        </div>
+      </div>
+    </div>
+    <div class="flex-fill" style="min-width: 200px;">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <h6 class="text-muted mb-2">Total Spent</h6>
+          <h3 class="mb-0 text-primary">{{ format_currency(payment_stats.total_amount_paid) }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Auto-Linking Suggestions -->
+  {% if link_suggestions %}
+  <div class="card mb-4 border-info">
+    <div class="card-header bg-info text-white">
+      <h5 class="mb-0 text-white">
+        <i class="bi bi-link-45deg"></i> AI Suggestions: Auto-Link Payments ({{ link_suggestions|length }})
+      </h5>
+    </div>
+    <div class="card-body">
+      <p class="text-muted">AI detected these expense entries that might be payments for your bills:</p>
+      {% for suggestion in link_suggestions %}
+      <div class="alert alert-info mb-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ suggestion.recurring_payment_name }}</strong>
+            <br>
+            <small>
+              Entry: {{ format_currency(suggestion.entry_amount) }} on {{ suggestion.entry_date }}
+              · Confidence: {{ (suggestion.confidence_score * 100)|int }}%
+            </small>
+          </div>
+          <div>
+            <button class="btn btn-sm btn-success me-2" onclick="acceptSuggestion({{ suggestion.id }})">
+              <i class="bi bi-check-circle"></i> Link
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="dismissSuggestion({{ suggestion.id }})">
+              <i class="bi bi-x-circle"></i> Dismiss
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Payment History Timeline -->
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Payment Timeline (Last 12 Months)</h5>
+    </div>
+    <div class="card-body">
+      {% if payment_history %}
+        {% for occurrence in payment_history %}
+        <div class="timeline-item {% if occurrence.is_paid and not occurrence.is_late %}paid{% elif occurrence.is_late %}late{% elif occurrence.is_skipped %}skipped{% endif %}">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="mb-1">
+                <strong>{{ occurrence.recurring_payment.name }}</strong>
+                {% if occurrence.is_paid %}
+                  <span class="badge bg-success ms-2">Paid</span>
+                {% endif %}
+                {% if occurrence.is_late %}
+                  <span class="badge bg-warning text-dark ms-2">Late</span>
+                {% endif %}
+                {% if occurrence.is_skipped %}
+                  <span class="badge bg-secondary ms-2">Skipped</span>
+                {% endif %}
+                {% if occurrence.linked_entry_id %}
+                  <span class="badge bg-info ms-2"><i class="bi bi-link"></i> Linked</span>
+                {% endif %}
+              </h6>
+              <p class="mb-1">
+                <strong>{{ format_currency(occurrence.amount) }}</strong>
+                <span class="text-muted ms-2">
+                  · Category: {{ occurrence.recurring_payment.category.name }}
+                </span>
+              </p>
+              <small class="text-muted">
+                {% if occurrence.is_paid %}
+                  Scheduled: {{ occurrence.scheduled_date }} · Paid: {{ occurrence.actual_date }}
+                {% elif occurrence.is_skipped %}
+                  Scheduled: {{ occurrence.scheduled_date }} · Skipped
+                {% endif %}
+              </small>
+              {% if occurrence.note %}
+              <br><small class="text-muted"><i class="bi bi-sticky"></i> {{ occurrence.note }}</small>
+              {% endif %}
+              {% if occurrence.confirmation_number %}
+              <br><small class="text-muted"><i class="bi bi-receipt"></i> Confirmation: {{ occurrence.confirmation_number }}</small>
+              {% endif %}
+            </div>
+            <div class="text-end">
+              <small class="text-muted">{{ occurrence.created_at.strftime('%b %d, %Y') }}</small>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-inbox fs-1 mb-3 d-block" style="color: var(--text-secondary);"></i>
+          <h5 style="color: var(--text);">No Payment History Yet</h5>
+          <p class="text-muted">
+            Start tracking your bill payments to see them here.
+          </p>
+          <a href="/intelligence/bills-subscriptions" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-circle"></i> Manage Bills & Subscriptions
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+async function acceptSuggestion(suggestionId) {
+  try {
+    const response = await fetch(`/api/v1/payment-history/suggestions/${suggestionId}/accept`, {
+      method: 'POST'
+    });
+
+    if (response.ok) {
+      alert('Payment linked successfully!');
+      location.reload();
+    } else {
+      const error = await response.json();
+      alert('Error: ' + (error.detail || 'Failed to link payment'));
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+async function dismissSuggestion(suggestionId) {
+  try {
+    const response = await fetch(`/api/v1/payment-history/suggestions/${suggestionId}/dismiss`, {
+      method: 'POST'
+    });
+
+    if (response.ok) {
+      alert('Suggestion dismissed');
+      location.reload();
+    } else {
+      const error = await response.json();
+      alert('Error: ' + (error.detail || 'Failed to dismiss suggestion'));
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+</script>
+
+{% endblock %}

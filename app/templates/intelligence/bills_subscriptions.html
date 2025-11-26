@@ -74,8 +74,9 @@
     border-color: var(--border);
   }
 
-  /* Make modal scrollable using Bootstrap helper */
-  #addPaymentModal .modal-body {
+  /* Make modals scrollable using Bootstrap helper */
+  #addPaymentModal .modal-body,
+  #editPaymentModal .modal-body {
     overflow-y: auto;
     max-height: none;
   }
@@ -418,6 +419,93 @@
   </div>
 </div>
 
+<!-- Edit Payment Modal -->
+<div class="modal fade" id="editPaymentModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Bill or Subscription</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editPaymentForm">
+          <input type="hidden" id="edit_payment_id" name="payment_id">
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="edit_name" class="form-label">Name *</label>
+              <input type="text" class="form-control" id="edit_name" name="name" required placeholder="e.g., Netflix, Electric Bill">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_category_id" class="form-label">Category *</label>
+              <div class="input-group">
+                <select class="form-select" id="edit_category_id" name="category_id" required>
+                  <option value="">Select a category</option>
+                  {% for category in categories %}
+                  <option value="{{ category.id }}">{{ category.name }}</option>
+                  {% endfor %}
+                </select>
+                <a href="/categories" target="_blank" class="btn btn-outline-secondary" title="Add new category in a new tab">
+                  <i class="bi bi-plus-circle"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="edit_description" class="form-label">Description (Optional)</label>
+            <textarea class="form-control" id="edit_description" name="description" rows="2" placeholder="Additional notes..."></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="edit_amount" class="form-label">Amount *</label>
+              <input type="number" class="form-control" id="edit_amount" name="amount" step="0.01" min="0.01" required placeholder="0.00">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_frequency" class="form-label">Frequency *</label>
+              <select class="form-select" id="edit_frequency" name="frequency" required onchange="updateEditDueDayLabel()">
+                <option value="">Select frequency</option>
+                <option value="WEEKLY">Weekly</option>
+                <option value="BIWEEKLY">Biweekly (Every 2 weeks)</option>
+                <option value="MONTHLY">Monthly</option>
+                <option value="QUARTERLY">Quarterly (Every 3 months)</option>
+                <option value="ANNUALLY">Annually</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="edit_due_day" class="form-label" id="editDueDayLabel">Due Day *</label>
+              <input type="number" class="form-control" id="edit_due_day" name="due_day" min="1" max="31" required>
+              <small class="form-text text-muted" id="editDueDayHelp">Day of month (1-31) for monthly/quarterly/annual</small>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_end_date" class="form-label">End Date (Optional)</label>
+              <input type="date" class="form-control" id="edit_end_date" name="end_date">
+              <small class="form-text text-muted">Leave empty for ongoing payments</small>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="edit_remind_days_before" class="form-label">Remind Me (Days Before)</label>
+              <input type="number" class="form-control" id="edit_remind_days_before" name="remind_days_before" min="0" max="30" value="3">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitEditPayment()">
+          <i class="bi bi-check-circle"></i> Update Payment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // Update due day label based on frequency
 function updateDueDayLabel() {
@@ -525,10 +613,101 @@ async function deletePayment(paymentId, name) {
   }
 }
 
-// Edit payment (placeholder - would open modal with pre-filled data)
-function editPayment(paymentId) {
-  alert('Edit functionality coming soon! Payment ID: ' + paymentId);
-  // TODO: Fetch payment details and open modal with pre-filled form
+// Update edit due day label based on frequency
+function updateEditDueDayLabel() {
+  const frequency = document.getElementById('edit_frequency').value;
+  const dueDayLabel = document.getElementById('editDueDayLabel');
+  const dueDayHelp = document.getElementById('editDueDayHelp');
+  const dueDayInput = document.getElementById('edit_due_day');
+
+  if (frequency === 'WEEKLY' || frequency === 'BIWEEKLY') {
+    dueDayLabel.textContent = 'Day of Week *';
+    dueDayHelp.textContent = 'Day of week (0=Monday, 6=Sunday)';
+    dueDayInput.max = 6;
+  } else {
+    dueDayLabel.textContent = 'Due Day *';
+    dueDayHelp.textContent = 'Day of month (1-31) for monthly/quarterly/annual';
+    dueDayInput.max = 31;
+  }
+}
+
+// Edit payment - fetch details and open modal
+async function editPayment(paymentId) {
+  try {
+    // Fetch payment details
+    const response = await fetch(`/api/v1/recurring-payments/${paymentId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch payment details');
+    }
+
+    const payment = await response.json();
+
+    // Populate the edit form
+    document.getElementById('edit_payment_id').value = payment.id;
+    document.getElementById('edit_name').value = payment.name;
+    document.getElementById('edit_category_id').value = payment.category_id;
+    document.getElementById('edit_description').value = payment.description || '';
+    document.getElementById('edit_amount').value = payment.amount;
+    document.getElementById('edit_frequency').value = payment.frequency.toUpperCase();
+    document.getElementById('edit_due_day').value = payment.due_day;
+    document.getElementById('edit_end_date').value = payment.end_date || '';
+    document.getElementById('edit_remind_days_before').value = payment.remind_days_before;
+
+    // Update the due day label based on frequency
+    updateEditDueDayLabel();
+
+    // Show the modal
+    const editModal = new bootstrap.Modal(document.getElementById('editPaymentModal'));
+    editModal.show();
+  } catch (error) {
+    alert('Error loading payment details: ' + error.message);
+  }
+}
+
+// Submit edited payment
+async function submitEditPayment() {
+  const form = document.getElementById('editPaymentForm');
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  const paymentId = document.getElementById('edit_payment_id').value;
+  const data = {
+    name: document.getElementById('edit_name').value,
+    description: document.getElementById('edit_description').value || null,
+    amount: parseFloat(document.getElementById('edit_amount').value),
+    frequency: document.getElementById('edit_frequency').value,
+    due_day: parseInt(document.getElementById('edit_due_day').value),
+    end_date: document.getElementById('edit_end_date').value || null,
+    remind_days_before: parseInt(document.getElementById('edit_remind_days_before').value)
+  };
+
+  try {
+    const response = await fetch(`/api/v1/recurring-payments/${paymentId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      // Close modal
+      const editModal = bootstrap.Modal.getInstance(document.getElementById('editPaymentModal'));
+      editModal.hide();
+
+      // Show success message and reload
+      alert('Payment updated successfully!');
+      location.reload();
+    } else {
+      alert('Error: ' + (result.detail || 'Failed to update payment'));
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
 }
 
 // Set today as default start date

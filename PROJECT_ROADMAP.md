@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 1.0 (Production)
-**Last Updated:** November 17, 2025
+**Last Updated:** November 26, 2025
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -37,7 +37,7 @@ Budget Pulse is a comprehensive expense management application featuring AI-powe
 - **Testing:** 64 unit tests + 89 integration tests (100% pass rate), zero deprecation warnings
 - **Mobile Ready:** RESTful JSON APIs, JWT auth, CORS enabled
 - **Users:** Ready for production use (web + mobile) with intelligent insights
-- **Last Update:** November 24, 2025 - Phase 28: Budget Intelligence complete - 4 smart features added
+- **Last Update:** November 26, 2025 - Phase 29 & 30: Payment History, Analytics & Improvements complete
 
 ---
 
@@ -2899,7 +2899,180 @@ Implemented Budget Intelligence system with 4 core features using pattern analys
 
 ---
 
-### **Phase 29: Social & Collaboration** 👥
+### **Phase 29: Payment History & Auto-Linking** 📜
+**Priority:** HIGH
+**Status:** ✅ COMPLETE
+**Completed:** November 26, 2025
+**Actual Time:** 2 hours
+**Estimated Time:** 6-8 hours
+
+**Overview:**
+Implemented comprehensive payment history tracking system with AI-powered auto-linking suggestions for connecting expense entries to recurring payments.
+
+**✅ Completed Features:**
+
+1. **Payment Occurrence Tracking** ✅
+   - Tracks all payment occurrences with status (paid, late, skipped)
+   - Links expense entries to recurring payment occurrences
+   - Stores payment confirmation numbers and notes
+   - Tracks scheduled vs actual payment dates
+   - Route: `/intelligence/payment-history`
+
+2. **Payment Timeline View** ✅
+   - Visual timeline of all payment occurrences
+   - Color-coded status indicators (green=paid, yellow=late, gray=skipped)
+   - Shows linked expense entries
+   - Displays confirmation numbers and notes
+   - Last 12 months of payment history
+
+3. **Payment Statistics Dashboard** ✅
+   - Total payments count
+   - On-time payment rate and count
+   - Late payment rate and count
+   - Total amount spent
+   - Payment reliability metrics per bill
+
+4. **AI Auto-Linking Suggestions** ✅
+   - Analyzes expense entries to find potential matches
+   - Matches based on amount, date proximity, category, description
+   - Confidence scoring (0.0-1.0 scale)
+   - One-click accept/dismiss functionality
+   - Prevents duplicate linking suggestions
+
+5. **Manual Linking Support** ✅
+   - Link existing expense entries to payments
+   - Edit/update payment occurrences
+   - Add confirmation numbers and notes
+   - Mark payments as paid, late, or skipped
+
+**Implementation Details:**
+- Model: `app/models/payment_history.py` (PaymentOccurrence, LinkingSuggestion)
+- Service: `app/services/payment_history_service.py` (~400 lines)
+- API: `app/api/v1/payment_history.py` (10 endpoints)
+- Page: `app/templates/intelligence/payment_history.html` (286 lines)
+- Migration: Alembic migration for payment_history tables
+- Card Alignment: Fixed with flexbox layout (`d-flex flex-nowrap`)
+
+**Technical Approach:**
+- SQLAlchemy ORM with proper relationships
+- Fuzzy matching algorithm for auto-linking
+- Confidence scoring based on multiple factors
+- REST API for accept/dismiss suggestions
+- Real-time updates with page reload
+
+**Database Tables:**
+- `payment_occurrences` - Tracks individual payment instances
+- `linking_suggestions` - Stores AI-generated suggestions
+- Foreign keys to `recurring_payments` and `entries`
+
+---
+
+### **Phase 30: Payment Analytics & Dashboard Improvements** 📊
+**Priority:** HIGH
+**Status:** ✅ COMPLETE
+**Completed:** November 26, 2025
+**Actual Time:** 3 hours
+**Estimated Time:** 8-10 hours
+
+**Overview:**
+Comprehensive payment analytics visualization system with trend analysis, reliability metrics, and cost projections. Also includes dashboard routing fixes and UI improvements.
+
+**✅ Completed Features:**
+
+1. **Payment Trends Visualization** ✅
+   - Monthly payment trends chart (Chart.js)
+   - Total due vs total paid comparison
+   - Line chart with 3/6/12 month views
+   - Identifies payment gaps and overpayments
+   - Route: `/intelligence/payment-analytics`
+
+2. **Payment Reliability Metrics** ✅
+   - On-time payment rate percentage
+   - Late payment tracking
+   - Missed payment detection
+   - Average days late calculation
+   - Per-bill reliability breakdown
+
+3. **Cost Projection Dashboard** ✅
+   - Monthly cost projection from active payments
+   - Annual cost projection
+   - Breakdown by frequency (daily/weekly/monthly/quarterly/annually)
+   - Active payment count summary
+
+4. **Category Spending Breakdown** ✅
+   - Pie chart of spending by category
+   - Top 10 categories displayed
+   - Percentage breakdown
+   - Total spending calculation
+   - Period-based analysis (3/6/12 months or all time)
+
+5. **Recurring vs One-Time Expenses** ✅
+   - Compares recurring payment spending to one-time expenses
+   - Percentage breakdown chart
+   - Total spending analysis
+   - Linked entry detection to avoid double-counting
+
+6. **Edit Payment Modal** ✅
+   - Edit recurring payment details
+   - Update name, amount, currency, frequency
+   - Change due day and category
+   - Toggle active/inactive status
+   - Real-time updates with page reload
+
+7. **Historical Report Storage** ✅
+   - Stores generated reports in database
+   - JSON serialization of report data
+   - Tracks generation timestamp
+   - Preserves historical analytics snapshots
+   - Enables trend analysis over time
+
+8. **Intelligence Dashboard Routing Fix** ✅
+   - Added `/intelligence/dashboard` route alias
+   - Fixed 404 error for dashboard navigation
+   - Maintains single source of truth with route aliasing
+   - Consistent navigation across intelligence features
+
+9. **Card Alignment Improvements** ✅
+   - Fixed cards stacking vertically
+   - Implemented flexbox layout (`d-flex flex-nowrap`)
+   - Added horizontal scrolling for narrow screens
+   - Consistent card sizing with `flex-fill` and `min-width`
+   - Applied to payment-history and payment-analytics pages
+
+**Implementation Details:**
+- Service: `app/services/payment_analytics_service.py` (~366 lines)
+- API: Updated `app/api/v1/intelligence_pages.py` (payment_analytics_page endpoint)
+- Template: `app/templates/intelligence/payment_analytics.html` (~500 lines)
+- Charts: Chart.js for trends and category breakdown
+- Database: Fixed field name from `due_date` to `scheduled_date` (4 locations)
+- Dark Theme: Full CSS variable support for dark/light themes
+- Currency: User-selected currency formatting throughout
+
+**Technical Approach:**
+- Complex SQLAlchemy aggregation queries with grouping
+- Monthly trend calculation with date extraction
+- Payment reliability scoring per bill
+- Cost projection with frequency conversion
+- Chart.js responsive canvas charts
+- Bootstrap grid with responsive breakpoints
+- Flexbox for card alignment consistency
+
+**Bug Fixes:**
+- Fixed `PaymentOccurrence.due_date` → `scheduled_date` in analytics service
+- Fixed template field names in payment history (total_amount → total_amount_paid)
+- Fixed card alignment across multiple intelligence pages
+- Added dashboard route alias to prevent 404 errors
+
+**UI/UX Improvements:**
+- Consistent card layouts across all intelligence pages
+- Dark theme support with proper color variables
+- Period selector (3/6/12 months, all time)
+- Responsive charts that adapt to screen size
+- Color-coded metrics (green=good, yellow=warning, red=danger)
+
+---
+
+### **Phase 31: Social & Collaboration** 👥
 **Priority:** LOW
 **Status:** Not Started
 **Estimated Time:** 12-15 hours
@@ -2937,7 +3110,7 @@ Implemented Budget Intelligence system with 4 core features using pattern analys
 
 ---
 
-### **Phase 30: Third-Party Integrations** 🔌
+### **Phase 32: Third-Party Integrations** 🔌
 **Priority:** LOW
 **Status:** Not Started
 **Estimated Time:** 10-15 hours per integration
@@ -2981,7 +3154,7 @@ Implemented Budget Intelligence system with 4 core features using pattern analys
 
 ---
 
-### **Phase 31: Admin Panel, Documentation & User Feedback** 🛠️
+### **Phase 33: Admin Panel, Documentation & User Feedback** 🛠️
 **Priority:** MEDIUM
 **Status:** Not Started
 **Estimated Time:** 8-12 hours

@@ -61,8 +61,8 @@ class PaymentAnalyticsService:
                     total_paid += float(entry.amount)
 
                     # Calculate days late if applicable
-                    if occ.status == 'late' and entry.date and occ.due_date:
-                        days_late = (entry.date - occ.due_date).days
+                    if occ.status == 'late' and entry.date and occ.scheduled_date:
+                        days_late = (entry.date - occ.scheduled_date).days
                         if days_late > 0:
                             late_days_list.append(days_late)
 
@@ -95,28 +95,28 @@ class PaymentAnalyticsService:
 
         # Get occurrences grouped by month
         occurrences = self.db.query(
-            extract('year', PaymentOccurrence.due_date).label('year'),
-            extract('month', PaymentOccurrence.due_date).label('month'),
+            extract('year', PaymentOccurrence.scheduled_date).label('year'),
+            extract('month', PaymentOccurrence.scheduled_date).label('month'),
             func.count(PaymentOccurrence.id).label('count'),
             func.sum(RecurringPayment.amount).label('total_due')
         ).join(
             RecurringPayment
         ).filter(
             RecurringPayment.user_id == user_id,
-            PaymentOccurrence.due_date >= start_date
+            PaymentOccurrence.scheduled_date >= start_date
         ).group_by(
-            extract('year', PaymentOccurrence.due_date),
-            extract('month', PaymentOccurrence.due_date)
+            extract('year', PaymentOccurrence.scheduled_date),
+            extract('month', PaymentOccurrence.scheduled_date)
         ).order_by(
-            extract('year', PaymentOccurrence.due_date),
-            extract('month', PaymentOccurrence.due_date)
+            extract('year', PaymentOccurrence.scheduled_date),
+            extract('month', PaymentOccurrence.scheduled_date)
         ).all()
 
         # Calculate actual paid amounts by month
         paid_by_month = {}
         for occ in self.db.query(PaymentOccurrence).join(RecurringPayment).filter(
             RecurringPayment.user_id == user_id,
-            PaymentOccurrence.due_date >= start_date,
+            PaymentOccurrence.scheduled_date >= start_date,
             PaymentOccurrence.linked_entry_id.isnot(None)
         ).all():
             entry = self.db.query(Entry).filter(Entry.id == occ.linked_entry_id).first()
@@ -167,8 +167,8 @@ class PaymentAnalyticsService:
             RecurringPayment
         ).filter(
             RecurringPayment.user_id == user_id,
-            PaymentOccurrence.due_date >= start_date,
-            PaymentOccurrence.due_date <= end_date,
+            PaymentOccurrence.scheduled_date >= start_date,
+            PaymentOccurrence.scheduled_date <= end_date,
             PaymentOccurrence.linked_entry_id.isnot(None)
         ).all()
 
@@ -321,8 +321,8 @@ class PaymentAnalyticsService:
             RecurringPayment
         ).filter(
             RecurringPayment.user_id == user_id,
-            PaymentOccurrence.due_date >= start_date,
-            PaymentOccurrence.due_date <= end_date,
+            PaymentOccurrence.scheduled_date >= start_date,
+            PaymentOccurrence.scheduled_date <= end_date,
             PaymentOccurrence.linked_entry_id.isnot(None)
         ).all()
 

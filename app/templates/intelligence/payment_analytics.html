@@ -3,6 +3,290 @@
 {% block title %}Payment Analytics - Expense Manager{% endblock %}
 
 {% block content %}
+<style>
+  /* Dark theme support */
+  .card {
+    background-color: var(--panel);
+    color: var(--text);
+  }
+
+  .card-header {
+    background-color: var(--surface);
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table {
+    color: var(--text);
+  }
+
+  .table tbody tr {
+    background-color: transparent !important;
+  }
+
+  .table tbody td {
+    background-color: transparent !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  .table thead th {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text);
+  }
+
+  .text-muted {
+    color: var(--text-secondary) !important;
+  }
+
+  .alert {
+    background-color: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  /* Analytics cards */
+  .analytics-cards-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  @media (max-width: 992px) {
+    .analytics-cards-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 576px) {
+    .analytics-cards-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .analytics-card {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .analytics-card .card-icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+  }
+
+  .analytics-card .card-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+  }
+
+  .analytics-card .card-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--text);
+  }
+
+  .analytics-card .card-detail {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .success-card .card-icon { color: #28a745; }
+  .warning-card .card-icon { color: #ffc107; }
+  .danger-card .card-icon { color: #dc3545; }
+  .info-card .card-icon { color: #17a2b8; }
+
+  /* Projection items */
+  .projection-item {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: var(--surface);
+    border-radius: 0.5rem;
+  }
+
+  .projection-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .projection-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text);
+  }
+
+  .projection-value.primary { color: #0d6efd; }
+  .projection-value.secondary { color: #6c757d; }
+
+  /* Frequency breakdown */
+  .frequency-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .frequency-label {
+    color: var(--text);
+  }
+
+  .frequency-value {
+    font-weight: bold;
+    color: var(--text);
+  }
+
+  /* Spending comparison */
+  .spending-comparison {
+    padding: 1rem 0;
+  }
+
+  .comparison-item {
+    margin-bottom: 2rem;
+  }
+
+  .comparison-header {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .comparison-amount {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: var(--text);
+    margin-bottom: 0.25rem;
+  }
+
+  .comparison-percentage {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+  }
+
+  .comparison-bar {
+    height: 10px;
+    background-color: var(--surface);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+
+  .recurring-fill {
+    background-color: #0d6efd;
+  }
+
+  .onetime-fill {
+    background-color: #6c757d;
+  }
+
+  .comparison-total {
+    padding-top: 1rem;
+    border-top: 2px solid var(--border);
+  }
+
+  .total-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .total-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--text);
+  }
+
+  /* Category list */
+  .category-list {
+    margin-top: 1rem;
+  }
+
+  .category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+  }
+
+  .category-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .category-name {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .category-stats {
+    text-align: right;
+  }
+
+  .category-amount {
+    font-weight: bold;
+    color: var(--text);
+  }
+
+  .category-percentage {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  .category-bar {
+    height: 6px;
+    background-color: var(--surface);
+    border-radius: 3px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+  }
+
+  .category-bar-fill {
+    height: 100%;
+    background-color: #0d6efd;
+    transition: width 0.3s ease;
+  }
+
+  /* Reliability badge */
+  .reliability-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+
+  .reliability-badge.excellent {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+  }
+
+  .reliability-badge.good {
+    background-color: rgba(23, 162, 184, 0.2);
+    color: #17a2b8;
+  }
+
+  .reliability-badge.fair {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+  }
+
+  .reliability-badge.poor {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+  }
+</style>
+
 <div class="container-fluid py-4">
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
