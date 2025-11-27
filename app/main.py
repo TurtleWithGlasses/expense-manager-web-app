@@ -137,18 +137,37 @@ async def startup_event():
                         # Clear the orphaned revision
                         connection.execute(text("DELETE FROM alembic_version"))
                         connection.commit()
+                        logger.info("Cleared orphaned revision from alembic_version")
                         # Stamp to the valid merge migration
                         command.stamp(alembic_cfg, "766b569daa8d")
                         logger.info("Successfully stamped database to 766b569daa8d")
                         current_rev = "766b569daa8d"
                     except Exception as stamp_error:
-                        logger.error(f"Failed to stamp database: {stamp_error}")
+                        logger.error(f"Failed to stamp database: {stamp_error}", exc_info=True)
                         # Fall through to schema creation
 
                 # Ensure all tables and columns exist using SQLAlchemy models
                 logger.info("Ensuring database schema is up to date...")
-                Base.metadata.create_all(bind=engine)
-                logger.info("Database schema verified/updated successfully")
+                try:
+                    Base.metadata.create_all(bind=engine)
+                    logger.info("Database schema verified/updated successfully")
+
+                    # Verify critical columns exist
+                    from sqlalchemy import inspect
+                    inspector = inspect(engine)
+                    users_columns = [col['name'] for col in inspector.get_columns('users')]
+                    logger.info(f"Users table columns: {users_columns}")
+                    if 'is_admin' in users_columns:
+                        logger.info("✓ is_admin column exists in users table")
+                    else:
+                        logger.error("✗ is_admin column MISSING in users table!")
+
+                    if 'user_feedback' in inspector.get_table_names():
+                        logger.info("✓ user_feedback table exists")
+                    else:
+                        logger.error("✗ user_feedback table MISSING!")
+                except Exception as schema_error:
+                    logger.error(f"Schema creation failed: {schema_error}", exc_info=True)
 
         except Exception as migration_error:
             logger.warning(f"Migration check/upgrade failed: {migration_error}")
