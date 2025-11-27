@@ -157,10 +157,25 @@ async def startup_event():
                     inspector = inspect(engine)
                     users_columns = [col['name'] for col in inspector.get_columns('users')]
                     logger.info(f"Users table columns: {users_columns}")
-                    if 'is_admin' in users_columns:
-                        logger.info("✓ is_admin column exists in users table")
+
+                    # Add is_admin column if missing
+                    if 'is_admin' not in users_columns:
+                        logger.warning("✗ is_admin column MISSING in users table - adding it now")
+                        try:
+                            with engine.begin() as conn:
+                                # Add the column
+                                conn.execute(text("ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT FALSE"))
+                                logger.info("Added is_admin column to users table")
+
+                                # Set admin user
+                                conn.execute(text("UPDATE users SET is_admin = TRUE WHERE email = 'mhmtsoylu1928@gmail.com'"))
+                                logger.info("Set mhmtsoylu1928@gmail.com as admin")
+
+                            logger.info("✓ is_admin column added and admin user set successfully")
+                        except Exception as alter_error:
+                            logger.error(f"Failed to add is_admin column: {alter_error}", exc_info=True)
                     else:
-                        logger.error("✗ is_admin column MISSING in users table!")
+                        logger.info("✓ is_admin column exists in users table")
 
                     if 'user_feedback' in inspector.get_table_names():
                         logger.info("✓ user_feedback table exists")
