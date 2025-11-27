@@ -50,7 +50,10 @@
       "Bash(.venv/Scripts/alembic.exe history:*)",
       "Bash(.venv/Scripts/alembic.exe current:*)",
       "Bash(timeout 10 .venv/Scripts/python.exe:*)",
-      "Bash(timeout 5 .venv/Scripts/python.exe:*)"
+      "Bash(timeout 5 .venv/Scripts/python.exe:*)",
+      "Bash(.venv/Scripts/alembic.exe heads)",
+      "Bash(.venv/Scripts/alembic.exe merge:*)",
+      "Bash(railway status:*)"
     ],
     "deny": [],
     "ask": []

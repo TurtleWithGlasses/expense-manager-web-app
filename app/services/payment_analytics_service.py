@@ -18,6 +18,32 @@ class PaymentAnalyticsService:
     def __init__(self, db: Session):
         self.db = db
 
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _derive_occurrence_status(occ: PaymentOccurrence) -> str:
+        """
+        Normalize occurrence status based on boolean flags present on the model.
+
+        Returns one of: on_time, late, missed, pending
+        """
+        if occ.is_paid:
+            if occ.is_late or (
+                occ.actual_date and occ.scheduled_date and occ.actual_date > occ.scheduled_date
+            ):
+                return "late"
+            return "on_time"
+
+        if occ.is_skipped:
+            return "missed"
+
+        # If scheduled date already passed and it's not paid/skipped, treat as missed
+        if occ.scheduled_date and occ.scheduled_date < date.today():
+            return "missed"
+
+        return "pending"
+
     def get_payment_statistics(self, user_id: int) -> Dict[str, Any]:
         """
         Get overall payment statistics including reliability metrics.
@@ -46,22 +72,24 @@ class PaymentAnalyticsService:
             }
 
         total = len(occurrences)
-        on_time = sum(1 for occ in occurrences if occ.status == 'on_time')
-        late = sum(1 for occ in occurrences if occ.status == 'late')
-        missed = sum(1 for occ in occurrences if occ.status == 'missed')
+        status_counts = {"on_time": 0, "late": 0, "missed": 0}
 
         # Calculate total paid (sum of all linked entries)
         total_paid = 0.0
         late_days_list = []
 
         for occ in occurrences:
+            status = self._derive_occurrence_status(occ)
+            if status in status_counts:
+                status_counts[status] += 1
+
             if occ.linked_entry_id:
                 entry = self.db.query(Entry).filter(Entry.id == occ.linked_entry_id).first()
                 if entry:
                     total_paid += float(entry.amount)
 
                     # Calculate days late if applicable
-                    if occ.status == 'late' and entry.date and occ.scheduled_date:
+                    if status == 'late' and entry.date and occ.scheduled_date:
                         days_late = (entry.date - occ.scheduled_date).days
                         if days_late > 0:
                             late_days_list.append(days_late)
@@ -70,12 +98,12 @@ class PaymentAnalyticsService:
 
         return {
             'total_occurrences': total,
-            'on_time_count': on_time,
-            'late_count': late,
-            'missed_count': missed,
-            'on_time_rate': (on_time / total * 100) if total > 0 else 0.0,
-            'late_rate': (late / total * 100) if total > 0 else 0.0,
-            'missed_rate': (missed / total * 100) if total > 0 else 0.0,
+            'on_time_count': status_counts["on_time"],
+            'late_count': status_counts["late"],
+            'missed_count': status_counts["missed"],
+            'on_time_rate': (status_counts["on_time"] / total * 100) if total > 0 else 0.0,
+            'late_rate': (status_counts["late"] / total * 100) if total > 0 else 0.0,
+            'missed_rate': (status_counts["missed"] / total * 100) if total > 0 else 0.0,
             'total_paid': total_paid,
             'average_days_late': average_days_late
         }
@@ -226,9 +254,12 @@ class PaymentAnalyticsService:
                 continue
 
             total = len(occurrences)
-            on_time = sum(1 for occ in occurrences if occ.status == 'on_time')
-            late = sum(1 for occ in occurrences if occ.status == 'late')
-            missed = sum(1 for occ in occurrences if occ.status == 'missed')
+            status_counts = {"on_time": 0, "late": 0, "missed": 0}
+
+            for occ in occurrences:
+                status = self._derive_occurrence_status(occ)
+                if status in status_counts:
+                    status_counts[status] += 1
 
             results.append({
                 'id': payment.id,
@@ -238,10 +269,10 @@ class PaymentAnalyticsService:
                 'category_name': payment.category.name if payment.category else 'Uncategorized',
                 'category_icon': payment.category.icon if payment.category else '📄',
                 'total_occurrences': total,
-                'on_time_count': on_time,
-                'late_count': late,
-                'missed_count': missed,
-                'on_time_rate': (on_time / total * 100) if total > 0 else 0.0,
+                'on_time_count': status_counts["on_time"],
+                'late_count': status_counts["late"],
+                'missed_count': status_counts["missed"],
+                'on_time_rate': (status_counts["on_time"] / total * 100) if total > 0 else 0.0,
                 'is_active': payment.is_active
             })
 
