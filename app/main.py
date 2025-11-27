@@ -117,16 +117,33 @@ async def startup_event():
             with engine.connect() as connection:
                 context = MigrationContext.configure(connection)
                 current_rev = context.get_current_revision()
-                head_rev = script.get_current_head()
+
+                # Get all heads (may be multiple if there are branches)
+                heads = script.get_heads()
+
+                if len(heads) > 1:
+                    logger.warning(f"Multiple migration heads detected: {heads}")
+                    logger.info("This indicates branching migrations that need to be merged")
+                    head_rev = heads[0]  # Use first head for comparison
+                else:
+                    head_rev = script.get_current_head()
 
                 if current_rev == head_rev:
                     logger.info(f"Database already at latest migration ({current_rev})")
+                elif current_rev in heads:
+                    logger.info(f"Database at one of the heads ({current_rev}), checking for merges...")
+                    # Try to upgrade anyway in case there's a merge migration
+                    try:
+                        command.upgrade(alembic_cfg, "heads")
+                        logger.info("Database migrations applied successfully")
+                    except Exception as e:
+                        logger.info(f"No additional migrations needed: {e}")
                 else:
                     logger.info(f"Database migration needed - Current: {current_rev}, Target: {head_rev}")
 
-                    # Try to upgrade
+                    # Try to upgrade to all heads (handles branches and merges)
                     try:
-                        command.upgrade(alembic_cfg, "head")
+                        command.upgrade(alembic_cfg, "heads")
                         logger.info("Database migrations applied successfully")
                     except ProgrammingError as pe:
                         # Check if it's a DuplicateColumn error
@@ -136,7 +153,7 @@ async def startup_event():
                             logger.info(f"Stamping database to latest version: {head_rev}")
 
                             # Stamp the database to the head revision without running migrations
-                            command.stamp(alembic_cfg, "head")
+                            command.stamp(alembic_cfg, "heads")
                             logger.info(f"Database stamped to {head_rev}")
                         else:
                             # Re-raise if it's a different error
