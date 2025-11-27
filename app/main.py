@@ -133,7 +133,6 @@ async def startup_event():
                     logger.warning(f"Database is at orphaned revision '{current_rev}' which no longer exists in migration files")
                     logger.info("Fixing: Stamping database to valid merge migration revision '766b569daa8d'")
                     try:
-                        from sqlalchemy import text
                         # Clear the orphaned revision
                         connection.execute(text("DELETE FROM alembic_version"))
                         connection.commit()
