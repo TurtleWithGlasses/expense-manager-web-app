@@ -1,7 +1,7 @@
 """add_is_admin_field_to_users
 
 Revision ID: 148457af5653
-Revises: ce6391aadad7
+Revises: 91bdbf9e0309
 Create Date: 2025-11-27 16:18:23.149830
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '148457af5653'
-down_revision = 'ce6391aadad7'
+down_revision = '91bdbf9e0309'
 branch_labels = None
 depends_on = None
 
