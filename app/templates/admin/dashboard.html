@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Admin Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">Admin Dashboard</h1>
+            <p class="text-muted">System overview and statistics</p>
+        </div>
+        <div>
+            <a href="/admin/users" class="btn btn-primary me-2">
+                <i class="bi bi-people"></i> Manage Users
+            </a>
+            <a href="/feedback/admin" class="btn btn-outline-primary">
+                <i class="bi bi-chat-dots"></i> Feedback
+            </a>
+        </div>
+    </div>
+
+    <!-- User Statistics Cards -->
+    <div class="d-flex flex-nowrap gap-3 mb-4" style="overflow-x: auto;">
+        <div class="flex-fill" style="min-width: 200px;">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people fs-1 text-primary mb-2"></i>
+                    <h3 class="mb-0">{{ stats.users.total }}</h3>
+                    <p class="text-muted mb-0">Total Users</p>
+                    <small class="text-success">{{ stats.users.verified }} verified</small>
+                </div>
+            </div>
+        </div>
+        <div class="flex-fill" style="min-width: 200px;">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-plus fs-1 text-success mb-2"></i>
+                    <h3 class="mb-0">{{ stats.users.registrations_today }}</h3>
+                    <p class="text-muted mb-0">Today</p>
+                    <small class="text-muted">{{ stats.users.registrations_week }} this week</small>
+                </div>
+            </div>
+        </div>
+        <div class="flex-fill" style="min-width: 200px;">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-journal-text fs-1 text-info mb-2"></i>
+                    <h3 class="mb-0">{{ stats.content.total_entries }}</h3>
+                    <p class="text-muted mb-0">Total Entries</p>
+                    <small class="text-muted">{{ stats.content.entries_this_month }} this month</small>
+                </div>
+            </div>
+        </div>
+        <div class="flex-fill" style="min-width: 200px;">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-robot fs-1 text-warning mb-2"></i>
+                    <h3 class="mb-0">{{ stats.ai.models_trained }}</h3>
+                    <p class="text-muted mb-0">AI Models</p>
+                    <small class="text-muted">{{ stats.reports.total_generated }} reports</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Health & Content Statistics -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">System Health</h5>
+                    <span class="badge bg-success">{{ health.status }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Recent Activity (Last Hour)</span>
+                            <span class="badge bg-info">Active</span>
+                        </div>
+                        <ul class="list-unstyled ms-3">
+                            <li><i class="bi bi-journal-text text-primary"></i> {{ health.recent_activity.entries_last_hour }} entries created</li>
+                            <li><i class="bi bi-person-plus text-success"></i> {{ health.recent_activity.registrations_last_hour }} new registrations</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h6 class="mb-2">Database Records</h6>
+                        <ul class="list-unstyled ms-3 small">
+                            <li>Users: {{ health.database.table_sizes.users }}</li>
+                            <li>Entries: {{ health.database.table_sizes.entries }}</li>
+                            <li>Categories: {{ health.database.table_sizes.categories }}</li>
+                            <li>AI Models: {{ health.database.table_sizes.ai_models }}</li>
+                            <li>Goals: {{ health.database.table_sizes.financial_goals }}</li>
+                            <li>Recurring Payments: {{ health.database.table_sizes.recurring_payments }}</li>
+                        </ul>
+                        <div class="border-top pt-2 mt-2">
+                            <strong>Total Records:</strong> {{ health.database.total_records }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Content Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Total Entries</span>
+                            <strong>{{ stats.content.total_entries }}</strong>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Total Categories</span>
+                            <strong>{{ stats.content.total_categories }}</strong>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ (stats.content.total_categories / stats.content.total_entries * 100) if stats.content.total_entries > 0 else 0 }}%" aria-valuenow="{{ stats.content.total_categories }}" aria-valuemin="0" aria-valuemax="{{ stats.content.total_entries }}"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Financial Goals</span>
+                            <strong>{{ stats.content.total_goals }}</strong>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ (stats.content.total_goals / stats.users.total * 100) if stats.users.total > 0 else 0 }}%" aria-valuenow="{{ stats.content.total_goals }}" aria-valuemin="0" aria-valuemax="{{ stats.users.total }}"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Recurring Payments</span>
+                            <strong>{{ stats.content.total_recurring_payments }}</strong>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: {{ (stats.content.total_recurring_payments / stats.users.total * 100) if stats.users.total > 0 else 0 }}%" aria-valuenow="{{ stats.content.total_recurring_payments }}" aria-valuemin="0" aria-valuemax="{{ stats.users.total }}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Activity Chart (Last 30 Days) -->
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">User Registrations (Last 30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="d-flex flex-nowrap gap-3 mt-4" style="overflow-x: auto;">
+        <div class="flex-fill" style="min-width: 250px;">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-people fs-1 text-primary mb-3"></i>
+                    <h5>User Management</h5>
+                    <p class="text-muted">View and manage all user accounts</p>
+                    <a href="/admin/users" class="btn btn-primary">Manage Users</a>
+                </div>
+            </div>
+        </div>
+        <div class="flex-fill" style="min-width: 250px;">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-chat-dots fs-1 text-success mb-3"></i>
+                    <h5>Feedback</h5>
+                    <p class="text-muted">View and respond to user feedback</p>
+                    <a href="/feedback/admin" class="btn btn-success">View Feedback</a>
+                </div>
+            </div>
+        </div>
+        <div class="flex-fill" style="min-width: 250px;">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-gear fs-1 text-info mb-3"></i>
+                    <h5>System Health</h5>
+                    <p class="text-muted">Monitor system performance</p>
+                    <button class="btn btn-info" onclick="refreshHealth()">Refresh Status</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// User activity chart
+const activityData = {{ activity.daily_activity | tojson }};
+const labels = activityData.map(d => d.date);
+const data = activityData.map(d => d.registrations);
+
+const ctx = document.getElementById('activityChart');
+const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'New Registrations',
+            data: data,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: true,
+                labels: {
+                    color: isDarkTheme ? '#e5e7eb' : '#1f2937'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1,
+                    color: isDarkTheme ? '#9ca3af' : '#6b7280'
+                },
+                grid: {
+                    color: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: isDarkTheme ? '#9ca3af' : '#6b7280'
+                },
+                grid: {
+                    color: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                }
+            }
+        }
+    }
+});
+
+function refreshHealth() {
+    window.location.reload();
+}
+</script>
+
+<style>
+/* Admin Dashboard Styles */
+.card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.badge {
+    padding: 0.35rem 0.65rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.progress {
+    background-color: var(--border);
+}
+
+/* Dark theme text colors */
+[data-theme="dark"] {
+    color: #e5e7eb;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+    color: #f3f4f6;
+}
+
+[data-theme="dark"] .text-muted {
+    color: #9ca3af !important;
+}
+
+[data-theme="dark"] .card {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+/* Light theme text colors */
+[data-theme="light"] {
+    color: #1f2937;
+}
+
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6 {
+    color: #111827;
+}
+
+[data-theme="light"] .text-muted {
+    color: #6b7280 !important;
+}
+
+[data-theme="light"] .card {
+    background: #ffffff;
+    border-color: #e5e7eb;
+}
+</style>
+{% endblock %}

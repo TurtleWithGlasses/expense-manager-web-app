@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">User Management</h1>
+            <p class="text-muted">View and manage all user accounts</p>
+        </div>
+        <a href="/admin" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" action="/admin/users" class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Search by email or name..." value="{{ search }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Verification Status</label>
+                    <select name="filter_verified" class="form-select">
+                        <option value="">All Users</option>
+                        <option value="true" {% if filter_verified == True %}selected{% endif %}>Verified Only</option>
+                        <option value="false" {% if filter_verified == False %}selected{% endif %}>Unverified Only</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Users ({{ pagination.total_count }} total)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Stats</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>{{ u.id }}</td>
+                            <td>
+                                {{ u.email }}
+                                {% if u.is_admin %}
+                                <span class="badge bg-danger ms-1">Admin</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ u.full_name or '-' }}</td>
+                            <td>
+                                {% if u.is_verified %}
+                                <span class="badge bg-success">Verified</span>
+                                {% else %}
+                                <span class="badge bg-warning">Unverified</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ u.created_at[:10] if u.created_at else '-' }}</small>
+                            </td>
+                            <td>
+                                <small>
+                                    {{ u.stats.entries }} entries<br>
+                                    {{ u.stats.categories }} categories
+                                </small>
+                            </td>
+                            <td>
+                                <a href="/admin/users/{{ u.id }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if not u.is_admin %}
+                                <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete({{ u.id }}, '{{ u.email }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination.total_pages > 1 %}
+        <div class="card-footer">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="?page={{ pagination.page - 1 }}{% if search %}&search={{ search }}{% endif %}{% if filter_verified is not none %}&filter_verified={{ filter_verified }}{% endif %}">Previous</a>
+                    </li>
+
+                    {% for p in range(1, pagination.total_pages + 1) %}
+                    {% if p == pagination.page %}
+                    <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                    {% elif p <= 3 or p > pagination.total_pages - 3 or (p >= pagination.page - 1 and p <= pagination.page + 1) %}
+                    <li class="page-item"><a class="page-link" href="?page={{ p }}{% if search %}&search={{ search }}{% endif %}{% if filter_verified is not none %}&filter_verified={{ filter_verified }}{% endif %}">{{ p }}</a></li>
+                    {% elif p == 4 or p == pagination.total_pages - 3 %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    {% endfor %}
+
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="?page={{ pagination.page + 1 }}{% if search %}&search={{ search }}{% endif %}{% if filter_verified is not none %}&filter_verified={{ filter_verified }}{% endif %}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function confirmDelete(userId, email) {
+    if (confirm(`Are you sure you want to delete user ${email}? This action cannot be undone and will delete all their data.`)) {
+        fetch(`/admin/users/${userId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('User deleted successfully');
+                window.location.reload();
+            } else {
+                alert('Error deleting user: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error deleting user');
+            console.error(error);
+        });
+    }
+}
+</script>
+
+<style>
+/* Admin Users Table Styles */
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 1rem;
+}
+
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border);
+}
+
+.table-hover tbody tr:hover {
+    background: var(--surface);
+}
+
+.pagination .page-link {
+    background: var(--panel);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+.pagination .page-link:hover {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+.pagination .page-item.active .page-link {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text-secondary);
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+    color: #e5e7eb;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+    color: #f3f4f6;
+}
+
+[data-theme="dark"] .text-muted {
+    color: #9ca3af !important;
+}
+
+[data-theme="dark"] .card {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background: #1f2937;
+    border-color: #374151;
+    color: #e5e7eb;
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background: #1f2937;
+    border-color: #3b82f6;
+    color: #e5e7eb;
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: #6b7280;
+}
+
+[data-theme="dark"] .form-label {
+    color: #d1d5db;
+}
+
+[data-theme="dark"] .table {
+    color: #e5e7eb;
+}
+
+[data-theme="dark"] .table thead th {
+    background: #1f2937;
+    color: #f3f4f6;
+    border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .table tbody td {
+    background: #1f2937;
+    color: #e5e7eb;
+    border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .table tbody tr {
+    background: #1f2937;
+}
+
+[data-theme="dark"] .table-hover tbody tr:hover {
+    background: #374151 !important;
+}
+
+[data-theme="dark"] .table-hover tbody tr:hover td {
+    background: #374151;
+}
+
+/* Light theme */
+[data-theme="light"] {
+    color: #1f2937;
+}
+
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6 {
+    color: #111827;
+}
+
+[data-theme="light"] .text-muted {
+    color: #6b7280 !important;
+}
+
+[data-theme="light"] .card {
+    background: #ffffff;
+    border-color: #e5e7eb;
+}
+
+[data-theme="light"] .form-control,
+[data-theme="light"] .form-select {
+    background: #ffffff;
+    border-color: #d1d5db;
+    color: #1f2937;
+}
+
+[data-theme="light"] .form-control:focus,
+[data-theme="light"] .form-select:focus {
+    background: #ffffff;
+    border-color: #3b82f6;
+    color: #1f2937;
+}
+
+[data-theme="light"] .form-control::placeholder {
+    color: #9ca3af;
+}
+
+[data-theme="light"] .form-label {
+    color: #374151;
+}
+
+[data-theme="light"] .table {
+    color: #1f2937;
+}
+
+[data-theme="light"] .table thead th {
+    background: #f9fafb;
+    color: #111827;
+    border-bottom-color: #e5e7eb;
+}
+
+[data-theme="light"] .table tbody td {
+    background: #ffffff;
+    color: #1f2937;
+    border-bottom-color: #e5e7eb;
+}
+
+[data-theme="light"] .table tbody tr {
+    background: #ffffff;
+}
+
+[data-theme="light"] .table-hover tbody tr:hover {
+    background: #f9fafb !important;
+}
+
+[data-theme="light"] .table-hover tbody tr:hover td {
+    background: #f9fafb;
+}
+</style>
+{% endblock %}

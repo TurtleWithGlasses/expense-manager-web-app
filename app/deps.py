@@ -100,3 +100,26 @@ def optional_user_jwt(
         return current_user_jwt(credentials, db)
     except HTTPException:
         return None
+
+def admin_user(request: Request, db: Session = Depends(get_db)):
+    """
+    Get current authenticated admin user.
+
+    Requires:
+    - User must be authenticated
+    - User must have is_admin = True
+    - Only mhmtsoylu1928@gmail.com is admin
+
+    Raises:
+    - 401 if not authenticated
+    - 403 if not admin
+    """
+    user = current_user(request, db)
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin privileges required"
+        )
+
+    return user

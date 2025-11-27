@@ -16,6 +16,9 @@ class User(Base):
     verification_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
     verification_token_expires: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
+    # Admin privileges - Phase 33
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+
     # Password reset fields
     password_reset_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
     password_reset_expires: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
