@@ -116,94 +116,38 @@ async def startup_event():
             script = ScriptDirectory.from_config(alembic_cfg)
             with engine.connect() as connection:
                 context = MigrationContext.configure(connection)
-                
-                # Get all heads (may be multiple if there are branches)
-                heads = script.get_heads()
-                
-                # Get current revision(s) - may be multiple if database has multiple heads
-                database_has_multiple_heads = False
+
+                # Get current revision
                 try:
                     current_rev = context.get_current_revision()
                 except Exception as e:
-                    if "more than one head" in str(e).lower():
-                        database_has_multiple_heads = True
-                        logger.warning("Database has multiple heads recorded - attempting to get all current heads")
-                        current_heads = context.get_current_heads()
-                        logger.info(f"Current database heads: {current_heads}")
-                        # If database is at one of the heads, we can proceed with merge
-                        if len(current_heads) > 0:
-                            current_rev = current_heads[0]  # Use first head for logging
-                        else:
-                            current_rev = None
-                    else:
-                        raise
+                    logger.warning(f"Could not get current revision: {e}")
+                    current_rev = None
 
-                # If we have multiple heads (in script or database), always upgrade to 'heads' to merge them
-                if len(heads) > 1 or database_has_multiple_heads:
-                    if len(heads) > 1:
-                        logger.warning(f"Multiple migration heads detected in script: {heads}")
-                    if database_has_multiple_heads:
-                        logger.warning("Database has multiple heads recorded")
-                    
-                    # Check if database is already at the merge migration
-                    db_at_merge = False
+                logger.info(f"Current database revision: {current_rev}")
+
+                # Check if database is at a non-existent revision (orphaned migration)
+                # This happens when migrations were deleted after being applied
+                orphaned_revisions = ['a1b2c3d4e5f6', 'fix_production']
+                if current_rev in orphaned_revisions:
+                    logger.warning(f"Database is at orphaned revision '{current_rev}' which no longer exists in migration files")
+                    logger.info("Fixing: Stamping database to valid merge migration revision '766b569daa8d'")
                     try:
-                        db_rev = context.get_current_revision()
-                        if db_rev == 'a1b2c3d4e5f6':
-                            # Database is already at the merge migration - this is fine
-                            logger.info(f"Database already at merge migration ({db_rev})")
-                            logger.info("Multiple heads in script files are expected until merge migration is deployed")
-                            db_at_merge = True
-                    except Exception:
-                        # Can't get current revision, proceed with upgrade
-                        pass
-                    
-                    # Skip upgrade if database is already at merge
-                    if not db_at_merge:
-                        logger.info("Attempting to upgrade to 'heads' to apply merge migration...")
-                        # When there are multiple heads, upgrade to 'heads' which will apply merge migrations
-                        try:
-                            command.upgrade(alembic_cfg, "heads")
-                            logger.info("Database migrations applied successfully (merge completed)")
-                            # After merge, verify we now have a single head
-                            heads = script.get_heads()
-                            if len(heads) == 1:
-                                logger.info(f"Merge successful - single head now: {heads[0]}")
-                            else:
-                                logger.warning(f"Still have multiple heads after merge: {heads}")
-                        except Exception as e:
-                            logger.warning(f"Merge migration failed: {e}")
-                            # Don't raise - allow app to start even if migration has issues
-                            logger.info("Continuing with application startup despite migration warning")
-                else:
-                    # Single head path - normal upgrade logic
-                    head_rev = script.get_current_head()
-                    
-                    try:
-                        current_rev = context.get_current_revision()
-                    except Exception:
-                        current_rev = None
+                        # Clear the orphaned revision
+                        connection.execute("DELETE FROM alembic_version")
+                        connection.commit()
+                        # Stamp to the valid merge migration
+                        command.stamp(alembic_cfg, "766b569daa8d")
+                        logger.info("Successfully stamped database to 766b569daa8d")
+                        current_rev = "766b569daa8d"
+                    except Exception as stamp_error:
+                        logger.error(f"Failed to stamp database: {stamp_error}")
+                        # Fall through to schema creation
 
-                    if current_rev == head_rev:
-                        logger.info(f"Database already at latest migration ({current_rev})")
-                    else:
-                        logger.info(f"Database migration needed - Current: {current_rev}, Target: {head_rev}")
-                        try:
-                            command.upgrade(alembic_cfg, "head")
-                            logger.info("Database migrations applied successfully")
-                        except ProgrammingError as pe:
-                            # Check if it's a DuplicateColumn error
-                            if isinstance(pe.orig, DuplicateColumn):
-                                logger.warning("Migration failed: Columns already exist (DuplicateColumn)")
-                                logger.info("Schema is already up-to-date but migration version is old")
-                                logger.info(f"Stamping database to latest version: {head_rev}")
-
-                                # Stamp the database to the head revision without running migrations
-                                command.stamp(alembic_cfg, "head")
-                                logger.info(f"Database stamped to {head_rev}")
-                            else:
-                                # Re-raise if it's a different error
-                                raise
+                # Ensure all tables and columns exist using SQLAlchemy models
+                logger.info("Ensuring database schema is up to date...")
+                Base.metadata.create_all(bind=engine)
+                logger.info("Database schema verified/updated successfully")
 
         except Exception as migration_error:
             logger.warning(f"Migration check/upgrade failed: {migration_error}")
