@@ -463,17 +463,249 @@
               </h2>
               <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                 <div class="accordion-body">
-                  Voice commands require a modern browser (Chrome, Edge, Opera, or Safari) and microphone access. Check that:
-                  <ul class="mb-0 mt-2">
-                    <li>Your browser supports Web Speech API (Chrome, Edge, Opera, Safari)</li>
-                    <li>You've granted microphone permissions</li>
-                    <li>Your microphone is working properly</li>
-                    <li>You're in a quiet environment</li>
-                  </ul>
-                  If it still doesn't work, you can always use the manual entry forms.
+                  See the detailed troubleshooting guide below for step-by-step diagnostics.
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Voice Commands Troubleshooting -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h4 class="card-title">
+            <i class="bi bi-wrench"></i> Voice Commands Troubleshooting Guide
+          </h4>
+          <p>If voice commands aren't working, follow these steps to diagnose the issue:</p>
+
+          <div class="alert alert-info">
+            <strong>💡 Quick Tip:</strong> When you open the voice modal, check the <strong>Debug Status</strong> panel at the top - it shows real-time information about what's happening. Also open your browser console (press <kbd>F12</kbd>) to see detailed logs.
+          </div>
+
+          <h5 class="mt-4">Step 1: Check Browser Support</h5>
+          <div class="mb-3">
+            <p><strong>Supported Browsers:</strong></p>
+            <ul>
+              <li>✅ <strong>Google Chrome</strong> (recommended)</li>
+              <li>✅ <strong>Microsoft Edge</strong></li>
+              <li>✅ <strong>Opera</strong></li>
+              <li>⚠️ <strong>Safari</strong> (macOS/iOS - limited support)</li>
+              <li>❌ <strong>Firefox</strong> (not supported)</li>
+            </ul>
+            <div class="alert alert-warning mt-2">
+              <strong>What to check in console:</strong> Look for "[Voice Commands] ✅ Web Speech API is supported"
+            </div>
+          </div>
+
+          <h5 class="mt-4">Step 2: Check Microphone Permissions</h5>
+          <div class="mb-3">
+            <ol>
+              <li>Click the microphone button or press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd></li>
+              <li>Look for a permission prompt in your browser's address bar</li>
+              <li>Click <strong>"Allow"</strong> to grant microphone access</li>
+            </ol>
+
+            <p class="mt-3"><strong>In Opera:</strong></p>
+            <ul>
+              <li>Look for the microphone icon in the address bar (left side)</li>
+              <li>Click it and select "Always allow this site to access your microphone"</li>
+              <li>If you previously denied access, you need to reset permissions:
+                <ol>
+                  <li>Click the lock/info icon in the address bar</li>
+                  <li>Find "Microphone" in the permissions list</li>
+                  <li>Change it from "Block" to "Allow"</li>
+                  <li>Refresh the page</li>
+                </ol>
+              </li>
+            </ul>
+
+            <div class="alert alert-warning mt-2">
+              <strong>What to check in console:</strong> If permission is denied, you'll see "[Voice Commands] ❌ Error: not-allowed"
+            </div>
+          </div>
+
+          <h5 class="mt-4">Step 3: Check Windows Microphone Settings</h5>
+          <div class="mb-3">
+            <ol>
+              <li>Open Windows Settings (<kbd>Win</kbd>+<kbd>I</kbd>)</li>
+              <li>Go to <strong>Privacy & Security</strong> → <strong>Microphone</strong></li>
+              <li>Ensure "Microphone access" is <strong>ON</strong></li>
+              <li>Ensure "Let apps access your microphone" is <strong>ON</strong></li>
+              <li>Scroll down and ensure <strong>Opera</strong> (or your browser) is allowed</li>
+            </ol>
+
+            <p class="mt-3"><strong>Test your microphone:</strong></p>
+            <ol>
+              <li>Open Windows Settings → <strong>System</strong> → <strong>Sound</strong></li>
+              <li>Under "Input", select your microphone</li>
+              <li>Speak and watch the volume bar - it should move when you talk</li>
+            </ol>
+          </div>
+
+          <h5 class="mt-4">Step 4: Understanding the Debug Panel</h5>
+          <div class="mb-3">
+            <p>When you open the voice modal, look at the Debug Status panel:</p>
+
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>What It Means</th>
+                  <th>What's Good</th>
+                  <th>What's Bad</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>API Support</strong></td>
+                  <td>Browser compatibility</td>
+                  <td>✅ Supported</td>
+                  <td>❌ Not supported</td>
+                </tr>
+                <tr>
+                  <td><strong>Microphone</strong></td>
+                  <td>Mic activation status</td>
+                  <td>✅ Active</td>
+                  <td>❌ Error, ⏳ Starting, Stopped</td>
+                </tr>
+                <tr>
+                  <td><strong>Listening</strong></td>
+                  <td>Is recognition active?</td>
+                  <td>✅ Yes</td>
+                  <td>❌ No</td>
+                </tr>
+                <tr>
+                  <td><strong>Last Event</strong></td>
+                  <td>Most recent action</td>
+                  <td>onstart, onresult, Final: "..."</td>
+                  <td>❌ Error: ..., onend (no speech captured)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h5 class="mt-4">Step 5: Common Issues and Solutions</h5>
+          <div class="mb-3">
+            <div class="card mb-2">
+              <div class="card-body">
+                <h6 class="card-subtitle mb-2">🔴 Issue: Green light appears but no transcript shows</h6>
+                <p class="mb-1"><strong>Symptoms:</strong></p>
+                <ul>
+                  <li>Debug panel shows "Microphone: ✅ Active"</li>
+                  <li>Debug panel shows "Listening: ✅ Yes"</li>
+                  <li>But transcript stays empty</li>
+                </ul>
+                <p class="mb-1"><strong>Solutions:</strong></p>
+                <ul>
+                  <li>Speak louder or move closer to the microphone</li>
+                  <li>Reduce background noise</li>
+                  <li>Check that you're speaking in English (only en-US supported currently)</li>
+                  <li>Test in a quieter environment</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card mb-2">
+              <div class="card-body">
+                <h6 class="card-subtitle mb-2">🔴 Issue: Error "not-allowed"</h6>
+                <p class="mb-1"><strong>Symptoms:</strong></p>
+                <ul>
+                  <li>Console shows "[Voice Commands] ❌ Error: not-allowed"</li>
+                  <li>Modal shows "Microphone permission denied"</li>
+                </ul>
+                <p class="mb-1"><strong>Solutions:</strong></p>
+                <ul>
+                  <li>Click the microphone/lock icon in the browser address bar</li>
+                  <li>Set microphone permission to "Allow"</li>
+                  <li>Refresh the page and try again</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card mb-2">
+              <div class="card-body">
+                <h6 class="card-subtitle mb-2">🔴 Issue: Error "no-speech"</h6>
+                <p class="mb-1"><strong>Symptoms:</strong></p>
+                <ul>
+                  <li>Console shows "[Voice Commands] ❌ Error: no-speech"</li>
+                  <li>Modal shows "I didn't hear anything"</li>
+                </ul>
+                <p class="mb-1"><strong>Solutions:</strong></p>
+                <ul>
+                  <li>Speak immediately after the modal opens (within 5-10 seconds)</li>
+                  <li>Check Windows Sound settings - ensure microphone volume is not muted</li>
+                  <li>Test microphone in another app (e.g., Voice Recorder)</li>
+                  <li>Make sure the correct microphone is selected as default in Windows</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card mb-2">
+              <div class="card-body">
+                <h6 class="card-subtitle mb-2">🔴 Issue: Error "audio-capture"</h6>
+                <p class="mb-1"><strong>Symptoms:</strong></p>
+                <ul>
+                  <li>Console shows "[Voice Commands] ❌ Error: audio-capture"</li>
+                  <li>Modal shows "No microphone was found"</li>
+                </ul>
+                <p class="mb-1"><strong>Solutions:</strong></p>
+                <ul>
+                  <li>Check that your microphone is properly connected</li>
+                  <li>Check Windows Device Manager - is the microphone listed and enabled?</li>
+                  <li>Try unplugging and replugging the microphone</li>
+                  <li>Restart the browser</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card mb-2">
+              <div class="card-body">
+                <h6 class="card-subtitle mb-2">🔴 Issue: "onend (no speech captured)"</h6>
+                <p class="mb-1"><strong>Symptoms:</strong></p>
+                <ul>
+                  <li>Last Event shows "onend (no speech captured)"</li>
+                  <li>Recognition stops immediately</li>
+                </ul>
+                <p class="mb-1"><strong>Solutions:</strong></p>
+                <ul>
+                  <li>This means the microphone is working but no speech was detected</li>
+                  <li>Speak louder and more clearly</li>
+                  <li>Check microphone sensitivity in Windows Sound settings</li>
+                  <li>Try a different microphone</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <h5 class="mt-4">Step 6: Check Console Logs</h5>
+          <div class="mb-3">
+            <p>Press <kbd>F12</kbd> to open the browser console. Look for messages starting with <code>[Voice Commands]</code>:</p>
+
+            <p class="mt-2"><strong>Successful flow looks like:</strong></p>
+            <pre style="background: var(--surface-secondary); padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto;"><code>[Voice Commands] Initializing VoiceCommandManager...
+[Voice Commands] ✅ Web Speech API is supported
+[Voice Commands] Event handlers attached
+[Voice Commands] Initialization complete
+[Voice Commands] 🎤 Starting voice recognition...
+[Voice Commands] 🟢 onstart event fired - Recognition is now active
+[Voice Commands] 📝 onresult event fired
+[Voice Commands] Transcript: add expense 50 dollars for groceries
+[Voice Commands] ✅ Final transcript received
+[Voice Commands] 🔄 Processing command...
+[Voice Commands] ✅ Command processed successfully</code></pre>
+
+            <p class="mt-3"><strong>If you see errors, copy them and submit feedback with the error details.</strong></p>
+          </div>
+
+          <div class="alert alert-success mt-4">
+            <h6>Still Having Issues?</h6>
+            <p class="mb-2">If none of these steps work:</p>
+            <ol class="mb-0">
+              <li>Take a screenshot of the Debug Status panel</li>
+              <li>Copy the console logs (press <kbd>F12</kbd>, right-click console, "Save as...")</li>
+              <li><a href="/feedback" class="alert-link">Submit feedback</a> with these details</li>
+            </ol>
           </div>
         </div>
       </div>

@@ -13,22 +13,32 @@ class VoiceCommandManager {
         this.confidence = 0;
         this.modal = null;
         this.button = null;
+        this.debugMode = true; // Enable debug logging
+
+        console.log('[Voice Commands] Initializing VoiceCommandManager...');
 
         // Initialize if browser supports Web Speech API
         this.initializeSpeechRecognition();
         this.initializeUI();
         this.setupKeyboardShortcut();
+
+        console.log('[Voice Commands] Initialization complete');
     }
 
     initializeSpeechRecognition() {
+        console.log('[Voice Commands] Checking browser support...');
+
         // Check browser support
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
-            console.warn('Web Speech API not supported in this browser');
+            console.error('[Voice Commands] ❌ Web Speech API NOT supported in this browser');
+            console.log('[Voice Commands] Browser info:', navigator.userAgent);
             this.showBrowserNotSupported();
             return;
         }
+
+        console.log('[Voice Commands] ✅ Web Speech API is supported');
 
         // Initialize recognition
         this.recognition = new SpeechRecognition();
@@ -37,11 +47,54 @@ class VoiceCommandManager {
         this.recognition.interimResults = true;
         this.recognition.maxAlternatives = 1;
 
+        console.log('[Voice Commands] SpeechRecognition configured:', {
+            lang: this.recognition.lang,
+            continuous: this.recognition.continuous,
+            interimResults: this.recognition.interimResults,
+            maxAlternatives: this.recognition.maxAlternatives
+        });
+
         // Event handlers
         this.recognition.onstart = () => this.onRecognitionStart();
         this.recognition.onresult = (event) => this.onRecognitionResult(event);
         this.recognition.onerror = (event) => this.onRecognitionError(event);
         this.recognition.onend = () => this.onRecognitionEnd();
+
+        console.log('[Voice Commands] Event handlers attached');
+
+        // Update debug panel
+        this.updateDebugPanel('api-support', this.recognition ? '✅ Supported' : '❌ Not supported');
+    }
+
+    updateDebugPanel(field, value, color = null) {
+        // Update debug panel in modal if it exists
+        if (!this.modal) return;
+
+        const fieldMap = {
+            'api-support': 'debug-api-support',
+            'mic-status': 'debug-mic-status',
+            'listening-status': 'debug-listening-status',
+            'last-event': 'debug-last-event'
+        };
+
+        const elementId = fieldMap[field];
+        if (!elementId) return;
+
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = value;
+            if (color) {
+                element.style.color = color;
+            }
+        }
+
+        // Update indicator color based on status
+        const indicator = document.getElementById('debug-status-indicator');
+        if (indicator && this.isListening) {
+            indicator.style.background = '#28a745'; // Green when listening
+        } else if (indicator) {
+            indicator.style.background = '#6c757d'; // Gray when not listening
+        }
     }
 
     initializeUI() {
@@ -85,6 +138,18 @@ class VoiceCommandManager {
                     <button class="voice-modal-close" aria-label="Close">&times;</button>
                 </div>
                 <div class="voice-modal-body">
+                    <div class="voice-debug-panel" style="background: var(--surface-secondary); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; font-family: monospace;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="color: var(--text-primary);">Debug Status</strong>
+                            <span id="debug-status-indicator" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #6c757d;"></span>
+                        </div>
+                        <div style="color: var(--text-secondary); line-height: 1.5;">
+                            <div>API Support: <span id="debug-api-support" style="color: var(--text-primary);">Checking...</span></div>
+                            <div>Microphone: <span id="debug-mic-status" style="color: var(--text-primary);">Not started</span></div>
+                            <div>Listening: <span id="debug-listening-status" style="color: var(--text-primary);">No</span></div>
+                            <div>Last Event: <span id="debug-last-event" style="color: var(--text-primary);">None</span></div>
+                        </div>
+                    </div>
                     <div class="voice-status">
                         <div class="voice-animation">
                             <div class="voice-wave"></div>
@@ -114,6 +179,8 @@ class VoiceCommandManager {
                 </div>
                 <div class="voice-modal-footer">
                     <small>Try: "Add expense 50 dollars for groceries" or "What's my total this month?"</small>
+                    <br>
+                    <small style="color: var(--text-secondary); margin-top: 4px; display: block;">💡 Check browser console (F12) for detailed logs</small>
                 </div>
             </div>
         `;
@@ -148,7 +215,10 @@ class VoiceCommandManager {
     }
 
     startListening() {
+        console.log('[Voice Commands] 🎤 Starting voice recognition...');
+
         if (!this.recognition) {
+            console.error('[Voice Commands] ❌ Recognition not initialized');
             this.showBrowserNotSupported();
             return;
         }
@@ -157,17 +227,31 @@ class VoiceCommandManager {
         this.transcript = '';
         this.confidence = 0;
 
+        console.log('[Voice Commands] State reset, showing modal...');
+
         // Show modal
         this.showModal();
         this.showListeningState();
 
+        // Initialize debug status
+        this.updateDebugPanel('mic-status', '⏳ Starting...', '#ffc107');
+        this.updateDebugPanel('listening-status', '⏳ Starting...', '#ffc107');
+        this.updateDebugPanel('last-event', 'Initializing...');
+
         // Start recognition
         try {
+            console.log('[Voice Commands] Calling recognition.start()...');
             this.recognition.start();
             this.isListening = true;
             this.button.classList.add('listening');
+            console.log('[Voice Commands] ✅ Recognition started successfully');
         } catch (error) {
-            console.error('Error starting recognition:', error);
+            console.error('[Voice Commands] ❌ Error starting recognition:', error);
+            console.error('[Voice Commands] Error details:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
             this.showError('Failed to start voice recognition. Please try again.');
         }
     }
@@ -181,57 +265,105 @@ class VoiceCommandManager {
     }
 
     onRecognitionStart() {
-        console.log('Voice recognition started');
+        console.log('[Voice Commands] 🟢 onstart event fired - Recognition is now active');
+        console.log('[Voice Commands] Microphone should be listening now');
+
+        this.updateDebugPanel('mic-status', '✅ Active', '#28a745');
+        this.updateDebugPanel('listening-status', '✅ Yes', '#28a745');
+        this.updateDebugPanel('last-event', 'onstart');
     }
 
     onRecognitionResult(event) {
+        console.log('[Voice Commands] 📝 onresult event fired');
+        console.log('[Voice Commands] Number of results:', event.results.length);
+
+        this.updateDebugPanel('last-event', 'onresult (speech detected!)');
+
         // Get the transcript
         const result = event.results[event.results.length - 1];
         const transcript = result[0].transcript;
         const isFinal = result.isFinal;
+        const confidence = result[0].confidence;
+
+        console.log('[Voice Commands] Transcript:', transcript);
+        console.log('[Voice Commands] Is final:', isFinal);
+        console.log('[Voice Commands] Confidence:', confidence);
 
         // Update transcript display
         this.updateTranscript(transcript);
 
         if (isFinal) {
             this.transcript = transcript;
-            this.confidence = result[0].confidence;
-            console.log('Final transcript:', transcript, 'Confidence:', this.confidence);
+            this.confidence = confidence;
+            console.log('[Voice Commands] ✅ Final transcript received:', transcript);
+            console.log('[Voice Commands] Confidence score:', this.confidence);
+
+            this.updateDebugPanel('last-event', `Final: "${transcript.substring(0, 30)}..."`);
 
             // Process the command
             this.processCommand(transcript);
+        } else {
+            console.log('[Voice Commands] ⏳ Interim result (not final yet)');
+            this.updateDebugPanel('last-event', 'Interim result...');
         }
     }
 
     onRecognitionError(event) {
-        console.error('Recognition error:', event.error);
+        console.error('[Voice Commands] ❌ onerror event fired');
+        console.error('[Voice Commands] Error type:', event.error);
+        console.error('[Voice Commands] Error event:', event);
 
         let errorMessage = 'An error occurred with voice recognition.';
+        let debugInfo = '';
+
         switch (event.error) {
             case 'no-speech':
                 errorMessage = "I didn't hear anything. Please try again.";
+                debugInfo = 'Microphone is active but no speech was detected. Try speaking louder or closer to the microphone.';
                 break;
             case 'audio-capture':
                 errorMessage = 'No microphone was found. Please check your microphone.';
+                debugInfo = 'Browser cannot access any audio input device. Check device manager and browser permissions.';
                 break;
             case 'not-allowed':
                 errorMessage = 'Microphone permission denied. Please enable microphone access.';
+                debugInfo = 'User denied microphone permission or browser blocked it. Check browser address bar for permission icon.';
                 break;
             case 'network':
                 errorMessage = 'Network error occurred. Please check your connection.';
+                debugInfo = 'Speech recognition service requires internet connection.';
                 break;
             case 'aborted':
                 errorMessage = 'Voice recognition was aborted.';
+                debugInfo = 'Recognition was stopped before completion.';
                 break;
+            default:
+                debugInfo = `Unknown error: ${event.error}`;
         }
+
+        console.error('[Voice Commands] Error message:', errorMessage);
+        console.error('[Voice Commands] Debug info:', debugInfo);
+
+        this.updateDebugPanel('last-event', `❌ Error: ${event.error}`, '#dc3545');
+        this.updateDebugPanel('mic-status', '❌ Error', '#dc3545');
+        this.updateDebugPanel('listening-status', '❌ No', '#dc3545');
 
         this.showError(errorMessage);
     }
 
     onRecognitionEnd() {
+        console.log('[Voice Commands] 🔴 onend event fired - Recognition stopped');
+        console.log('[Voice Commands] Was listening:', this.isListening);
+        console.log('[Voice Commands] Final transcript:', this.transcript || '(none)');
+
         this.isListening = false;
         this.button.classList.remove('listening');
-        console.log('Voice recognition ended');
+
+        this.updateDebugPanel('mic-status', 'Stopped', '#6c757d');
+        this.updateDebugPanel('listening-status', 'No', '#6c757d');
+        if (!this.transcript) {
+            this.updateDebugPanel('last-event', 'onend (no speech captured)');
+        }
     }
 
     updateTranscript(text) {
@@ -240,10 +372,14 @@ class VoiceCommandManager {
     }
 
     async processCommand(commandText) {
+        console.log('[Voice Commands] 🔄 Processing command:', commandText);
+
         // Show processing state
         this.showProcessingState();
 
         try {
+            console.log('[Voice Commands] Sending to backend API...');
+
             // Send to backend API
             const response = await fetch('/api/voice/command', {
                 method: 'POST',
@@ -253,17 +389,32 @@ class VoiceCommandManager {
                 body: JSON.stringify({ command: commandText })
             });
 
+            console.log('[Voice Commands] API response status:', response.status);
+
             const data = await response.json();
+            console.log('[Voice Commands] API response data:', data);
 
             if (data.success) {
+                console.log('[Voice Commands] ✅ Command processed successfully');
+                console.log('[Voice Commands] Intent:', data.intent);
+                console.log('[Voice Commands] Message:', data.message);
+
                 // Show confirmation
                 this.showConfirmation(data);
             } else {
+                console.warn('[Voice Commands] ⚠️ Command not understood');
+                console.warn('[Voice Commands] Error message:', data.message);
+
                 // Show error
                 this.showError(data.message || 'Command not understood');
             }
         } catch (error) {
-            console.error('Error processing command:', error);
+            console.error('[Voice Commands] ❌ Error processing command:', error);
+            console.error('[Voice Commands] Error details:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
             this.showError('Failed to process command. Please try again.');
         }
     }
@@ -396,8 +547,18 @@ class VoiceCommandManager {
 
 // Initialize voice command manager when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[Voice Commands] DOM loaded, checking authentication...');
+
     // Only initialize if user is logged in (check for specific element or session)
-    if (document.querySelector('[data-user-authenticated]') || document.body.classList.contains('authenticated')) {
+    const isAuthenticated = document.querySelector('[data-user-authenticated]') || document.body.classList.contains('authenticated');
+
+    console.log('[Voice Commands] Is authenticated:', isAuthenticated);
+
+    if (isAuthenticated) {
+        console.log('[Voice Commands] Creating VoiceCommandManager instance...');
         window.voiceCommandManager = new VoiceCommandManager();
+        console.log('[Voice Commands] ✅ Manager instance created and available as window.voiceCommandManager');
+    } else {
+        console.log('[Voice Commands] ⚠️ User not authenticated, voice commands disabled');
     }
 });
