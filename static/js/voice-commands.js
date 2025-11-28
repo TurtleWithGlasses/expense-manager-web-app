@@ -17,6 +17,8 @@ class VoiceCommandManager {
         this.hasReceivedSpeech = false; // Track if we got any speech
         this.hasReceivedAnyResult = false; // Track if we got ANY result (even unclear)
         this.silenceTimeout = null; // Timeout for stopping after silence
+        this.startTimeout = null; // Timeout for detecting if start event never fires
+        this.recognitionStarted = false; // Track if onstart event actually fired
 
         console.log('[Voice Commands] Initializing VoiceCommandManager...');
 
@@ -233,11 +235,16 @@ class VoiceCommandManager {
         this.confidence = 0;
         this.hasReceivedSpeech = false;
         this.hasReceivedAnyResult = false;
+        this.recognitionStarted = false;
 
-        // Clear any existing silence timeout
+        // Clear any existing timeouts
         if (this.silenceTimeout) {
             clearTimeout(this.silenceTimeout);
             this.silenceTimeout = null;
+        }
+        if (this.startTimeout) {
+            clearTimeout(this.startTimeout);
+            this.startTimeout = null;
         }
 
         console.log('[Voice Commands] State reset, showing modal...');
@@ -257,9 +264,26 @@ class VoiceCommandManager {
             this.recognition.start();
             this.isListening = true;
             this.button.classList.add('listening');
-            console.log('[Voice Commands] ✅ Recognition started successfully');
+            console.log('[Voice Commands] ✅ Recognition.start() called successfully');
+
+            // Set a timeout to detect if onstart event never fires
+            this.startTimeout = setTimeout(() => {
+                if (!this.recognitionStarted) {
+                    console.error('[Voice Commands] ❌ TIMEOUT: onstart event never fired after 3 seconds');
+                    console.error('[Voice Commands] Recognition.start() was called but onstart event did not trigger');
+                    console.error('[Voice Commands] This indicates a Web Speech API initialization failure');
+
+                    this.updateDebugPanel('mic-status', '❌ Failed', '#dc3545');
+                    this.updateDebugPanel('listening-status', '❌ No', '#dc3545');
+                    this.updateDebugPanel('last-event', 'ERROR: onstart never fired');
+
+                    this.stopListening();
+                    this.showError('Voice recognition failed to start. The microphone may be in use by another application. Please close other apps using the microphone and try again.');
+                }
+            }, 3000); // Wait 3 seconds for onstart event
+
         } catch (error) {
-            console.error('[Voice Commands] ❌ Error starting recognition:', error);
+            console.error('[Voice Commands] ❌ Error calling recognition.start():', error);
             console.error('[Voice Commands] Error details:', {
                 name: error.name,
                 message: error.message,
@@ -270,6 +294,12 @@ class VoiceCommandManager {
     }
 
     stopListening() {
+        // Clear start timeout if still running
+        if (this.startTimeout) {
+            clearTimeout(this.startTimeout);
+            this.startTimeout = null;
+        }
+
         if (this.recognition && this.isListening) {
             this.recognition.stop();
             this.isListening = false;
@@ -280,6 +310,16 @@ class VoiceCommandManager {
     onRecognitionStart() {
         console.log('[Voice Commands] 🟢 onstart event fired - Recognition is now active');
         console.log('[Voice Commands] Microphone should be listening now');
+
+        // Mark that onstart actually fired
+        this.recognitionStarted = true;
+
+        // Clear the start timeout since onstart fired successfully
+        if (this.startTimeout) {
+            clearTimeout(this.startTimeout);
+            this.startTimeout = null;
+            console.log('[Voice Commands] ✅ Start timeout cleared - onstart fired in time');
+        }
 
         this.updateDebugPanel('mic-status', '✅ Active', '#28a745');
         this.updateDebugPanel('listening-status', '✅ Yes', '#28a745');
