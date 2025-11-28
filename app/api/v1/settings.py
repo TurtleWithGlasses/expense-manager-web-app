@@ -72,13 +72,15 @@ async def appearance_settings_page(
     compact_mode = display_prefs.get('compact_mode', False)
     animations_enabled = display_prefs.get('animations_enabled', True)
     font_size = display_prefs.get('font_size', 'medium')
+    voice_commands_enabled = display_prefs.get('voice_commands_enabled', True)  # Default ON
 
     return render(request, "settings/appearance.html", {
         "user": user,
         "user_theme": user_theme,
         "compact_mode": compact_mode,
         "animations_enabled": animations_enabled,
-        "font_size": font_size
+        "font_size": font_size,
+        "voice_commands_enabled": voice_commands_enabled
     })
 
 

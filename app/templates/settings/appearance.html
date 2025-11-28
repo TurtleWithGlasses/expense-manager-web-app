@@ -152,6 +152,22 @@
                 </label>
               </div>
             </div>
+
+            <div class="preference-item">
+              <div class="preference-info">
+                <label class="preference-label">
+                  Voice Commands
+                  <span class="badge-sm" style="background: var(--blue); color: white; margin-left: 8px;">NEW</span>
+                </label>
+                <p class="preference-description">Enable hands-free voice input for adding entries</p>
+              </div>
+              <div class="preference-control">
+                <label class="switch">
+                  <input type="checkbox" id="voice-commands-toggle" {% if voice_commands_enabled %}checked{% endif %} onchange="updateDisplayPreference('voice_commands', this.checked)">
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -504,6 +520,13 @@ async function updateDisplayPreference(prefType, value) {
       font_size = value;
       // Apply immediately
       document.documentElement.setAttribute('data-font-size', value);
+    } else if (prefType === 'voice_commands') {
+      voice_commands_enabled = value;
+      // Apply immediately - show/hide voice button
+      const voiceButton = document.getElementById('voice-command-button');
+      if (voiceButton) {
+        voiceButton.style.display = value ? 'flex' : 'none';
+      }
     }
 
     // Save to backend
@@ -511,6 +534,7 @@ async function updateDisplayPreference(prefType, value) {
     formData.append('compact_mode', compact_mode);
     formData.append('animations_enabled', animations_enabled);
     formData.append('font_size', font_size);
+    formData.append('voice_commands_enabled', voice_commands_enabled || currentPrefs.voice_commands_enabled || true);
 
     const saveResponse = await fetch('/theme/preferences', {
       method: 'POST',

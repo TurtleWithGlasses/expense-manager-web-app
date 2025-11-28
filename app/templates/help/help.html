@@ -1,0 +1,486 @@
+{% extends "base.html" %}
+
+{% block title %}Help & Documentation - BudgetPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+          <i class="bi bi-question-circle"></i> Help & Documentation
+        </h1>
+      </div>
+
+      <!-- Quick Navigation -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Quick Navigation</h5>
+          <div class="row">
+            <div class="col-md-4">
+              <ul class="list-unstyled">
+                <li><a href="#getting-started">Getting Started</a></li>
+                <li><a href="#voice-commands">Voice Commands</a></li>
+                <li><a href="#entries">Managing Entries</a></li>
+              </ul>
+            </div>
+            <div class="col-md-4">
+              <ul class="list-unstyled">
+                <li><a href="#categories">Categories</a></li>
+                <li><a href="#reports">Reports & Analytics</a></li>
+                <li><a href="#ai-features">AI Features</a></li>
+              </ul>
+            </div>
+            <div class="col-md-4">
+              <ul class="list-unstyled">
+                <li><a href="#goals">Financial Goals</a></li>
+                <li><a href="#settings">Settings & Preferences</a></li>
+                <li><a href="#faq">FAQ</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Getting Started -->
+      <div class="card mb-4" id="getting-started">
+        <div class="card-body">
+          <h4 class="card-title">
+            <i class="bi bi-play-circle"></i> Getting Started
+          </h4>
+          <p>Welcome to BudgetPulse! Here's how to get started:</p>
+          <ol>
+            <li><strong>Add your first entry:</strong> Click "Add Entry" and fill in the amount, category, and date.</li>
+            <li><strong>Create categories:</strong> Organize your expenses by creating custom categories.</li>
+            <li><strong>View your dashboard:</strong> See your spending trends and financial overview.</li>
+            <li><strong>Generate reports:</strong> Get weekly, monthly, or annual financial reports.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Voice Commands Section -->
+      <div class="card mb-4" id="voice-commands">
+        <div class="card-body">
+          <h4 class="card-title">
+            <i class="bi bi-mic-fill"></i> Voice Commands
+          </h4>
+          <p class="text-muted">Use natural language to manage your finances hands-free.</p>
+
+          <!-- How to Use -->
+          <h5 class="mt-4">How to Use Voice Commands</h5>
+          <ol>
+            <li>Click the <strong>purple microphone button</strong> in the bottom-right corner</li>
+            <li>Or press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></li>
+            <li>Speak your command clearly</li>
+            <li>Review the parsed command and confirm</li>
+          </ol>
+
+          <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle"></i> <strong>Browser Support:</strong> Voice commands work best in Chrome, Edge, and Safari. Firefox is not supported.
+          </div>
+
+          <!-- Add Expenses -->
+          <h5 class="mt-4">📤 Adding Expenses</h5>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Command</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>"Add expense 50 dollars for groceries"</code></td>
+                  <td>Creates $50 expense in Groceries category</td>
+                </tr>
+                <tr>
+                  <td><code>"Spent 25 on coffee yesterday"</code></td>
+                  <td>Creates $25 expense in Coffee category for yesterday</td>
+                </tr>
+                <tr>
+                  <td><code>"Paid 100 dollars for utilities last Monday"</code></td>
+                  <td>Creates $100 expense in Utilities category for last Monday</td>
+                </tr>
+                <tr>
+                  <td><code>"Bought fifteen dollars food today"</code></td>
+                  <td>Creates $15 expense in Food category for today</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Add Income -->
+          <h5 class="mt-4">📥 Adding Income</h5>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Command</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>"Add income 2000 dollars salary"</code></td>
+                  <td>Creates $2000 income in Salary category</td>
+                </tr>
+                <tr>
+                  <td><code>"Earned 500 from freelance yesterday"</code></td>
+                  <td>Creates $500 income in Freelance category for yesterday</td>
+                </tr>
+                <tr>
+                  <td><code>"Received 1500 dollars bonus last Friday"</code></td>
+                  <td>Creates $1500 income in Bonus category for last Friday</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Delete Entries -->
+          <h5 class="mt-4">🗑️ Deleting Entries</h5>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Command</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>"Delete last entry"</code></td>
+                  <td>Removes your most recent entry</td>
+                </tr>
+                <tr>
+                  <td><code>"Remove last expense"</code></td>
+                  <td>Removes your most recent entry</td>
+                </tr>
+                <tr>
+                  <td><code>"Undo last entry"</code></td>
+                  <td>Removes your most recent entry</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Edit Entries -->
+          <h5 class="mt-4">✏️ Editing Entries</h5>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Command</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>"Edit last entry amount to 45 dollars"</code></td>
+                  <td>Changes the amount of your last entry to $45</td>
+                </tr>
+                <tr>
+                  <td><code>"Change last entry category to Food"</code></td>
+                  <td>Changes the category of your last entry to Food</td>
+                </tr>
+                <tr>
+                  <td><code>"Update last expense to 60 dollars"</code></td>
+                  <td>Changes the amount of your last entry to $60</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Queries -->
+          <h5 class="mt-4">📊 Queries & Reports</h5>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Command</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>"What's my total this month?"</code></td>
+                  <td>Shows income, expenses, and balance for this month</td>
+                </tr>
+                <tr>
+                  <td><code>"How much did I spend on groceries this week?"</code></td>
+                  <td>Shows total expenses in Groceries category this week</td>
+                </tr>
+                <tr>
+                  <td><code>"Show me my balance"</code></td>
+                  <td>Shows current income minus expenses</td>
+                </tr>
+                <tr>
+                  <td><code>"What did I earn this year?"</code></td>
+                  <td>Shows total income for this year</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Create Categories -->
+          <h5 class="mt-4">📁 Creating Categories</h5>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Command</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>"Create category Transportation"</code></td>
+                  <td>Creates a new category named Transportation</td>
+                </tr>
+                <tr>
+                  <td><code>"Add new category Entertainment"</code></td>
+                  <td>Creates a new category named Entertainment</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Tips -->
+          <h5 class="mt-4">💡 Tips for Best Results</h5>
+          <ul>
+            <li><strong>Speak clearly</strong> in a quiet environment</li>
+            <li><strong>Use natural language</strong> - you don't need exact phrasing</li>
+            <li><strong>Review before confirming</strong> - you can always cancel if it's wrong</li>
+            <li><strong>Start simple</strong> - try basic commands first</li>
+            <li><strong>Use number words</strong> - "fifty dollars" works as well as "50 dollars"</li>
+          </ul>
+
+          <!-- Supported Date Formats -->
+          <h5 class="mt-4">📅 Supported Date Formats</h5>
+          <ul>
+            <li><strong>Relative:</strong> "today", "yesterday", "tomorrow"</li>
+            <li><strong>Weekdays:</strong> "last Monday", "this Friday"</li>
+            <li><strong>Absolute:</strong> "11/20/2024", "2024-11-20"</li>
+            <li><strong>Default:</strong> If no date specified, today is used</li>
+          </ul>
+
+          <!-- Number Formats -->
+          <h5 class="mt-4">💰 Supported Amount Formats</h5>
+          <ul>
+            <li><strong>Numeric:</strong> "50", "50.99", "$50", "$50.99"</li>
+            <li><strong>Words:</strong> "fifty dollars", "twenty five dollars"</li>
+            <li><strong>With currency:</strong> "50 dollars", "50 euros", "50 pounds"</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Managing Entries -->
+      <div class="card mb-4" id="entries">
+        <div class="card-body">
+          <h4 class="card-title">
+            <i class="bi bi-receipt"></i> Managing Entries
+          </h4>
+          <h5 class="mt-3">Adding Entries</h5>
+          <p>Click "Add Entry" to create a new income or expense entry. Fill in:</p>
+          <ul>
+            <li><strong>Type:</strong> Income or Expense</li>
+            <li><strong>Amount:</strong> The monetary value</li>
+            <li><strong>Category:</strong> Select from your categories</li>
+            <li><strong>Date:</strong> When the transaction occurred</li>
+            <li><strong>Description:</strong> Optional notes about the entry</li>
+          </ul>
+
+          <h5 class="mt-3">Editing Entries</h5>
+          <p>Click the edit icon next to any entry to modify it. You can change the amount, category, date, or description.</p>
+
+          <h5 class="mt-3">Deleting Entries</h5>
+          <p>Click the delete icon next to any entry to remove it. This action cannot be undone.</p>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="card mb-4" id="categories">
+        <div class="card-body">
+          <h4 class="card-title">
+            <i class="bi bi-folder"></i> Categories
+          </h4>
+          <p>Categories help you organize your income and expenses. You can:</p>
+          <ul>
+            <li><strong>Create categories:</strong> Click "Add Category" and choose a name and color</li>
+            <li><strong>Edit categories:</strong> Change the name or color of existing categories</li>
+            <li><strong>Delete categories:</strong> Remove categories you no longer need</li>
+            <li><strong>AI Suggestions:</strong> The app can suggest categories based on your description</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Reports & Analytics -->
+      <div class="card mb-4" id="reports">
+        <div class="card-body">
+          <h4 class="card-title">
+            <i class="bi bi-graph-up"></i> Reports & Analytics
+          </h4>
+          <p>BudgetPulse offers comprehensive financial reports:</p>
+          <ul>
+            <li><strong>Weekly Reports:</strong> Get insights into your spending patterns each week</li>
+            <li><strong>Monthly Reports:</strong> See your monthly income, expenses, and savings</li>
+            <li><strong>Annual Reports:</strong> Review your financial year with detailed analytics</li>
+            <li><strong>Calendar View:</strong> Visualize your entries on a calendar</li>
+            <li><strong>Payment Analytics:</strong> Track recurring payments and subscriptions</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- AI Features -->
+      <div class="card mb-4" id="ai-features">
+        <div class="card-body">
+          <h4 class="card-title">
+            <i class="bi bi-stars"></i> AI Features
+          </h4>
+          <p>AI-powered features to help you manage your finances better:</p>
+          <ul>
+            <li><strong>Category Suggestions:</strong> Automatically suggest categories based on entry descriptions</li>
+            <li><strong>Budget Intelligence:</strong> Get smart insights about your spending habits</li>
+            <li><strong>Anomaly Detection:</strong> Detect unusual expenses or income</li>
+            <li><strong>Predictive Analytics:</strong> Forecast future spending trends</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Financial Goals -->
+      <div class="card mb-4" id="goals">
+        <div class="card-body">
+          <h4 class="card-title">
+            <i class="bi bi-bullseye"></i> Financial Goals
+          </h4>
+          <p>Set and track your financial goals:</p>
+          <ul>
+            <li><strong>Create goals:</strong> Set savings targets or spending limits</li>
+            <li><strong>Track progress:</strong> Monitor how close you are to achieving your goals</li>
+            <li><strong>Get reminders:</strong> Receive notifications about goal progress</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Settings & Preferences -->
+      <div class="card mb-4" id="settings">
+        <div class="card-body">
+          <h4 class="card-title">
+            <i class="bi bi-gear"></i> Settings & Preferences
+          </h4>
+          <p>Customize your BudgetPulse experience:</p>
+          <ul>
+            <li><strong>Theme:</strong> Choose between light and dark theme</li>
+            <li><strong>Currency:</strong> Set your preferred currency</li>
+            <li><strong>Profile:</strong> Update your personal information</li>
+            <li><strong>Notifications:</strong> Manage email notifications and report preferences</li>
+            <li><strong>Voice Commands:</strong> Enable or disable voice command feature</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="card mb-4" id="faq">
+        <div class="card-body">
+          <h4 class="card-title">
+            <i class="bi bi-patch-question"></i> Frequently Asked Questions
+          </h4>
+
+          <div class="accordion" id="faqAccordion">
+            <!-- Q1 -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                  How do I export my data?
+                </button>
+              </h2>
+              <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Go to Reports and click the "Export" button. You can export your data as CSV or PDF.
+                </div>
+              </div>
+            </div>
+
+            <!-- Q2 -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                  Can I use voice commands on mobile?
+                </button>
+              </h2>
+              <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Yes! Voice commands work on mobile browsers (Chrome on Android, Safari on iOS). Just tap the microphone button.
+                </div>
+              </div>
+            </div>
+
+            <!-- Q3 -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                  Is my data secure?
+                </button>
+              </h2>
+              <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Yes! Your data is encrypted and stored securely. We use industry-standard security practices to protect your information. Voice processing is done entirely in your browser - no audio is sent to our servers.
+                </div>
+              </div>
+            </div>
+
+            <!-- Q4 -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                  Can I delete my account?
+                </button>
+              </h2>
+              <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Yes, you can delete your account from the Settings page. This will permanently remove all your data.
+                </div>
+              </div>
+            </div>
+
+            <!-- Q5 -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                  What if voice commands don't work?
+                </button>
+              </h2>
+              <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Voice commands require a modern browser (Chrome, Edge, or Safari) and microphone access. Check that:
+                  <ul class="mb-0 mt-2">
+                    <li>Your browser supports Web Speech API</li>
+                    <li>You've granted microphone permissions</li>
+                    <li>Your microphone is working properly</li>
+                    <li>You're in a quiet environment</li>
+                  </ul>
+                  If it still doesn't work, you can always use the manual entry forms.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Support -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h4 class="card-title">
+            <i class="bi bi-envelope"></i> Need More Help?
+          </h4>
+          <p>Can't find what you're looking for? We're here to help!</p>
+          <a href="/feedback" class="btn btn-primary">
+            <i class="bi bi-chat-dots"></i> Submit Feedback
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

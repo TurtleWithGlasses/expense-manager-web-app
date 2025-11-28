@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, categories, entries, metrics, dashboard, ai, reports, weekly_reports, reports_pages, report_status, theme, profile, settings, insights_pages, goals, goals_pages, calendar_pages, budget_intelligence, intelligence_pages, recurring_payments, payment_history, payment_analytics_pages, admin, feedback, voice
+from app.api.v1 import auth, categories, entries, metrics, dashboard, ai, reports, weekly_reports, reports_pages, report_status, theme, profile, settings, insights_pages, goals, goals_pages, calendar_pages, budget_intelligence, intelligence_pages, recurring_payments, payment_history, payment_analytics_pages, admin, feedback, voice, help_pages
 from app.api.v1 import entries_rest, categories_rest, dashboard_rest, auth_rest
 from app.api.currency import router as currency_router
 
@@ -31,6 +31,7 @@ api_router.include_router(currency_router)
 api_router.include_router(admin.router)  # Phase 33
 api_router.include_router(feedback.router)  # Phase 33
 api_router.include_router(voice.router)  # Phase 32 - Voice Commands
+api_router.include_router(help_pages.router)  # Help & Documentation
 
 # REST API endpoints (JSON-only, for mobile/external clients)
 api_router.include_router(auth_rest.router)
