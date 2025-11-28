@@ -14,6 +14,8 @@ class VoiceCommandManager {
         this.modal = null;
         this.button = null;
         this.debugMode = true; // Enable debug logging
+        this.hasReceivedSpeech = false; // Track if we got any speech
+        this.silenceTimeout = null; // Timeout for stopping after silence
 
         console.log('[Voice Commands] Initializing VoiceCommandManager...');
 
@@ -43,7 +45,7 @@ class VoiceCommandManager {
         // Initialize recognition
         this.recognition = new SpeechRecognition();
         this.recognition.lang = 'en-US';
-        this.recognition.continuous = false;
+        this.recognition.continuous = true; // Keep listening for longer
         this.recognition.interimResults = true;
         this.recognition.maxAlternatives = 1;
 
@@ -226,6 +228,13 @@ class VoiceCommandManager {
         // Reset state
         this.transcript = '';
         this.confidence = 0;
+        this.hasReceivedSpeech = false;
+
+        // Clear any existing silence timeout
+        if (this.silenceTimeout) {
+            clearTimeout(this.silenceTimeout);
+            this.silenceTimeout = null;
+        }
 
         console.log('[Voice Commands] State reset, showing modal...');
 
@@ -278,6 +287,7 @@ class VoiceCommandManager {
         console.log('[Voice Commands] Number of results:', event.results.length);
 
         this.updateDebugPanel('last-event', 'onresult (speech detected!)');
+        this.hasReceivedSpeech = true;
 
         // Get the transcript
         const result = event.results[event.results.length - 1];
@@ -299,6 +309,10 @@ class VoiceCommandManager {
             console.log('[Voice Commands] Confidence score:', this.confidence);
 
             this.updateDebugPanel('last-event', `Final: "${transcript.substring(0, 30)}..."`);
+
+            // Stop listening after getting final result
+            console.log('[Voice Commands] Stopping recognition after final result');
+            this.stopListening();
 
             // Process the command
             this.processCommand(transcript);
@@ -355,14 +369,21 @@ class VoiceCommandManager {
         console.log('[Voice Commands] 🔴 onend event fired - Recognition stopped');
         console.log('[Voice Commands] Was listening:', this.isListening);
         console.log('[Voice Commands] Final transcript:', this.transcript || '(none)');
+        console.log('[Voice Commands] Had received speech:', this.hasReceivedSpeech);
 
         this.isListening = false;
         this.button.classList.remove('listening');
 
         this.updateDebugPanel('mic-status', 'Stopped', '#6c757d');
         this.updateDebugPanel('listening-status', 'No', '#6c757d');
-        if (!this.transcript) {
+
+        // Only show "no speech captured" warning if we didn't get any speech
+        if (!this.hasReceivedSpeech && !this.transcript) {
+            console.warn('[Voice Commands] ⚠️ Recognition ended without capturing any speech');
             this.updateDebugPanel('last-event', 'onend (no speech captured)');
+
+            // Show helpful message to user
+            this.showError("I didn't hear anything. Please speak louder and try again.");
         }
     }
 
