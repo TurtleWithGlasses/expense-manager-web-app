@@ -390,7 +390,7 @@ class VoiceCommandManager {
             this.button.style.display = 'none';
         }
 
-        console.warn('Voice commands not available in this browser. Please use Chrome, Edge, or Safari.');
+        console.warn('Voice commands not available in this browser. Please use Chrome, Edge, Opera, or Safari.');
     }
 }
 
