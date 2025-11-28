@@ -57,10 +57,12 @@
   <link rel="stylesheet" href="/static/css/calendar.css?v=3">
   <!-- Payment Analytics Styles - Phase 30 -->
   <link rel="stylesheet" href="/static/css/payment_analytics.css?v=1">
+  <!-- Voice Commands Styles - Phase 32 -->
+  <link rel="stylesheet" href="/static/css/voice-commands.css?v=1">
   <!-- Final navigation overrides -->
   <link rel="stylesheet" href="/static/css/nav-fix.css?v=1">
 </head>
-<body class="bg-surface">
+<body class="bg-surface authenticated" data-user-authenticated="true">
   <!-- Skip to main content link for keyboard users -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
@@ -235,5 +237,8 @@
 
   <!-- PWA Installation & Service Worker - Phase 25 Alt -->
   <script src="/static/js/pwa-install.js?v=1"></script>
+
+  <!-- Voice Commands - Phase 32 -->
+  <script src="/static/js/voice-commands.js?v=1"></script>
 </body>
 </html>
