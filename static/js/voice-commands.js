@@ -15,6 +15,7 @@ class VoiceCommandManager {
         this.button = null;
         this.debugMode = true; // Enable debug logging
         this.hasReceivedSpeech = false; // Track if we got any speech
+        this.hasReceivedAnyResult = false; // Track if we got ANY result (even unclear)
         this.silenceTimeout = null; // Timeout for stopping after silence
 
         console.log('[Voice Commands] Initializing VoiceCommandManager...');
@@ -76,6 +77,7 @@ class VoiceCommandManager {
             'api-support': 'debug-api-support',
             'mic-status': 'debug-mic-status',
             'listening-status': 'debug-listening-status',
+            'voice-activity': 'debug-voice-activity',
             'last-event': 'debug-last-event'
         };
 
@@ -149,6 +151,7 @@ class VoiceCommandManager {
                             <div>API Support: <span id="debug-api-support" style="color: var(--text-primary);">Checking...</span></div>
                             <div>Microphone: <span id="debug-mic-status" style="color: var(--text-primary);">Not started</span></div>
                             <div>Listening: <span id="debug-listening-status" style="color: var(--text-primary);">No</span></div>
+                            <div>Voice Activity: <span id="debug-voice-activity" style="color: var(--text-primary);">None</span></div>
                             <div>Last Event: <span id="debug-last-event" style="color: var(--text-primary);">None</span></div>
                         </div>
                     </div>
@@ -229,6 +232,7 @@ class VoiceCommandManager {
         this.transcript = '';
         this.confidence = 0;
         this.hasReceivedSpeech = false;
+        this.hasReceivedAnyResult = false;
 
         // Clear any existing silence timeout
         if (this.silenceTimeout) {
@@ -286,8 +290,10 @@ class VoiceCommandManager {
         console.log('[Voice Commands] 📝 onresult event fired');
         console.log('[Voice Commands] Number of results:', event.results.length);
 
-        this.updateDebugPanel('last-event', 'onresult (speech detected!)');
-        this.hasReceivedSpeech = true;
+        // Mark that we received ANY result (even if unclear)
+        this.hasReceivedAnyResult = true;
+        this.updateDebugPanel('voice-activity', '✅ Detected', '#28a745');
+        this.updateDebugPanel('last-event', 'onresult (voice activity detected!)');
 
         // Get the transcript
         const result = event.results[event.results.length - 1];
@@ -296,8 +302,20 @@ class VoiceCommandManager {
         const confidence = result[0].confidence;
 
         console.log('[Voice Commands] Transcript:', transcript);
+        console.log('[Voice Commands] Transcript length:', transcript.length);
         console.log('[Voice Commands] Is final:', isFinal);
         console.log('[Voice Commands] Confidence:', confidence);
+
+        // Check if we got actual meaningful speech
+        const hasContent = transcript && transcript.trim().length > 0;
+        if (hasContent) {
+            this.hasReceivedSpeech = true;
+            this.updateDebugPanel('voice-activity', '✅ Clear Speech', '#28a745');
+            console.log('[Voice Commands] ✅ Meaningful speech detected');
+        } else {
+            this.updateDebugPanel('voice-activity', '⚠️ Unclear', '#ffc107');
+            console.log('[Voice Commands] ⚠️ Voice detected but no clear words');
+        }
 
         // Update transcript display
         this.updateTranscript(transcript);
@@ -305,17 +323,26 @@ class VoiceCommandManager {
         if (isFinal) {
             this.transcript = transcript;
             this.confidence = confidence;
-            console.log('[Voice Commands] ✅ Final transcript received:', transcript);
+            console.log('[Voice Commands] ✅ Final result received');
+            console.log('[Voice Commands] Transcript:', transcript || '(empty)');
             console.log('[Voice Commands] Confidence score:', this.confidence);
 
-            this.updateDebugPanel('last-event', `Final: "${transcript.substring(0, 30)}..."`);
+            if (hasContent) {
+                this.updateDebugPanel('last-event', `Final: "${transcript.substring(0, 30)}..."`);
 
-            // Stop listening after getting final result
-            console.log('[Voice Commands] Stopping recognition after final result');
-            this.stopListening();
+                // Stop listening after getting final result
+                console.log('[Voice Commands] Stopping recognition after final result');
+                this.stopListening();
 
-            // Process the command
-            this.processCommand(transcript);
+                // Process the command
+                this.processCommand(transcript);
+            } else {
+                // Got voice activity but no clear speech
+                console.warn('[Voice Commands] ⚠️ Final result is empty - voice detected but speech unclear');
+                this.updateDebugPanel('last-event', 'Voice heard but unclear');
+                this.stopListening();
+                this.showError("I heard you speaking but couldn't understand the words. Please speak more clearly and try again.");
+            }
         } else {
             console.log('[Voice Commands] ⏳ Interim result (not final yet)');
             this.updateDebugPanel('last-event', 'Interim result...');
@@ -369,6 +396,7 @@ class VoiceCommandManager {
         console.log('[Voice Commands] 🔴 onend event fired - Recognition stopped');
         console.log('[Voice Commands] Was listening:', this.isListening);
         console.log('[Voice Commands] Final transcript:', this.transcript || '(none)');
+        console.log('[Voice Commands] Had received any result:', this.hasReceivedAnyResult);
         console.log('[Voice Commands] Had received speech:', this.hasReceivedSpeech);
 
         this.isListening = false;
@@ -377,13 +405,19 @@ class VoiceCommandManager {
         this.updateDebugPanel('mic-status', 'Stopped', '#6c757d');
         this.updateDebugPanel('listening-status', 'No', '#6c757d');
 
-        // Only show "no speech captured" warning if we didn't get any speech
+        // Provide specific feedback based on what we detected
         if (!this.hasReceivedSpeech && !this.transcript) {
-            console.warn('[Voice Commands] ⚠️ Recognition ended without capturing any speech');
-            this.updateDebugPanel('last-event', 'onend (no speech captured)');
-
-            // Show helpful message to user
-            this.showError("I didn't hear anything. Please speak louder and try again.");
+            if (this.hasReceivedAnyResult) {
+                // We detected voice activity but couldn't understand the words
+                console.warn('[Voice Commands] ⚠️ Voice activity detected but speech was unclear');
+                this.updateDebugPanel('last-event', 'onend (voice heard but unclear)');
+                this.showError("I heard you speaking but couldn't make out the words. Please speak more clearly and closer to the microphone.");
+            } else {
+                // No voice activity detected at all
+                console.warn('[Voice Commands] ⚠️ No voice activity detected');
+                this.updateDebugPanel('last-event', 'onend (no sound detected)');
+                this.showError("I didn't hear anything. Please check your microphone and speak louder.");
+            }
         }
     }
 
