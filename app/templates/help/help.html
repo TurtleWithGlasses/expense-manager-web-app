@@ -282,6 +282,41 @@
           <div class="alert alert-warning mt-3">
             <i class="bi bi-exclamation-triangle"></i> <strong>Note:</strong> Currently, voice commands create entries in your default currency (set in Settings). Currency keywords in voice commands are recognized but the amount is saved using your default currency setting.
           </div>
+
+          <h5 class="mt-4">💵 Available Display Currencies</h5>
+          <p>You can change your display currency in Settings. BudgetPulse supports 19 currencies with automatic exchange rate conversion:</p>
+          <div class="row">
+            <div class="col-md-6">
+              <ul>
+                <li><strong>USD</strong> - US Dollar ($)</li>
+                <li><strong>EUR</strong> - Euro (€)</li>
+                <li><strong>GBP</strong> - British Pound (£)</li>
+                <li><strong>JPY</strong> - Japanese Yen (¥)</li>
+                <li><strong>CAD</strong> - Canadian Dollar (C$)</li>
+                <li><strong>AUD</strong> - Australian Dollar (A$)</li>
+                <li><strong>CHF</strong> - Swiss Franc (Fr)</li>
+                <li><strong>CNY</strong> - Chinese Yuan (¥)</li>
+                <li><strong>INR</strong> - Indian Rupee (₹)</li>
+                <li><strong>TRY</strong> - Turkish Lira (₺)</li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <ul>
+                <li><strong>BRL</strong> - Brazilian Real (R$)</li>
+                <li><strong>MXN</strong> - Mexican Peso ($)</li>
+                <li><strong>KRW</strong> - South Korean Won (₩)</li>
+                <li><strong>RUB</strong> - Russian Ruble (₽)</li>
+                <li><strong>PHP</strong> - Philippine Peso (₱)</li>
+                <li><strong>MYR</strong> - Malaysian Ringgit (RM)</li>
+                <li><strong>NZD</strong> - New Zealand Dollar (NZ$)</li>
+                <li><strong>IDR</strong> - Indonesian Rupiah (Rp)</li>
+                <li><strong>ZAR</strong> - South African Rand (R)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle"></i> <strong>Currency Conversion:</strong> When you change your currency, all existing entries are automatically converted using current exchange rates. Exchange rates are updated regularly to ensure accuracy.
+          </div>
         </div>
       </div>
 
@@ -336,9 +371,36 @@
             <li><strong>Weekly Reports:</strong> Get insights into your spending patterns each week</li>
             <li><strong>Monthly Reports:</strong> See your monthly income, expenses, and savings</li>
             <li><strong>Annual Reports:</strong> Review your financial year with detailed analytics</li>
-            <li><strong>Calendar View:</strong> Visualize your entries on a calendar</li>
+            <li><strong>Calendar View:</strong> Visualize your entries on a calendar with interactive features</li>
             <li><strong>Payment Analytics:</strong> Track recurring payments and subscriptions</li>
           </ul>
+
+          <h5 class="mt-4">📅 Calendar View Features</h5>
+          <p>The calendar provides a visual overview of your financial activities:</p>
+          <ul>
+            <li><strong>Color-Coded Markers:</strong>
+              <ul>
+                <li><span style="color: #10b981;">🟢 Green</span> - Income only</li>
+                <li><span style="color: #ef4444;">🔴 Red</span> - Expenses only</li>
+                <li><span style="color: #f59e0b;">🟡 Yellow</span> - Mixed (both income and expenses)</li>
+                <li><span style="color: #fbbf24;">📅 Bill icon</span> - Recurring bills/subscriptions due</li>
+              </ul>
+            </li>
+            <li><strong>Hover Tooltips:</strong> Hover your mouse over any date to see:
+              <ul>
+                <li>Total income and expenses for that day</li>
+                <li>Net balance (income - expenses)</li>
+                <li>First 3 entries with details (bills shown first)</li>
+                <li>Bill frequency labels (MONTHLY, WEEKLY, etc.)</li>
+              </ul>
+            </li>
+            <li><strong>Click to View All:</strong> Click on any date to see complete details of all entries</li>
+            <li><strong>Future Bills:</strong> See upcoming recurring payments on future dates with full details</li>
+          </ul>
+
+          <div class="alert alert-info mt-3">
+            <i class="bi bi-lightbulb"></i> <strong>Pro Tip:</strong> The calendar view is perfect for tracking your recurring bills and understanding your monthly cash flow at a glance. Yellow markers on future dates indicate scheduled bills or subscriptions.
+          </div>
         </div>
       </div>
 
@@ -382,11 +444,22 @@
           <p>Customize your BudgetPulse experience:</p>
           <ul>
             <li><strong>Theme:</strong> Choose between light and dark theme</li>
-            <li><strong>Currency:</strong> Set your preferred currency</li>
+            <li><strong>Currency:</strong> Set your preferred currency from 19 supported currencies
+              <ul>
+                <li>All amounts throughout the app will be displayed in your chosen currency</li>
+                <li>Existing entries are automatically converted when you change currencies</li>
+                <li>View current exchange rates in the Currency Settings page</li>
+                <li>Exchange rates are updated regularly for accuracy</li>
+              </ul>
+            </li>
             <li><strong>Profile:</strong> Update your personal information</li>
             <li><strong>Notifications:</strong> Manage email notifications and report preferences</li>
             <li><strong>Voice Commands:</strong> Enable or disable voice command feature</li>
           </ul>
+
+          <div class="alert alert-warning mt-3">
+            <i class="bi bi-exclamation-triangle"></i> <strong>Important:</strong> When changing currencies, all existing entries are converted using current exchange rates. This action cannot be undone, so make sure you select the right currency.
+          </div>
         </div>
       </div>
 
@@ -464,6 +537,34 @@
               <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                 <div class="accordion-body">
                   See the detailed troubleshooting guide below for step-by-step diagnostics.
+                </div>
+              </div>
+            </div>
+
+            <!-- Q6 -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                  How do I see my upcoming bills on the calendar?
+                </button>
+              </h2>
+              <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Create recurring bills or subscriptions through the Bills/Subscriptions feature. They will automatically appear on future dates in the calendar view with a yellow bill marker (📅). Hover over the date to see bill details including name, amount, and frequency. Click the date to view all entries for that day.
+                </div>
+              </div>
+            </div>
+
+            <!-- Q7 -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                  What happens to my data when I change currencies?
+                </button>
+              </h2>
+              <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  When you change your currency in Settings, all existing entries are automatically converted using current exchange rates. For example, if you have $100 USD in expenses and switch to EUR, the amount will be converted to approximately €92 (rates vary). This conversion is permanent and cannot be undone, so choose your currency carefully. All future entries will use the new currency.
                 </div>
               </div>
             </div>
