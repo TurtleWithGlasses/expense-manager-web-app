@@ -28,6 +28,7 @@
       {% set has_income = date_data.income_total > 0 if date_data else false %}
       {% set has_expense = date_data.expense_total > 0 if date_data else false %}
       {% set has_bills = date_data.entries|selectattr('type', 'equalto', 'bill')|list|length > 0 if date_data and date_data.entries else false %}
+      {% set has_any_data = has_entries or has_bills %}
       {% set marker_class = '' %}
       {% if has_income and has_expense %}
         {% set marker_class = 'mixed' %}
@@ -38,9 +39,9 @@
       {% endif %}
 
       <div
-        class="calendar-date {% if is_today %}today{% endif %} {% if has_entries %}has-entries{% endif %} {% if has_bills %}has-bills{% endif %}"
+        class="calendar-date {% if is_today %}today{% endif %} {% if has_any_data %}has-entries{% endif %} {% if has_bills %}has-bills{% endif %}"
         data-date="{{ date_item.date }}"
-        {% if has_entries %}
+        {% if has_any_data %}
           onclick="showDateDetail('{{ date_item.date }}')"
           role="button"
           tabindex="0"
@@ -48,7 +49,7 @@
       >
         <div class="date-number">{{ date_item.day_num }}</div>
 
-        {% if has_entries %}
+        {% if has_any_data %}
         <div class="date-markers">
           {% if marker_class %}
           <span class="date-marker {{ marker_class }}"></span>
@@ -133,9 +134,10 @@
             </div>
             {% endfor %}
 
-            {% if date_data.entry_count > 3 %}
+            {% set total_items = all_entries|length %}
+            {% if total_items > 3 %}
             <div class="tooltip-more">
-              +{{ date_data.entry_count - 3 }} more entries
+              +{{ total_items - 3 }} more {% if has_bills and not has_entries %}bills{% else %}entries{% endif %}
             </div>
             {% endif %}
 
