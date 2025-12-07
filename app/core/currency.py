@@ -17,6 +17,12 @@ CURRENCIES = {
     'BRL': {'symbol': 'R$', 'name': 'Brazilian Real', 'decimal_places': 2, 'position': 'before'},
     'MXN': {'symbol': '$', 'name': 'Mexican Peso', 'decimal_places': 2, 'position': 'before'},
     'KRW': {'symbol': '₩', 'name': 'South Korean Won', 'decimal_places': 0, 'position': 'before'},
+    'RUB': {'symbol': '₽', 'name': 'Russian Ruble', 'decimal_places': 2, 'position': 'before'},
+    'PHP': {'symbol': '₱', 'name': 'Philippine Peso', 'decimal_places': 2, 'position': 'before'},
+    'MYR': {'symbol': 'RM', 'name': 'Malaysian Ringgit', 'decimal_places': 2, 'position': 'before'},
+    'NZD': {'symbol': 'NZ$', 'name': 'New Zealand Dollar', 'decimal_places': 2, 'position': 'before'},
+    'IDR': {'symbol': 'Rp', 'name': 'Indonesian Rupiah', 'decimal_places': 0, 'position': 'before'},
+    'ZAR': {'symbol': 'R', 'name': 'South African Rand', 'decimal_places': 2, 'position': 'before'},
 }
 
 class CurrencyService:
@@ -61,6 +67,12 @@ class CurrencyService:
             'BRL': 5.2,
             'MXN': 20.0,
             'KRW': 1180.0,
+            'RUB': 75.0,
+            'PHP': 50.0,
+            'MYR': 4.2,
+            'NZD': 1.42,
+            'IDR': 14250.0,
+            'ZAR': 15.0,
         }
     
     async def convert_amount(self, amount: float, from_currency: str, to_currency: str) -> float:
