@@ -62,23 +62,6 @@
           {% endif %}
         </div>
 
-        <!-- Show bill details directly on calendar for future dates -->
-        {% set bills = date_data.entries|selectattr('type', 'equalto', 'bill')|list %}
-        {% if bills %}
-        <div class="date-bills-preview">
-          {% for bill in bills[:2] %}
-          <div class="bill-preview-item">
-            <span class="bill-preview-icon">📅</span>
-            <span class="bill-preview-name">{{ bill.note[:15] }}{% if bill.note|length > 15 %}...{% endif %}</span>
-            <span class="bill-preview-amount">{{ format_currency(bill.amount) }}</span>
-          </div>
-          {% endfor %}
-          {% if bills|length > 2 %}
-          <div class="bill-preview-more">+{{ bills|length - 2 }} more</div>
-          {% endif %}
-        </div>
-        {% endif %}
-
         <!-- Tooltip content -->
         <div class="date-tooltip">
           <div class="tooltip-header">
