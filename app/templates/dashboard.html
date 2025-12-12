@@ -11,36 +11,6 @@
 
 <h1 class="h1">Welcome, {{ user.full_name or user.email.split('@')[0] }}</h1>
 
-<!-- Navigation Links - Fixed with proper horizontal layout -->
-<nav class="quick-links-horizontal" aria-label="Quick actions">
-  <a class="btn ghost" href="/entries/" aria-label="Add, view, or edit expense entries">
-    <i class="bi bi-plus-circle" aria-hidden="true"></i> Add / View / Edit Entries
-  </a>
-  <a class="btn ghost" href="/categories/" aria-label="Manage expense categories">
-    <i class="bi bi-tags" aria-hidden="true"></i> Manage Categories
-  </a>
-  <a class="btn ghost" href="/calendar" aria-label="View calendar of financial entries">
-    <i class="bi bi-calendar3" aria-hidden="true"></i> Calendar
-  </a>
-  <a class="btn ghost" href="/reports/" aria-label="View financial reports and analytics">
-    <i class="bi bi-graph-up" aria-hidden="true"></i> Financial Reports
-  </a>
-  <a class="btn ghost" href="/insights/" aria-label="View smart financial insights and recommendations">
-    <i class="bi bi-lightbulb" aria-hidden="true"></i> AI Insights
-  </a>
-  <a class="btn ghost" href="/goals/" aria-label="Set and track financial goals">
-    <i class="bi bi-trophy" aria-hidden="true"></i> Goals
-  </a>
-  <a class="btn ghost" href="/intelligence/" aria-label="View smart budget recommendations and insights">
-    <i class="bi bi-lightbulb-fill" aria-hidden="true"></i> Budget Intelligence
-  </a>
-  <a class="btn ghost" href="/currency/settings" aria-label="Change currency settings">
-    <i class="bi bi-currency-exchange" aria-hidden="true"></i> Currency
-  </a>
-  <a class="btn ghost" href="/ai/settings" aria-label="Configure AI and machine learning settings">
-    <i class="bi bi-robot" aria-hidden="true"></i> AI Settings
-  </a>
-</nav>
 <!-- Horizontal date and category filters -->
 <form id="filters" class="date-filters mt-6" onsubmit="return false" role="search" aria-label="Filter expenses by date and category">
   <div class="date-inputs">
@@ -257,25 +227,7 @@
   --expense-color: #dc3545;
 }
 
-/* Navigation Links - Extended Horizontal Layout */
-.quick-links-horizontal {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin: 2rem 0;
-  width: 100%;
-}
-
-.quick-links-horizontal .btn {
-  text-align: center;
-  white-space: nowrap;
-  padding: 12px 16px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
+/* Old navigation links removed - now in header secondary nav */
 
 /* Horizontal date filters layout */
 .date-filters {
@@ -696,18 +648,6 @@
 
 /* Mobile Responsive Design */
 @media (max-width: 768px) {
-  /* Navigation links - stack vertically on mobile */
-  .quick-links-horizontal {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-  
-  .quick-links-horizontal .btn {
-    padding: 14px 16px;
-    min-height: 48px;
-    font-size: 0.9rem;
-  }
-  
   /* Date filters - stack vertically on mobile */
   .date-filters {
     flex-direction: column;
@@ -859,12 +799,6 @@
 
 @media (max-width: 480px) {
   /* Extra small screens */
-  .quick-links-horizontal .btn {
-    padding: 16px;
-    min-height: 52px;
-    font-size: 1rem;
-  }
-  
   .date-field .input {
     padding: 14px;
     font-size: 16px;
