@@ -27,23 +27,31 @@ class VoiceCommandManager {
         this.initializeUI();
         this.setupKeyboardShortcut();
 
+        // Check microphone permissions asynchronously (non-blocking)
+        this.checkMicrophonePermissions();
+
         console.log('[Voice Commands] Initialization complete');
     }
 
     initializeSpeechRecognition() {
         console.log('[Voice Commands] Checking browser support...');
+        console.log('[Voice Commands] window.SpeechRecognition:', !!window.SpeechRecognition);
+        console.log('[Voice Commands] window.webkitSpeechRecognition:', !!window.webkitSpeechRecognition);
 
         // Check browser support
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
             console.error('[Voice Commands] ❌ Web Speech API NOT supported in this browser');
-            console.log('[Voice Commands] Browser info:', navigator.userAgent);
+            console.error('[Voice Commands] Browser info:', navigator.userAgent);
+            console.error('[Voice Commands] Protocol:', window.location.protocol);
+            console.error('[Voice Commands] Web Speech API requires Chrome, Edge, Opera, or Safari');
             this.showBrowserNotSupported();
             return;
         }
 
         console.log('[Voice Commands] ✅ Web Speech API is supported');
+        console.log('[Voice Commands] Using:', window.SpeechRecognition ? 'SpeechRecognition' : 'webkitSpeechRecognition');
 
         // Initialize recognition
         this.recognition = new SpeechRecognition();
@@ -69,6 +77,29 @@ class VoiceCommandManager {
 
         // Update debug panel
         this.updateDebugPanel('api-support', this.recognition ? '✅ Supported' : '❌ Not supported');
+    }
+
+    async checkMicrophonePermissions() {
+        // Check microphone permissions using MediaDevices API (non-blocking)
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            try {
+                console.log('[Voice Commands] Checking microphone permissions...');
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log('[Voice Commands] ✅ Microphone access granted via MediaDevices API');
+                // Stop the stream immediately - we just needed to check permission
+                stream.getTracks().forEach(track => track.stop());
+            } catch (error) {
+                console.warn('[Voice Commands] ⚠️ Microphone permission check failed:', error.name, error.message);
+                console.warn('[Voice Commands] This might affect voice recognition. Error:', error);
+                if (error.name === 'NotAllowedError') {
+                    console.warn('[Voice Commands] 💡 Tip: Microphone permission is denied. Please allow microphone access in browser settings.');
+                } else if (error.name === 'NotFoundError') {
+                    console.warn('[Voice Commands] 💡 Tip: No microphone found. Please check your microphone connection.');
+                }
+            }
+        } else {
+            console.warn('[Voice Commands] ⚠️ MediaDevices API not available for permission check');
+        }
     }
 
     updateDebugPanel(field, value, color = null) {
@@ -129,8 +160,19 @@ class VoiceCommandManager {
         `;
         this.button.title = 'Voice Command (Ctrl+Shift+V)';
         this.button.setAttribute('aria-label', 'Activate voice command');
+        
+        // Ensure button is visible
+        this.button.style.display = 'flex';
+        this.button.style.visibility = 'visible';
 
-        this.button.addEventListener('click', () => this.toggleListening());
+        this.button.addEventListener('click', () => {
+            console.log('[Voice Commands] Button clicked');
+            console.log('[Voice Commands] Recognition available:', !!this.recognition);
+            console.log('[Voice Commands] Is listening:', this.isListening);
+            this.toggleListening();
+        });
+        
+        console.log('[Voice Commands] Voice button created');
     }
 
     createVoiceModal() {
@@ -226,7 +268,15 @@ class VoiceCommandManager {
 
         if (!this.recognition) {
             console.error('[Voice Commands] ❌ Recognition not initialized');
+            console.error('[Voice Commands] Checking Web Speech API support...');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            console.error('[Voice Commands] SpeechRecognition available:', !!SpeechRecognition);
+            console.error('[Voice Commands] Browser:', navigator.userAgent);
+            console.error('[Voice Commands] Protocol:', window.location.protocol);
+            console.error('[Voice Commands] Is HTTPS:', window.location.protocol === 'https:');
+            
             this.showBrowserNotSupported();
+            this.showError('Voice recognition is not available. Please ensure you are using Chrome, Edge, Opera, or Safari, and that you are on a secure (HTTPS) connection.');
             return;
         }
 
@@ -261,9 +311,17 @@ class VoiceCommandManager {
         // Start recognition
         try {
             console.log('[Voice Commands] Calling recognition.start()...');
+            console.log('[Voice Commands] Recognition object:', this.recognition);
+            console.log('[Voice Commands] Recognition state before start:', {
+                isListening: this.isListening,
+                recognitionStarted: this.recognitionStarted
+            });
+            
             this.recognition.start();
             this.isListening = true;
-            this.button.classList.add('listening');
+            if (this.button) {
+                this.button.classList.add('listening');
+            }
             console.log('[Voice Commands] ✅ Recognition.start() called successfully');
 
             // Set a timeout to detect if onstart event never fires
@@ -272,13 +330,18 @@ class VoiceCommandManager {
                     console.error('[Voice Commands] ❌ TIMEOUT: onstart event never fired after 3 seconds');
                     console.error('[Voice Commands] Recognition.start() was called but onstart event did not trigger');
                     console.error('[Voice Commands] This indicates a Web Speech API initialization failure');
+                    console.error('[Voice Commands] Possible causes:');
+                    console.error('[Voice Commands] 1. Microphone permission denied');
+                    console.error('[Voice Commands] 2. Microphone in use by another application');
+                    console.error('[Voice Commands] 3. Browser security restrictions');
+                    console.error('[Voice Commands] 4. Network connectivity issues (Web Speech API requires internet)');
 
                     this.updateDebugPanel('mic-status', '❌ Failed', '#dc3545');
                     this.updateDebugPanel('listening-status', '❌ No', '#dc3545');
                     this.updateDebugPanel('last-event', 'ERROR: onstart never fired');
 
                     this.stopListening();
-                    this.showError('Voice recognition failed to start. The microphone may be in use by another application. Please close other apps using the microphone and try again.');
+                    this.showError('Voice recognition failed to start. Please check: 1) Microphone permissions are allowed, 2) No other apps are using the microphone, 3) You have an internet connection (Web Speech API requires internet).');
                 }
             }, 3000); // Wait 3 seconds for onstart event
 
@@ -289,7 +352,20 @@ class VoiceCommandManager {
                 message: error.message,
                 stack: error.stack
             });
-            this.showError('Failed to start voice recognition. Please try again.');
+            
+            // Provide more specific error messages
+            let errorMsg = 'Failed to start voice recognition. ';
+            if (error.name === 'NotAllowedError' || error.message.includes('not-allowed')) {
+                errorMsg += 'Microphone permission denied. Please allow microphone access in your browser settings.';
+            } else if (error.name === 'NotFoundError' || error.message.includes('audio-capture')) {
+                errorMsg += 'No microphone found. Please check your microphone connection.';
+            } else if (error.name === 'NetworkError' || error.message.includes('network')) {
+                errorMsg += 'Network error. Web Speech API requires an internet connection.';
+            } else {
+                errorMsg += 'Please try again or check the browser console for details.';
+            }
+            
+            this.showError(errorMsg);
         }
     }
 
@@ -643,16 +719,45 @@ class VoiceCommandManager {
 // Initialize voice command manager when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[Voice Commands] DOM loaded, checking authentication...');
+    console.log('[Voice Commands] Browser:', navigator.userAgent);
+    console.log('[Voice Commands] Protocol:', window.location.protocol);
+    console.log('[Voice Commands] Is HTTPS:', window.location.protocol === 'https:');
 
     // Only initialize if user is logged in (check for specific element or session)
-    const isAuthenticated = document.querySelector('[data-user-authenticated]') || document.body.classList.contains('authenticated');
+    const authElement = document.querySelector('[data-user-authenticated]');
+    const authClass = document.body.classList.contains('authenticated');
+    const isAuthenticated = authElement || authClass;
 
-    console.log('[Voice Commands] Is authenticated:', isAuthenticated);
+    console.log('[Voice Commands] Authentication check:');
+    console.log('[Voice Commands] - data-user-authenticated element:', !!authElement);
+    console.log('[Voice Commands] - authenticated class:', authClass);
+    console.log('[Voice Commands] - Is authenticated:', isAuthenticated);
 
     if (isAuthenticated) {
         console.log('[Voice Commands] Creating VoiceCommandManager instance...');
-        window.voiceCommandManager = new VoiceCommandManager();
-        console.log('[Voice Commands] ✅ Manager instance created and available as window.voiceCommandManager');
+        try {
+            window.voiceCommandManager = new VoiceCommandManager();
+            console.log('[Voice Commands] ✅ Manager instance created and available as window.voiceCommandManager');
+            
+            // Verify button was created
+            setTimeout(() => {
+                const button = document.getElementById('voice-command-button');
+                if (button) {
+                    console.log('[Voice Commands] ✅ Voice button found in DOM');
+                    console.log('[Voice Commands] Button display style:', window.getComputedStyle(button).display);
+                    console.log('[Voice Commands] Button visibility:', window.getComputedStyle(button).visibility);
+                } else {
+                    console.error('[Voice Commands] ❌ Voice button NOT found in DOM');
+                }
+            }, 100);
+        } catch (error) {
+            console.error('[Voice Commands] ❌ Error creating VoiceCommandManager:', error);
+            console.error('[Voice Commands] Error details:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
+        }
     } else {
         console.log('[Voice Commands] ⚠️ User not authenticated, voice commands disabled');
     }
