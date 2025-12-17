@@ -39,3 +39,30 @@ async def help_page(
         "user": user,
         "active_page": "help"
     })
+
+
+@router.get("/tutorial", response_class=HTMLResponse)
+async def tutorial_page(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user)
+):
+    """
+    Display step-by-step tutorial for new users.
+
+    Comprehensive guide covering:
+    - Creating categories
+    - Adding income/expense entries
+    - Understanding the dashboard
+    - Using the calendar view
+    - Generating reports
+    - AI features
+    - Bills and subscriptions
+    - Financial goals
+    - Voice commands
+    - Settings and customization
+    """
+    return render(request, "help/tutorial.html", {
+        "user": user,
+        "active_page": "tutorial"
+    })

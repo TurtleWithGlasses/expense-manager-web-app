@@ -1,0 +1,839 @@
+{% extends "base.html" %}
+
+{% block title %}Getting Started Tutorial - BudgetPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+          <i class="bi bi-mortarboard"></i> Getting Started Tutorial
+        </h1>
+        <a href="/help" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i> Back to Help
+        </a>
+      </div>
+
+      <!-- Progress Tracker -->
+      <div class="card mb-4 bg-primary text-white">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-rocket-takeoff"></i> Welcome to BudgetPulse!
+          </h5>
+          <p class="mb-2">This tutorial will guide you through everything you need to know to master your finances. Follow along step by step!</p>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="#step1" class="badge bg-light text-primary text-decoration-none">1. Categories</a>
+            <a href="#step2" class="badge bg-light text-primary text-decoration-none">2. Adding Entries</a>
+            <a href="#step3" class="badge bg-light text-primary text-decoration-none">3. Dashboard</a>
+            <a href="#step4" class="badge bg-light text-primary text-decoration-none">4. Calendar</a>
+            <a href="#step5" class="badge bg-light text-primary text-decoration-none">5. Reports</a>
+            <a href="#step6" class="badge bg-light text-primary text-decoration-none">6. AI Features</a>
+            <a href="#step7" class="badge bg-light text-primary text-decoration-none">7. Bills & Subscriptions</a>
+            <a href="#step8" class="badge bg-light text-primary text-decoration-none">8. Goals</a>
+            <a href="#step9" class="badge bg-light text-primary text-decoration-none">9. Voice Commands</a>
+            <a href="#step10" class="badge bg-light text-primary text-decoration-none">10. Settings</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 1: Categories -->
+      <div class="card mb-4" id="step1">
+        <div class="card-header bg-success text-white">
+          <h4 class="mb-0">
+            <span class="badge bg-white text-success me-2">Step 1</span>
+            <i class="bi bi-folder-plus"></i> Creating Categories
+          </h4>
+        </div>
+        <div class="card-body">
+          <p class="lead">Categories help you organize your income and expenses. Before adding any entries, set up your categories first!</p>
+
+          <div class="row">
+            <div class="col-lg-6">
+              <h5><i class="bi bi-1-circle text-success"></i> How to Create a Category</h5>
+              <ol class="mb-4">
+                <li>Click <strong>"Categories"</strong> in the top navigation menu</li>
+                <li>Click the <strong>"+ Add Category"</strong> button</li>
+                <li>Enter a category name (e.g., "Groceries", "Salary", "Entertainment")</li>
+                <li>Choose a color for easy identification</li>
+                <li>Select the type: <strong>Expense</strong> or <strong>Income</strong></li>
+                <li>Click <strong>"Save"</strong> to create the category</li>
+              </ol>
+
+              <h5><i class="bi bi-2-circle text-success"></i> Managing Categories</h5>
+              <ul>
+                <li><strong>Edit:</strong> Click the edit icon next to any category to rename or change its color</li>
+                <li><strong>Delete:</strong> Click the trash icon to remove a category (entries will become uncategorized)</li>
+                <li><strong>View Count:</strong> Each category shows how many entries are assigned to it</li>
+              </ul>
+            </div>
+            <div class="col-lg-6">
+              <div class="alert alert-info">
+                <h6><i class="bi bi-lightbulb"></i> Recommended Categories</h6>
+                <p class="mb-2"><strong>For Expenses:</strong></p>
+                <div class="d-flex flex-wrap gap-1 mb-3">
+                  <span class="badge bg-secondary">Groceries</span>
+                  <span class="badge bg-secondary">Rent/Mortgage</span>
+                  <span class="badge bg-secondary">Utilities</span>
+                  <span class="badge bg-secondary">Transportation</span>
+                  <span class="badge bg-secondary">Entertainment</span>
+                  <span class="badge bg-secondary">Dining Out</span>
+                  <span class="badge bg-secondary">Healthcare</span>
+                  <span class="badge bg-secondary">Shopping</span>
+                  <span class="badge bg-secondary">Subscriptions</span>
+                </div>
+                <p class="mb-2"><strong>For Income:</strong></p>
+                <div class="d-flex flex-wrap gap-1">
+                  <span class="badge bg-secondary">Salary</span>
+                  <span class="badge bg-secondary">Freelance</span>
+                  <span class="badge bg-secondary">Investments</span>
+                  <span class="badge bg-secondary">Bonus</span>
+                  <span class="badge bg-secondary">Gifts</span>
+                  <span class="badge bg-secondary">Refunds</span>
+                </div>
+              </div>
+
+              <div class="alert alert-success">
+                <h6><i class="bi bi-magic"></i> Pro Tip</h6>
+                <p class="mb-0">BudgetPulse's AI can automatically suggest categories based on your entry descriptions. Enable this in <strong>Settings > AI Settings</strong>!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Adding Entries -->
+      <div class="card mb-4" id="step2">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <span class="badge bg-white text-primary me-2">Step 2</span>
+            <i class="bi bi-plus-circle"></i> Adding Income & Expense Entries
+          </h4>
+        </div>
+        <div class="card-body">
+          <p class="lead">Now let's add your first financial entries! You can add both income (money coming in) and expenses (money going out).</p>
+
+          <div class="row">
+            <div class="col-lg-6">
+              <h5><i class="bi bi-arrow-up-circle text-danger"></i> Adding an Expense</h5>
+              <ol>
+                <li>Click <strong>"+ Add Entry"</strong> button (visible on Dashboard or Entries page)</li>
+                <li>Select <strong>"Expense"</strong> as the entry type</li>
+                <li>Enter the <strong>amount</strong> (e.g., 50.00)</li>
+                <li>Select a <strong>category</strong> from your list</li>
+                <li>Choose the <strong>date</strong> of the transaction</li>
+                <li>Add an optional <strong>note/description</strong></li>
+                <li>Click <strong>"Save Entry"</strong></li>
+              </ol>
+
+              <h5 class="mt-4"><i class="bi bi-arrow-down-circle text-success"></i> Adding Income</h5>
+              <ol>
+                <li>Click <strong>"+ Add Entry"</strong> button</li>
+                <li>Select <strong>"Income"</strong> as the entry type</li>
+                <li>Enter the amount received</li>
+                <li>Select an income category (e.g., Salary)</li>
+                <li>Choose the date and add notes</li>
+                <li>Click <strong>"Save Entry"</strong></li>
+              </ol>
+            </div>
+            <div class="col-lg-6">
+              <h5><i class="bi bi-pencil-square"></i> Managing Entries</h5>
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Action</th>
+                      <th>How To</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>View All</strong></td>
+                      <td>Go to <strong>Entries</strong> from the menu</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Edit Entry</strong></td>
+                      <td>Click the pencil icon next to any entry</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Quick Edit Amount</strong></td>
+                      <td>Click directly on the amount to edit inline</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Delete Entry</strong></td>
+                      <td>Click the trash icon (cannot be undone!)</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Filter Entries</strong></td>
+                      <td>Use date range, category, or type filters</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Sort Entries</strong></td>
+                      <td>Click column headers to sort</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="alert alert-warning mt-3">
+                <h6><i class="bi bi-calendar-date"></i> Date Selection Tips</h6>
+                <ul class="mb-0">
+                  <li>Default date is <strong>today</strong></li>
+                  <li>Click the calendar icon to pick any date</li>
+                  <li>You can add entries for past dates (backdate receipts)</li>
+                  <li>Future dates are useful for planned expenses</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Dashboard -->
+      <div class="card mb-4" id="step3">
+        <div class="card-header bg-info text-white">
+          <h4 class="mb-0">
+            <span class="badge bg-white text-info me-2">Step 3</span>
+            <i class="bi bi-speedometer2"></i> Understanding Your Dashboard
+          </h4>
+        </div>
+        <div class="card-body">
+          <p class="lead">Your dashboard is the command center for your finances. Here's what each section shows you.</p>
+
+          <div class="row">
+            <div class="col-lg-4 mb-3">
+              <div class="card h-100 border-success">
+                <div class="card-body">
+                  <h5 class="card-title text-success"><i class="bi bi-arrow-down-circle"></i> Total Income</h5>
+                  <p class="card-text">Shows all money received during the selected period. Includes salary, freelance work, investments, and other income sources.</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-4 mb-3">
+              <div class="card h-100 border-danger">
+                <div class="card-body">
+                  <h5 class="card-title text-danger"><i class="bi bi-arrow-up-circle"></i> Total Expenses</h5>
+                  <p class="card-text">Shows all money spent during the selected period. Includes all your expense categories combined.</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-4 mb-3">
+              <div class="card h-100 border-primary">
+                <div class="card-body">
+                  <h5 class="card-title text-primary"><i class="bi bi-wallet2"></i> Balance</h5>
+                  <p class="card-text">Your net position: Income minus Expenses. Green means you're saving money, red means you're spending more than earning.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h5 class="mt-4"><i class="bi bi-funnel"></i> Filtering Your Dashboard</h5>
+          <div class="row">
+            <div class="col-lg-6">
+              <ul>
+                <li><strong>Date Range:</strong> Click the date picker to select a custom period
+                  <ul>
+                    <li>Today, This Week, This Month</li>
+                    <li>Last 7/30/90 Days</li>
+                    <li>Custom date range</li>
+                  </ul>
+                </li>
+                <li><strong>Category Filter:</strong> Focus on specific categories</li>
+                <li><strong>Type Filter:</strong> Show only income or expenses</li>
+              </ul>
+            </div>
+            <div class="col-lg-6">
+              <div class="alert alert-info">
+                <h6><i class="bi bi-bar-chart"></i> Dashboard Charts</h6>
+                <ul class="mb-0">
+                  <li><strong>Daily Chart:</strong> Line graph showing spending over time</li>
+                  <li><strong>Pie Chart:</strong> Visual breakdown by category</li>
+                  <li><strong>Bar Chart:</strong> Compare categories side by side</li>
+                </ul>
+                <small>Hover over charts to see detailed values!</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: Calendar View -->
+      <div class="card mb-4" id="step4">
+        <div class="card-header bg-warning text-dark">
+          <h4 class="mb-0">
+            <span class="badge bg-dark text-warning me-2">Step 4</span>
+            <i class="bi bi-calendar3"></i> Using the Calendar View
+          </h4>
+        </div>
+        <div class="card-body">
+          <p class="lead">The calendar gives you a visual overview of your financial activity day by day.</p>
+
+          <div class="row">
+            <div class="col-lg-6">
+              <h5><i class="bi bi-compass"></i> Navigating the Calendar</h5>
+              <ol>
+                <li>Go to <strong>"Calendar"</strong> from the menu</li>
+                <li>Use <strong>&lt;</strong> and <strong>&gt;</strong> arrows to change months</li>
+                <li>Click <strong>"Today"</strong> to jump back to current month</li>
+                <li>Use the month/year dropdown for quick navigation</li>
+              </ol>
+
+              <h5 class="mt-4"><i class="bi bi-circle-fill"></i> Understanding the Markers</h5>
+              <table class="table table-sm">
+                <tbody>
+                  <tr>
+                    <td><span class="badge bg-success">Green</span></td>
+                    <td>Income only on this date</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge bg-danger">Red</span></td>
+                    <td>Expenses only on this date</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge bg-warning text-dark">Yellow</span></td>
+                    <td>Both income and expenses (mixed)</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge bg-warning text-dark">Bill Icon</span></td>
+                    <td>Recurring bill/subscription due</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col-lg-6">
+              <h5><i class="bi bi-eye"></i> Viewing Date Details</h5>
+              <div class="alert alert-light border">
+                <p><strong>Hover Method:</strong></p>
+                <ul>
+                  <li>Hover your mouse over any date with a marker</li>
+                  <li>A tooltip will show:
+                    <ul>
+                      <li>Total income for the day</li>
+                      <li>Total expenses for the day</li>
+                      <li>Net balance</li>
+                      <li>First 3 entries with details</li>
+                      <li>Bill/subscription information</li>
+                    </ul>
+                  </li>
+                </ul>
+                <p><strong>Click Method:</strong></p>
+                <ul class="mb-0">
+                  <li>Click any date to see <strong>all</strong> entries for that day</li>
+                  <li>Full entry details with edit/delete options</li>
+                </ul>
+              </div>
+
+              <div class="alert alert-success">
+                <h6><i class="bi bi-clock-history"></i> Future Bills</h6>
+                <p class="mb-0">The calendar shows your upcoming bills and subscriptions on future dates, so you can plan ahead for upcoming payments!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 5: Reports -->
+      <div class="card mb-4" id="step5">
+        <div class="card-header bg-secondary text-white">
+          <h4 class="mb-0">
+            <span class="badge bg-white text-secondary me-2">Step 5</span>
+            <i class="bi bi-file-earmark-bar-graph"></i> Generating Reports
+          </h4>
+        </div>
+        <div class="card-body">
+          <p class="lead">Reports help you analyze your spending patterns over different time periods.</p>
+
+          <div class="row">
+            <div class="col-lg-4 mb-3">
+              <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white">
+                  <i class="bi bi-calendar-week"></i> Weekly Reports
+                </div>
+                <div class="card-body">
+                  <p>Perfect for tracking short-term spending:</p>
+                  <ul>
+                    <li>7-day spending breakdown</li>
+                    <li>Daily averages</li>
+                    <li>Top expense categories</li>
+                    <li>Week-over-week comparison</li>
+                  </ul>
+                  <a href="/reports/weekly" class="btn btn-outline-primary btn-sm">View Weekly Report</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-4 mb-3">
+              <div class="card h-100 border-success">
+                <div class="card-header bg-success text-white">
+                  <i class="bi bi-calendar-month"></i> Monthly Reports
+                </div>
+                <div class="card-body">
+                  <p>Ideal for budget planning:</p>
+                  <ul>
+                    <li>Full month analysis</li>
+                    <li>Category breakdown with percentages</li>
+                    <li>Income vs. expense comparison</li>
+                    <li>Savings rate calculation</li>
+                  </ul>
+                  <a href="/reports/monthly" class="btn btn-outline-success btn-sm">View Monthly Report</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-4 mb-3">
+              <div class="card h-100 border-warning">
+                <div class="card-header bg-warning text-dark">
+                  <i class="bi bi-calendar"></i> Annual Reports
+                </div>
+                <div class="card-body">
+                  <p>See the big picture:</p>
+                  <ul>
+                    <li>Year-long trends</li>
+                    <li>Month-by-month breakdown</li>
+                    <li>Year-over-year comparison</li>
+                    <li>Annual totals and averages</li>
+                  </ul>
+                  <a href="/reports/annual" class="btn btn-outline-warning btn-sm">View Annual Report</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h5 class="mt-4"><i class="bi bi-download"></i> Exporting Your Data</h5>
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="card">
+                <div class="card-body">
+                  <h6><i class="bi bi-file-earmark-excel text-success"></i> Excel Export</h6>
+                  <ul>
+                    <li>Download all your entries as a spreadsheet</li>
+                    <li>Filter by date range, category, or type</li>
+                    <li>Includes all details: date, amount, category, notes</li>
+                    <li>Great for further analysis or tax purposes</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="card">
+                <div class="card-body">
+                  <h6><i class="bi bi-file-earmark-pdf text-danger"></i> PDF Export</h6>
+                  <ul>
+                    <li>Professional formatted reports</li>
+                    <li>Include charts and visualizations</li>
+                    <li>Perfect for printing or sharing</li>
+                    <li>Summary statistics included</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 6: AI Features -->
+      <div class="card mb-4" id="step6">
+        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+          <h4 class="mb-0">
+            <span class="badge bg-white text-primary me-2">Step 6</span>
+            <i class="bi bi-stars"></i> Using AI Features
+          </h4>
+        </div>
+        <div class="card-body">
+          <p class="lead">BudgetPulse uses artificial intelligence to help you manage your finances smarter.</p>
+
+          <div class="row">
+            <div class="col-lg-6">
+              <h5><i class="bi bi-magic"></i> Automatic Category Suggestions</h5>
+              <p>When you add a new entry with a description, the AI can automatically suggest the best category:</p>
+              <ol>
+                <li>Enable in <strong>Settings > AI Settings</strong></li>
+                <li>When adding an entry, type a description (e.g., "Coffee at Starbucks")</li>
+                <li>AI suggests "Dining Out" or "Coffee" category</li>
+                <li>Accept the suggestion or choose manually</li>
+                <li>AI learns from your corrections!</li>
+              </ol>
+
+              <h5 class="mt-4"><i class="bi bi-graph-up-arrow"></i> Smart Insights</h5>
+              <p>AI analyzes your spending patterns and provides:</p>
+              <ul>
+                <li><strong>Spending Patterns:</strong> Identifies your habits</li>
+                <li><strong>Saving Opportunities:</strong> Where you can cut costs</li>
+                <li><strong>Budget Recommendations:</strong> Suggested budget limits</li>
+                <li><strong>Anomaly Alerts:</strong> Unusual spending warnings</li>
+              </ul>
+            </div>
+            <div class="col-lg-6">
+              <h5><i class="bi bi-binoculars"></i> Predictive Analytics</h5>
+              <div class="alert alert-light border">
+                <ul class="mb-0">
+                  <li><strong>Next Month Forecast:</strong> Predicts your spending</li>
+                  <li><strong>Cash Flow Projection:</strong> Future income/expense balance</li>
+                  <li><strong>Category Predictions:</strong> Expected spending per category</li>
+                  <li><strong>Budget Status:</strong> Will you stay within budget?</li>
+                </ul>
+              </div>
+
+              <h5 class="mt-4"><i class="bi bi-exclamation-triangle"></i> Anomaly Detection</h5>
+              <div class="alert alert-warning">
+                <p class="mb-2">AI alerts you about unusual transactions:</p>
+                <ul class="mb-0">
+                  <li>Unusually large purchases</li>
+                  <li>Spending spikes in specific categories</li>
+                  <li>Changed subscription amounts</li>
+                  <li>Pattern deviations</li>
+                </ul>
+              </div>
+
+              <div class="alert alert-info">
+                <h6><i class="bi bi-gear"></i> AI Settings Location</h6>
+                <p class="mb-0">Manage all AI features at:<br><strong>Settings > AI Settings</strong></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 7: Bills & Subscriptions -->
+      <div class="card mb-4" id="step7">
+        <div class="card-header bg-danger text-white">
+          <h4 class="mb-0">
+            <span class="badge bg-white text-danger me-2">Step 7</span>
+            <i class="bi bi-receipt"></i> Managing Bills & Subscriptions
+          </h4>
+        </div>
+        <div class="card-body">
+          <p class="lead">Never miss a payment! Track all your recurring bills and subscriptions in one place.</p>
+
+          <div class="row">
+            <div class="col-lg-6">
+              <h5><i class="bi bi-plus-lg"></i> Adding a Recurring Payment</h5>
+              <ol>
+                <li>Go to <strong>Intelligence > Bills & Subscriptions</strong></li>
+                <li>Click <strong>"+ Add Bill/Subscription"</strong></li>
+                <li>Enter payment details:
+                  <ul>
+                    <li><strong>Name:</strong> e.g., "Netflix", "Electric Bill"</li>
+                    <li><strong>Amount:</strong> Monthly payment amount</li>
+                    <li><strong>Category:</strong> Assign to a category</li>
+                    <li><strong>Frequency:</strong> Weekly, Monthly, Quarterly, Annual</li>
+                    <li><strong>Due Date:</strong> Day of month/week</li>
+                    <li><strong>Reminder:</strong> Days before due to remind</li>
+                  </ul>
+                </li>
+                <li>Click <strong>"Save"</strong></li>
+              </ol>
+
+              <h5 class="mt-4"><i class="bi bi-bell"></i> Payment Reminders</h5>
+              <ul>
+                <li>Set reminder days (e.g., 3 days before)</li>
+                <li>Reminders appear on dashboard</li>
+                <li>Mark payments as "Paid" when done</li>
+                <li>Dismiss reminders you've seen</li>
+              </ul>
+            </div>
+            <div class="col-lg-6">
+              <h5><i class="bi bi-list-check"></i> Bill Features</h5>
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Feature</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Frequency Options</strong></td>
+                      <td>Weekly, Biweekly, Monthly, Quarterly, Annual</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Auto Calculation</strong></td>
+                      <td>Shows monthly and annual cost totals</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Calendar Integration</strong></td>
+                      <td>Bills appear on calendar for future dates</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Payment History</strong></td>
+                      <td>Track when bills were actually paid</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Pause/Resume</strong></td>
+                      <td>Temporarily pause inactive subscriptions</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="alert alert-success">
+                <h6><i class="bi bi-robot"></i> AI Subscription Detection</h6>
+                <p class="mb-0">BudgetPulse can automatically detect recurring payments in your spending history and suggest adding them as bills!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 8: Financial Goals -->
+      <div class="card mb-4" id="step8">
+        <div class="card-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+          <h4 class="mb-0">
+            <span class="badge bg-white text-danger me-2">Step 8</span>
+            <i class="bi bi-bullseye"></i> Setting Financial Goals
+          </h4>
+        </div>
+        <div class="card-body">
+          <p class="lead">Set goals to save money, pay off debt, or limit spending in specific categories.</p>
+
+          <div class="row">
+            <div class="col-lg-6">
+              <h5><i class="bi bi-plus-circle"></i> Creating a Goal</h5>
+              <ol>
+                <li>Go to <strong>"Goals"</strong> from the menu</li>
+                <li>Click <strong>"+ Create Goal"</strong></li>
+                <li>Choose goal type:
+                  <ul>
+                    <li><strong>Savings Goal:</strong> Save a specific amount</li>
+                    <li><strong>Spending Limit:</strong> Cap spending in a category</li>
+                    <li><strong>Debt Payoff:</strong> Track debt reduction</li>
+                    <li><strong>Emergency Fund:</strong> Build safety net</li>
+                  </ul>
+                </li>
+                <li>Set your target amount</li>
+                <li>Choose a deadline (optional)</li>
+                <li>Add a description for motivation</li>
+                <li>Click <strong>"Create Goal"</strong></li>
+              </ol>
+            </div>
+            <div class="col-lg-6">
+              <h5><i class="bi bi-graph-up"></i> Tracking Progress</h5>
+              <ul>
+                <li><strong>Progress Bar:</strong> Visual progress indicator</li>
+                <li><strong>Percentage Complete:</strong> How close you are</li>
+                <li><strong>Milestone Celebrations:</strong> 25%, 50%, 75% achievements</li>
+                <li><strong>Auto-Update:</strong> Spending goals update automatically</li>
+                <li><strong>Manual Updates:</strong> Add progress for savings goals</li>
+              </ul>
+
+              <div class="alert alert-info">
+                <h6><i class="bi bi-trophy"></i> Goal Status</h6>
+                <ul class="mb-0">
+                  <li><span class="badge bg-primary">Active</span> Currently working on</li>
+                  <li><span class="badge bg-success">Completed</span> Goal achieved!</li>
+                  <li><span class="badge bg-secondary">Paused</span> Temporarily on hold</li>
+                  <li><span class="badge bg-danger">Failed</span> Deadline passed</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 9: Voice Commands -->
+      <div class="card mb-4" id="step9">
+        <div class="card-header" style="background: linear-gradient(135deg, #5ee7df 0%, #b490ca 100%); color: white;">
+          <h4 class="mb-0">
+            <span class="badge bg-white text-primary me-2">Step 9</span>
+            <i class="bi bi-mic"></i> Using Voice Commands
+          </h4>
+        </div>
+        <div class="card-body">
+          <p class="lead">Add entries hands-free by speaking naturally to BudgetPulse!</p>
+
+          <div class="row">
+            <div class="col-lg-6">
+              <h5><i class="bi bi-play-circle"></i> Getting Started</h5>
+              <ol>
+                <li>Click the <strong>purple microphone button</strong> (bottom-right corner)</li>
+                <li>Or press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></li>
+                <li>Allow microphone access when prompted</li>
+                <li>Speak your command clearly</li>
+                <li>Review the parsed command</li>
+                <li>Click <strong>"Confirm"</strong> to save</li>
+              </ol>
+
+              <h5 class="mt-4"><i class="bi bi-chat-dots"></i> Example Commands</h5>
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Say This</th>
+                      <th>Result</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>"Add expense 50 dollars for groceries"</code></td>
+                      <td>Creates $50 grocery expense</td>
+                    </tr>
+                    <tr>
+                      <td><code>"Add income 2000 salary"</code></td>
+                      <td>Creates $2000 income</td>
+                    </tr>
+                    <tr>
+                      <td><code>"Spent 25 on coffee yesterday"</code></td>
+                      <td>Creates $25 expense for yesterday</td>
+                    </tr>
+                    <tr>
+                      <td><code>"Delete last entry"</code></td>
+                      <td>Removes most recent entry</td>
+                    </tr>
+                    <tr>
+                      <td><code>"What's my total this month?"</code></td>
+                      <td>Shows monthly summary</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <h5><i class="bi bi-globe"></i> Supported Browsers</h5>
+              <ul>
+                <li><i class="bi bi-check-circle text-success"></i> Google Chrome (recommended)</li>
+                <li><i class="bi bi-check-circle text-success"></i> Microsoft Edge</li>
+                <li><i class="bi bi-check-circle text-success"></i> Opera</li>
+                <li><i class="bi bi-dash-circle text-warning"></i> Safari (limited support)</li>
+                <li><i class="bi bi-x-circle text-danger"></i> Firefox (not supported)</li>
+              </ul>
+
+              <div class="alert alert-warning">
+                <h6><i class="bi bi-exclamation-triangle"></i> Troubleshooting</h6>
+                <ul class="mb-0">
+                  <li>Make sure microphone permission is granted</li>
+                  <li>Speak clearly in a quiet environment</li>
+                  <li>Use English for best results</li>
+                  <li>Check the <a href="/help#voice-commands">Help page</a> for more tips</li>
+                </ul>
+              </div>
+
+              <div class="alert alert-info">
+                <h6><i class="bi bi-shield-check"></i> Privacy Note</h6>
+                <p class="mb-0">Voice processing happens entirely in your browser. No audio is sent to our servers - your voice data stays private!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 10: Settings -->
+      <div class="card mb-4" id="step10">
+        <div class="card-header bg-dark text-white">
+          <h4 class="mb-0">
+            <span class="badge bg-white text-dark me-2">Step 10</span>
+            <i class="bi bi-gear"></i> Customizing Your Settings
+          </h4>
+        </div>
+        <div class="card-body">
+          <p class="lead">Personalize BudgetPulse to match your preferences.</p>
+
+          <div class="row">
+            <div class="col-lg-6">
+              <h5><i class="bi bi-palette"></i> Appearance Settings</h5>
+              <p>Go to <strong>Settings > Appearance</strong></p>
+              <ul>
+                <li><strong>Theme:</strong> Switch between Dark and Light mode</li>
+                <li><strong>Compact Mode:</strong> Condensed UI for more data</li>
+                <li><strong>Font Size:</strong> Small, Medium, or Large text</li>
+                <li><strong>Animations:</strong> Enable/disable UI animations</li>
+              </ul>
+
+              <h5 class="mt-4"><i class="bi bi-currency-exchange"></i> Currency Settings</h5>
+              <p>Go to <strong>Settings > Currency</strong></p>
+              <ul>
+                <li>Choose from <strong>19 supported currencies</strong></li>
+                <li>View current exchange rates</li>
+                <li>All amounts convert automatically</li>
+              </ul>
+              <div class="alert alert-warning">
+                <small><i class="bi bi-exclamation-triangle"></i> Changing currency converts all existing entries. This cannot be undone!</small>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <h5><i class="bi bi-robot"></i> AI Settings</h5>
+              <p>Go to <strong>Settings > AI Settings</strong></p>
+              <ul>
+                <li><strong>Auto-Categorization:</strong> Let AI assign categories</li>
+                <li><strong>Smart Suggestions:</strong> Get intelligent recommendations</li>
+                <li><strong>Spending Insights:</strong> Enable spending analysis</li>
+                <li><strong>Budget Predictions:</strong> Forecast future spending</li>
+              </ul>
+
+              <h5 class="mt-4"><i class="bi bi-person-circle"></i> Profile Settings</h5>
+              <p>Go to <strong>Settings</strong> (main page)</p>
+              <ul>
+                <li>Update your name and email</li>
+                <li>Upload a profile picture</li>
+                <li>Change your password</li>
+                <li>View account statistics</li>
+                <li>Delete your account (irreversible!)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Reference Card -->
+      <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <i class="bi bi-lightning-charge"></i> Quick Reference Guide
+          </h4>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <h6><i class="bi bi-keyboard"></i> Keyboard Shortcuts</h6>
+              <ul class="list-unstyled">
+                <li><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> - Voice Command</li>
+                <li><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd> - New Entry</li>
+              </ul>
+            </div>
+            <div class="col-md-4">
+              <h6><i class="bi bi-link-45deg"></i> Quick Links</h6>
+              <ul class="list-unstyled">
+                <li><a href="/dashboard">Dashboard</a></li>
+                <li><a href="/entries">All Entries</a></li>
+                <li><a href="/categories">Categories</a></li>
+                <li><a href="/calendar">Calendar</a></li>
+                <li><a href="/reports">Reports</a></li>
+                <li><a href="/goals">Goals</a></li>
+              </ul>
+            </div>
+            <div class="col-md-4">
+              <h6><i class="bi bi-question-circle"></i> Need Help?</h6>
+              <ul class="list-unstyled">
+                <li><a href="/help">Full Help Documentation</a></li>
+                <li><a href="/help#voice-commands">Voice Commands Guide</a></li>
+                <li><a href="/help#faq">FAQ</a></li>
+                <li><a href="/feedback">Submit Feedback</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Congratulations -->
+      <div class="card mb-4 border-success">
+        <div class="card-body text-center py-5">
+          <h2 class="text-success mb-3">
+            <i class="bi bi-trophy"></i> Congratulations!
+          </h2>
+          <p class="lead mb-4">You've completed the BudgetPulse tutorial. You're now ready to take control of your finances!</p>
+          <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="/dashboard" class="btn btn-primary btn-lg">
+              <i class="bi bi-speedometer2"></i> Go to Dashboard
+            </a>
+            <a href="/entries" class="btn btn-success btn-lg">
+              <i class="bi bi-plus-circle"></i> Add Your First Entry
+            </a>
+            <a href="/categories" class="btn btn-outline-primary btn-lg">
+              <i class="bi bi-folder-plus"></i> Create Categories
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
