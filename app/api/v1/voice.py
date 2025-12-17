@@ -4,7 +4,7 @@ Voice Command API endpoints
 Endpoints for processing voice commands and executing actions.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -17,6 +17,8 @@ from app.models.entry import Entry, EntryType
 from app.models.category import Category
 from app.services.voice_command_service import VoiceCommandService
 from app.services.entries import create_entry
+from app.services.user_preferences import user_preferences_service
+from app.core.currency import currency_service
 
 
 router = APIRouter(prefix="/voice", tags=["voice"])
@@ -68,13 +70,25 @@ async def process_voice_command(
     intent = parsed["intent"]
     params = parsed.get("params", {})
 
+    # Get user's currency for formatting messages
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
+
     try:
         # Execute the command based on intent
         if intent == "add_expense" or intent == "add_income":
             result = await _execute_add_entry(db, user, params, request)
+            # Format confirmation message with user's currency
+            amount = params.get("amount", 0)
+            formatted_amount = currency_service.format_amount(float(amount), user_currency)
+            category = params.get("category", "Uncategorized")
+            entry_date = params.get("date")
+            date_str = entry_date.strftime('%Y-%m-%d') if entry_date else "today"
+            entry_type = "expense" if intent == "add_expense" else "income"
+            formatted_message = f"Add {formatted_amount} {entry_type} for {category} on {date_str}"
+            
             return VoiceCommandResponse(
                 success=True,
-                message=parsed["message"],
+                message=formatted_message,
                 intent=intent,
                 confidence=parsed["confidence"],
                 data=result
@@ -160,6 +174,9 @@ async def _execute_add_entry(db: Session, user: User, params: dict, request: Req
         db.add(category)
         db.flush()
 
+    # Get user's preferred currency
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
+    
     # Create the entry using existing service
     entry_data = {
         "amount": params["amount"],
@@ -167,7 +184,7 @@ async def _execute_add_entry(db: Session, user: User, params: dict, request: Req
         "category_id": category.id,
         "date": params["date"].isoformat(),
         "description": params.get("description", ""),
-        "currency": "USD"  # Default currency, could be extracted from voice
+        "currency": user_currency
     }
 
     entry = create_entry(db, user.id, entry_data, request)
@@ -256,6 +273,9 @@ async def _execute_query(db: Session, user: User, params: dict) -> dict:
     period = params.get("period", "this_month")
     category_name = params.get("category")
 
+    # Get user's preferred currency for formatting
+    user_currency = user_preferences_service.get_user_currency(db, user.id)
+
     # Determine date range based on period
     today = datetime.now().date()
     if period == "today":
@@ -263,7 +283,7 @@ async def _execute_query(db: Session, user: User, params: dict) -> dict:
         end_date = today
     elif period == "this_week":
         # Start of week (Monday)
-        start_date = today - datetime.timedelta(days=today.weekday())
+        start_date = today - timedelta(days=today.weekday())
         end_date = today
     elif period == "this_month":
         start_date = today.replace(day=1)
@@ -300,12 +320,14 @@ async def _execute_query(db: Session, user: User, params: dict) -> dict:
         total = query.filter(Entry.type == EntryType.EXPENSE).with_entities(
             func.sum(Entry.amount)
         ).scalar() or 0
-        message = f"You spent ${total:.2f}"
+        formatted_total = currency_service.format_amount(float(total), user_currency)
+        message = f"You spent {formatted_total}"
     elif query_type == "income":
         total = query.filter(Entry.type == EntryType.INCOME).with_entities(
             func.sum(Entry.amount)
         ).scalar() or 0
-        message = f"You earned ${total:.2f}"
+        formatted_total = currency_service.format_amount(float(total), user_currency)
+        message = f"You earned {formatted_total}"
     elif query_type == "balance":
         income = query.filter(Entry.type == EntryType.INCOME).with_entities(
             func.sum(Entry.amount)
@@ -314,7 +336,8 @@ async def _execute_query(db: Session, user: User, params: dict) -> dict:
             func.sum(Entry.amount)
         ).scalar() or 0
         total = income - expenses
-        message = f"Your balance is ${total:.2f}"
+        formatted_total = currency_service.format_amount(float(total), user_currency)
+        message = f"Your balance is {formatted_total}"
     else:  # total
         income = query.filter(Entry.type == EntryType.INCOME).with_entities(
             func.sum(Entry.amount)
@@ -323,7 +346,10 @@ async def _execute_query(db: Session, user: User, params: dict) -> dict:
             func.sum(Entry.amount)
         ).scalar() or 0
         total = income - expenses
-        message = f"Income: ${income:.2f}, Expenses: ${expenses:.2f}, Balance: ${total:.2f}"
+        formatted_income = currency_service.format_amount(float(income), user_currency)
+        formatted_expenses = currency_service.format_amount(float(expenses), user_currency)
+        formatted_total = currency_service.format_amount(float(total), user_currency)
+        message = f"Income: {formatted_income}, Expenses: {formatted_expenses}, Balance: {formatted_total}"
 
     # Add period and category to message
     period_text = period.replace("_", " ")
