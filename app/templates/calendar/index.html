@@ -3,27 +3,6 @@
 {% block title %}Calendar - Expense Manager{% endblock %}
 
 {% block content %}
-<style>
-  /* Ensure summary cards stay in one row */
-  .calendar-summary-row {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
-
-  .calendar-summary-row > div {
-    flex: 1;
-    min-width: 0;
-  }
-
-  /* Responsive: stack on mobile */
-  @media (max-width: 768px) {
-    .calendar-summary-row {
-      flex-wrap: wrap;
-    }
-  }
-</style>
 <div class="container-fluid py-4">
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -34,31 +13,31 @@
 
   <!-- Month Navigation -->
   <div class="card mb-4">
-    <div class="card-body">
-      <div class="row align-items-center">
-        <div class="col-md-4">
-          <div class="btn-group" role="group">
+    <div class="card-body p-2 p-md-3">
+      <div class="row align-items-center g-2">
+        <div class="col-12 col-md-4 text-center text-md-start">
+          <div class="btn-group btn-group-sm" role="group">
             <a href="/calendar?year={{ prev_year }}&month={{ prev_month }}"
                class="btn btn-outline-primary">
-              <i class="bi bi-chevron-left"></i> Previous
+              <i class="bi bi-chevron-left"></i> <span class="d-none d-sm-inline">Previous</span>
             </a>
             <a href="/calendar" class="btn btn-outline-primary">
               Today
             </a>
             <a href="/calendar?year={{ next_year }}&month={{ next_month }}"
                class="btn btn-outline-primary">
-              Next <i class="bi bi-chevron-right"></i>
+              <span class="d-none d-sm-inline">Next</span> <i class="bi bi-chevron-right"></i>
             </a>
           </div>
         </div>
 
-        <div class="col-md-4 text-center">
-          <h2 class="h4 mb-0">{{ calendar_data.month_name }} {{ current_year }}</h2>
+        <div class="col-12 col-md-4 text-center">
+          <h2 class="h5 h4-md mb-0">{{ calendar_data.month_name }} {{ current_year }}</h2>
         </div>
 
-        <div class="col-md-4 text-end">
+        <div class="col-12 col-md-4 text-center text-md-end">
           {% if available_months %}
-          <select class="form-select d-inline-block w-auto"
+          <select class="form-select form-select-sm d-inline-block w-auto"
                   onchange="window.location.href='/calendar?year=' + this.value.split('-')[0] + '&month=' + this.value.split('-')[1]">
             <option value="">Jump to month...</option>
             {% for month_opt in available_months %}
@@ -74,53 +53,45 @@
     </div>
   </div>
 
-  <!-- Month Summary -->
-  <div class="calendar-summary-row">
-    <div>
-      <div class="summary-card income-card">
-        <div class="summary-icon">
-          <i class="bi bi-arrow-down-circle"></i>
-        </div>
-        <div class="summary-content">
-          <div class="summary-label">Total Income</div>
-          <div class="summary-value">{{ format_currency(month_summary.total_income) }}</div>
-        </div>
+  <!-- Month Summary Cards -->
+  <div class="month-summary-cards">
+    <div class="summary-card income-card">
+      <div class="summary-icon">
+        <i class="bi bi-arrow-down-circle"></i>
+      </div>
+      <div class="summary-content">
+        <div class="summary-label">Income</div>
+        <div class="summary-value">{{ format_currency(month_summary.total_income) }}</div>
       </div>
     </div>
 
-    <div>
-      <div class="summary-card expense-card">
-        <div class="summary-icon">
-          <i class="bi bi-arrow-up-circle"></i>
-        </div>
-        <div class="summary-content">
-          <div class="summary-label">Total Expenses</div>
-          <div class="summary-value">{{ format_currency(month_summary.total_expense) }}</div>
-        </div>
+    <div class="summary-card expense-card">
+      <div class="summary-icon">
+        <i class="bi bi-arrow-up-circle"></i>
+      </div>
+      <div class="summary-content">
+        <div class="summary-label">Expenses</div>
+        <div class="summary-value">{{ format_currency(month_summary.total_expense) }}</div>
       </div>
     </div>
 
-    <div>
-      <div class="summary-card net-card">
-        <div class="summary-icon">
-          <i class="bi bi-graph-up"></i>
-        </div>
-        <div class="summary-content">
-          <div class="summary-label">Net Balance</div>
-          <div class="summary-value {% if month_summary.net >= 0 %}positive{% else %}negative{% endif %}">{{ format_currency(month_summary.net) }}</div>
-        </div>
+    <div class="summary-card net-card">
+      <div class="summary-icon">
+        <i class="bi bi-graph-up"></i>
+      </div>
+      <div class="summary-content">
+        <div class="summary-label">Balance</div>
+        <div class="summary-value {% if month_summary.net >= 0 %}positive{% else %}negative{% endif %}">{{ format_currency(month_summary.net) }}</div>
       </div>
     </div>
 
-    <div>
-      <div class="summary-card count-card">
-        <div class="summary-icon">
-          <i class="bi bi-receipt"></i>
-        </div>
-        <div class="summary-content">
-          <div class="summary-label">Transactions</div>
-          <div class="summary-value">{{ month_summary.entry_count }}</div>
-        </div>
+    <div class="summary-card count-card">
+      <div class="summary-icon">
+        <i class="bi bi-receipt"></i>
+      </div>
+      <div class="summary-content">
+        <div class="summary-label">Transactions</div>
+        <div class="summary-value">{{ month_summary.entry_count }}</div>
       </div>
     </div>
   </div>
