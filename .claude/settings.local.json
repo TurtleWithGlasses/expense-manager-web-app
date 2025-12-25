@@ -9,7 +9,8 @@
       "Bash(python:*)",
       "Bash(alembic revision:*)",
       "Bash(alembic current:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(pytest:*)"
     ],
     "deny": [],
     "ask": []
