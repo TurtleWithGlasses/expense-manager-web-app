@@ -135,3 +135,16 @@ class CurrencyService:
             return f"{formatted_amount} {symbol}"
 
 currency_service = CurrencyService()
+
+
+def get_currency_info(currency_code: str) -> Dict[str, str]:
+    """
+    Get currency information by currency code
+
+    Args:
+        currency_code: ISO currency code (e.g., 'USD', 'EUR', 'TRY')
+
+    Returns:
+        Dictionary containing currency symbol, name, decimal_places, and position
+    """
+    return CURRENCIES.get(currency_code, CURRENCIES['USD'])
