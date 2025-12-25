@@ -34,6 +34,7 @@ class User(Base):
     ai_models = relationship("AIModel", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
     ai_suggestions = relationship("AISuggestion", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
     ai_preferences = relationship("UserAIPreferences", back_populates="user", uselist=False, cascade="all, delete-orphan", passive_deletes=True)
+    forecasts = relationship("Forecast", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
 
     # Report relationships
     weekly_reports = relationship("WeeklyReport", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)

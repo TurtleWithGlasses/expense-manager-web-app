@@ -1,0 +1,604 @@
+{% extends "base.html" %}
+
+{% block title %}Spending Forecasts - BudgetPulse{% endblock %}
+
+{% block head_extra %}
+<!-- Chart.js for forecast visualization -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  .forecast-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .forecast-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .forecast-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .forecast-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+  }
+
+  .forecast-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .chart-container {
+    position: relative;
+    height: 400px;
+    margin-bottom: 1.5rem;
+  }
+
+  .insight-card {
+    background: rgba(77, 163, 255, 0.1);
+    border-left: 4px solid var(--blue);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .insight-icon {
+    color: var(--blue);
+    margin-right: 0.5rem;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .summary-item {
+    background: var(--surface);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .summary-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+  }
+
+  .summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .summary-value.trend-up {
+    color: var(--red);
+  }
+
+  .summary-value.trend-down {
+    color: var(--green);
+  }
+
+  .summary-value.trend-stable {
+    color: var(--blue);
+  }
+
+  .pattern-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .pattern-strong {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--red);
+  }
+
+  .pattern-moderate {
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--warning, #fbbf24);
+  }
+
+  .pattern-weak {
+    background: rgba(156, 163, 175, 0.15);
+    color: var(--text-secondary);
+  }
+
+  .loading-spinner {
+    text-align: center;
+    padding: 3rem;
+  }
+
+  .spinner {
+    border: 4px solid var(--border);
+    border-top: 4px solid var(--blue);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @media (max-width: 768px) {
+    .chart-container {
+      height: 300px;
+    }
+
+    .forecast-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .summary-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">
+        <i class="bi bi-graph-up-arrow"></i> Spending Forecasts
+      </h1>
+      <p class="text-muted mb-0">AI-powered predictions using Facebook Prophet</p>
+    </div>
+    <div>
+      <button class="btn btn-outline-primary" onclick="clearCache()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh Forecasts
+      </button>
+    </div>
+  </div>
+
+  <!-- Forecast Settings -->
+  <div class="forecast-card">
+    <div class="forecast-header">
+      <div>
+        <div class="forecast-title">Configure Forecast</div>
+        <div class="forecast-subtitle">Adjust parameters to customize your predictions</div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label for="forecastHorizon" class="form-label">Forecast Period</label>
+        <select id="forecastHorizon" class="form-select">
+          <option value="30">1 Month (30 days)</option>
+          <option value="60">2 Months (60 days)</option>
+          <option value="90" selected>3 Months (90 days)</option>
+          <option value="180">6 Months (180 days)</option>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label d-block">Include Historical Data</label>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="includeHistory" checked>
+          <label class="form-check-label" for="includeHistory">
+            Show past 30 days
+          </label>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label d-block">&nbsp;</label>
+        <button class="btn btn-primary w-100" onclick="generateForecast()">
+          <i class="bi bi-magic"></i> Generate Forecast
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="loadingState" class="forecast-card" style="display: none;">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p class="text-muted">Analyzing your spending patterns...</p>
+      <small class="text-muted">This may take a few moments</small>
+    </div>
+  </div>
+
+  <!-- Main Forecast Chart -->
+  <div id="forecastResults" style="display: none;">
+    <div class="forecast-card">
+      <div class="forecast-header">
+        <div>
+          <div class="forecast-title">Total Spending Forecast</div>
+          <div class="forecast-subtitle" id="forecastPeriod"></div>
+        </div>
+        <div class="forecast-controls">
+          <span class="badge bg-success" id="confidenceLevel">95% Confidence</span>
+          <span class="badge bg-info" id="cacheStatus"></span>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="forecastChart"></canvas>
+      </div>
+
+      <!-- Summary Statistics -->
+      <div class="summary-grid" id="summaryStats"></div>
+    </div>
+
+    <!-- Insights -->
+    <div class="forecast-card" id="insightsCard">
+      <div class="forecast-title mb-3">
+        <i class="bi bi-lightbulb"></i> AI Insights
+      </div>
+      <div id="insightsContainer"></div>
+    </div>
+
+    <!-- Seasonal Patterns -->
+    <div class="forecast-card">
+      <div class="forecast-title mb-3">
+        <i class="bi bi-calendar-week"></i> Detected Patterns
+      </div>
+      <button class="btn btn-outline-secondary btn-sm mb-3" onclick="detectSeasonalPatterns()">
+        <i class="bi bi-search"></i> Analyze Seasonal Patterns
+      </button>
+      <div id="patternsContainer"></div>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div id="errorState" class="forecast-card" style="display: none;">
+    <div class="text-center py-4">
+      <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+      <h4 class="mt-3">Unable to Generate Forecast</h4>
+      <p class="text-muted" id="errorMessage"></p>
+      <button class="btn btn-primary mt-2" onclick="generateForecast()">
+        <i class="bi bi-arrow-clockwise"></i> Try Again
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+let forecastChart = null;
+
+// Generate forecast
+async function generateForecast() {
+  const daysAhead = parseInt(document.getElementById('forecastHorizon').value);
+  const includeHistory = document.getElementById('includeHistory').checked;
+
+  // Show loading state
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('forecastResults').style.display = 'none';
+  document.getElementById('errorState').style.display = 'none';
+
+  try {
+    const response = await fetch(
+      `/api/v1/forecasts/spending/total?days_ahead=${daysAhead}&include_history=${includeHistory}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (!data.success) {
+      showError(data.message || 'Forecasting failed');
+      return;
+    }
+
+    // Hide loading, show results
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('forecastResults').style.display = 'block';
+
+    // Update cache status
+    const cacheStatus = document.getElementById('cacheStatus');
+    cacheStatus.textContent = data.cached ? 'Cached' : 'Fresh';
+    cacheStatus.className = data.cached ? 'badge bg-secondary' : 'badge bg-success';
+
+    // Render forecast chart
+    renderForecastChart(data);
+
+    // Render summary stats
+    renderSummaryStats(data.summary);
+
+    // Render insights
+    renderInsights(data.insights || []);
+
+  } catch (error) {
+    console.error('Forecast error:', error);
+    showError('An error occurred while generating the forecast');
+  }
+}
+
+// Render forecast chart with Chart.js
+function renderForecastChart(data) {
+  const ctx = document.getElementById('forecastChart').getContext('2d');
+
+  // Prepare data
+  const forecastData = data.forecast || [];
+  const historicalData = data.historical || [];
+
+  // Combine dates
+  const allDates = [
+    ...historicalData.map(d => d.date),
+    ...forecastData.map(d => d.date)
+  ];
+
+  // Historical actual values
+  const actualValues = historicalData.map(d => d.actual);
+  const actualPadding = new Array(forecastData.length).fill(null);
+
+  // Forecast values
+  const historicalPadding = new Array(historicalData.length).fill(null);
+  const predictedValues = forecastData.map(d => d.predicted);
+  const lowerBounds = forecastData.map(d => d.lower_bound);
+  const upperBounds = forecastData.map(d => d.upper_bound);
+
+  // Destroy existing chart
+  if (forecastChart) {
+    forecastChart.destroy();
+  }
+
+  // Create new chart
+  forecastChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: allDates,
+      datasets: [
+        {
+          label: 'Historical Actual',
+          data: [...actualValues, ...actualPadding],
+          borderColor: 'rgb(77, 163, 255)',
+          backgroundColor: 'rgba(77, 163, 255, 0.1)',
+          borderWidth: 2,
+          pointRadius: 2,
+          fill: false,
+          tension: 0.1
+        },
+        {
+          label: 'Forecast',
+          data: [...historicalPadding, ...predictedValues],
+          borderColor: 'rgb(16, 185, 129)',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          fill: false,
+          tension: 0.1
+        },
+        {
+          label: 'Lower Bound (95%)',
+          data: [...historicalPadding, ...lowerBounds],
+          borderColor: 'rgba(239, 68, 68, 0.3)',
+          backgroundColor: 'rgba(239, 68, 68, 0.05)',
+          borderWidth: 1,
+          borderDash: [2, 2],
+          pointRadius: 0,
+          fill: '+1',
+          tension: 0.1
+        },
+        {
+          label: 'Upper Bound (95%)',
+          data: [...historicalPadding, ...upperBounds],
+          borderColor: 'rgba(239, 68, 68, 0.3)',
+          backgroundColor: 'rgba(239, 68, 68, 0.05)',
+          borderWidth: 1,
+          borderDash: [2, 2],
+          pointRadius: 0,
+          fill: false,
+          tension: 0.1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        title: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.parsed.y !== null) {
+                label += new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: 'USD'
+                }).format(context.parsed.y);
+              }
+              return label;
+            }
+          }
+        },
+        legend: {
+          display: true,
+          position: 'bottom'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0
+              }).format(value);
+            }
+          }
+        },
+        x: {
+          ticks: {
+            maxRotation: 45,
+            minRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 10
+          }
+        }
+      }
+    }
+  });
+}
+
+// Render summary statistics
+function renderSummaryStats(summary) {
+  const container = document.getElementById('summaryStats');
+  const trendClass = summary.trend_direction === 'increasing' ? 'trend-up' :
+                      summary.trend_direction === 'decreasing' ? 'trend-down' : 'trend-stable';
+  const trendIcon = summary.trend_direction === 'increasing' ? '↑' :
+                     summary.trend_direction === 'decreasing' ? '↓' : '→';
+
+  container.innerHTML = `
+    <div class="summary-item">
+      <div class="summary-label">Predicted Total</div>
+      <div class="summary-value">$${summary.total_predicted.toLocaleString()}</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Daily Average</div>
+      <div class="summary-value">$${summary.avg_daily_spending.toFixed(2)}</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Trend</div>
+      <div class="summary-value ${trendClass}">
+        ${trendIcon} ${summary.trend_direction} ${Math.abs(summary.trend_change_percent).toFixed(1)}%
+      </div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Forecast Period</div>
+      <div class="summary-value">${summary.forecast_period_days} days</div>
+    </div>
+  `;
+
+  document.getElementById('forecastPeriod').textContent =
+    `Next ${summary.forecast_period_days} days with ${summary.confidence_level} confidence`;
+}
+
+// Render insights
+function renderInsights(insights) {
+  const container = document.getElementById('insightsContainer');
+
+  if (insights.length === 0) {
+    container.innerHTML = '<p class="text-muted">No specific insights available for this forecast.</p>';
+    return;
+  }
+
+  container.innerHTML = insights.map(insight => `
+    <div class="insight-card">
+      <i class="bi bi-lightbulb insight-icon"></i>
+      ${insight}
+    </div>
+  `).join('');
+}
+
+// Detect seasonal patterns
+async function detectSeasonalPatterns() {
+  const container = document.getElementById('patternsContainer');
+  container.innerHTML = '<p class="text-muted"><i class="spinner-border spinner-border-sm me-2"></i>Analyzing patterns...</p>';
+
+  try {
+    const response = await fetch('/api/v1/forecasts/patterns/seasonal');
+    const data = await response.json();
+
+    if (!data.success) {
+      container.innerHTML = `<p class="text-muted">${data.message}</p>`;
+      return;
+    }
+
+    const patterns = data.patterns || {};
+    let html = '';
+
+    for (const [type, pattern] of Object.entries(patterns)) {
+      if (pattern.detected) {
+        const strength = pattern.strength || 'weak';
+        html += `
+          <span class="pattern-badge pattern-${strength}">
+            ${type.charAt(0).toUpperCase() + type.slice(1)}: ${strength}
+          </span>
+        `;
+      }
+    }
+
+    if (html === '') {
+      html = '<p class="text-muted">No significant patterns detected</p>';
+    }
+
+    html += '<div class="mt-3">';
+    (data.insights || []).forEach(insight => {
+      html += `<p class="small text-muted mb-1"><i class="bi bi-check-circle text-success me-1"></i>${insight}</p>`;
+    });
+    html += '</div>';
+
+    container.innerHTML = html;
+
+  } catch (error) {
+    container.innerHTML = '<p class="text-danger">Error analyzing patterns</p>';
+  }
+}
+
+// Clear cache
+async function clearCache() {
+  try {
+    const response = await fetch('/api/v1/forecasts/clear-cache', {
+      method: 'DELETE'
+    });
+    const data = await response.json();
+
+    if (data.success) {
+      alert(`Cleared ${data.forecasts_cleared} cached forecasts. Generate a new forecast to see updated predictions.`);
+      document.getElementById('forecastResults').style.display = 'none';
+    }
+  } catch (error) {
+    alert('Error clearing cache');
+  }
+}
+
+// Show error
+function showError(message) {
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('forecastResults').style.display = 'none';
+  document.getElementById('errorState').style.display = 'block';
+  document.getElementById('errorMessage').textContent = message;
+}
+
+// Auto-generate forecast on page load
+window.addEventListener('DOMContentLoaded', function() {
+  // Don't auto-generate to save API calls
+  // User can click "Generate Forecast" button
+});
+</script>
+{% endblock %}
