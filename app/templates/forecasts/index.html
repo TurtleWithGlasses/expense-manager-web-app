@@ -395,7 +395,7 @@ async function generateForecast() {
     renderForecastChart(data);
 
     // Render summary stats
-    renderSummaryStats(data.summary);
+    renderSummaryStats(data.summary, data.recurring_payments);
 
     // Render insights
     renderInsights(data.insights || []);
@@ -557,21 +557,43 @@ function renderForecastChart(data) {
 }
 
 // Render summary statistics
-function renderSummaryStats(summary) {
+function renderSummaryStats(summary, recurringData) {
   const container = document.getElementById('summaryStats');
   const trendClass = summary.trend_direction === 'increasing' ? 'trend-up' :
                       summary.trend_direction === 'decreasing' ? 'trend-down' : 'trend-stable';
   const trendIcon = summary.trend_direction === 'increasing' ? '↑' :
                      summary.trend_direction === 'decreasing' ? '↓' : '→';
 
-  container.innerHTML = `
+  // Check if we have recurring payments
+  const hasRecurring = recurringData && recurringData.total > 0;
+  const displayTotal = hasRecurring ? summary.total_combined : summary.total_predicted;
+  const displayAvg = hasRecurring ? summary.avg_daily_combined : summary.avg_daily_spending;
+
+  let summaryHTML = `
     <div class="summary-item">
-      <div class="summary-label">Predicted Total</div>
-      <div class="summary-value">${formatCurrencyShort(summary.total_predicted)}</div>
+      <div class="summary-label">Total Forecast</div>
+      <div class="summary-value">${formatCurrencyShort(displayTotal)}</div>
     </div>
+  `;
+
+  // Add breakdown if we have recurring payments
+  if (hasRecurring) {
+    summaryHTML += `
+      <div class="summary-item">
+        <div class="summary-label">AI Predicted</div>
+        <div class="summary-value">${formatCurrencyShort(summary.total_predicted)}</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Scheduled Bills</div>
+        <div class="summary-value">${formatCurrencyShort(summary.total_recurring)}</div>
+      </div>
+    `;
+  }
+
+  summaryHTML += `
     <div class="summary-item">
       <div class="summary-label">Daily Average</div>
-      <div class="summary-value">${formatCurrency(summary.avg_daily_spending)}</div>
+      <div class="summary-value">${formatCurrency(displayAvg)}</div>
     </div>
     <div class="summary-item">
       <div class="summary-label">Trend</div>
@@ -584,6 +606,8 @@ function renderSummaryStats(summary) {
       <div class="summary-value">${summary.forecast_period_days} days</div>
     </div>
   `;
+
+  container.innerHTML = summaryHTML;
 
   document.getElementById('forecastPeriod').textContent =
     `Next ${summary.forecast_period_days} days with ${summary.confidence_level} confidence`;
@@ -612,6 +636,7 @@ function renderForecastExplanation(data, daysAhead, includeHistory) {
   const summary = data.summary || {};
   const historical = data.historical || [];
   const forecast = data.forecast || [];
+  const recurringPayments = data.recurring_payments || { occurrences: [], total: 0, count: 0 };
 
   // Calculate historical total if available
   let historicalTotal = 0;
@@ -641,14 +666,39 @@ function renderForecastExplanation(data, daysAhead, includeHistory) {
     `;
   }
 
-  // Forecast period explanation
-  explanation += `
-    <p><strong>🔮 Forecast Prediction (Next ${daysAhead} days):</strong><br>
-    Based on your spending patterns, our AI model predicts you will spend approximately
-    <strong>${formatCurrency(summary.total_predicted || 0)}</strong> over the next ${daysAhead} days.
-    This works out to an average of <strong>${formatCurrency(summary.avg_daily_spending || 0)}</strong> per day.
-    The green dashed line shows the predicted spending trajectory.</p>
-  `;
+  // Recurring payments explanation (if any)
+  if (recurringPayments.count > 0) {
+    explanation += `
+      <p><strong>💳 Scheduled Bills & Subscriptions (Next ${daysAhead} days):</strong><br>
+      You have <strong>${recurringPayments.count} scheduled payment(s)</strong> totaling
+      <strong>${formatCurrency(recurringPayments.total)}</strong>. These are recurring bills and
+      subscriptions you've configured in your account. This amount is automatically added to the
+      AI forecast to give you a complete picture of your expected spending.</p>
+    `;
+  }
+
+  // Forecast period explanation - updated to show breakdown
+  const hasRecurring = recurringPayments.total > 0;
+  if (hasRecurring) {
+    explanation += `
+      <p><strong>🔮 Total Forecast (Next ${daysAhead} days):</strong><br>
+      <strong>AI Prediction:</strong> ${formatCurrency(summary.total_predicted || 0)}
+      (based on your spending patterns)<br>
+      <strong>+ Scheduled Bills:</strong> ${formatCurrency(summary.total_recurring || 0)}<br>
+      <strong>= Total Expected:</strong> ${formatCurrency(summary.total_combined || 0)}<br>
+      <br>
+      This works out to an average of <strong>${formatCurrency(summary.avg_daily_combined || 0)}</strong> per day.
+      The green dashed line shows the AI-predicted spending trajectory (excluding bills).</p>
+    `;
+  } else {
+    explanation += `
+      <p><strong>🔮 Forecast Prediction (Next ${daysAhead} days):</strong><br>
+      Based on your spending patterns, our AI model predicts you will spend approximately
+      <strong>${formatCurrency(summary.total_predicted || 0)}</strong> over the next ${daysAhead} days.
+      This works out to an average of <strong>${formatCurrency(summary.avg_daily_spending || 0)}</strong> per day.
+      The green dashed line shows the predicted spending trajectory.</p>
+    `;
+  }
 
   // Confidence interval explanation
   const lowerBound = forecast.length > 0 ? forecast.reduce((sum, d) => sum + (d.lower_bound || 0), 0) : 0;

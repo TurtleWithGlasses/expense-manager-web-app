@@ -28,6 +28,7 @@ except ImportError:
 
 from app.models.entry import Entry
 from app.models.category import Category
+from app.models.recurring_payment import RecurringPayment, RecurrenceFrequency
 
 
 class ProphetForecastService:
@@ -47,6 +48,130 @@ class ProphetForecastService:
         self.model = None
         self.is_trained = False
         self.prophet_available = PROPHET_AVAILABLE
+
+    def _calculate_recurring_payments(
+        self,
+        user_id: int,
+        start_date: datetime,
+        end_date: datetime
+    ) -> Tuple[List[Dict], float]:
+        """
+        Calculate all recurring payment occurrences within a date range
+
+        Args:
+            user_id: User ID
+            start_date: Start of forecast period
+            end_date: End of forecast period
+
+        Returns:
+            Tuple of (list of payment occurrences, total amount)
+        """
+        # Get active recurring payments
+        recurring_payments = self.db.query(RecurringPayment).filter(
+            RecurringPayment.user_id == user_id,
+            RecurringPayment.is_active.is_(True),
+            RecurringPayment.start_date <= end_date.date()
+        ).all()
+
+        occurrences = []
+        total_recurring = 0.0
+
+        for payment in recurring_payments:
+            # Skip if payment has ended
+            if payment.end_date and payment.end_date < start_date.date():
+                continue
+
+            # Calculate occurrences based on frequency
+            current_date = max(start_date.date(), payment.start_date)
+
+            while current_date <= end_date.date():
+                # Check if payment has ended
+                if payment.end_date and current_date > payment.end_date:
+                    break
+
+                # Calculate next occurrence based on frequency
+                if payment.frequency == RecurrenceFrequency.WEEKLY:
+                    # For weekly, due_day is day of week (0=Monday, 6=Sunday)
+                    days_ahead = (payment.due_day - current_date.weekday()) % 7
+                    next_date = current_date + timedelta(days=days_ahead if days_ahead > 0 else 7)
+                elif payment.frequency == RecurrenceFrequency.BIWEEKLY:
+                    # Calculate weeks since start
+                    weeks_since_start = (current_date - payment.start_date).days // 7
+                    if weeks_since_start % 2 == 0:
+                        days_ahead = (payment.due_day - current_date.weekday()) % 7
+                        next_date = current_date + timedelta(days=days_ahead if days_ahead > 0 else 14)
+                    else:
+                        days_ahead = 7 + (payment.due_day - current_date.weekday()) % 7
+                        next_date = current_date + timedelta(days=days_ahead)
+                elif payment.frequency == RecurrenceFrequency.MONTHLY:
+                    # For monthly, due_day is day of month
+                    if current_date.day <= payment.due_day:
+                        next_date = current_date.replace(day=payment.due_day)
+                    else:
+                        # Next month
+                        if current_date.month == 12:
+                            next_date = current_date.replace(year=current_date.year + 1, month=1, day=payment.due_day)
+                        else:
+                            next_date = current_date.replace(month=current_date.month + 1, day=payment.due_day)
+                elif payment.frequency == RecurrenceFrequency.QUARTERLY:
+                    # Every 3 months
+                    if current_date.day <= payment.due_day:
+                        next_date = current_date.replace(day=payment.due_day)
+                    else:
+                        month = current_date.month + 3
+                        year = current_date.year
+                        if month > 12:
+                            month = month - 12
+                            year += 1
+                        next_date = current_date.replace(year=year, month=month, day=payment.due_day)
+                elif payment.frequency == RecurrenceFrequency.ANNUALLY:
+                    # Once per year
+                    if current_date.month < payment.start_date.month or \
+                       (current_date.month == payment.start_date.month and current_date.day <= payment.due_day):
+                        next_date = current_date.replace(month=payment.start_date.month, day=payment.due_day)
+                    else:
+                        next_date = current_date.replace(year=current_date.year + 1, month=payment.start_date.month, day=payment.due_day)
+                else:
+                    break
+
+                # Add occurrence if within range
+                if start_date.date() <= next_date <= end_date.date():
+                    occurrences.append({
+                        'date': next_date.strftime('%Y-%m-%d'),
+                        'amount': float(payment.amount),
+                        'name': payment.name,
+                        'category_id': payment.category_id,
+                        'frequency': payment.frequency.value
+                    })
+                    total_recurring += float(payment.amount)
+
+                # Move to next period
+                if payment.frequency == RecurrenceFrequency.WEEKLY:
+                    current_date = next_date + timedelta(days=7)
+                elif payment.frequency == RecurrenceFrequency.BIWEEKLY:
+                    current_date = next_date + timedelta(days=14)
+                elif payment.frequency == RecurrenceFrequency.MONTHLY:
+                    if next_date.month == 12:
+                        current_date = next_date.replace(year=next_date.year + 1, month=1)
+                    else:
+                        current_date = next_date.replace(month=next_date.month + 1)
+                elif payment.frequency == RecurrenceFrequency.QUARTERLY:
+                    month = next_date.month + 3
+                    year = next_date.year
+                    if month > 12:
+                        month = month - 12
+                        year += 1
+                    current_date = next_date.replace(year=year, month=month)
+                elif payment.frequency == RecurrenceFrequency.ANNUALLY:
+                    current_date = next_date.replace(year=next_date.year + 1)
+                else:
+                    break
+
+                # Safety check to prevent infinite loops
+                if current_date <= next_date:
+                    break
+
+        return occurrences, total_recurring
 
     def forecast_total_spending(
         self,
@@ -175,20 +300,43 @@ class ProphetForecastService:
                         'actual': round(float(row['y']), 2)
                     })
 
+            # Calculate recurring payments for forecast period
+            forecast_start = datetime.now()
+            forecast_end = forecast_start + timedelta(days=days_ahead)
+            recurring_occurrences, total_recurring = self._calculate_recurring_payments(
+                user_id,
+                forecast_start,
+                forecast_end
+            )
+
+            # Combine AI prediction with scheduled recurring payments
+            total_combined = total_predicted + total_recurring
+            avg_daily_combined = total_combined / days_ahead if days_ahead > 0 else 0
+
             # Detect significant patterns
             insights = self._generate_forecast_insights(
                 forecast_results,
                 daily_spending,
-                days_ahead
+                days_ahead,
+                recurring_occurrences,
+                total_recurring
             )
 
             return {
                 'success': True,
                 'forecast': forecast_data,
                 'historical': historical_data,
+                'recurring_payments': {
+                    'occurrences': recurring_occurrences,
+                    'total': round(float(total_recurring), 2),
+                    'count': len(recurring_occurrences)
+                },
                 'summary': {
                     'total_predicted': round(float(total_predicted), 2),
+                    'total_recurring': round(float(total_recurring), 2),
+                    'total_combined': round(float(total_combined), 2),
                     'avg_daily_spending': round(float(avg_daily), 2),
+                    'avg_daily_combined': round(float(avg_daily_combined), 2),
                     'forecast_period_days': days_ahead,
                     'trend_direction': 'increasing' if trend_change > 2 else 'decreasing' if trend_change < -2 else 'stable',
                     'trend_change_percent': round(float(trend_change), 2),
@@ -435,10 +583,19 @@ class ProphetForecastService:
         self,
         forecast: pd.DataFrame,
         historical: pd.DataFrame,
-        days_ahead: int
+        days_ahead: int,
+        recurring_occurrences: List[Dict] = None,
+        total_recurring: float = 0.0
     ) -> List[str]:
         """Generate human-readable insights from forecast"""
         insights = []
+
+        # Add recurring payments insight first if any exist
+        if recurring_occurrences and len(recurring_occurrences) > 0:
+            insights.append(
+                f"You have {len(recurring_occurrences)} scheduled bill(s)/subscription(s) "
+                f"totaling ${total_recurring:,.2f} in the forecast period"
+            )
 
         # Compare forecast to historical average
         historical_avg = historical['y'].mean()
@@ -449,7 +606,7 @@ class ProphetForecastService:
         if abs(difference_pct) > 10:
             direction = "higher" if difference_pct > 0 else "lower"
             insights.append(
-                f"Predicted spending is {abs(difference_pct):.1f}% {direction} "
+                f"AI-predicted spending (excluding bills) is {abs(difference_pct):.1f}% {direction} "
                 f"than your historical average"
             )
 
