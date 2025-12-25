@@ -16,6 +16,7 @@ from app.services.entries import entries_service
 from app.services.categories import list_categories
 from app.services.user_preferences import user_preferences_service
 from app.templates import render
+from app.core.cache import get_cache
 
 router = APIRouter(prefix="/entries", tags=["entries"])
 
@@ -205,6 +206,10 @@ async def add(
         currency_code=user_currency,
     )
 
+    # Invalidate forecast cache (spending data changed)
+    cache = get_cache()
+    cache.invalidate_user_cache(user.id)
+
     # Return first page of entries
     sort_by, sort_order = entries_service.get_sort_preferences(
         db, user.id, None, None, "entries"
@@ -231,6 +236,10 @@ async def remove(
 ) -> HTMLResponse:
     """Delete an entry"""
     entries_service.delete_entry(db, user.id, entry_id)
+
+    # Invalidate forecast cache (spending data changed)
+    cache = get_cache()
+    cache.invalidate_user_cache(user.id)
 
     # Return first page of entries
     sort_by, sort_order = entries_service.get_sort_preferences(
@@ -276,6 +285,10 @@ async def update_amount_cell(
     entry = entries_service.update_entry_amount(db, user.id, entry_id, amount)
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
+
+    # Invalidate forecast cache (spending data changed)
+    cache = get_cache()
+    cache.invalidate_user_cache(user.id)
 
     return render(request, "entries/_cell_amount.html", {"e": entry})
 
@@ -374,6 +387,10 @@ async def update_entry_endpoint(
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
 
+    # Invalidate forecast cache (spending data changed)
+    cache = get_cache()
+    cache.invalidate_user_cache(user.id)
+
     cats = list_categories(db, user_id=user.id)
     user_currency = user_preferences_service.get_user_currency(db, user.id)
 
@@ -446,6 +463,10 @@ async def update_entry_category(
                 "success": False,
                 "message": "Entry not found"
             }, status_code=404)
+
+        # Invalidate forecast cache (category data changed)
+        cache = get_cache()
+        cache.invalidate_user_cache(user.id)
 
         return JSONResponse({
             "success": True,

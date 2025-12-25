@@ -374,9 +374,42 @@ redis-cli CONFIG SET maxmemory-policy allkeys-lru
 
 ---
 
+## ✅ Implemented Integration
+
+### Three-Tier Caching in Forecast API
+
+The forecast API (`/api/v1/forecasts/spending/total`) now uses a three-tier caching strategy:
+
+**Tier 1: Redis Cache (Fastest - ~15ms)**
+- Checked first on every request
+- 24-hour TTL
+- Returns cached result with `cache_tier: 'redis'`
+
+**Tier 2: Database Cache (Fast - ~100ms)**
+- Checked if Redis cache misses
+- Stored in `forecasts` table with 24-hour expiration
+- Result is stored in Redis for next request
+- Returns with `cache_tier: 'database'`
+
+**Tier 3: Fresh Generation (Slow - ~3000ms)**
+- Prophet model generates new forecast
+- Stored in both database and Redis
+- Returns with `cache_tier: 'fresh'`
+
+### Automatic Cache Invalidation
+
+Cache is automatically invalidated when spending data changes:
+- ✅ `/entries/create` - Creating new entries
+- ✅ `/entries/delete/{entry_id}` - Deleting entries
+- ✅ `/entries/update/{entry_id}` - Updating entries
+- ✅ `/entries/update_amount/{entry_id}` - Quick amount edits
+- ✅ `/entries/{entry_id}/category` - Category changes
+
+All entry modifications call `cache.invalidate_user_cache(user.id)` to clear forecasts, reports, and dashboards.
+
 ## 📝 Example Integration
 
-### Forecast API with Caching
+### Forecast API with Caching (IMPLEMENTED)
 
 ```python
 from fastapi import APIRouter, Depends

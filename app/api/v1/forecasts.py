@@ -15,6 +15,7 @@ from app.models.forecast import Forecast
 from app.models.user_preferences import UserPreferences
 from app.ai.services.prophet_forecast_service import ProphetForecastService
 from app.core.currency import get_currency_info
+from app.core.cache import get_cache, cache_forecast, get_cached_forecast
 
 router = APIRouter(prefix="/api/v1/forecasts", tags=["Forecasts"])
 
@@ -49,9 +50,29 @@ def forecast_total_spending(
         currency_code = user_prefs.currency_code if user_prefs else 'USD'
         currency_info = get_currency_info(currency_code)
 
-        # Check for cached forecast (less than 24 hours old)
+        # Three-tier caching strategy:
+        # 1. Redis cache (fastest - 15ms)
+        # 2. Database cache (fast - 100ms)
+        # 3. Fresh generation (slow - 3000ms)
+
         if use_cache:
-            cached_forecast = db.query(Forecast).filter(
+            # Tier 1: Check Redis cache first (fastest)
+            redis_cached = get_cached_forecast(
+                user_id=user.id,
+                forecast_type='total_spending',
+                days=days_ahead
+            )
+
+            if redis_cached:
+                return {
+                    **redis_cached,
+                    'cached': True,
+                    'cache_tier': 'redis',
+                    'cache_speed': '~15ms'
+                }
+
+            # Tier 2: Check database cache (less than 24 hours old)
+            db_cached_forecast = db.query(Forecast).filter(
                 Forecast.user_id == user.id,
                 Forecast.forecast_type == 'total_spending',
                 Forecast.forecast_horizon_days == days_ahead,
@@ -59,21 +80,34 @@ def forecast_total_spending(
                 Forecast.created_at >= datetime.utcnow() - timedelta(hours=24)
             ).order_by(Forecast.created_at.desc()).first()
 
-            if cached_forecast:
-                return {
+            if db_cached_forecast:
+                result = {
                     'success': True,
                     'cached': True,
-                    'forecast': cached_forecast.forecast_data,
-                    'historical': cached_forecast.summary.get('historical', []) if cached_forecast.summary else [],
-                    'summary': cached_forecast.summary,
-                    'insights': cached_forecast.insights,
-                    'created_at': cached_forecast.created_at.isoformat(),
+                    'cache_tier': 'database',
+                    'cache_speed': '~100ms',
+                    'forecast': db_cached_forecast.forecast_data,
+                    'historical': db_cached_forecast.summary.get('historical', []) if db_cached_forecast.summary else [],
+                    'summary': db_cached_forecast.summary,
+                    'insights': db_cached_forecast.insights,
+                    'created_at': db_cached_forecast.created_at.isoformat(),
                     'currency': {
                         'code': currency_code,
                         'symbol': currency_info['symbol'],
                         'name': currency_info['name']
                     }
                 }
+
+                # Store in Redis for next time (24 hour TTL)
+                cache_forecast(
+                    user_id=user.id,
+                    forecast_type='total_spending',
+                    days=days_ahead,
+                    data=result,
+                    ttl=86400  # 24 hours
+                )
+
+                return result
 
         # Generate new forecast
         service = ProphetForecastService(db)
@@ -106,9 +140,11 @@ def forecast_total_spending(
         db.add(forecast)
         db.commit()
 
-        return {
+        response = {
             **result,
             'cached': False,
+            'cache_tier': 'fresh',
+            'cache_speed': '~3000ms',
             'forecast_id': forecast.id,
             'currency': {
                 'code': currency_code,
@@ -116,6 +152,17 @@ def forecast_total_spending(
                 'name': currency_info['name']
             }
         }
+
+        # Store in Redis cache for future requests (24 hour TTL)
+        cache_forecast(
+            user_id=user.id,
+            forecast_type='total_spending',
+            days=days_ahead,
+            data=response,
+            ttl=86400  # 24 hours
+        )
+
+        return response
 
     except HTTPException:
         raise
