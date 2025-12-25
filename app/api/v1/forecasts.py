@@ -12,7 +12,9 @@ from app.db.session import get_db
 from app.deps import current_user
 from app.models.user import User
 from app.models.forecast import Forecast
+from app.models.user_preferences import UserPreferences
 from app.ai.services.prophet_forecast_service import ProphetForecastService
+from app.core.currency import get_currency_info
 
 router = APIRouter(prefix="/api/v1/forecasts", tags=["Forecasts"])
 
@@ -42,6 +44,11 @@ def forecast_total_spending(
     - Model diagnostics
     """
     try:
+        # Get user's currency preference
+        user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
+        currency_code = user_prefs.currency_code if user_prefs else 'USD'
+        currency_info = get_currency_info(currency_code)
+
         # Check for cached forecast (less than 24 hours old)
         if use_cache:
             cached_forecast = db.query(Forecast).filter(
@@ -60,7 +67,12 @@ def forecast_total_spending(
                     'historical': cached_forecast.summary.get('historical', []) if cached_forecast.summary else [],
                     'summary': cached_forecast.summary,
                     'insights': cached_forecast.insights,
-                    'created_at': cached_forecast.created_at.isoformat()
+                    'created_at': cached_forecast.created_at.isoformat(),
+                    'currency': {
+                        'code': currency_code,
+                        'symbol': currency_info['symbol'],
+                        'name': currency_info['name']
+                    }
                 }
 
         # Generate new forecast
@@ -97,7 +109,12 @@ def forecast_total_spending(
         return {
             **result,
             'cached': False,
-            'forecast_id': forecast.id
+            'forecast_id': forecast.id,
+            'currency': {
+                'code': currency_code,
+                'symbol': currency_info['symbol'],
+                'name': currency_info['name']
+            }
         }
 
     except HTTPException:

@@ -318,6 +318,23 @@
 
 <script>
 let forecastChart = null;
+let userCurrency = {
+  code: 'USD',
+  symbol: '$',
+  name: 'US Dollar'
+};
+
+// Format currency based on user preference
+function formatCurrency(amount) {
+  return `${userCurrency.symbol}${amount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
+}
+
+function formatCurrencyShort(amount) {
+  return `${userCurrency.symbol}${Math.round(amount).toLocaleString('en-US')}`;
+}
 
 // Generate forecast
 async function generateForecast() {
@@ -345,6 +362,11 @@ async function generateForecast() {
     if (!data.success) {
       showError(data.message || 'Forecasting failed');
       return;
+    }
+
+    // Store user currency if provided
+    if (data.currency) {
+      userCurrency = data.currency;
     }
 
     // Hide loading, show results
@@ -472,7 +494,7 @@ function renderForecastChart(data) {
               if (context.parsed.y !== null) {
                 label += new Intl.NumberFormat('en-US', {
                   style: 'currency',
-                  currency: 'USD'
+                  currency: userCurrency.code
                 }).format(context.parsed.y);
               }
               return label;
@@ -491,7 +513,7 @@ function renderForecastChart(data) {
             callback: function(value) {
               return new Intl.NumberFormat('en-US', {
                 style: 'currency',
-                currency: 'USD',
+                currency: userCurrency.code,
                 minimumFractionDigits: 0
               }).format(value);
             }
@@ -521,11 +543,11 @@ function renderSummaryStats(summary) {
   container.innerHTML = `
     <div class="summary-item">
       <div class="summary-label">Predicted Total</div>
-      <div class="summary-value">$${summary.total_predicted.toLocaleString()}</div>
+      <div class="summary-value">${formatCurrencyShort(summary.total_predicted)}</div>
     </div>
     <div class="summary-item">
       <div class="summary-label">Daily Average</div>
-      <div class="summary-value">$${summary.avg_daily_spending.toFixed(2)}</div>
+      <div class="summary-value">${formatCurrency(summary.avg_daily_spending)}</div>
     </div>
     <div class="summary-item">
       <div class="summary-label">Trend</div>
