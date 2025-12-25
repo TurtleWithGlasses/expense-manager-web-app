@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, desc
 from collections import defaultdict
 import statistics
+import numpy as np
 
 from app.models.entry import Entry
 from app.models.category import Category
@@ -27,6 +28,23 @@ class BudgetIntelligenceService:
 
     def __init__(self, db: Session):
         self.db = db
+
+        # Seasonal adjustment factors (multipliers for different months)
+        # Based on typical spending patterns: holidays, back-to-school, etc.
+        self.seasonal_factors = {
+            1: 1.0,   # January (New Year recovery)
+            2: 0.95,  # February (lowest spending month)
+            3: 1.0,   # March
+            4: 1.05,  # April (Spring shopping)
+            5: 1.05,  # May
+            6: 1.1,   # June (Summer vacation prep)
+            7: 1.15,  # July (Summer vacation)
+            8: 1.1,   # August (Back-to-school)
+            9: 1.0,   # September
+            10: 1.05, # October (Fall shopping)
+            11: 1.2,  # November (Thanksgiving, Black Friday)
+            12: 1.25  # December (Holiday season)
+        }
 
     # ==================== SMART BUDGET RECOMMENDATIONS ====================
 
@@ -81,6 +99,8 @@ class BudgetIntelligenceService:
         recommendations = []
         total_recommended = 0
 
+        current_month = datetime.now().month
+
         for category_id, data in category_data.items():
             amounts = data['monthly_amounts']
             if not amounts:
@@ -90,33 +110,69 @@ class BudgetIntelligenceService:
             max_monthly = max(amounts)
             min_monthly = min(amounts)
 
-            # Smart recommendation: average + 15% buffer
-            recommended = avg_monthly * 1.15
-
             # Calculate variability
             variability = ((max_monthly - min_monthly) / avg_monthly * 100) if avg_monthly > 0 else 0
 
-            # Determine confidence
-            if variability < 20:
-                confidence = 'high'
-                description = 'Consistent spending pattern'
-            elif variability < 50:
+            # ENHANCED: Use percentile-based budget for highly variable categories
+            if variability > 50:
+                # For variable spending, use 75th percentile instead of mean
+                recommended = np.percentile(amounts, 75)
+                recommendation_method = 'percentile-based'
+                confidence = 'low'
+                description = 'Highly variable spending - using 75th percentile'
+            elif variability > 30:
+                # Moderate variability: use median + 20%
+                recommended = statistics.median(amounts) * 1.2
+                recommendation_method = 'median-based'
                 confidence = 'medium'
                 description = 'Moderate spending variation'
             else:
-                confidence = 'low'
-                description = 'Highly variable spending'
+                # Consistent spending: use average + 15% buffer
+                recommended = avg_monthly * 1.15
+                recommendation_method = 'average-based'
+                confidence = 'high'
+                description = 'Consistent spending pattern'
+
+            # ENHANCED: Apply seasonal adjustment for current month
+            seasonal_factor = self.seasonal_factors.get(current_month, 1.0)
+            seasonal_recommended = recommended * seasonal_factor
+
+            # ENHANCED: Calculate spending trend (increasing/decreasing)
+            if len(amounts) >= 2:
+                # Simple linear trend: compare first half vs second half
+                mid = len(amounts) // 2
+                first_half_avg = statistics.mean(amounts[:mid]) if mid > 0 else avg_monthly
+                second_half_avg = statistics.mean(amounts[mid:])
+                trend_pct = ((second_half_avg - first_half_avg) / first_half_avg * 100) if first_half_avg > 0 else 0
+
+                if trend_pct > 10:
+                    trend = 'increasing'
+                    trend_note = f'Spending trending up ({trend_pct:.1f}% increase)'
+                elif trend_pct < -10:
+                    trend = 'decreasing'
+                    trend_note = f'Spending trending down ({abs(trend_pct):.1f}% decrease)'
+                else:
+                    trend = 'stable'
+                    trend_note = 'Spending is stable'
+            else:
+                trend = 'unknown'
+                trend_note = 'Not enough data for trend analysis'
 
             recommendations.append({
                 'category_id': category_id,
                 'category_name': data['name'],
                 'recommended_budget': round(recommended, 2),
+                'seasonal_recommended_budget': round(seasonal_recommended, 2),
+                'seasonal_factor': seasonal_factor,
                 'current_average': round(avg_monthly, 2),
                 'max_spent': round(max_monthly, 2),
                 'min_spent': round(min_monthly, 2),
                 'variability_percent': round(variability, 1),
                 'confidence': confidence,
                 'description': description,
+                'recommendation_method': recommendation_method,
+                'trend': trend,
+                'trend_note': trend_note,
                 'entry_count': data['entry_count']
             })
 

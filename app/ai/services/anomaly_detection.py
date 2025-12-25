@@ -20,13 +20,21 @@ class AnomalyDetectionService:
 
     def __init__(self, db: Session):
         self.db = db
-        self.model = IsolationForest(
-            contamination=0.1,  # Expect 10% of data to be anomalies
-            random_state=42,
-            n_estimators=100
-        )
+        self.model = None  # Will be created with adaptive contamination
         self.scaler = StandardScaler()
         self.is_trained = False
+
+        # Seasonal awareness: major holidays (month-day)
+        self.holidays = [
+            (1, 1),   # New Year's Day
+            (2, 14),  # Valentine's Day
+            (7, 4),   # Independence Day (US)
+            (10, 31), # Halloween
+            (11, 24), # Black Friday (approximate)
+            (12, 24), # Christmas Eve
+            (12, 25), # Christmas
+            (12, 31)  # New Year's Eve
+        ]
 
     def detect_spending_anomalies(self, user_id: int, days_back: int = 90) -> Dict:
         """
@@ -79,6 +87,16 @@ class AnomalyDetectionService:
                     'success': False,
                     'message': 'Insufficient data for anomaly detection'
                 }
+
+            # Calculate adaptive contamination rate based on historical data
+            contamination_rate = self._calculate_adaptive_contamination(df)
+
+            # Create model with adaptive contamination
+            self.model = IsolationForest(
+                contamination=contamination_rate,
+                random_state=42,
+                n_estimators=100
+            )
 
             # Scale features
             features_scaled = self.scaler.fit_transform(features)
@@ -140,31 +158,88 @@ class AnomalyDetectionService:
                 'error': str(e)
             }
 
+    def _calculate_adaptive_contamination(self, df: pd.DataFrame) -> float:
+        """
+        Calculate adaptive contamination rate based on spending variance
+
+        Users with high spending variance may naturally have more outliers,
+        so we adjust the contamination rate accordingly.
+        """
+        try:
+            # Calculate coefficient of variation (std/mean)
+            cv = df['amount'].std() / df['amount'].mean() if df['amount'].mean() > 0 else 0
+
+            # High variance users: expect more anomalies (up to 15%)
+            # Low variance users: expect fewer anomalies (down to 5%)
+            if cv > 1.0:
+                return min(0.15, 0.1 + cv * 0.05)
+            elif cv < 0.3:
+                return max(0.05, 0.1 - (0.3 - cv) * 0.1)
+            else:
+                return 0.1  # Default 10%
+
+        except Exception:
+            return 0.1  # Fallback to default
+
+    def _is_near_holiday(self, date) -> bool:
+        """Check if date is within 3 days of a major holiday"""
+        for holiday_month, holiday_day in self.holidays:
+            if date.month == holiday_month:
+                if abs(date.day - holiday_day) <= 3:
+                    return True
+        return False
+
+    def _get_season(self, month: int) -> int:
+        """Get season number (0-3) from month"""
+        if month in [12, 1, 2]:
+            return 0  # Winter
+        elif month in [3, 4, 5]:
+            return 1  # Spring
+        elif month in [6, 7, 8]:
+            return 2  # Summer
+        else:
+            return 3  # Fall
+
     def _extract_anomaly_features(self, df: pd.DataFrame, user_id: int) -> Optional[np.ndarray]:
-        """Extract features for anomaly detection"""
+        """Extract enhanced features for anomaly detection with seasonal awareness"""
         try:
             features_list = []
 
             for idx, row in df.iterrows():
-                # Feature 1: Transaction amount (normalized)
+                # Original features
                 amount = row['amount']
-
-                # Feature 2: Amount z-score (how far from mean)
                 amount_zscore = (amount - df['amount'].mean()) / df['amount'].std() if df['amount'].std() > 0 else 0
-
-                # Feature 3: Day of week (0-6)
                 weekday = row['weekday']
-
-                # Feature 4: Day of month
                 day_of_month = row['day_of_month']
 
-                # Feature 5: Category frequency (how common is this category)
                 category_counts = df['category_id'].value_counts()
                 category_frequency = category_counts.get(row['category_id'], 0) / len(df)
 
-                # Feature 6: Amount relative to category average
                 category_avg = df[df['category_id'] == row['category_id']]['amount'].mean()
                 amount_vs_category_avg = amount / category_avg if category_avg > 0 else 1
+
+                # NEW SEASONAL FEATURES
+                # Feature 7: Month (1-12) - seasonal patterns
+                month = row['date'].month
+
+                # Feature 8: Quarter (1-4)
+                quarter = (month - 1) // 3 + 1
+
+                # Feature 9: Is weekend (0 or 1)
+                is_weekend = 1 if weekday >= 5 else 0
+
+                # Feature 10: Near holiday (0 or 1)
+                near_holiday = 1 if self._is_near_holiday(row['date']) else 0
+
+                # Feature 11: Season (0-3: winter, spring, summer, fall)
+                season = self._get_season(month)
+
+                # Feature 12: Days since similar transaction
+                same_category_dates = df[df['category_id'] == row['category_id']]['date']
+                if len(same_category_dates) > 1:
+                    days_since_similar = (row['date'] - same_category_dates[same_category_dates < row['date']].max()).days if len(same_category_dates[same_category_dates < row['date']]) > 0 else 30
+                else:
+                    days_since_similar = 30
 
                 features_list.append([
                     amount,
@@ -172,7 +247,13 @@ class AnomalyDetectionService:
                     weekday,
                     day_of_month,
                     category_frequency,
-                    amount_vs_category_avg
+                    amount_vs_category_avg,
+                    month,
+                    quarter,
+                    is_weekend,
+                    near_holiday,
+                    season,
+                    min(days_since_similar, 90)  # Cap at 90 days
                 ])
 
             return np.array(features_list)
@@ -182,9 +263,10 @@ class AnomalyDetectionService:
             return None
 
     def _explain_anomaly(self, transaction: pd.Series, all_transactions: pd.DataFrame) -> str:
-        """Generate human-readable explanation for why transaction is anomalous"""
+        """Generate enhanced human-readable explanation with seasonal context"""
         explanations = []
         amount = transaction['amount']
+        trans_date = transaction['date']
 
         # Check if amount is unusually high
         mean_amount = all_transactions['amount'].mean()
@@ -215,6 +297,24 @@ class AnomalyDetectionService:
 
         if len(similar_amounts) <= 2:
             explanations.append("Rare transaction amount for you")
+
+        # ENHANCED: Seasonal context
+        if self._is_near_holiday(trans_date):
+            explanations.append("Near a major holiday (higher spending expected)")
+
+        # ENHANCED: Weekend spending pattern
+        if trans_date.weekday() >= 5:
+            weekend_avg = all_transactions[all_transactions['weekday'] >= 5]['amount'].mean()
+            if weekend_avg > 0 and amount > weekend_avg * 1.5:
+                explanations.append("Significantly higher than your typical weekend spending")
+
+        # ENHANCED: Month comparison
+        same_month = all_transactions[all_transactions['date'].dt.month == trans_date.month]
+        if len(same_month) > 3:
+            month_avg = same_month['amount'].mean()
+            if amount > month_avg * 1.8:
+                month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                explanations.append(f"Unusually high for {month_names[trans_date.month - 1]}")
 
         # Check timing patterns
         same_weekday = all_transactions[all_transactions['weekday'] == transaction['weekday']]
