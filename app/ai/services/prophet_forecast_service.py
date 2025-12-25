@@ -46,12 +46,7 @@ class ProphetForecastService:
         self.db = db
         self.model = None
         self.is_trained = False
-
-        if not PROPHET_AVAILABLE:
-            raise ImportError(
-                "Prophet is not installed. "
-                "Install it with: pip install prophet"
-            )
+        self.prophet_available = PROPHET_AVAILABLE
 
     def forecast_total_spending(
         self,
@@ -70,6 +65,15 @@ class ProphetForecastService:
         Returns:
             Dictionary with forecast data, trends, and insights
         """
+        # Check if Prophet is available
+        if not self.prophet_available:
+            return {
+                'success': False,
+                'error': 'Prophet library not installed',
+                'message': 'Prophet forecasting requires the "prophet" Python package. Install it with: pip install prophet',
+                'installation_guide': 'https://facebook.github.io/prophet/docs/installation.html'
+            }
+
         try:
             # Get historical data (minimum 60 days for reliable forecasting)
             end_date = datetime.now().date()
@@ -225,6 +229,14 @@ class ProphetForecastService:
         Returns:
             Dictionary with category-specific forecast
         """
+        # Check if Prophet is available
+        if not self.prophet_available:
+            return {
+                'success': False,
+                'error': 'Prophet library not installed',
+                'message': 'Prophet forecasting requires the "prophet" Python package. Install it with: pip install prophet'
+            }
+
         try:
             # Get category info
             category = self.db.query(Category).filter(
@@ -349,6 +361,14 @@ class ProphetForecastService:
         Returns:
             Dictionary with seasonal insights
         """
+        # Check if Prophet is available
+        if not self.prophet_available:
+            return {
+                'success': False,
+                'error': 'Prophet library not installed',
+                'message': 'Prophet forecasting requires the "prophet" Python package. Install it with: pip install prophet'
+            }
+
         try:
             # Get 1 year of data for seasonal analysis
             end_date = datetime.now().date()
