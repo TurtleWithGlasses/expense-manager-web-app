@@ -185,6 +185,102 @@
     </div>
 </div>
 
+<!-- Custom Report Modal Styles -->
+<style>
+#customReportModal .modal-content {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+#customReportModal .modal-header {
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    padding: 1.25rem 1.5rem;
+}
+
+#customReportModal .modal-title {
+    color: var(--text);
+    font-weight: 600;
+}
+
+#customReportModal .modal-body {
+    background-color: var(--panel);
+    color: var(--text);
+    padding: 1.5rem;
+}
+
+#customReportModal .modal-footer {
+    background-color: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 1.25rem 1.5rem;
+}
+
+#customReportModal .form-label {
+    color: var(--text);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+#customReportModal .form-select,
+#customReportModal .form-control {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+#customReportModal .form-select:focus,
+#customReportModal .form-control:focus {
+    background-color: var(--surface);
+    border-color: var(--blue);
+    color: var(--text);
+    box-shadow: 0 0 0 0.2rem rgba(77, 163, 255, 0.25);
+}
+
+#customReportModal .form-select option {
+    background-color: var(--surface);
+    color: var(--text);
+}
+
+#customReportModal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+#customReportModal .btn-secondary {
+    background-color: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+#customReportModal .btn-secondary:hover {
+    background-color: var(--panel);
+    border-color: var(--border-hover);
+}
+
+#customReportModal .btn-success {
+    background-color: #10b981;
+    border-color: #10b981;
+    color: #fff;
+}
+
+#customReportModal .btn-success:hover {
+    background-color: #059669;
+    border-color: #059669;
+}
+
+#customReportModal .btn-danger {
+    background-color: #ef4444;
+    border-color: #ef4444;
+    color: #fff;
+}
+
+#customReportModal .btn-danger:hover {
+    background-color: #dc2626;
+    border-color: #dc2626;
+}
+</style>
+
 <!-- Custom Report Modal -->
 <div class="modal fade" id="customReportModal" tabindex="-1">
     <div class="modal-dialog">
@@ -207,7 +303,7 @@
                         </select>
                     </div>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-6 mb-3 mb-md-0">
                             <label for="startDate" class="form-label">Start Date</label>
                             <input type="date" class="form-control" id="startDate" name="startDate" required>
                         </div>
