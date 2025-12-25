@@ -23,7 +23,8 @@ try:
     PROPHET_AVAILABLE = True
 except ImportError:
     PROPHET_AVAILABLE = False
-    print("⚠️  Prophet not installed. Install with: pip install prophet")
+    import logging
+    logging.warning("Prophet not installed. Install with: pip install prophet")
 
 from app.models.entry import Entry
 from app.models.category import Category

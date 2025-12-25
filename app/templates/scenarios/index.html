@@ -1,0 +1,1291 @@
+{% extends "base.html" %}
+
+{% block title %}Scenario Planning - Expense Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scenarios-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+
+    /* Template Cards */
+    .template-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .template-card {
+        background: var(--panel);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .template-card:hover {
+        border-color: var(--blue);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .template-card.active {
+        border-color: var(--blue);
+        background: rgba(77, 163, 255, 0.05);
+    }
+
+    .template-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--blue);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        margin-bottom: 1rem;
+    }
+
+    .template-card h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .template-card p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    /* Builder Section */
+    .builder-section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        display: none;
+    }
+
+    .builder-section.active {
+        display: block;
+    }
+
+    .builder-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .builder-header h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group .help-text {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+
+    /* Slider Styling */
+    .slider-container {
+        margin-top: 1rem;
+    }
+
+    .slider-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .slider-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--blue);
+    }
+
+    input[type="range"] {
+        width: 100%;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--border);
+        outline: none;
+        -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--blue);
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--blue);
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        border: none;
+    }
+
+    /* Preview Section */
+    .preview-section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .preview-header {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 1rem;
+    }
+
+    .preview-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .preview-stat {
+        background: var(--panel);
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+    }
+
+    .preview-stat-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .preview-stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .preview-stat-value.positive {
+        color: var(--green);
+    }
+
+    .preview-stat-value.negative {
+        color: var(--red);
+    }
+
+    /* Chart Container */
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 1.5rem 0;
+    }
+
+    /* Insights */
+    .insights-container {
+        margin-top: 1.5rem;
+    }
+
+    .insight-item {
+        background: var(--panel);
+        border-left: 3px solid var(--blue);
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.75rem;
+        border-radius: 4px;
+    }
+
+    .insight-item i {
+        color: var(--blue);
+        margin-right: 0.5rem;
+    }
+
+    /* Scenarios List */
+    .scenarios-list {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+    }
+
+    .scenarios-list h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 1.5rem;
+    }
+
+    .scenario-item {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .scenario-item:hover {
+        border-color: var(--blue);
+        transform: translateX(4px);
+    }
+
+    .scenario-item.selected {
+        border-color: var(--blue);
+        background: rgba(77, 163, 255, 0.05);
+    }
+
+    .scenario-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 0.75rem;
+    }
+
+    .scenario-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 0.25rem;
+    }
+
+    .scenario-type-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .scenario-type-badge.spending-reduction {
+        background: rgba(34, 197, 94, 0.1);
+        color: var(--green);
+    }
+
+    .scenario-type-badge.income-increase {
+        background: rgba(77, 163, 255, 0.1);
+        color: var(--blue);
+    }
+
+    .scenario-type-badge.goal-based {
+        background: rgba(234, 179, 8, 0.1);
+        color: var(--yellow);
+    }
+
+    .scenario-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .scenario-action-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .scenario-action-btn:hover {
+        background: var(--border);
+        color: var(--text);
+    }
+
+    .scenario-action-btn.favorite.active {
+        color: var(--yellow);
+    }
+
+    .scenario-stats {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .scenario-stat {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .scenario-stat-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .scenario-stat-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    /* Comparison Section */
+    .comparison-section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-top: 2rem;
+        display: none;
+    }
+
+    .comparison-section.active {
+        display: block;
+    }
+
+    .comparison-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .comparison-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .comparison-card {
+        background: var(--surface);
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+
+    .comparison-card.winner {
+        border-color: var(--green);
+        position: relative;
+    }
+
+    .comparison-card.winner::before {
+        content: "🏆 Best";
+        position: absolute;
+        top: -12px;
+        right: 12px;
+        background: var(--green);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    /* Loading and Empty States */
+    .loading-spinner {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .scenarios-container {
+            padding: 1rem;
+        }
+
+        .template-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .preview-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .scenario-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .comparison-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="scenarios-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1><i class="bi bi-lightbulb"></i> Scenario Planning</h1>
+        <p>Test different financial scenarios and make data-driven decisions about your money</p>
+    </div>
+
+    <!-- Scenario Templates -->
+    <div id="templatesSection">
+        <h2 style="font-size: 1.3rem; font-weight: 600; margin-bottom: 1rem; color: var(--text);">
+            Choose a Scenario Template
+        </h2>
+        <div class="template-grid" id="templateGrid">
+            <!-- Templates loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Scenario Builder -->
+    <div class="builder-section" id="builderSection">
+        <div class="builder-header">
+            <h2 id="builderTitle">Build Your Scenario</h2>
+            <button class="btn btn-secondary" onclick="resetBuilder()">
+                <i class="bi bi-arrow-left"></i> Back to Templates
+            </button>
+        </div>
+
+        <form id="scenarioForm">
+            <!-- Scenario Name -->
+            <div class="form-group">
+                <label for="scenarioName">Scenario Name</label>
+                <input type="text" class="form-control" id="scenarioName" required>
+                <div class="help-text">Give your scenario a descriptive name</div>
+            </div>
+
+            <!-- Scenario Description -->
+            <div class="form-group">
+                <label for="scenarioDescription">Description (Optional)</label>
+                <textarea class="form-control" id="scenarioDescription" rows="2"></textarea>
+            </div>
+
+            <!-- Dynamic Parameters -->
+            <div id="parametersContainer">
+                <!-- Loaded based on template -->
+            </div>
+
+            <!-- Preview Section -->
+            <div class="preview-section" id="previewSection" style="display: none;">
+                <div class="preview-header">
+                    <i class="bi bi-graph-up"></i> Projected Outcome
+                </div>
+
+                <div class="preview-stats" id="previewStats">
+                    <!-- Stats loaded dynamically -->
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="scenarioChart"></canvas>
+                </div>
+
+                <div class="insights-container" id="insightsContainer">
+                    <!-- Insights loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2 mt-3">
+                <button type="button" class="btn btn-primary" onclick="calculateScenario()">
+                    <i class="bi bi-calculator"></i> Calculate Outcome
+                </button>
+                <button type="submit" class="btn btn-success" id="saveScenarioBtn" style="display: none;">
+                    <i class="bi bi-save"></i> Save Scenario
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Saved Scenarios List -->
+    <div class="scenarios-list">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Your Scenarios</h2>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary btn-sm" onclick="compareSelected()" id="compareBtn" style="display: none;">
+                    <i class="bi bi-arrow-left-right"></i> Compare Selected
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="loadScenarios()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <div id="scenariosList">
+            <div class="loading-spinner">
+                <i class="bi bi-hourglass-split"></i><br>
+                Loading scenarios...
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison Section -->
+    <div class="comparison-section" id="comparisonSection">
+        <div class="comparison-header">
+            <h2><i class="bi bi-arrow-left-right"></i> Scenario Comparison</h2>
+            <button class="btn btn-secondary" onclick="closeComparison()">
+                <i class="bi bi-x"></i> Close
+            </button>
+        </div>
+
+        <div class="insights-container mb-4" id="comparisonInsights">
+            <!-- Comparison insights -->
+        </div>
+
+        <div class="comparison-grid" id="comparisonGrid">
+            <!-- Comparison cards -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let currentTemplate = null;
+let currentScenarioData = null;
+let scenarioChart = null;
+let selectedScenarios = new Set();
+let allCategories = [];
+
+// Load templates and scenarios on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadTemplates();
+    loadScenarios();
+    loadCategories();
+});
+
+// Load scenario templates
+async function loadTemplates() {
+    try {
+        const response = await fetch('/api/v1/scenarios/templates');
+        const templates = await response.json();
+
+        const grid = document.getElementById('templateGrid');
+        grid.innerHTML = '';
+
+        templates.forEach(template => {
+            const card = document.createElement('div');
+            card.className = 'template-card';
+            card.onclick = () => selectTemplate(template);
+
+            card.innerHTML = `
+                <div class="template-icon">
+                    <i class="bi bi-${template.icon}"></i>
+                </div>
+                <h3>${template.name}</h3>
+                <p>${template.description}</p>
+            `;
+
+            grid.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Error loading templates:', error);
+    }
+}
+
+// Load user's categories
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/v1/categories');
+        const data = await response.json();
+        allCategories = data.categories || [];
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+// Select a template
+function selectTemplate(template) {
+    currentTemplate = template;
+
+    // Show builder section
+    document.getElementById('templatesSection').style.display = 'none';
+    document.getElementById('builderSection').classList.add('active');
+    document.getElementById('builderTitle').textContent = template.name;
+
+    // Set default name
+    document.getElementById('scenarioName').value = template.name;
+
+    // Build parameter inputs
+    buildParameterInputs(template);
+}
+
+// Build parameter inputs based on template
+function buildParameterInputs(template) {
+    const container = document.getElementById('parametersContainer');
+    container.innerHTML = '';
+
+    if (template.scenario_type === 'spending_reduction') {
+        container.innerHTML = `
+            <div class="form-group">
+                <label for="categorySelect">Category to Reduce</label>
+                <select class="form-select" id="categorySelect" required>
+                    <option value="">Select a category...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <label>Reduction Percentage</label>
+                        <span class="slider-value" id="reductionValue">30%</span>
+                    </div>
+                    <input type="range" id="reductionPercent" min="5" max="100" value="30" step="5"
+                           oninput="updateSliderValue('reductionPercent', 'reductionValue', '%')">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <label>Duration (Months)</label>
+                        <span class="slider-value" id="durationValue">6 months</span>
+                    </div>
+                    <input type="range" id="durationMonths" min="1" max="24" value="6" step="1"
+                           oninput="updateSliderValue('durationMonths', 'durationValue', ' months')">
+                </div>
+            </div>
+        `;
+
+        // Populate category dropdown
+        const categorySelect = document.getElementById('categorySelect');
+        const expenseCategories = allCategories.filter(c => c.type === 'expense');
+        expenseCategories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            categorySelect.appendChild(option);
+        });
+
+    } else if (template.scenario_type === 'income_increase') {
+        container.innerHTML = `
+            <div class="form-group">
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <label>Additional Income Amount</label>
+                        <span class="slider-value" id="amountValue">$500</span>
+                    </div>
+                    <input type="range" id="incomeAmount" min="50" max="5000" value="500" step="50"
+                           oninput="updateSliderValue('incomeAmount', 'amountValue', '$')">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="frequencySelect">Frequency</label>
+                <select class="form-select" id="frequencySelect" required>
+                    <option value="monthly">Monthly</option>
+                    <option value="biweekly">Bi-weekly</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="one_time">One Time</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <label>Duration (Months)</label>
+                        <span class="slider-value" id="durationValue">12 months</span>
+                    </div>
+                    <input type="range" id="durationMonths" min="1" max="24" value="12" step="1"
+                           oninput="updateSliderValue('durationMonths', 'durationValue', ' months')">
+                </div>
+            </div>
+        `;
+
+    } else if (template.scenario_type === 'goal_based') {
+        container.innerHTML = `
+            <div class="form-group">
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <label>Target Savings Amount</label>
+                        <span class="slider-value" id="targetValue">$5,000</span>
+                    </div>
+                    <input type="range" id="targetAmount" min="500" max="50000" value="5000" step="500"
+                           oninput="updateSliderValue('targetAmount', 'targetValue', '$', true)">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <label>Timeframe (Months)</label>
+                        <span class="slider-value" id="timeframeValue">12 months</span>
+                    </div>
+                    <input type="range" id="timeframeMonths" min="1" max="60" value="12" step="1"
+                           oninput="updateSliderValue('timeframeMonths', 'timeframeValue', ' months')">
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Update slider value display
+function updateSliderValue(sliderId, displayId, suffix, isComma = false) {
+    const slider = document.getElementById(sliderId);
+    const display = document.getElementById(displayId);
+    let value = slider.value;
+
+    if (isComma) {
+        value = parseInt(value).toLocaleString();
+    }
+
+    if (suffix.startsWith('$')) {
+        display.textContent = `$${value}`;
+    } else {
+        display.textContent = `${value}${suffix}`;
+    }
+}
+
+// Calculate scenario outcome
+async function calculateScenario() {
+    if (!currentTemplate) return;
+
+    const parameters = getParameters();
+    if (!parameters) return;
+
+    const scenarioData = {
+        name: document.getElementById('scenarioName').value,
+        description: document.getElementById('scenarioDescription').value,
+        scenario_type: currentTemplate.scenario_type,
+        parameters: parameters
+    };
+
+    try {
+        const response = await fetch('/api/v1/scenarios', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(scenarioData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            currentScenarioData = result.scenario;
+            displayPreview(result.scenario);
+            document.getElementById('saveScenarioBtn').style.display = 'inline-block';
+        } else {
+            alert('Error: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error calculating scenario:', error);
+        alert('Failed to calculate scenario');
+    }
+}
+
+// Get parameters from form
+function getParameters() {
+    if (currentTemplate.scenario_type === 'spending_reduction') {
+        const categoryId = document.getElementById('categorySelect').value;
+        if (!categoryId) {
+            alert('Please select a category');
+            return null;
+        }
+
+        return {
+            category_id: parseInt(categoryId),
+            reduction_percent: parseFloat(document.getElementById('reductionPercent').value),
+            duration_months: parseInt(document.getElementById('durationMonths').value)
+        };
+
+    } else if (currentTemplate.scenario_type === 'income_increase') {
+        return {
+            amount: parseFloat(document.getElementById('incomeAmount').value),
+            frequency: document.getElementById('frequencySelect').value,
+            duration_months: parseInt(document.getElementById('durationMonths').value)
+        };
+
+    } else if (currentTemplate.scenario_type === 'goal_based') {
+        return {
+            target_amount: parseFloat(document.getElementById('targetAmount').value),
+            timeframe_months: parseInt(document.getElementById('timeframeMonths').value)
+        };
+    }
+
+    return {};
+}
+
+// Display preview
+function displayPreview(scenario) {
+    const previewSection = document.getElementById('previewSection');
+    previewSection.style.display = 'block';
+
+    const outcome = scenario.projected_outcome;
+
+    // Display stats
+    const statsContainer = document.getElementById('previewStats');
+    statsContainer.innerHTML = '';
+
+    if (outcome.monthly_savings !== undefined) {
+        addPreviewStat('Monthly Savings', `$${outcome.monthly_savings.toFixed(2)}`, 'positive');
+        addPreviewStat('Total Savings', `$${outcome.total_savings.toFixed(2)}`, 'positive');
+    }
+
+    if (outcome.monthly_increase !== undefined) {
+        addPreviewStat('Monthly Increase', `$${outcome.monthly_increase.toFixed(2)}`, 'positive');
+        addPreviewStat('Total Increase', `$${outcome.total_increase.toFixed(2)}`, 'positive');
+    }
+
+    if (outcome.goal_achievable !== undefined) {
+        addPreviewStat('Goal Achievable', outcome.goal_achievable ? 'Yes ✓' : 'No ✗', outcome.goal_achievable ? 'positive' : 'negative');
+        if (outcome.months_to_goal) {
+            addPreviewStat('Months to Goal', outcome.months_to_goal.toFixed(1), '');
+        }
+    }
+
+    // Display timeline chart
+    if (outcome.timeline && outcome.timeline.length > 0) {
+        renderTimelineChart(outcome.timeline);
+    }
+
+    // Display insights
+    displayInsights(outcome.insights || []);
+}
+
+// Add preview stat
+function addPreviewStat(label, value, cssClass) {
+    const statsContainer = document.getElementById('previewStats');
+    const stat = document.createElement('div');
+    stat.className = 'preview-stat';
+    stat.innerHTML = `
+        <div class="preview-stat-label">${label}</div>
+        <div class="preview-stat-value ${cssClass}">${value}</div>
+    `;
+    statsContainer.appendChild(stat);
+}
+
+// Render timeline chart
+function renderTimelineChart(timeline) {
+    const ctx = document.getElementById('scenarioChart').getContext('2d');
+
+    if (scenarioChart) {
+        scenarioChart.destroy();
+    }
+
+    const labels = timeline.map(t => t.date || `Month ${t.month}`);
+
+    let datasets = [];
+
+    if (timeline[0].cumulative_savings !== undefined) {
+        datasets.push({
+            label: 'Cumulative Savings',
+            data: timeline.map(t => t.cumulative_savings),
+            borderColor: 'rgb(34, 197, 94)',
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            fill: true,
+            tension: 0.4
+        });
+    }
+
+    if (timeline[0].cumulative_increase !== undefined) {
+        datasets.push({
+            label: 'Cumulative Income',
+            data: timeline.map(t => t.cumulative_increase),
+            borderColor: 'rgb(77, 163, 255)',
+            backgroundColor: 'rgba(77, 163, 255, 0.1)',
+            fill: true,
+            tension: 0.4
+        });
+    }
+
+    if (timeline[0].projected_savings !== undefined) {
+        datasets.push({
+            label: 'Monthly Savings',
+            data: timeline.map(t => t.projected_savings),
+            borderColor: 'rgb(234, 179, 8)',
+            backgroundColor: 'rgba(234, 179, 8, 0.1)',
+            fill: true,
+            tension: 0.4
+        });
+    }
+
+    scenarioChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(0);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Display insights
+function displayInsights(insights) {
+    const container = document.getElementById('insightsContainer');
+    container.innerHTML = '<div class="preview-header"><i class="bi bi-lightbulb"></i> AI Insights</div>';
+
+    insights.forEach(insight => {
+        const item = document.createElement('div');
+        item.className = 'insight-item';
+        item.innerHTML = `<i class="bi bi-check-circle"></i> ${insight}`;
+        container.appendChild(item);
+    });
+}
+
+// Save scenario
+document.getElementById('scenarioForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    if (currentScenarioData) {
+        // Scenario already created, just reload list
+        await loadScenarios();
+        resetBuilder();
+    }
+});
+
+// Reset builder
+function resetBuilder() {
+    currentTemplate = null;
+    currentScenarioData = null;
+
+    document.getElementById('templatesSection').style.display = 'block';
+    document.getElementById('builderSection').classList.remove('active');
+    document.getElementById('scenarioForm').reset();
+    document.getElementById('previewSection').style.display = 'none';
+    document.getElementById('saveScenarioBtn').style.display = 'none';
+
+    if (scenarioChart) {
+        scenarioChart.destroy();
+        scenarioChart = null;
+    }
+}
+
+// Load saved scenarios
+async function loadScenarios() {
+    try {
+        const response = await fetch('/api/v1/scenarios');
+        const scenarios = await response.json();
+
+        const container = document.getElementById('scenariosList');
+
+        if (scenarios.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No scenarios yet. Create your first scenario above!</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = '';
+
+        scenarios.forEach(scenario => {
+            const item = document.createElement('div');
+            item.className = 'scenario-item';
+            if (selectedScenarios.has(scenario.id)) {
+                item.classList.add('selected');
+            }
+
+            const outcome = scenario.projected_outcome || {};
+            const typeBadge = scenario.scenario_type.replace('_', '-');
+
+            item.innerHTML = `
+                <div class="scenario-header">
+                    <div>
+                        <div class="scenario-title">${scenario.name}</div>
+                        <span class="scenario-type-badge ${typeBadge}">${scenario.scenario_type.replace('_', ' ')}</span>
+                    </div>
+                    <div class="scenario-actions">
+                        <button class="scenario-action-btn favorite ${scenario.is_favorite ? 'active' : ''}"
+                                onclick="toggleFavorite(${scenario.id}, event)">
+                            <i class="bi bi-star${scenario.is_favorite ? '-fill' : ''}"></i>
+                        </button>
+                        <button class="scenario-action-btn" onclick="deleteScenario(${scenario.id}, event)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="scenario-stats">
+                    ${outcome.monthly_savings !== undefined ? `
+                        <div class="scenario-stat">
+                            <div class="scenario-stat-label">Monthly Savings</div>
+                            <div class="scenario-stat-value">$${outcome.monthly_savings.toFixed(2)}</div>
+                        </div>
+                    ` : ''}
+                    ${outcome.monthly_increase !== undefined ? `
+                        <div class="scenario-stat">
+                            <div class="scenario-stat-label">Monthly Increase</div>
+                            <div class="scenario-stat-value">$${outcome.monthly_increase.toFixed(2)}</div>
+                        </div>
+                    ` : ''}
+                    ${outcome.goal_achievable !== undefined ? `
+                        <div class="scenario-stat">
+                            <div class="scenario-stat-label">Goal Achievable</div>
+                            <div class="scenario-stat-value">${outcome.goal_achievable ? 'Yes ✓' : 'No ✗'}</div>
+                        </div>
+                    ` : ''}
+                    ${outcome.total_savings !== undefined ? `
+                        <div class="scenario-stat">
+                            <div class="scenario-stat-label">Total Impact</div>
+                            <div class="scenario-stat-value">$${outcome.total_savings.toFixed(2)}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            item.onclick = (e) => {
+                if (!e.target.closest('.scenario-actions')) {
+                    toggleScenarioSelection(scenario.id);
+                }
+            };
+
+            container.appendChild(item);
+        });
+
+        updateCompareButton();
+
+    } catch (error) {
+        console.error('Error loading scenarios:', error);
+    }
+}
+
+// Toggle scenario selection for comparison
+function toggleScenarioSelection(scenarioId) {
+    if (selectedScenarios.has(scenarioId)) {
+        selectedScenarios.delete(scenarioId);
+    } else {
+        if (selectedScenarios.size >= 4) {
+            alert('You can compare up to 4 scenarios at once');
+            return;
+        }
+        selectedScenarios.add(scenarioId);
+    }
+
+    loadScenarios();
+}
+
+// Update compare button visibility
+function updateCompareButton() {
+    const compareBtn = document.getElementById('compareBtn');
+    if (selectedScenarios.size >= 2) {
+        compareBtn.style.display = 'inline-block';
+        compareBtn.textContent = `Compare Selected (${selectedScenarios.size})`;
+    } else {
+        compareBtn.style.display = 'none';
+    }
+}
+
+// Compare selected scenarios
+async function compareSelected() {
+    if (selectedScenarios.size < 2) {
+        alert('Select at least 2 scenarios to compare');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/v1/scenarios/compare', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                scenario_ids: Array.from(selectedScenarios),
+                save_comparison: false
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            displayComparison(result);
+        } else {
+            alert('Error: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error comparing scenarios:', error);
+        alert('Failed to compare scenarios');
+    }
+}
+
+// Display comparison
+function displayComparison(result) {
+    const section = document.getElementById('comparisonSection');
+    section.classList.add('active');
+    section.scrollIntoView({ behavior: 'smooth' });
+
+    // Display insights
+    const insightsContainer = document.getElementById('comparisonInsights');
+    insightsContainer.innerHTML = '';
+
+    result.insights.forEach(insight => {
+        const item = document.createElement('div');
+        item.className = 'insight-item';
+        item.innerHTML = `<i class="bi bi-info-circle"></i> ${insight}`;
+        insightsContainer.appendChild(item);
+    });
+
+    // Display comparison cards
+    const grid = document.getElementById('comparisonGrid');
+    grid.innerHTML = '';
+
+    result.scenarios.forEach(scenario => {
+        const isWinner = scenario.id === result.winner.scenario_id;
+        const card = document.createElement('div');
+        card.className = `comparison-card ${isWinner ? 'winner' : ''}`;
+
+        card.innerHTML = `
+            <h3>${scenario.name}</h3>
+            <div class="scenario-type-badge ${scenario.type.replace('_', '-')} mb-3">
+                ${scenario.type.replace('_', ' ')}
+            </div>
+
+            <div class="scenario-stats">
+                <div class="scenario-stat">
+                    <div class="scenario-stat-label">Monthly Impact</div>
+                    <div class="scenario-stat-value">$${scenario.monthly_impact.toFixed(2)}</div>
+                </div>
+                <div class="scenario-stat">
+                    <div class="scenario-stat-label">Total Impact</div>
+                    <div class="scenario-stat-value">$${scenario.total_impact.toFixed(2)}</div>
+                </div>
+                ${scenario.achievable !== undefined ? `
+                    <div class="scenario-stat">
+                        <div class="scenario-stat-label">Achievable</div>
+                        <div class="scenario-stat-value">${scenario.achievable ? 'Yes ✓' : 'No ✗'}</div>
+                    </div>
+                ` : ''}
+            </div>
+
+            ${scenario.insights.length > 0 ? `
+                <div class="mt-3">
+                    <small class="text-muted">Key Insights:</small>
+                    ${scenario.insights.slice(0, 2).map(i => `
+                        <div style="font-size: 0.85rem; margin-top: 0.5rem;">
+                            <i class="bi bi-check-circle text-success"></i> ${i}
+                        </div>
+                    `).join('')}
+                </div>
+            ` : ''}
+        `;
+
+        grid.appendChild(card);
+    });
+}
+
+// Close comparison
+function closeComparison() {
+    document.getElementById('comparisonSection').classList.remove('active');
+    selectedScenarios.clear();
+    loadScenarios();
+}
+
+// Toggle favorite
+async function toggleFavorite(scenarioId, event) {
+    event.stopPropagation();
+
+    try {
+        const response = await fetch(`/api/v1/scenarios/${scenarioId}/favorite`, {
+            method: 'POST'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            await loadScenarios();
+        }
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+    }
+}
+
+// Delete scenario
+async function deleteScenario(scenarioId, event) {
+    event.stopPropagation();
+
+    if (!confirm('Are you sure you want to delete this scenario?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/v1/scenarios/${scenarioId}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            selectedScenarios.delete(scenarioId);
+            await loadScenarios();
+        }
+    } catch (error) {
+        console.error('Error deleting scenario:', error);
+    }
+}
+</script>
+{% endblock %}
