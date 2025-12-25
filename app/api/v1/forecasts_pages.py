@@ -19,6 +19,7 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("", response_class=HTMLResponse)
+@router.get("/index", response_class=HTMLResponse)
 def forecasts_page(
     request: Request,
     user: User = Depends(current_user),
