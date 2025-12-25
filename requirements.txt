@@ -38,6 +38,9 @@ cmdstanpy==1.2.0
 # Background task scheduling
 apscheduler==3.10.4
 
+# Caching (optional - for performance optimization)
+redis==5.0.1
+
 # Testing dependencies
 pytest==7.4.3
 pytest-asyncio==0.21.1
