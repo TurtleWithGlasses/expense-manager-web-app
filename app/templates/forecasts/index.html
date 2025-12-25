@@ -306,6 +306,14 @@
       </button>
       <div id="patternsContainer"></div>
     </div>
+
+    <!-- Forecast Explanation -->
+    <div class="forecast-card">
+      <div class="forecast-title mb-3">
+        <i class="bi bi-info-circle"></i> Understanding Your Forecast
+      </div>
+      <div id="explanationContainer" style="color: var(--text-secondary); line-height: 1.8;"></div>
+    </div>
   </div>
 
   <!-- Error State -->
@@ -391,6 +399,9 @@ async function generateForecast() {
 
     // Render insights
     renderInsights(data.insights || []);
+
+    // Render forecast explanation
+    renderForecastExplanation(data, daysAhead, includeHistory);
 
   } catch (error) {
     console.error('Forecast error:', error);
@@ -594,6 +605,111 @@ function renderInsights(insights) {
     </div>
   `).join('');
 }
+
+// Render forecast explanation
+function renderForecastExplanation(data, daysAhead, includeHistory) {
+  const container = document.getElementById('explanationContainer');
+  const summary = data.summary || {};
+  const historical = data.historical || [];
+  const forecast = data.forecast || [];
+
+  // Calculate historical total if available
+  let historicalTotal = 0;
+  let historicalDays = 0;
+  if (historical.length > 0) {
+    historicalTotal = historical.reduce((sum, d) => sum + (d.actual || 0), 0);
+    historicalDays = historical.length;
+  }
+
+  // Build explanation paragraphs
+  let explanation = '';
+
+  // Historical data explanation
+  if (includeHistory && historical.length > 0) {
+    explanation += `
+      <p><strong>📊 Historical Data (Past ${historicalDays} days):</strong><br>
+      The blue line on the chart shows your actual spending over the past ${historicalDays} days,
+      totaling <strong>${formatCurrency(historicalTotal)}</strong>. This represents your real spending
+      behavior, with an average of <strong>${formatCurrency(historicalTotal / historicalDays)}</strong> per day.
+      This historical data helps our AI understand your spending patterns and make accurate predictions.</p>
+    `;
+  } else if (includeHistory && historical.length === 0) {
+    explanation += `
+      <p><strong>📊 Historical Data:</strong><br>
+      No historical data is shown on this chart. This could mean you don't have enough spending
+      records in the past 30 days, or the data is being processed.</p>
+    `;
+  }
+
+  // Forecast period explanation
+  explanation += `
+    <p><strong>🔮 Forecast Prediction (Next ${daysAhead} days):</strong><br>
+    Based on your spending patterns, our AI model predicts you will spend approximately
+    <strong>${formatCurrency(summary.total_predicted || 0)}</strong> over the next ${daysAhead} days.
+    This works out to an average of <strong>${formatCurrency(summary.avg_daily_spending || 0)}</strong> per day.
+    The green dashed line shows the predicted spending trajectory.</p>
+  `;
+
+  // Confidence interval explanation
+  const lowerBound = forecast.length > 0 ? forecast.reduce((sum, d) => sum + (d.lower_bound || 0), 0) : 0;
+  const upperBound = forecast.length > 0 ? forecast.reduce((sum, d) => sum + (d.upper_bound || 0), 0) : 0;
+
+  explanation += `
+    <p><strong>📈 Confidence Interval (95%):</strong><br>
+    We're 95% confident that your actual spending will fall between
+    <strong>${formatCurrency(lowerBound)}</strong> (lower bound) and
+    <strong>${formatCurrency(upperBound)}</strong> (upper bound).
+    This range is shown by the shaded red area on the chart. The wider the range, the more
+    variability we expect in your spending patterns.</p>
+  `;
+
+  // Trend explanation
+  if (summary.trend_direction) {
+    const trendEmoji = summary.trend_direction === 'increasing' ? '📈' :
+                       summary.trend_direction === 'decreasing' ? '📉' : '➡️';
+    const trendText = summary.trend_direction === 'increasing' ? 'upward' :
+                      summary.trend_direction === 'decreasing' ? 'downward' : 'stable';
+    const trendChange = Math.abs(summary.trend_change_percent || 0).toFixed(1);
+
+    explanation += `
+      <p><strong>${trendEmoji} Spending Trend:</strong><br>
+      Your spending shows a <strong>${trendText} trend</strong> with a
+      ${summary.trend_direction === 'increasing' ? 'increase' : summary.trend_direction === 'decreasing' ? 'decrease' : 'change'}
+      of approximately <strong>${trendChange}%</strong>. This trend is calculated by comparing your
+      spending patterns over time and helps predict future behavior.</p>
+    `;
+  }
+
+  // Cache status explanation
+  if (data.cached) {
+    explanation += `
+      <p><strong>💾 Cached Forecast:</strong><br>
+      This forecast was generated earlier and is being shown from our cache. Cached forecasts are
+      stored for up to 24 hours to provide faster results. If you want to see an updated forecast
+      with the latest data, click the <strong>"Refresh Forecasts"</strong> button at the top of the page
+      to clear the cache, then click <strong>"Generate Forecast"</strong> again.</p>
+    `;
+  } else {
+    explanation += `
+      <p><strong>✨ Fresh Forecast:</strong><br>
+      This is a newly generated forecast using your latest spending data. The AI has analyzed your
+      recent transactions and patterns to provide the most accurate prediction possible. This forecast
+      will be cached for 24 hours for faster access.</p>
+    `;
+  }
+
+  // Model information
+  explanation += `
+    <p><strong>🤖 How It Works:</strong><br>
+    This forecast uses Facebook Prophet, an advanced time-series forecasting model developed by Meta.
+    It automatically detects seasonal patterns (like higher spending on weekends or during holidays),
+    identifies trends, and makes predictions with confidence intervals. The more spending data you have,
+    the more accurate the predictions become.</p>
+  `;
+
+  container.innerHTML = explanation;
+}
+
 
 // Detect seasonal patterns
 async function detectSeasonalPatterns() {
