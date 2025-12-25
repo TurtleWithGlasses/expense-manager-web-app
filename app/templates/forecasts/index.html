@@ -178,6 +178,11 @@
     color: var(--text-secondary) !important;
   }
 
+  /* Heading colors */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text) !important;
+  }
+
   @media (max-width: 768px) {
     .chart-container {
       height: 300px;
@@ -401,6 +406,12 @@ function renderForecastChart(data) {
   const forecastData = data.forecast || [];
   const historicalData = data.historical || [];
 
+  // Debug logging
+  console.log('Rendering forecast chart');
+  console.log('Historical data points:', historicalData.length);
+  console.log('Forecast data points:', forecastData.length);
+  console.log('Historical data:', historicalData);
+
   // Combine dates
   const allDates = [
     ...historicalData.map(d => d.date),
@@ -434,9 +445,11 @@ function renderForecastChart(data) {
           borderColor: 'rgb(77, 163, 255)',
           backgroundColor: 'rgba(77, 163, 255, 0.1)',
           borderWidth: 2,
-          pointRadius: 2,
+          pointRadius: 3,
+          pointBackgroundColor: 'rgb(77, 163, 255)',
           fill: false,
-          tension: 0.1
+          tension: 0.1,
+          hidden: historicalData.length === 0
         },
         {
           label: 'Forecast',
