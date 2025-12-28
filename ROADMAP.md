@@ -1,10 +1,10 @@
 # 🗺️ BudgetPulse Development Roadmap
 ## Advanced Analytics & Gamification Implementation Plan
 
-**Version:** 3.1
-**Last Updated:** 2025-12-28
+**Version:** 3.2
+**Last Updated:** 2025-12-29
 **Timeline:** 16 weeks (4 months)
-**Status:** Phase 4 & 5 Complete ✅
+**Status:** Phase 2.1 In Progress 🚧 | Phase 4 & 5 Complete ✅
 
 ---
 
@@ -32,6 +32,39 @@
 - Cache SET: 0.114ms avg (44x better than target)
 - Forecast retrieval: 3500ms → 0.1ms (35,000x faster with Redis)
 - Database queries: 800ms → 120ms (6.7x faster with indexes)
+
+**Financial Goals System** - **100% Complete** (December 2025)
+- ✅ Complete CRUD operations for financial goals
+- ✅ Progress tracking with history logs
+- ✅ Multiple goal types (savings, spending limits, debt payoff, emergency fund)
+- ✅ Automatic overdue goal handling
+- ✅ Goal reactivation with new deadlines
+- ✅ Completed goals summary with total savings
+- ✅ XP rewards for goal creation and completion
+- **Commits:** 0cf2f14, 7c076e7, 6a5f9ef, 9096874, 87075fc
+
+### 🚧 Currently In Progress
+
+**Phase 2.1: Advanced Custom Reports** - **In Progress** (December 2025)
+- 🚧 Saveable report templates
+- 🚧 Flexible metrics selection (avg daily, transaction count, savings rate)
+- 🚧 Report scheduling for automatic generation
+- 🚧 Interactive drill-down charts
+- 🚧 Advanced filters (min/max amount, multi-category)
+
+### 📅 Deferred for Future Implementation
+
+**Phase 3.2: Savings Challenges** - **Deferred**
+- Weekly/monthly challenges (No-Spend Weekend, $5 Daily Challenge)
+- Community challenges with leaderboards
+- Progress tracking and rewards
+- Challenge templates (models exist at `app/models/challenge.py`)
+
+**Phase 3.3: Financial Health Score** - **Deferred**
+- 0-100 score based on savings rate, budget adherence, debt ratio
+- Component breakdown with visualizations
+- Historical trends
+- Personalized recommendations
 
 ---
 
@@ -67,13 +100,14 @@ This roadmap outlines the implementation plan for two major feature sets:
 
 | Phase | Status | Priority | Duration | Completion |
 |-------|--------|----------|----------|------------|
-| **Phase 1: Foundation & Infrastructure** | 🟡 Partial | 🔴 Critical | 3 weeks | ~60% |
-| **Phase 2: Advanced Analytics** | 🟡 Partial | 🟠 High | 4 weeks | ~50% |
-| **Phase 3: Gamification System** | 🟡 Partial | 🟡 Medium | 3 weeks | ~40% |
+| **Phase 1: Foundation & Infrastructure** | 🟢 Mostly Done | 🔴 Critical | 3 weeks | ~85% |
+| **Phase 2: Advanced Analytics** | 🚧 In Progress | 🟠 High | 4 weeks | ~65% |
+| **Phase 3: Gamification System** | 🟡 Partial | 🟡 Medium | 3 weeks | ~50% |
 | **Phase 4: Advanced ML & Predictions** | ✅ Complete | 🟡 Medium-Low | 4 weeks | **100%** ✅ |
 | **Phase 5: Polish & Testing** | ✅ Complete | 🟠 High | 2 weeks | **100%** ✅ |
+| **Financial Goals** | ✅ Complete | 🟢 Medium | 2 weeks | **100%** ✅ |
 
-**Overall Progress: ~70% Complete**
+**Overall Progress: ~78% Complete**
 
 ---
 

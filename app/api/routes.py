@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, categories, entries, metrics, dashboard, ai, reports, weekly_reports, reports_pages, report_status, theme, profile, settings, insights_pages, goals, goals_pages, calendar_pages, budget_intelligence, intelligence_pages, recurring_payments, payment_history, payment_analytics_pages, admin, feedback, voice, help_pages, forecasts, forecasts_pages, scenarios, scenarios_pages, achievements, achievements_pages, charts, gamification
+from app.api.v1 import auth, categories, entries, metrics, dashboard, ai, reports, weekly_reports, reports_pages, report_status, theme, profile, settings, insights_pages, goals, goals_pages, calendar_pages, budget_intelligence, intelligence_pages, recurring_payments, payment_history, payment_analytics_pages, admin, feedback, voice, help_pages, forecasts, forecasts_pages, scenarios, scenarios_pages, achievements, achievements_pages, charts, gamification, report_templates
 from app.api.v1 import entries_rest, categories_rest, dashboard_rest, auth_rest
 from app.api.currency import router as currency_router
 
@@ -18,6 +18,7 @@ api_router.include_router(recurring_payments.router)
 api_router.include_router(payment_history.router)  # Phase 29
 api_router.include_router(payment_analytics_pages.router)  # Phase 30
 api_router.include_router(reports.router)
+api_router.include_router(report_templates.router)  # Phase 2.1 - Saveable Report Templates
 api_router.include_router(weekly_reports.router)
 api_router.include_router(reports_pages.router)
 api_router.include_router(insights_pages.router)

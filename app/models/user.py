@@ -60,6 +60,7 @@ class User(Base):
 
     # Historical reports relationship
     historical_reports = relationship("HistoricalReport", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
+    report_templates = relationship("ReportTemplate", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
 
     # Gamification relationships - Phase 1 & 3
     achievements = relationship("UserAchievement", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
