@@ -18,6 +18,11 @@ echo "  DATABASE_URL=$DATABASE_URL"
 echo "ℹ️  Skipping pre-startup database checks"
 echo "ℹ️  Database connection will be established when the app starts"
 
+# Run database migrations
+echo "📊 Running database migrations..."
+alembic upgrade head
+echo "✅ Migrations completed successfully"
+
 # Start the application
 echo "🌐 Starting application server..."
 uvicorn app.main:app --host 0.0.0.0 --port $PORT
