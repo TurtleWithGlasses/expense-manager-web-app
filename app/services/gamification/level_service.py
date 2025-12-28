@@ -261,7 +261,7 @@ class LevelService:
         return [
             {
                 'user_id': user.id,
-                'username': user.username,
+                'username': user.full_name or user.email.split('@')[0],
                 'email': user.email,
                 'level': user.level or 1,
                 'total_xp': user.xp or 0,
@@ -279,7 +279,7 @@ class LevelService:
         return [
             {
                 'user_id': user.id,
-                'username': user.username,
+                'username': user.full_name or user.email.split('@')[0],
                 'email': user.email,
                 'level': user.level or 1,
                 'total_xp': user.xp or 0,
