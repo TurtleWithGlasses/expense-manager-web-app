@@ -273,7 +273,7 @@ class GoalService:
     def _update_progress_percentage(self, goal: FinancialGoal):
         """Calculate and update progress percentage"""
         if goal.target_amount > 0:
-            progress = (goal.current_amount / goal.target_amount * 100)
+            progress = (float(goal.current_amount) / float(goal.target_amount) * 100)
             goal.progress_percentage = min(progress, 100)  # Cap at 100%
         else:
             goal.progress_percentage = 0
