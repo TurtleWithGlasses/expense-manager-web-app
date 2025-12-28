@@ -23,6 +23,11 @@ echo "📊 Running database migrations..."
 alembic upgrade head
 echo "✅ Migrations completed successfully"
 
+# Seed gamification data (achievements and badges)
+echo "🎮 Seeding gamification data..."
+python -m app.seeds.gamification_seeds
+echo "✅ Gamification data seeded successfully"
+
 # Start the application
 echo "🌐 Starting application server..."
 uvicorn app.main:app --host 0.0.0.0 --port $PORT
