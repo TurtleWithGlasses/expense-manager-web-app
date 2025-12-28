@@ -264,6 +264,12 @@ async def get_goal_statistics(
     from app.services.user_preferences import user_preferences_service
     currency_code = user_preferences_service.get_user_currency(db, user.id)
 
+    # Convert Decimal values to float for JSON serialization
+    if 'total_target_amount' in stats:
+        stats['total_target_amount'] = float(stats['total_target_amount'])
+    if 'total_current_amount' in stats:
+        stats['total_current_amount'] = float(stats['total_current_amount'])
+
     return JSONResponse({
         'success': True,
         'statistics': {
