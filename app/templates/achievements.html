@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .achievement-card {
+    border-radius: 12px;
+    padding: 1.5rem;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .achievement-card.unlocked {
+    border-color: var(--success);
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(34, 197, 94, 0.05) 100%);
+  }
+
+  .achievement-card.locked {
+    opacity: 0.6;
+    filter: grayscale(50%);
+  }
+
+  .achievement-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .achievement-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .tier-bronze { background: linear-gradient(135deg, #cd7f32 0%, #9c5518 100%); }
+  .tier-silver { background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%); }
+  .tier-gold { background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%); }
+  .tier-platinum { background: linear-gradient(135deg, #e5e4e2 0%, #a8a8a8 100%); }
+
+  .stats-card {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .level-progress {
+    height: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 1rem 0;
+  }
+
+  .level-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.8) 0%, white 100%);
+    transition: width 0.5s ease;
+  }
+
+  .filter-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .filter-btn:hover {
+    border-color: var(--primary);
+    background: rgba(59, 130, 246, 0.1);
+  }
+
+  .filter-btn.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+  }
+
+  .category-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .new-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--danger);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+  }
+
+  .leaderboard-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 8px;
+    background: var(--surface);
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border);
+  }
+
+  .leaderboard-rank {
+    font-size: 1.5rem;
+    font-weight: bold;
+    min-width: 50px;
+    text-align: center;
+  }
+
+  .rank-1 { color: #ffd700; }
+  .rank-2 { color: #c0c0c0; }
+  .rank-3 { color: #cd7f32; }
+</style>
+
+<div class="container-fluid py-4">
+  <!-- Header Stats -->
+  <div class="stats-card">
+    <div class="row align-items-center">
+      <div class="col-md-3 text-center border-end border-light border-opacity-25">
+        <div class="display-4 fw-bold" id="userLevel">--</div>
+        <div class="text-white-50">Level</div>
+        <div class="small mt-1" id="rankName">--</div>
+      </div>
+      <div class="col-md-6">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="fw-bold">XP Progress</span>
+          <span id="xpProgress">-- / --</span>
+        </div>
+        <div class="level-progress">
+          <div class="level-progress-bar" id="xpBar" style="width: 0%"></div>
+        </div>
+        <div class="small text-white-50 mt-1" id="xpToNext">-- XP to next level</div>
+      </div>
+      <div class="col-md-3 text-center border-start border-light border-opacity-25">
+        <div class="display-4 fw-bold" id="totalPoints">--</div>
+        <div class="text-white-50">Total Points</div>
+        <div class="small mt-1" id="achievementCount">-- / -- Achievements</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#achievements-tab">
+        <i class="bi bi-trophy-fill me-2"></i>Achievements
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#badges-tab">
+        <i class="bi bi-award-fill me-2"></i>Badges
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#leaderboard-tab">
+        <i class="bi bi-bar-chart-fill me-2"></i>Leaderboard
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <!-- Achievements Tab -->
+    <div class="tab-pane fade show active" id="achievements-tab">
+      <!-- Filters -->
+      <div class="d-flex flex-wrap gap-2 mb-4">
+        <button class="filter-btn active" onclick="filterAchievements('all')">All</button>
+        <button class="filter-btn" onclick="filterAchievements('tracking')">Tracking</button>
+        <button class="filter-btn" onclick="filterAchievements('savings')">Savings</button>
+        <button class="filter-btn" onclick="filterAchievements('spending')">Spending</button>
+        <button class="filter-btn" onclick="filterAchievements('goals')">Goals</button>
+        <button class="filter-btn" onclick="filterAchievements('analysis')">Analysis</button>
+        <div class="ms-auto">
+          <button class="filter-btn" onclick="toggleLocked()">
+            <i class="bi bi-eye-fill me-1"></i><span id="lockedToggleText">Hide Locked</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Achievements Grid -->
+      <div class="row g-3" id="achievementsGrid">
+        <div class="col-12 text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2 text-muted">Loading achievements...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Badges Tab -->
+    <div class="tab-pane fade" id="badges-tab">
+      <div class="row g-3" id="badgesGrid">
+        <div class="col-12 text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2 text-muted">Loading badges...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard Tab -->
+    <div class="tab-pane fade" id="leaderboard-tab">
+      <div class="row">
+        <div class="col-md-8">
+          <h4 class="mb-3">Top Players</h4>
+          <div id="leaderboardList">
+            <div class="text-center py-5">
+              <div class="spinner-border text-primary" role="status"></div>
+              <p class="mt-2 text-muted">Loading leaderboard...</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Your Rank</h5>
+              <div class="text-center py-4">
+                <div class="display-3 fw-bold text-primary" id="userRank">--</div>
+                <p class="text-muted mb-0">out of <span id="totalPlayers">--</span> players</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let allAchievements = [];
+let currentFilter = 'all';
+let showLocked = true;
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadUserStats();
+  loadAchievements();
+  loadBadges();
+  loadLeaderboard();
+});
+
+async function loadUserStats() {
+  try {
+    const [levelResponse, statsResponse] = await Promise.all([
+      fetch('/api/gamification/level/info'),
+      fetch('/api/achievements/stats')
+    ]);
+
+    const levelData = await levelResponse.json();
+    const statsData = await statsResponse.json();
+
+    // Update level info
+    document.getElementById('userLevel').textContent = levelData.level;
+    document.getElementById('rankName').textContent = levelData.rank_name;
+    document.getElementById('xpProgress').textContent = `${levelData.current_xp} / ${levelData.xp_for_next_level}`;
+    document.getElementById('xpToNext').textContent = `${levelData.xp_to_next_level} XP to next level`;
+
+    const xpPercentage = (levelData.current_xp / levelData.xp_for_next_level) * 100;
+    document.getElementById('xpBar').style.width = `${xpPercentage}%`;
+
+    // Update achievement stats
+    document.getElementById('totalPoints').textContent = statsData.stats.total_points.toLocaleString();
+    document.getElementById('achievementCount').textContent =
+      `${statsData.stats.unlocked_count} / ${statsData.stats.total_count} Achievements`;
+
+  } catch (error) {
+    console.error('Error loading stats:', error);
+  }
+}
+
+async function loadAchievements() {
+  try {
+    const response = await fetch('/api/achievements/');
+    const data = await response.json();
+
+    allAchievements = data.achievements;
+    renderAchievements();
+  } catch (error) {
+    console.error('Error loading achievements:', error);
+    document.getElementById('achievementsGrid').innerHTML = `
+      <div class="col-12 text-center py-5">
+        <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+        <p class="mt-2 text-danger">Error loading achievements</p>
+      </div>
+    `;
+  }
+}
+
+function renderAchievements() {
+  const filtered = allAchievements.filter(a => {
+    if (!showLocked && !a.is_unlocked) return false;
+    if (currentFilter === 'all') return true;
+    return a.category === currentFilter;
+  });
+
+  const grid = document.getElementById('achievementsGrid');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="col-12 text-center py-5">
+        <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+        <p class="mt-2 text-muted">No achievements found</p>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(achievement => `
+    <div class="col-md-6 col-lg-4">
+      <div class="achievement-card ${achievement.is_unlocked ? 'unlocked' : 'locked'}">
+        ${achievement.is_new ? '<span class="new-badge">NEW!</span>' : ''}
+        <div class="achievement-icon tier-${achievement.tier}">
+          <i class="bi bi-${achievement.icon_name || 'trophy'} text-white"></i>
+        </div>
+        <h5 class="fw-bold mb-2">${achievement.name}</h5>
+        <p class="text-muted small mb-3">${achievement.description || ''}</p>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="category-badge" style="background: ${getCategoryColor(achievement.category)}20; color: ${getCategoryColor(achievement.category)}">
+            ${achievement.category}
+          </span>
+          <span class="fw-bold text-primary">${achievement.points} pts</span>
+        </div>
+        ${achievement.is_unlocked ? `
+          <div class="mt-2 small text-success">
+            <i class="bi bi-check-circle-fill me-1"></i>
+            Unlocked ${achievement.earned_at ? new Date(achievement.earned_at).toLocaleDateString() : ''}
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadBadges() {
+  try {
+    const response = await fetch('/api/achievements/badges');
+    const data = await response.json();
+
+    const grid = document.getElementById('badgesGrid');
+
+    if (data.badges.length === 0) {
+      grid.innerHTML = `
+        <div class="col-12 text-center py-5">
+          <i class="bi bi-award" style="font-size: 3rem; opacity: 0.3;"></i>
+          <p class="mt-2 text-muted">No badges yet</p>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = data.badges.map(badge => `
+      <div class="col-md-4 col-lg-3">
+        <div class="achievement-card ${badge.is_earned ? 'unlocked' : 'locked'}">
+          <div class="achievement-icon" style="background: ${badge.color_hex}">
+            <span style="font-size: 2rem;">${badge.icon_url || '🏆'}</span>
+          </div>
+          <h6 class="fw-bold mb-2">${badge.name}</h6>
+          <p class="text-muted small">${badge.description || ''}</p>
+          ${badge.is_earned ? `
+            <button class="btn btn-sm btn-${badge.is_equipped ? 'success' : 'outline-primary'} w-100 mt-2"
+                    onclick="toggleBadgeEquip(${badge.id}, ${badge.is_equipped})">
+              <i class="bi bi-${badge.is_equipped ? 'check-circle-fill' : 'circle'} me-1"></i>
+              ${badge.is_equipped ? 'Equipped' : 'Equip'}
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('Error loading badges:', error);
+  }
+}
+
+async function loadLeaderboard() {
+  try {
+    const response = await fetch('/api/gamification/leaderboard/xp?limit=10');
+    const data = await response.json();
+
+    const list = document.getElementById('leaderboardList');
+    list.innerHTML = data.leaderboard.map((user, idx) => `
+      <div class="leaderboard-item">
+        <div class="leaderboard-rank rank-${idx + 1}">#${idx + 1}</div>
+        <div class="flex-grow-1 ms-3">
+          <div class="fw-bold">${user.username}</div>
+          <div class="small text-muted">${user.total_xp.toLocaleString()} XP • Level ${user.level}</div>
+        </div>
+      </div>
+    `).join('');
+
+    document.getElementById('userRank').textContent = data.user_rank.rank;
+    document.getElementById('totalPlayers').textContent = data.user_rank.total_users;
+  } catch (error) {
+    console.error('Error loading leaderboard:', error);
+  }
+}
+
+function filterAchievements(category) {
+  currentFilter = category;
+
+  // Update active button
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+
+  renderAchievements();
+}
+
+function toggleLocked() {
+  showLocked = !showLocked;
+  document.getElementById('lockedToggleText').textContent = showLocked ? 'Hide Locked' : 'Show Locked';
+  renderAchievements();
+}
+
+async function toggleBadgeEquip(badgeId, isEquipped) {
+  try {
+    const endpoint = isEquipped ? 'unequip' : 'equip';
+    await fetch(`/api/achievements/badges/${badgeId}/${endpoint}`, { method: 'POST' });
+    loadBadges();
+  } catch (error) {
+    console.error('Error toggling badge:', error);
+  }
+}
+
+function getCategoryColor(category) {
+  const colors = {
+    'tracking': '#3b82f6',
+    'savings': '#22c55e',
+    'spending': '#ef4444',
+    'goals': '#f59e0b',
+    'analysis': '#8b5cf6'
+  };
+  return colors[category] || '#6b7280';
+}
+</script>
+
+{% endblock %}
