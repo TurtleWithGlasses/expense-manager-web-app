@@ -109,6 +109,10 @@ async def get_user_goals(
 ):
     """Get all goals for current user"""
     service = GoalService(db)
+
+    # Check and mark overdue goals as failed
+    service.check_and_mark_overdue_goals(user.id)
+
     goals = service.get_user_goals(user.id, status=status, include_completed=include_completed)
 
     return JSONResponse({
@@ -270,6 +274,32 @@ async def delete_goal(
     })
 
 
+@router.post("/{goal_id}/reactivate")
+async def reactivate_goal(
+    goal_id: int,
+    new_target_date: Optional[datetime] = None,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Reactivate a failed or cancelled goal"""
+    service = GoalService(db)
+    goal = service.reactivate_goal(goal_id, user.id, new_target_date)
+
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found or already completed")
+
+    return JSONResponse({
+        'success': True,
+        'message': 'Goal reactivated successfully',
+        'goal': {
+            'id': goal.id,
+            'name': goal.name,
+            'status': goal.status,
+            'target_date': goal.target_date.isoformat() if goal.target_date else None
+        }
+    })
+
+
 # ===== STATISTICS & ANALYTICS =====
 
 @router.get("/statistics/overview")
@@ -279,6 +309,10 @@ async def get_goal_statistics(
 ):
     """Get statistics about user's goals"""
     service = GoalService(db)
+
+    # Check and mark overdue goals as failed
+    service.check_and_mark_overdue_goals(user.id)
+
     stats = service.get_goal_statistics(user.id)
 
     # Get user's currency

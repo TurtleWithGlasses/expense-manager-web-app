@@ -182,6 +182,7 @@ class GoalService:
 
         active_goals = [g for g in all_goals if g.status == GoalStatus.ACTIVE]
         completed_goals = [g for g in all_goals if g.status == GoalStatus.COMPLETED]
+        failed_goals = [g for g in all_goals if g.status == GoalStatus.FAILED]
 
         total_target = sum(g.target_amount for g in active_goals)
         total_current = sum(g.current_amount for g in active_goals)
@@ -203,6 +204,7 @@ class GoalService:
             'total_goals': len(all_goals),
             'active_goals': len(active_goals),
             'completed_goals': len(completed_goals),
+            'failed_goals': len(failed_goals),
             'completion_rate': (len(completed_goals) / len(all_goals) * 100) if all_goals else 0,
             'total_target_amount': total_target,
             'total_current_amount': total_current,
@@ -298,6 +300,73 @@ class GoalService:
         )
         self.db.add(log)
         # Commit happens in calling function
+
+    def check_and_mark_overdue_goals(self, user_id: int) -> List[FinancialGoal]:
+        """Check for overdue goals and mark them as failed"""
+        now = datetime.utcnow()
+
+        # Get all active goals with target dates that have passed
+        overdue_goals = self.db.query(FinancialGoal).filter(
+            FinancialGoal.user_id == user_id,
+            FinancialGoal.status == GoalStatus.ACTIVE,
+            FinancialGoal.target_date.isnot(None),
+            FinancialGoal.target_date < now,
+            FinancialGoal.current_amount < FinancialGoal.target_amount
+        ).all()
+
+        failed_goals = []
+        for goal in overdue_goals:
+            goal.status = GoalStatus.FAILED
+            goal.completed_date = now
+            goal.updated_at = now
+            failed_goals.append(goal)
+
+            # Log the failure
+            self._log_progress(
+                goal.id,
+                float(goal.current_amount),
+                float(goal.current_amount),
+                0,
+                f"Goal marked as failed - deadline passed ({goal.target_date.strftime('%Y-%m-%d')})",
+                is_manual=False
+            )
+
+        if failed_goals:
+            self.db.commit()
+
+        return failed_goals
+
+    def reactivate_goal(self, goal_id: int, user_id: int, new_target_date: datetime = None) -> Optional[FinancialGoal]:
+        """Reactivate a failed or cancelled goal with optional new deadline"""
+        goal = self.get_goal(goal_id, user_id)
+        if not goal or goal.status == GoalStatus.COMPLETED:
+            return None
+
+        goal.status = GoalStatus.ACTIVE
+        goal.completed_date = None
+        goal.updated_at = datetime.utcnow()
+
+        if new_target_date:
+            goal.target_date = new_target_date
+
+        self.db.commit()
+        self.db.refresh(goal)
+
+        # Log reactivation
+        note = "Goal reactivated"
+        if new_target_date:
+            note += f" with new deadline {new_target_date.strftime('%Y-%m-%d')}"
+
+        self._log_progress(
+            goal.id,
+            float(goal.current_amount),
+            float(goal.current_amount),
+            0,
+            note,
+            is_manual=True
+        )
+
+        return goal
 
     def get_goals_summary_for_dashboard(self, user_id: int) -> Dict:
         """Get a summary of goals for dashboard widget"""
