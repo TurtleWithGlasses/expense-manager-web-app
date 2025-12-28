@@ -314,11 +314,11 @@ async function loadUserStats() {
 
     // Update level info
     document.getElementById('userLevel').textContent = levelData.level;
-    document.getElementById('rankName').textContent = levelData.rank_name;
-    document.getElementById('xpProgress').textContent = `${levelData.current_xp} / ${levelData.xp_for_next_level}`;
-    document.getElementById('xpToNext').textContent = `${levelData.xp_to_next_level} XP to next level`;
+    document.getElementById('rankName').textContent = levelData.rank;
+    document.getElementById('xpProgress').textContent = `${levelData.xp_in_current_level} / ${levelData.xp_needed_for_next_level}`;
+    document.getElementById('xpToNext').textContent = `${levelData.xp_needed_for_next_level} XP to next level`;
 
-    const xpPercentage = (levelData.current_xp / levelData.xp_for_next_level) * 100;
+    const xpPercentage = (levelData.xp_in_current_level / levelData.xp_needed_for_next_level) * 100;
     document.getElementById('xpBar').style.width = `${xpPercentage}%`;
 
     // Update achievement stats
