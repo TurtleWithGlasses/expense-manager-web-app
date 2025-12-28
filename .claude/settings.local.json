@@ -13,7 +13,9 @@
       "Bash(pytest:*)",
       "Bash(.venvScriptsactivate)",
       "Bash(.venv/Scripts/python:*)",
-      "Bash(.venv/Scripts/activate)"
+      "Bash(.venv/Scripts/activate)",
+      "Bash(ls:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

@@ -13,6 +13,7 @@ from app.deps import current_user_jwt
 from app.db.session import get_db
 from app.services.entries import entries_service
 from app.services.user_preferences import user_preferences_service
+from app.services.gamification.level_service import LevelService
 from app.schemas.entry import EntryCreate, EntryUpdate, EntryOut
 from app.core.responses import (
     success_response,
@@ -139,6 +140,14 @@ async def create_entry(
         note=entry_data.note,
         currency_code=currency_code
     )
+
+    # Award XP for logging entry
+    try:
+        level_service = LevelService(db)
+        level_service.award_entry_xp(user.id)
+    except Exception as e:
+        # Don't fail entry creation if XP award fails
+        print(f"Failed to award XP for entry: {e}")
 
     entry_out = EntryOut.model_validate(entry)
     return created_response(

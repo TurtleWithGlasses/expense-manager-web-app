@@ -13,6 +13,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.deps import current_user
 from app.services.scenario_service import ScenarioService
+from app.services.gamification.level_service import LevelService
 
 
 router = APIRouter(prefix="/api/v1/scenarios", tags=["scenarios"])
@@ -94,6 +95,13 @@ def create_scenario(
 
     if not result['success']:
         raise HTTPException(status_code=400, detail=result['error'])
+
+    # Award XP for creating scenario
+    try:
+        level_service = LevelService(db)
+        level_service.add_xp(user.id, level_service.XP_REWARDS['scenario_created'], "Scenario created")
+    except Exception as e:
+        print(f"Failed to award XP for scenario creation: {e}")
 
     return result
 

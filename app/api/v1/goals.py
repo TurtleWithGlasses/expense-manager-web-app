@@ -11,6 +11,7 @@ from app.deps import current_user
 from app.models.user import User
 from app.models.financial_goal import GoalType, GoalStatus
 from app.services.goal_service import GoalService
+from app.services.gamification.level_service import LevelService
 
 
 router = APIRouter(prefix="/api/goals", tags=["Goals"])
@@ -73,6 +74,13 @@ async def create_goal(
             notify_on_milestone=goal_data.notify_on_milestone,
             milestone_percentage=goal_data.milestone_percentage
         )
+
+        # Award XP for creating goal
+        try:
+            level_service = LevelService(db)
+            level_service.award_goal_created_xp(user.id)
+        except Exception as e:
+            print(f"Failed to award XP for goal creation: {e}")
 
         return JSONResponse({
             'success': True,
@@ -204,6 +212,11 @@ async def update_goal_progress(
 ):
     """Update the progress of a goal"""
     service = GoalService(db)
+
+    # Check old status before update
+    old_goal = service.get_goal(goal_id, user.id)
+    old_status = old_goal.status if old_goal else None
+
     goal = service.update_goal_progress(
         goal_id,
         user.id,
@@ -214,6 +227,14 @@ async def update_goal_progress(
 
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
+
+    # Award XP if goal was just completed
+    if old_status != GoalStatus.COMPLETED and goal.status == GoalStatus.COMPLETED:
+        try:
+            level_service = LevelService(db)
+            level_service.award_goal_completed_xp(user.id)
+        except Exception as e:
+            print(f"Failed to award XP for goal completion: {e}")
 
     return JSONResponse({
         'success': True,

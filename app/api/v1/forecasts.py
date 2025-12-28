@@ -14,6 +14,7 @@ from app.models.user import User
 from app.models.forecast import Forecast
 from app.models.user_preferences import UserPreferences
 from app.ai.services.prophet_forecast_service import ProphetForecastService
+from app.services.gamification.level_service import LevelService
 from app.core.currency import get_currency_info
 from app.core.cache import get_cache, cache_forecast, get_cached_forecast
 
@@ -139,6 +140,13 @@ def forecast_total_spending(
 
         db.add(forecast)
         db.commit()
+
+        # Award XP for creating forecast
+        try:
+            level_service = LevelService(db)
+            level_service.add_xp(user.id, level_service.XP_REWARDS['forecast_created'], "Forecast created")
+        except Exception as e:
+            print(f"Failed to award XP for forecast creation: {e}")
 
         response = {
             **result,

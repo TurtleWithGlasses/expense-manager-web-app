@@ -15,6 +15,7 @@ from app.db.session import get_db
 from app.services.entries import entries_service
 from app.services.categories import list_categories
 from app.services.user_preferences import user_preferences_service
+from app.services.gamification.level_service import LevelService
 from app.templates import render
 from app.core.cache import get_cache
 
@@ -205,6 +206,14 @@ async def add(
         note=note,
         currency_code=user_currency,
     )
+
+    # Award XP for logging entry
+    try:
+        level_service = LevelService(db)
+        level_service.award_entry_xp(user.id)
+    except Exception as e:
+        # Don't fail entry creation if XP award fails
+        print(f"Failed to award XP for entry: {e}")
 
     # Invalidate forecast cache (spending data changed)
     cache = get_cache()

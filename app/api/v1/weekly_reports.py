@@ -10,6 +10,7 @@ from app.deps import current_user
 from app.db.session import get_db
 from app.templates import render
 from app.services.weekly_report_service import WeeklyReportService
+from app.services.gamification.level_service import LevelService
 from app.services.email import email_service
 from app.models.weekly_report import WeeklyReport, UserReportPreferences
 from app.models.user import User
@@ -95,7 +96,7 @@ async def weekly_reports_page(
     reports = db.query(WeeklyReport).filter(
         WeeklyReport.user_id == user.id
     ).order_by(WeeklyReport.week_start.desc()).limit(12).all()
-    
+
     # Parse report data
     reports_data = []
     for report_record in reports:
@@ -106,7 +107,14 @@ async def weekly_reports_page(
             'summary': report_data['summary'],
             'is_viewed': report_record.is_viewed
         })
-    
+
+    # Award XP for viewing weekly report (once per page view)
+    try:
+        level_service = LevelService(db)
+        xp_result = level_service.add_xp(user.id, level_service.XP_REWARDS['weekly_report_viewed'], "Weekly report viewed")
+    except Exception as e:
+        print(f"Failed to award XP for weekly report view: {e}")
+
     return render(request, "reports/weekly.html", {
         "user": user,
         "reports": reports_data
