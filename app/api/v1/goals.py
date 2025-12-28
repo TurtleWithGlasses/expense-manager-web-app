@@ -269,6 +269,10 @@ async def get_goal_statistics(
         stats['total_target_amount'] = float(stats['total_target_amount'])
     if 'total_current_amount' in stats:
         stats['total_current_amount'] = float(stats['total_current_amount'])
+    if 'overall_progress' in stats:
+        stats['overall_progress'] = float(stats['overall_progress'])
+    if 'completion_rate' in stats:
+        stats['completion_rate'] = float(stats['completion_rate'])
 
     return JSONResponse({
         'success': True,
