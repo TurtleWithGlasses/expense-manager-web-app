@@ -583,8 +583,8 @@ function displayGoals(goals) {
           </div>
         </div>
         <div class="progress-amounts">
-          <span>${goal.current_amount.toLocaleString()}${CURRENCY_SYMBOL}</span>
-          <span>${goal.target_amount.toLocaleString()}${CURRENCY_SYMBOL}</span>
+          <span>${CURRENCY_SYMBOL}${formatAmount(goal.current_amount)}</span>
+          <span>${CURRENCY_SYMBOL}${formatAmount(goal.target_amount)}</span>
         </div>
       </div>
 
@@ -701,7 +701,7 @@ function displayGoalDetail(goal) {
           </div>
         </div>
         <div class="progress-amounts" style="margin-top: 1rem; font-size: 1.125rem;">
-          <span><strong>${goal.current_amount.toLocaleString()}${CURRENCY_SYMBOL}</strong> of ${goal.target_amount.toLocaleString()}${CURRENCY_SYMBOL}</span>
+          <span><strong>${CURRENCY_SYMBOL}${formatAmount(goal.current_amount)}</strong> of ${CURRENCY_SYMBOL}${formatAmount(goal.target_amount)}</span>
         </div>
       </div>
 
@@ -781,6 +781,14 @@ function refreshGoals() {
 }
 
 // Utility functions
+function formatAmount(amount) {
+  // Format number with commas, no currency symbol
+  return Number(amount).toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  });
+}
+
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
