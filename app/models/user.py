@@ -1,5 +1,5 @@
 from datetime import datetime, UTC
-from sqlalchemy import String, Boolean, DateTime, Text
+from sqlalchemy import String, Boolean, DateTime, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
@@ -18,6 +18,10 @@ class User(Base):
 
     # Admin privileges - Phase 33
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # Gamification fields - Phase 3
+    xp: Mapped[int] = mapped_column(Integer, default=0)
+    level: Mapped[int] = mapped_column(Integer, default=1)
 
     # Password reset fields
     password_reset_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
