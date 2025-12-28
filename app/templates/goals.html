@@ -32,6 +32,18 @@
     <button class="filter-tab" onclick="filterGoals('completed', event)" role="tab">Completed</button>
   </div>
 
+  <!-- Completed Goals Summary (only shown on completed tab) -->
+  <div id="completed-summary" class="completed-summary" style="display: none;">
+    <h3><i class="bi bi-list-check"></i> Completed Goals Summary</h3>
+    <div id="completed-list" class="completed-list">
+      <!-- Will be populated dynamically -->
+    </div>
+    <div class="completed-total">
+      <strong>Total Saved Amount:</strong>
+      <span id="total-saved" class="total-amount"></span>
+    </div>
+  </div>
+
   <!-- Goals List -->
   <div id="goals-list" class="goals-grid">
     <div class="loading-state">
@@ -189,6 +201,65 @@
 .stat-label {
   color: var(--text-muted);
   font-size: 0.875rem;
+}
+
+/* Completed Summary */
+.completed-summary {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.completed-summary h3 {
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text);
+}
+
+.completed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.completed-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--surface-3);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary);
+}
+
+.completed-item-name {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.completed-item-amount {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.completed-total {
+  padding-top: 1rem;
+  border-top: 2px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.125rem;
+}
+
+.total-amount {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--primary);
 }
 
 /* Filter Tabs */
@@ -450,6 +521,22 @@
   .form-row {
     grid-template-columns: 1fr;
   }
+
+  .completed-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .completed-total {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .total-amount {
+    font-size: 1.25rem;
+  }
 }
 
 /* Light Theme */
@@ -553,7 +640,42 @@ function filterGoals(filter, event = null) {
     filteredGoals = allGoals.filter(g => g.status === 'completed');
   }
 
+  // Show/hide completed summary
+  const completedSummary = document.getElementById('completed-summary');
+  if (filter === 'completed' && filteredGoals.length > 0) {
+    displayCompletedSummary(filteredGoals);
+    completedSummary.style.display = 'block';
+  } else {
+    completedSummary.style.display = 'none';
+  }
+
   displayGoals(filteredGoals);
+}
+
+function displayCompletedSummary(completedGoals) {
+  const completedList = document.getElementById('completed-list');
+  const totalSaved = document.getElementById('total-saved');
+
+  // Filter only savings-type goals for the summary
+  const savingsGoals = completedGoals.filter(g =>
+    g.goal_type === 'savings' ||
+    g.goal_type === 'emergency_fund' ||
+    g.goal_type === 'debt_payoff'
+  );
+
+  // Calculate total
+  const total = savingsGoals.reduce((sum, goal) => sum + goal.current_amount, 0);
+
+  // Display list
+  completedList.innerHTML = savingsGoals.map(goal => `
+    <div class="completed-item">
+      <span class="completed-item-name">${escapeHtml(goal.name)}</span>
+      <span class="completed-item-amount">${CURRENCY_SYMBOL}${formatAmount(goal.current_amount)}</span>
+    </div>
+  `).join('');
+
+  // Display total
+  totalSaved.textContent = `${CURRENCY_SYMBOL}${formatAmount(total)}`;
 }
 
 function displayGoals(goals) {
@@ -693,6 +815,16 @@ function displayGoalDetail(goal) {
   const content = document.getElementById('goal-detail-content');
   content.innerHTML = `
     <div style="padding: 1.5rem;">
+      <div style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <h4 style="margin: 0;">Goal Name</h4>
+          <button class="btn ghost btn-small" onclick="editGoalName(${goal.id}, '${escapeHtml(goal.name).replace(/'/g, "\\'")}')">
+            <i class="bi bi-pencil"></i> Edit Name
+          </button>
+        </div>
+        <p style="font-size: 1.125rem; margin: 0;">${escapeHtml(goal.name)}</p>
+      </div>
+
       <div class="progress-section">
         <h3>Progress</h3>
         <div class="progress-bar-container" style="height: 30px;">
@@ -772,6 +904,35 @@ async function deleteGoal(goalId) {
     }
   } catch (error) {
     console.error('Error deleting goal:', error);
+  }
+}
+
+async function editGoalName(goalId, currentName) {
+  const newName = prompt('Enter new goal name:', currentName);
+  if (!newName || newName === currentName) return;
+
+  try {
+    const response = await fetch(`/api/goals/${goalId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      closeDetailModal();
+      loadGoals();
+      loadStatistics();
+      if (typeof Toast !== 'undefined') {
+        Toast.success('Goal name updated successfully!');
+      }
+    }
+  } catch (error) {
+    console.error('Error updating goal name:', error);
+    if (typeof Toast !== 'undefined') {
+      Toast.error('Failed to update goal name');
+    }
   }
 }
 
