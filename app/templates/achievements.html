@@ -24,7 +24,12 @@
 
   .achievement-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 16px var(--shadow-color, rgba(0, 0, 0, 0.1));
+  }
+
+  .achievement-card h5,
+  .achievement-card h6 {
+    color: var(--text);
   }
 
   .achievement-icon {
@@ -127,9 +132,34 @@
     text-align: center;
   }
 
+  .leaderboard-item .fw-bold {
+    color: var(--text);
+  }
+
   .rank-1 { color: #ffd700; }
   .rank-2 { color: #c0c0c0; }
   .rank-3 { color: #cd7f32; }
+
+  /* Dark theme support for cards */
+  .card {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .card-title,
+  .card-body {
+    color: var(--text);
+  }
+
+  /* Ensure all headings use theme colors */
+  h4, h5, h6 {
+    color: var(--text);
+  }
+
+  /* Tab content headings */
+  #leaderboard-tab h4 {
+    color: var(--text);
+  }
 </style>
 
 <div class="container-fluid py-4">
