@@ -10,7 +10,10 @@
       "Bash(alembic revision:*)",
       "Bash(alembic current:*)",
       "Bash(pip install:*)",
-      "Bash(pytest:*)"
+      "Bash(pytest:*)",
+      "Bash(.venvScriptsactivate)",
+      "Bash(.venv/Scripts/python:*)",
+      "Bash(.venv/Scripts/activate)"
     ],
     "deny": [],
     "ask": []

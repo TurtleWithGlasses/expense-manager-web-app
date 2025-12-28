@@ -11,6 +11,18 @@ from app.models.user import User
 from app.models.category import Category
 from app.models.entry import Entry
 from app.models.user_preferences import UserPreferences
+from app.models.financial_goal import FinancialGoal
+from app.models.recurring_payment import RecurringPayment, PaymentReminder
+from app.models.payment_history import PaymentOccurrence, PaymentLinkSuggestion
+from app.models.forecast import Forecast
+from app.models.scenario import Scenario
+from app.models.achievement import Achievement, UserAchievement, Badge, UserBadge
+from app.models.challenge import Challenge, UserChallenge
+from app.models.weekly_report import WeeklyReport, UserReportPreferences
+from app.models.ai_model import AIModel, AISuggestion, UserAIPreferences
+from app.models.historical_report import HistoricalReport
+from app.models.user_feedback import UserFeedback
+from app.models.report_status import ReportStatus
 
 
 # this is the Alembic Config object, which provides access to the values within the .ini file in use.

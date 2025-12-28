@@ -31,6 +31,8 @@ from app.models.forecast import Forecast
 from app.models.scenario import Scenario, ScenarioComparison
 from app.models.historical_report import HistoricalReport
 from app.models.achievement import Achievement, Badge, UserAchievement, UserBadge
+from app.models.challenge import Challenge, UserChallenge
+from app.models.user_feedback import UserFeedback
 
 
 def seed_achievements(db: Session):

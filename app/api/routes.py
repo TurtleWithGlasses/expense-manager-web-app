@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, categories, entries, metrics, dashboard, ai, reports, weekly_reports, reports_pages, report_status, theme, profile, settings, insights_pages, goals, goals_pages, calendar_pages, budget_intelligence, intelligence_pages, recurring_payments, payment_history, payment_analytics_pages, admin, feedback, voice, help_pages, forecasts, forecasts_pages, scenarios, scenarios_pages, achievements, charts
+from app.api.v1 import auth, categories, entries, metrics, dashboard, ai, reports, weekly_reports, reports_pages, report_status, theme, profile, settings, insights_pages, goals, goals_pages, calendar_pages, budget_intelligence, intelligence_pages, recurring_payments, payment_history, payment_analytics_pages, admin, feedback, voice, help_pages, forecasts, forecasts_pages, scenarios, scenarios_pages, achievements, charts, gamification
 from app.api.v1 import entries_rest, categories_rest, dashboard_rest, auth_rest
 from app.api.currency import router as currency_router
 
@@ -38,6 +38,7 @@ api_router.include_router(scenarios.router)  # Phase 4 - Scenario Planning API
 api_router.include_router(scenarios_pages.router)  # Phase 4 - Scenario Planning UI
 api_router.include_router(achievements.router)  # Phase 1 - Gamification: Achievements & Badges
 api_router.include_router(charts.router)  # Phase 1 - Interactive Chart Configuration
+api_router.include_router(gamification.router)  # Phase 3 - Full Gamification: Leaderboards, Challenges, Health Score
 
 # REST API endpoints (JSON-only, for mobile/external clients)
 api_router.include_router(auth_rest.router)
