@@ -24,6 +24,7 @@ from app.models.user_preferences import UserPreferences
 from app.models.ai_model import AIModel, AISuggestion, UserAIPreferences
 from app.models.weekly_report import WeeklyReport, UserReportPreferences
 from app.models.report_status import ReportStatus
+from app.models.report_template import ReportTemplate
 from app.models.financial_goal import FinancialGoal, GoalProgressLog
 from app.models.recurring_payment import RecurringPayment, PaymentReminder
 from app.models.payment_history import PaymentOccurrence, PaymentLinkSuggestion
