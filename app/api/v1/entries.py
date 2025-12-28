@@ -208,12 +208,17 @@ async def add(
     )
 
     # Award XP for logging entry
+    print(f"DEBUG: About to award XP for user {user.id}")
     try:
         level_service = LevelService(db)
-        level_service.award_entry_xp(user.id)
+        print(f"DEBUG: LevelService created successfully")
+        result = level_service.award_entry_xp(user.id)
+        print(f"DEBUG: XP awarded successfully: {result}")
     except Exception as e:
         # Don't fail entry creation if XP award fails
-        print(f"Failed to award XP for entry: {e}")
+        print(f"ERROR: Failed to award XP for entry: {e}")
+        import traceback
+        traceback.print_exc()
 
     # Invalidate forecast cache (spending data changed)
     cache = get_cache()
