@@ -411,21 +411,48 @@ async function loadBadges() {
       return;
     }
 
+    // Get Bootstrap icon for badge based on code
+    const getBadgeIcon = (code, rarity) => {
+      const iconMap = {
+        'bronze_collector': 'trophy',
+        'silver_collector': 'trophy-fill',
+        'gold_collector': 'award',
+        'platinum_collector': 'award-fill',
+        'points_500': 'star',
+        'points_1000': 'star-fill',
+        'points_2000': 'stars',
+        'tracking_master': 'graph-up-arrow',
+        'savings_guru': 'piggy-bank-fill',
+        'spending_ninja': 'lightning-fill'
+      };
+      return iconMap[code] || 'award';
+    };
+
     grid.innerHTML = data.badges.map(badge => `
       <div class="col-md-4 col-lg-3">
         <div class="achievement-card ${badge.is_earned ? 'unlocked' : 'locked'}">
-          <div class="achievement-icon" style="background: ${badge.color_hex}">
-            <span style="font-size: 2rem;">${badge.icon_url || '🏆'}</span>
+          <div class="achievement-icon" style="background: ${badge.color_hex}20; border: 3px solid ${badge.color_hex}">
+            <i class="bi bi-${getBadgeIcon(badge.code, badge.rarity)}" style="font-size: 2rem; color: ${badge.color_hex}"></i>
           </div>
           <h6 class="fw-bold mb-2">${badge.name}</h6>
-          <p class="text-muted small">${badge.description || ''}</p>
+          <p class="text-muted small mb-1">${badge.description || ''}</p>
+          ${badge.rarity ? `<span class="badge bg-secondary mb-2">${badge.rarity.toUpperCase()}</span>` : ''}
           ${badge.is_earned ? `
-            <button class="btn btn-sm btn-${badge.is_equipped ? 'success' : 'outline-primary'} w-100 mt-2"
-                    onclick="toggleBadgeEquip(${badge.id}, ${badge.is_equipped})">
-              <i class="bi bi-${badge.is_equipped ? 'check-circle-fill' : 'circle'} me-1"></i>
-              ${badge.is_equipped ? 'Equipped' : 'Equip'}
-            </button>
-          ` : ''}
+            <div class="mt-2">
+              <small class="text-success d-block mb-2">
+                <i class="bi bi-check-circle-fill me-1"></i>Earned ${new Date(badge.earned_at).toLocaleDateString()}
+              </small>
+              <button class="btn btn-sm btn-${badge.is_equipped ? 'success' : 'outline-primary'} w-100"
+                      onclick="toggleBadgeEquip(${badge.id}, ${badge.is_equipped})">
+                <i class="bi bi-${badge.is_equipped ? 'check-circle-fill' : 'circle'} me-1"></i>
+                ${badge.is_equipped ? 'Equipped' : 'Equip'}
+              </button>
+            </div>
+          ` : `
+            <small class="text-muted d-block mt-2">
+              <i class="bi bi-lock-fill me-1"></i>Not earned yet
+            </small>
+          `}
         </div>
       </div>
     `).join('');
