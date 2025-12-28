@@ -146,8 +146,25 @@ async def create_entry(
         level_service = LevelService(db)
         level_service.award_entry_xp(user.id)
     except Exception as e:
-        # Don't fail entry creation if XP award fails
         print(f"Failed to award XP for entry: {e}")
+
+    # Check and unlock achievements
+    try:
+        from app.services.gamification.achievement_service import AchievementService
+        newly_unlocked = AchievementService.check_and_unlock_achievements(db, user.id)
+        if newly_unlocked:
+            print(f"Unlocked {len(newly_unlocked)} achievement(s)!")
+    except Exception as e:
+        print(f"Failed to check achievements: {e}")
+
+    # Check and award badges
+    try:
+        from app.services.gamification.badge_service import BadgeService
+        newly_earned_badges = BadgeService.check_and_award_badges(db, user.id)
+        if newly_earned_badges:
+            print(f"Earned {len(newly_earned_badges)} badge(s)!")
+    except Exception as e:
+        print(f"Failed to check badges: {e}")
 
     entry_out = EntryOut.model_validate(entry)
     return created_response(

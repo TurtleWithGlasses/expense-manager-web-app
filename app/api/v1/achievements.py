@@ -327,6 +327,13 @@ async def get_user_badges(
 
         result.append(badge_data)
 
+    # Sort: earned badges first (with equipped ones at the very top), then locked badges
+    result.sort(key=lambda x: (
+        not x['is_earned'],  # Earned first (False < True, so earned come first)
+        not x.get('is_equipped', False),  # Among earned, equipped first
+        x['name']  # Then alphabetically
+    ))
+
     return JSONResponse({
         'success': True,
         'badges': result,

@@ -16,6 +16,8 @@ from app.services.entries import entries_service
 from app.services.categories import list_categories
 from app.services.user_preferences import user_preferences_service
 from app.services.gamification.level_service import LevelService
+from app.services.gamification.achievement_service import AchievementService
+from app.services.gamification.badge_service import BadgeService
 from app.templates import render
 from app.core.cache import get_cache
 
@@ -208,17 +210,42 @@ async def add(
     )
 
     # Award XP for logging entry
-    print(f"DEBUG: About to award XP for user {user.id}")
     try:
         level_service = LevelService(db)
-        print(f"DEBUG: LevelService created successfully")
         result = level_service.award_entry_xp(user.id)
-        print(f"DEBUG: XP awarded successfully: {result}")
+        print(f"XP awarded: {result}")
     except Exception as e:
-        # Don't fail entry creation if XP award fails
-        print(f"ERROR: Failed to award XP for entry: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Failed to award XP for entry: {e}")
+
+    # Check and unlock achievements
+    try:
+        newly_unlocked = AchievementService.check_and_unlock_achievements(db, user.id)
+        if newly_unlocked:
+            print(f"Unlocked {len(newly_unlocked)} achievement(s)!")
+            # Award XP for achievements
+            for achievement in newly_unlocked:
+                try:
+                    level_service = LevelService(db)
+                    level_service.award_achievement_xp(user.id)
+                except Exception as e:
+                    print(f"Failed to award achievement XP: {e}")
+    except Exception as e:
+        print(f"Failed to check achievements: {e}")
+
+    # Check and award badges
+    try:
+        newly_earned_badges = BadgeService.check_and_award_badges(db, user.id)
+        if newly_earned_badges:
+            print(f"Earned {len(newly_earned_badges)} badge(s)!")
+            # Award XP for badges
+            for badge in newly_earned_badges:
+                try:
+                    level_service = LevelService(db)
+                    level_service.award_badge_xp(user.id)
+                except Exception as e:
+                    print(f"Failed to award badge XP: {e}")
+    except Exception as e:
+        print(f"Failed to check badges: {e}")
 
     # Invalidate forecast cache (spending data changed)
     cache = get_cache()
