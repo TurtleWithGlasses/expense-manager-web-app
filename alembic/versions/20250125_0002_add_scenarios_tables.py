@@ -19,58 +19,64 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create scenarios table
-    op.create_table(
-        'scenarios',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('user_id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(length=200), nullable=False),
-        sa.Column('description', sa.Text(), nullable=True),
-        sa.Column('scenario_type', sa.String(length=50), nullable=False),
-        sa.Column('parameters', JSON, nullable=False),
-        sa.Column('projected_outcome', JSON, nullable=True),
-        sa.Column('baseline_data', JSON, nullable=True),
-        sa.Column('is_active', sa.Boolean(), nullable=False, server_default='1'),
-        sa.Column('is_favorite', sa.Boolean(), nullable=False, server_default='0'),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id')
-    )
+    # Check if table already exists
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
 
-    # Create indexes for scenarios table
-    op.create_index('ix_scenarios_id', 'scenarios', ['id'])
-    op.create_index('ix_scenarios_user_id', 'scenarios', ['user_id'])
-    op.create_index('ix_scenarios_scenario_type', 'scenarios', ['scenario_type'])
-    op.create_index('ix_scenarios_created_at', 'scenarios', ['created_at'])
-    op.create_index('ix_scenarios_is_active', 'scenarios', ['is_active'])
-    op.create_index('ix_scenarios_is_favorite', 'scenarios', ['is_favorite'])
+    if 'scenarios' not in inspector.get_table_names():
+        # Create scenarios table
+        op.create_table(
+            'scenarios',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('user_id', sa.Integer(), nullable=False),
+            sa.Column('name', sa.String(length=200), nullable=False),
+            sa.Column('description', sa.Text(), nullable=True),
+            sa.Column('scenario_type', sa.String(length=50), nullable=False),
+            sa.Column('parameters', JSON, nullable=False),
+            sa.Column('projected_outcome', JSON, nullable=True),
+            sa.Column('baseline_data', JSON, nullable=True),
+            sa.Column('is_active', sa.Boolean(), nullable=False, server_default='1'),
+            sa.Column('is_favorite', sa.Boolean(), nullable=False, server_default='0'),
+            sa.Column('created_at', sa.DateTime(), nullable=False),
+            sa.Column('updated_at', sa.DateTime(), nullable=True),
+            sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+            sa.PrimaryKeyConstraint('id')
+        )
 
-    # Composite index for common queries
-    op.create_index(
-        'ix_scenarios_user_type_active',
-        'scenarios',
-        ['user_id', 'scenario_type', 'is_active']
-    )
+        # Create indexes for scenarios table
+        op.create_index('ix_scenarios_id', 'scenarios', ['id'])
+        op.create_index('ix_scenarios_user_id', 'scenarios', ['user_id'])
+        op.create_index('ix_scenarios_scenario_type', 'scenarios', ['scenario_type'])
+        op.create_index('ix_scenarios_created_at', 'scenarios', ['created_at'])
+        op.create_index('ix_scenarios_is_active', 'scenarios', ['is_active'])
+        op.create_index('ix_scenarios_is_favorite', 'scenarios', ['is_favorite'])
 
-    # Create scenario_comparisons table
-    op.create_table(
-        'scenario_comparisons',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('user_id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(length=200), nullable=False),
-        sa.Column('description', sa.Text(), nullable=True),
-        sa.Column('scenario_ids', JSON, nullable=False),
-        sa.Column('comparison_data', JSON, nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id')
-    )
+        # Composite index for common queries
+        op.create_index(
+            'ix_scenarios_user_type_active',
+            'scenarios',
+            ['user_id', 'scenario_type', 'is_active']
+        )
 
-    # Create indexes for scenario_comparisons table
-    op.create_index('ix_scenario_comparisons_id', 'scenario_comparisons', ['id'])
-    op.create_index('ix_scenario_comparisons_user_id', 'scenario_comparisons', ['user_id'])
-    op.create_index('ix_scenario_comparisons_created_at', 'scenario_comparisons', ['created_at'])
+    if 'scenario_comparisons' not in inspector.get_table_names():
+        # Create scenario_comparisons table
+        op.create_table(
+            'scenario_comparisons',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('user_id', sa.Integer(), nullable=False),
+            sa.Column('name', sa.String(length=200), nullable=False),
+            sa.Column('description', sa.Text(), nullable=True),
+            sa.Column('scenario_ids', JSON, nullable=False),
+            sa.Column('comparison_data', JSON, nullable=False),
+            sa.Column('created_at', sa.DateTime(), nullable=False),
+            sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+            sa.PrimaryKeyConstraint('id')
+        )
+
+        # Create indexes for scenario_comparisons table
+        op.create_index('ix_scenario_comparisons_id', 'scenario_comparisons', ['id'])
+        op.create_index('ix_scenario_comparisons_user_id', 'scenario_comparisons', ['user_id'])
+        op.create_index('ix_scenario_comparisons_created_at', 'scenario_comparisons', ['created_at'])
 
 
 def downgrade() -> None:

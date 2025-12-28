@@ -17,9 +17,16 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Add xp and level columns to users table
-    op.add_column('users', sa.Column('xp', sa.Integer(), nullable=False, server_default='0'))
-    op.add_column('users', sa.Column('level', sa.Integer(), nullable=False, server_default='1'))
+    # Check if columns already exist
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = [col['name'] for col in inspector.get_columns('users')]
+
+    # Add xp and level columns to users table if they don't exist
+    if 'xp' not in columns:
+        op.add_column('users', sa.Column('xp', sa.Integer(), nullable=False, server_default='0'))
+    if 'level' not in columns:
+        op.add_column('users', sa.Column('level', sa.Integer(), nullable=False, server_default='1'))
 
 
 def downgrade() -> None:

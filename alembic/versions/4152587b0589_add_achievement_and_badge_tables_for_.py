@@ -19,9 +19,14 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create achievements table
-    op.create_table(
-        'achievements',
+    # Check if tables already exist
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+
+    if 'achievements' not in inspector.get_table_names():
+        # Create achievements table
+        op.create_table(
+            'achievements',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('code', sa.String(length=100), nullable=False),
         sa.Column('name', sa.String(length=200), nullable=False),
@@ -37,13 +42,14 @@ def upgrade() -> None:
         sa.Column('sort_order', sa.Integer(), nullable=True, default=0),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index('ix_achievements_id', 'achievements', ['id'], unique=False)
-    op.create_index('ix_achievements_code', 'achievements', ['code'], unique=True)
+        )
+        op.create_index('ix_achievements_id', 'achievements', ['id'], unique=False)
+        op.create_index('ix_achievements_code', 'achievements', ['code'], unique=True)
 
-    # Create user_achievements table
-    op.create_table(
-        'user_achievements',
+    if 'user_achievements' not in inspector.get_table_names():
+        # Create user_achievements table
+        op.create_table(
+            'user_achievements',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
         sa.Column('achievement_id', sa.Integer(), nullable=False),
@@ -55,14 +61,15 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['achievement_id'], ['achievements.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index('ix_user_achievements_id', 'user_achievements', ['id'], unique=False)
-    op.create_index('ix_user_achievements_user_id', 'user_achievements', ['user_id'], unique=False)
-    op.create_index('ix_user_achievements_earned_at', 'user_achievements', ['earned_at'], unique=False)
+        )
+        op.create_index('ix_user_achievements_id', 'user_achievements', ['id'], unique=False)
+        op.create_index('ix_user_achievements_user_id', 'user_achievements', ['user_id'], unique=False)
+        op.create_index('ix_user_achievements_earned_at', 'user_achievements', ['earned_at'], unique=False)
 
-    # Create badges table
-    op.create_table(
-        'badges',
+    if 'badges' not in inspector.get_table_names():
+        # Create badges table
+        op.create_table(
+            'badges',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('code', sa.String(length=100), nullable=False),
         sa.Column('name', sa.String(length=200), nullable=False),
@@ -76,13 +83,14 @@ def upgrade() -> None:
         sa.Column('is_displayable', sa.Boolean(), nullable=True, default=True),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index('ix_badges_id', 'badges', ['id'], unique=False)
-    op.create_index('ix_badges_code', 'badges', ['code'], unique=True)
+        )
+        op.create_index('ix_badges_id', 'badges', ['id'], unique=False)
+        op.create_index('ix_badges_code', 'badges', ['code'], unique=True)
 
-    # Create user_badges table
-    op.create_table(
-        'user_badges',
+    if 'user_badges' not in inspector.get_table_names():
+        # Create user_badges table
+        op.create_table(
+            'user_badges',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
         sa.Column('badge_id', sa.Integer(), nullable=False),
@@ -93,10 +101,10 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['badge_id'], ['badges.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index('ix_user_badges_id', 'user_badges', ['id'], unique=False)
-    op.create_index('ix_user_badges_user_id', 'user_badges', ['user_id'], unique=False)
-    op.create_index('ix_user_badges_earned_at', 'user_badges', ['earned_at'], unique=False)
+        )
+        op.create_index('ix_user_badges_id', 'user_badges', ['id'], unique=False)
+        op.create_index('ix_user_badges_user_id', 'user_badges', ['user_id'], unique=False)
+        op.create_index('ix_user_badges_earned_at', 'user_badges', ['earned_at'], unique=False)
 
 
 def downgrade() -> None:
