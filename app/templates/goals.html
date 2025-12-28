@@ -27,9 +27,9 @@
 
   <!-- Filter Tabs -->
   <div class="filter-tabs" role="tablist">
-    <button class="filter-tab active" onclick="filterGoals('all')" role="tab">All Goals</button>
-    <button class="filter-tab" onclick="filterGoals('active')" role="tab">Active</button>
-    <button class="filter-tab" onclick="filterGoals('completed')" role="tab">Completed</button>
+    <button class="filter-tab active" onclick="filterGoals('all', event)" role="tab">All Goals</button>
+    <button class="filter-tab" onclick="filterGoals('active', event)" role="tab">Active</button>
+    <button class="filter-tab" onclick="filterGoals('completed', event)" role="tab">Completed</button>
   </div>
 
   <!-- Goals List -->
@@ -530,12 +530,20 @@ async function loadGoals() {
   }
 }
 
-function filterGoals(filter) {
+function filterGoals(filter, event = null) {
   currentFilter = filter;
 
   // Update active tab
   document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
-  event.target?.classList.add('active');
+  if (event && event.target) {
+    event.target.classList.add('active');
+  } else {
+    // If no event (programmatic call), activate the correct tab
+    const tabs = document.querySelectorAll('.filter-tab');
+    if (filter === 'all' && tabs[0]) tabs[0].classList.add('active');
+    if (filter === 'active' && tabs[1]) tabs[1].classList.add('active');
+    if (filter === 'completed' && tabs[2]) tabs[2].classList.add('active');
+  }
 
   // Filter goals
   let filteredGoals = allGoals;
