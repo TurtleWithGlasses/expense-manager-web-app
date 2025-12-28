@@ -129,7 +129,7 @@ class GoalService:
         if not goal:
             return None
 
-        previous_amount = goal.current_amount
+        previous_amount = float(goal.current_amount)
         change_amount = new_amount - previous_amount
 
         goal.current_amount = new_amount
