@@ -160,6 +160,23 @@
   #leaderboard-tab h4 {
     color: var(--text);
   }
+
+  /* Override Bootstrap's muted text for better dark theme visibility */
+  .text-muted {
+    color: var(--text-secondary, #9ca3af) !important;
+  }
+
+  /* Leaderboard text colors */
+  .leaderboard-item .small {
+    color: var(--text-secondary, #9ca3af);
+  }
+
+  /* Empty state text */
+  #achievementsGrid .text-muted,
+  #badgesGrid .text-muted,
+  #leaderboardList .text-muted {
+    color: var(--text-secondary, #9ca3af) !important;
+  }
 </style>
 
 <div class="container-fluid py-4">
