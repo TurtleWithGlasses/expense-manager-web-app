@@ -3,8 +3,8 @@
 
 <style>
   .achievement-card {
-    border-radius: 12px;
-    padding: 1.5rem;
+    border-radius: 10px;
+    padding: 1rem;
     background: var(--surface);
     border: 2px solid var(--border);
     transition: all 0.3s ease;
@@ -30,17 +30,19 @@
   .achievement-card h5,
   .achievement-card h6 {
     color: var(--text);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
   }
 
   .achievement-icon {
-    width: 64px;
-    height: 64px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
   }
 
   .tier-bronze { background: linear-gradient(135deg, #cd7f32 0%, #9c5518 100%); }
@@ -95,12 +97,17 @@
 
   .category-badge {
     display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
+  }
+
+  .achievement-card p.small {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
   }
 
   .new-badge {
@@ -369,7 +376,7 @@ function renderAchievements() {
   }
 
   grid.innerHTML = filtered.map(achievement => `
-    <div class="col-md-6 col-lg-4">
+    <div class="col-12 col-sm-6 col-lg-4">
       <div class="achievement-card ${achievement.is_unlocked ? 'unlocked' : 'locked'}">
         ${achievement.is_new ? '<span class="new-badge">NEW!</span>' : ''}
         <div class="achievement-icon tier-${achievement.tier}">
@@ -429,7 +436,7 @@ async function loadBadges() {
     };
 
     grid.innerHTML = data.badges.map(badge => `
-      <div class="col-md-4 col-lg-3">
+      <div class="col-12 col-sm-6 col-lg-4">
         <div class="achievement-card ${badge.is_earned ? 'unlocked' : 'locked'}">
           <div class="achievement-icon" style="background: ${badge.color_hex}20; border: 3px solid ${badge.color_hex}">
             <i class="bi bi-${getBadgeIcon(badge.code, badge.rarity)}" style="font-size: 2rem; color: ${badge.color_hex}"></i>
