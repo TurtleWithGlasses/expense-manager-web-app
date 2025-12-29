@@ -407,6 +407,16 @@
               <input type="number" class="form-control" id="remind_days_before" name="remind_days_before" min="0" max="30" value="3">
             </div>
           </div>
+
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="auto_add_to_expenses" name="auto_add_to_expenses">
+              <label class="form-check-label" for="auto_add_to_expenses">
+                <strong>Automatically add to expenses on due date</strong>
+                <br><small class="text-muted">When enabled, this payment will be automatically added to your expense entries on the due date</small>
+              </label>
+            </div>
+          </div>
         </form>
       </div>
       <div class="modal-footer">
@@ -494,10 +504,20 @@
               <input type="number" class="form-control" id="edit_remind_days_before" name="remind_days_before" min="0" max="30" value="3">
             </div>
           </div>
+
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="edit_auto_add_to_expenses" name="auto_add_to_expenses">
+              <label class="form-check-label" for="edit_auto_add_to_expenses">
+                <strong>Automatically add to expenses on due date</strong>
+                <br><small class="text-muted">When enabled, this payment will be automatically added to your expense entries on the due date</small>
+              </label>
+            </div>
+          </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-primary" onclick="submitEditPayment()">
           <i class="bi bi-check-circle"></i> Update Payment
         </button>
@@ -544,7 +564,8 @@ async function submitPayment() {
     due_day: parseInt(document.getElementById('due_day').value),
     start_date: document.getElementById('start_date').value,
     end_date: document.getElementById('end_date').value || null,
-    remind_days_before: parseInt(document.getElementById('remind_days_before').value)
+    remind_days_before: parseInt(document.getElementById('remind_days_before').value),
+    auto_add_to_expenses: document.getElementById('auto_add_to_expenses').checked
   };
 
   try {
@@ -680,7 +701,8 @@ async function submitEditPayment() {
     frequency: document.getElementById('edit_frequency').value,
     due_day: parseInt(document.getElementById('edit_due_day').value),
     end_date: document.getElementById('edit_end_date').value || null,
-    remind_days_before: parseInt(document.getElementById('edit_remind_days_before').value)
+    remind_days_before: parseInt(document.getElementById('edit_remind_days_before').value),
+    auto_add_to_expenses: document.getElementById('edit_auto_add_to_expenses').checked
   };
 
   try {

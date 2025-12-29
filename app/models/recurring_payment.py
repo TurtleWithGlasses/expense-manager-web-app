@@ -49,6 +49,7 @@ class RecurringPayment(Base):
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)  # User can pause/resume
+    auto_add_to_expenses: Mapped[bool] = mapped_column(Boolean, default=False)  # Auto-create expense entry on due date
 
     # Reminder settings
     remind_days_before: Mapped[int] = mapped_column(Integer, default=3)  # Days before due date to send reminder

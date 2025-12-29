@@ -39,7 +39,8 @@ class RecurringPaymentService:
         description: Optional[str] = None,
         currency_code: str = 'USD',
         end_date: Optional[date] = None,
-        remind_days_before: int = 3
+        remind_days_before: int = 3,
+        auto_add_to_expenses: bool = False
     ) -> RecurringPayment:
         """
         Create a new recurring payment (bill or subscription)
@@ -72,6 +73,7 @@ class RecurringPaymentService:
             start_date=start_date,
             end_date=end_date,
             is_active=True,
+            auto_add_to_expenses=auto_add_to_expenses,
             remind_days_before=remind_days_before,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow()

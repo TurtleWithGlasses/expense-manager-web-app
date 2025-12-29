@@ -13,6 +13,8 @@ from app.services.monthly_report_service import MonthlyReportService
 from app.services.email import email_service
 from app.models.weekly_report import UserReportPreferences, WeeklyReport
 from app.models.user import User
+from app.models.recurring_payment import RecurringPayment, RecurrenceFrequency
+from app.models.entry import Entry
 
 
 class ReportScheduler:
@@ -53,7 +55,16 @@ class ReportScheduler:
             name='Send Custom Schedule Reports',
             replace_existing=True
         )
-        
+
+        # Schedule daily recurring payment processing - Every day at 1 AM
+        self.scheduler.add_job(
+            self.process_recurring_payments,
+            CronTrigger(hour=1, minute=0),
+            id='process_recurring_payments',
+            name='Process Due Recurring Payments',
+            replace_existing=True
+        )
+
         self.scheduler.start()
         self.is_started = True
         print("📅 Report scheduler started successfully")
@@ -275,6 +286,107 @@ class ReportScheduler:
             return True
         elif pref.frequency == "monthly" and days_since_last >= 30:
             return True
+
+        return False
+
+    async def process_recurring_payments(self):
+        """Process recurring payments and auto-add to expenses if due"""
+        print(f"💰 Processing recurring payments at {datetime.now()}")
+
+        db = SessionLocal()
+        try:
+            today = date.today()
+
+            # Get all active recurring payments with auto-add enabled
+            payments = db.query(RecurringPayment).filter(
+                RecurringPayment.is_active == True,
+                RecurringPayment.auto_add_to_expenses == True
+            ).all()
+
+            print(f"📋 Found {len(payments)} payments with auto-add enabled")
+
+            for payment in payments:
+                try:
+                    # Check if payment is due today
+                    if self._is_payment_due_today(payment, today):
+                        # Check if already added today (avoid duplicates)
+                        existing_entry = db.query(Entry).filter(
+                            Entry.user_id == payment.user_id,
+                            Entry.category_id == payment.category_id,
+                            Entry.date == today,
+                            Entry.amount == payment.amount,
+                            Entry.type == "expense",
+                            Entry.description.like(f"%{payment.name}%")
+                        ).first()
+
+                        if not existing_entry:
+                            # Create expense entry
+                            new_entry = Entry(
+                                user_id=payment.user_id,
+                                category_id=payment.category_id,
+                                type="expense",
+                                amount=payment.amount,
+                                currency_code=payment.currency_code,
+                                date=today,
+                                description=f"{payment.name} (Auto-added)"
+                            )
+
+                            db.add(new_entry)
+                            db.commit()
+
+                            print(f"✅ Auto-added expense for '{payment.name}' - {payment.currency_code} {payment.amount}")
+                        else:
+                            print(f"⏭️  Skipping '{payment.name}' - already added today")
+
+                except Exception as e:
+                    print(f"❌ Error processing payment '{payment.name}': {e}")
+                    db.rollback()
+
+            print(f"✅ Recurring payments processing completed")
+
+        except Exception as e:
+            print(f"❌ Error in recurring payments job: {e}")
+        finally:
+            db.close()
+
+    def _is_payment_due_today(self, payment: RecurringPayment, today: date) -> bool:
+        """Check if a recurring payment is due today"""
+        # Check if payment has ended
+        if payment.end_date and today > payment.end_date:
+            return False
+
+        # Check if payment hasn't started yet
+        if today < payment.start_date:
+            return False
+
+        # Check based on frequency
+        if payment.frequency == RecurrenceFrequency.WEEKLY:
+            # due_day is day of week (0 = Monday, 6 = Sunday)
+            return today.weekday() == payment.due_day
+
+        elif payment.frequency == RecurrenceFrequency.BIWEEKLY:
+            # Check if today is the due day of week
+            if today.weekday() != payment.due_day:
+                return False
+            # Check if it's been 2 weeks since start_date
+            days_since_start = (today - payment.start_date).days
+            weeks_since_start = days_since_start // 7
+            return weeks_since_start % 2 == 0
+
+        elif payment.frequency == RecurrenceFrequency.MONTHLY:
+            # due_day is day of month (1-31)
+            return today.day == payment.due_day
+
+        elif payment.frequency == RecurrenceFrequency.QUARTERLY:
+            # Check if this month is a quarter month (1, 4, 7, 10)
+            # and today is the due day
+            quarter_months = [1, 4, 7, 10]
+            return today.month in quarter_months and today.day == payment.due_day
+
+        elif payment.frequency == RecurrenceFrequency.ANNUALLY:
+            # Check if today matches the start date's month and day
+            return (today.month == payment.start_date.month and
+                   today.day == payment.due_day)
 
         return False
 

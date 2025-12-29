@@ -35,6 +35,7 @@ class RecurringPaymentCreate(BaseModel):
     start_date: date = Field(..., description="Start date")
     end_date: Optional[date] = Field(None, description="Optional end date")
     remind_days_before: int = Field(3, ge=0, le=30, description="Days before due date to remind")
+    auto_add_to_expenses: bool = Field(False, description="Automatically add to expenses on due date")
 
 
 class RecurringPaymentUpdate(BaseModel):
@@ -46,6 +47,7 @@ class RecurringPaymentUpdate(BaseModel):
     due_day: Optional[int] = None
     end_date: Optional[date] = None
     remind_days_before: Optional[int] = Field(None, ge=0, le=30)
+    auto_add_to_expenses: Optional[bool] = None
 
 
 # ==================== CRUD ENDPOINTS ====================
@@ -85,7 +87,8 @@ def create_recurring_payment(
         description=payment_data.description,
         currency_code=payment_data.currency_code,
         end_date=payment_data.end_date,
-        remind_days_before=payment_data.remind_days_before
+        remind_days_before=payment_data.remind_days_before,
+        auto_add_to_expenses=payment_data.auto_add_to_expenses
     )
 
     # Calculate next due date
@@ -102,6 +105,7 @@ def create_recurring_payment(
         "category_name": payment.category.name if payment.category else "Uncategorized",
         "next_due_date": next_due.isoformat() if next_due else None,
         "is_active": payment.is_active,
+        "auto_add_to_expenses": payment.auto_add_to_expenses,
         "created_at": payment.created_at.isoformat()
     }
 
@@ -136,6 +140,7 @@ def get_all_recurring_payments(
             "next_due_date": next_due.isoformat() if next_due else None,
             "days_until_due": (next_due - date.today()).days if next_due else None,
             "is_active": payment.is_active,
+            "auto_add_to_expenses": payment.auto_add_to_expenses,
             "remind_days_before": payment.remind_days_before
         })
 
@@ -214,6 +219,8 @@ def update_recurring_payment(
         updates['end_date'] = payment_data.end_date
     if payment_data.remind_days_before is not None:
         updates['remind_days_before'] = payment_data.remind_days_before
+    if payment_data.auto_add_to_expenses is not None:
+        updates['auto_add_to_expenses'] = payment_data.auto_add_to_expenses
 
     payment = service.update_recurring_payment(payment_id, user.id, **updates)
 
