@@ -46,11 +46,16 @@
 ### 🚧 Currently In Progress
 
 **Phase 2.1: Advanced Custom Reports** - **In Progress** (December 2025)
-- 🚧 Saveable report templates
-- 🚧 Flexible metrics selection (avg daily, transaction count, savings rate)
+- ✅ Saveable report templates with category filtering
+  - Full CRUD operations for templates
+  - Category-specific report filtering
+  - Favorite/starred templates
+  - Usage tracking and statistics
+  - Template management UI with dark theme support
 - 🚧 Report scheduling for automatic generation
-- 🚧 Interactive drill-down charts
-- 🚧 Advanced filters (min/max amount, multi-category)
+- 📅 Flexible metrics selection (deferred - weekly/monthly/annual reports cover this)
+- 📅 Interactive drill-down charts (deferred)
+- 📅 Advanced filters beyond categories (deferred)
 
 ### 📅 Deferred for Future Implementation
 
@@ -75,7 +80,7 @@ This roadmap outlines the implementation plan for two major feature sets:
 1. **Advanced Analytics** - Custom reports, interactive visualizations, ML-driven predictions
 2. **Gamification** - Achievements, badges, savings challenges, financial health scoring
 
-**Current State:** 75% complete - Phase 4 & 5 done, strong ML/AI foundation with performance optimization
+**Current State:** 78% complete - Phase 4 & 5 done, Phase 2.1 saveable templates complete
 **Target State:** Production-ready analytics platform with engagement features
 
 ---

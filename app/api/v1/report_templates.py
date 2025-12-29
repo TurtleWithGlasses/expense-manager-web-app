@@ -19,6 +19,7 @@ class TemplateCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
     report_type: str = Field(..., pattern="^(expense|income|comprehensive)$")
+    category_id: Optional[int] = None
     date_range_type: str = Field(default='custom')
     custom_days: Optional[int] = None
     filters: Optional[dict] = None
@@ -30,6 +31,7 @@ class TemplateUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = None
     report_type: Optional[str] = Field(None, pattern="^(expense|income|comprehensive)$")
+    category_id: Optional[int] = None
     date_range_type: Optional[str] = None
     custom_days: Optional[int] = None
     filters: Optional[dict] = None
@@ -54,6 +56,7 @@ async def create_template(
             name=template_data.name,
             description=template_data.description,
             report_type=template_data.report_type,
+            category_id=template_data.category_id,
             date_range_type=template_data.date_range_type,
             custom_days=template_data.custom_days,
             filters=template_data.filters,
@@ -69,6 +72,8 @@ async def create_template(
                 'name': template.name,
                 'description': template.description,
                 'report_type': template.report_type,
+                'category_id': template.category_id,
+                'category_name': template.category.name if template.category else None,
                 'date_range_type': template.date_range_type,
                 'custom_days': template.custom_days,
                 'filters': template.filters,
@@ -101,6 +106,8 @@ async def get_templates(
                 'name': t.name,
                 'description': t.description,
                 'report_type': t.report_type,
+                'category_id': t.category_id,
+                'category_name': t.category.name if t.category else None,
                 'date_range_type': t.date_range_type,
                 'custom_days': t.custom_days,
                 'filters': t.filters,
@@ -137,6 +144,8 @@ async def get_template(
             'name': template.name,
             'description': template.description,
             'report_type': template.report_type,
+            'category_id': template.category_id,
+            'category_name': template.category.name if template.category else None,
             'date_range_type': template.date_range_type,
             'custom_days': template.custom_days,
             'filters': template.filters,

@@ -21,6 +21,7 @@ class ReportTemplate(Base):
 
     # Report configuration
     report_type: Mapped[str] = mapped_column(String(50))  # 'expense', 'income', 'comprehensive'
+    category_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Date range configuration
     date_range_type: Mapped[str] = mapped_column(String(50), default='custom')  # 'custom', 'last_7_days', 'this_month', etc.
@@ -43,3 +44,4 @@ class ReportTemplate(Base):
 
     # Relationships
     user = relationship("User", back_populates="report_templates")
+    category = relationship("Category")

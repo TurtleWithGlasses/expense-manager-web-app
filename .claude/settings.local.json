@@ -15,7 +15,8 @@
       "Bash(.venv/Scripts/python:*)",
       "Bash(.venv/Scripts/activate)",
       "Bash(ls:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(.venvScriptspython -m alembic revision -m \"Add report templates table for Phase 2.1\")"
     ],
     "deny": [],
     "ask": []
