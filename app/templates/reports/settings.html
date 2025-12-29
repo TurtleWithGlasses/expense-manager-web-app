@@ -1,0 +1,738 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2" style="color: var(--text);">
+                        <i class="bi bi-gear me-2"></i>
+                        Report Settings
+                    </h1>
+                    <p class="text-muted mb-0">Manage your saved report templates and preferences</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/reports" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Back to Reports
+                    </a>
+                    <button class="btn btn-primary" onclick="showCreateTemplateModal()">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        New Template
+                    </button>
+                </div>
+            </div>
+
+            <!-- Templates Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0" style="color: var(--text);">
+                                    <i class="bi bi-bookmark-star me-2"></i>
+                                    Saved Report Templates
+                                </h5>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary active" onclick="filterTemplates('all')">
+                                        All
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="filterTemplates('favorites')">
+                                        <i class="bi bi-star-fill me-1"></i>
+                                        Favorites
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="templates-container" class="row g-3">
+                                <!-- Templates will be loaded here -->
+                            </div>
+                            <div id="empty-state" class="text-center py-5" style="display: none;">
+                                <i class="bi bi-inbox" style="font-size: 4rem; color: var(--text-muted);"></i>
+                                <p class="text-muted mt-3">No templates found. Create your first template to get started!</p>
+                                <button class="btn btn-primary" onclick="showCreateTemplateModal()">
+                                    <i class="bi bi-plus-circle me-1"></i>
+                                    Create Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Statistics -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0" style="color: var(--text);">
+                                <i class="bi bi-graph-up me-2"></i>
+                                Template Usage Statistics
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="stat-card text-center">
+                                        <div class="stat-value" id="total-templates">0</div>
+                                        <div class="stat-label" style="color: var(--text);">Total Templates</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-card text-center">
+                                        <div class="stat-value text-warning" id="favorite-templates">0</div>
+                                        <div class="stat-label" style="color: var(--text);">Favorites</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-card text-center">
+                                        <div class="stat-value text-success" id="total-uses">0</div>
+                                        <div class="stat-label" style="color: var(--text);">Total Uses</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-card text-center">
+                                        <div class="stat-value text-primary" id="most-used">-</div>
+                                        <div class="stat-label" style="color: var(--text);">Most Used</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Template Modal -->
+<div class="modal fade" id="templateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    <span id="modal-title">Create Report Template</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="templateForm">
+                    <input type="hidden" id="template-id" name="template_id">
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="template-name" class="form-label">Template Name</label>
+                            <input type="text" class="form-control" id="template-name" name="name" required
+                                   placeholder="e.g., Monthly Groceries Report">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="export-format" class="form-label">Default Export</label>
+                            <select class="form-select" id="export-format" name="default_export_format">
+                                <option value="excel">Excel</option>
+                                <option value="pdf">PDF</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="template-description" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="template-description" name="description" rows="2"
+                                  placeholder="Brief description of this report template..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="report-type" class="form-label">Report Type</label>
+                            <select class="form-select" id="report-type" name="report_type" required>
+                                <option value="expense">Expense Analysis</option>
+                                <option value="income">Income Analysis</option>
+                                <option value="comprehensive">Comprehensive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="date-range-type" class="form-label">Date Range</label>
+                            <select class="form-select" id="date-range-type" name="date_range_type" onchange="toggleCustomDays()">
+                                <option value="custom">Custom Range</option>
+                                <option value="last_7_days">Last 7 Days</option>
+                                <option value="last_30_days">Last 30 Days</option>
+                                <option value="last_90_days">Last 90 Days</option>
+                                <option value="this_month">This Month</option>
+                                <option value="last_month">Last Month</option>
+                                <option value="this_year">This Year</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="custom-days-container" style="display: none;">
+                        <label for="custom-days" class="form-label">Number of Days</label>
+                        <input type="number" class="form-control" id="custom-days" name="custom_days" min="1" max="365">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Additional Filters (Optional)</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="number" class="form-control mb-2" id="min-amount"
+                                       placeholder="Min Amount" step="0.01">
+                            </div>
+                            <div class="col-md-6">
+                                <input type="number" class="form-control mb-2" id="max-amount"
+                                       placeholder="Max Amount" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveTemplate()">
+                    <i class="bi bi-save me-1"></i>
+                    Save Template
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Styles -->
+<style>
+.stat-card {
+    padding: 1.5rem;
+    background-color: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--text);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+.template-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    transition: all 0.2s;
+    height: 100%;
+}
+
+.template-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.template-card .template-header {
+    display: flex;
+    justify-content: space-between;
+    align-items-start;
+    margin-bottom: 1rem;
+}
+
+.template-card .template-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.25rem;
+}
+
+.template-card .template-description {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.template-card .template-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.template-card .template-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background-color: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.template-card .template-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.template-card .template-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.favorite-star {
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: color 0.2s;
+}
+
+.favorite-star.active {
+    color: #ffc107;
+}
+
+.favorite-star:not(.active) {
+    color: var(--text-muted);
+}
+
+.favorite-star:hover {
+    color: #ffc107;
+}
+
+/* Modal Styles */
+#templateModal .modal-content {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+#templateModal .modal-header {
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+}
+
+#templateModal .modal-title {
+    color: var(--text);
+}
+
+#templateModal .modal-body {
+    background-color: var(--panel);
+    color: var(--text);
+}
+
+#templateModal .modal-footer {
+    background-color: var(--surface);
+    border-top: 1px solid var(--border);
+}
+
+#templateModal .form-label {
+    color: var(--text);
+    font-weight: 500;
+}
+
+#templateModal .form-select,
+#templateModal .form-control,
+#templateModal textarea {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+#templateModal .form-select:focus,
+#templateModal .form-control:focus,
+#templateModal textarea:focus {
+    background-color: var(--surface);
+    border-color: var(--primary);
+    color: var(--text);
+    box-shadow: 0 0 0 0.2rem rgba(77, 163, 255, 0.25);
+}
+
+#templateModal .form-select option {
+    background-color: var(--surface);
+    color: var(--text);
+}
+
+#templateModal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+</style>
+
+<!-- Scripts -->
+<script>
+let templates = [];
+let currentFilter = 'all';
+
+// Load templates on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadTemplates();
+});
+
+async function loadTemplates() {
+    try {
+        const response = await fetch('/api/report-templates');
+        const data = await response.json();
+
+        if (data.success) {
+            templates = data.templates;
+            renderTemplates();
+            updateStatistics();
+        } else {
+            Toast.error('Failed to load templates', 'Error');
+        }
+    } catch (error) {
+        console.error('Error loading templates:', error);
+        Toast.error('Failed to load templates', 'Error');
+    }
+}
+
+function renderTemplates() {
+    const container = document.getElementById('templates-container');
+    const emptyState = document.getElementById('empty-state');
+
+    let filteredTemplates = templates;
+    if (currentFilter === 'favorites') {
+        filteredTemplates = templates.filter(t => t.is_favorite);
+    }
+
+    if (filteredTemplates.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    container.innerHTML = filteredTemplates.map(template => `
+        <div class="col-md-6 col-lg-4">
+            <div class="template-card">
+                <div class="template-header">
+                    <div style="flex: 1;">
+                        <div class="template-title">${escapeHtml(template.name)}</div>
+                    </div>
+                    <i class="bi bi-star-fill favorite-star ${template.is_favorite ? 'active' : ''}"
+                       onclick="toggleFavorite(${template.id})"></i>
+                </div>
+
+                ${template.description ? `<div class="template-description">${escapeHtml(template.description)}</div>` : ''}
+
+                <div class="template-details">
+                    <span class="template-badge">
+                        <i class="bi bi-graph-up me-1"></i>
+                        ${formatReportType(template.report_type)}
+                    </span>
+                    <span class="template-badge">
+                        <i class="bi bi-calendar-range me-1"></i>
+                        ${formatDateRange(template.date_range_type)}
+                    </span>
+                    <span class="template-badge">
+                        <i class="bi bi-file-earmark me-1"></i>
+                        ${template.default_export_format.toUpperCase()}
+                    </span>
+                </div>
+
+                <div class="template-stats">
+                    <span>
+                        <i class="bi bi-clock-history me-1"></i>
+                        Used ${template.use_count} times
+                    </span>
+                    ${template.last_used_at ? `
+                        <span>
+                            <i class="bi bi-calendar-check me-1"></i>
+                            ${formatRelativeTime(template.last_used_at)}
+                        </span>
+                    ` : ''}
+                </div>
+
+                <div class="template-actions">
+                    <button class="btn btn-sm btn-primary" onclick="useTemplate(${template.id})">
+                        <i class="bi bi-play-circle me-1"></i>
+                        Use Template
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="editTemplate(${template.id})">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteTemplate(${template.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateStatistics() {
+    document.getElementById('total-templates').textContent = templates.length;
+    document.getElementById('favorite-templates').textContent = templates.filter(t => t.is_favorite).length;
+
+    const totalUses = templates.reduce((sum, t) => sum + t.use_count, 0);
+    document.getElementById('total-uses').textContent = totalUses;
+
+    const mostUsed = templates.reduce((max, t) => t.use_count > (max?.use_count || 0) ? t : max, null);
+    document.getElementById('most-used').textContent = mostUsed ? mostUsed.name : '-';
+}
+
+function filterTemplates(filter) {
+    currentFilter = filter;
+
+    // Update button states
+    document.querySelectorAll('.btn-group button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    renderTemplates();
+}
+
+function showCreateTemplateModal() {
+    document.getElementById('modal-title').textContent = 'Create Report Template';
+    document.getElementById('templateForm').reset();
+    document.getElementById('template-id').value = '';
+
+    const modal = new bootstrap.Modal(document.getElementById('templateModal'));
+    modal.show();
+}
+
+function editTemplate(id) {
+    const template = templates.find(t => t.id === id);
+    if (!template) return;
+
+    document.getElementById('modal-title').textContent = 'Edit Report Template';
+    document.getElementById('template-id').value = template.id;
+    document.getElementById('template-name').value = template.name;
+    document.getElementById('template-description').value = template.description || '';
+    document.getElementById('report-type').value = template.report_type;
+    document.getElementById('date-range-type').value = template.date_range_type;
+    document.getElementById('export-format').value = template.default_export_format;
+
+    if (template.custom_days) {
+        document.getElementById('custom-days').value = template.custom_days;
+    }
+
+    if (template.filters) {
+        if (template.filters.min_amount) {
+            document.getElementById('min-amount').value = template.filters.min_amount;
+        }
+        if (template.filters.max_amount) {
+            document.getElementById('max-amount').value = template.filters.max_amount;
+        }
+    }
+
+    toggleCustomDays();
+
+    const modal = new bootstrap.Modal(document.getElementById('templateModal'));
+    modal.show();
+}
+
+async function saveTemplate() {
+    const form = document.getElementById('templateForm');
+    const formData = new FormData(form);
+
+    const templateId = document.getElementById('template-id').value;
+    const minAmount = document.getElementById('min-amount').value;
+    const maxAmount = document.getElementById('max-amount').value;
+
+    const filters = {};
+    if (minAmount) filters.min_amount = parseFloat(minAmount);
+    if (maxAmount) filters.max_amount = parseFloat(maxAmount);
+
+    const data = {
+        name: formData.get('name'),
+        description: formData.get('description') || null,
+        report_type: formData.get('report_type'),
+        date_range_type: formData.get('date_range_type'),
+        custom_days: formData.get('custom_days') ? parseInt(formData.get('custom_days')) : null,
+        default_export_format: formData.get('default_export_format'),
+        filters: Object.keys(filters).length > 0 ? filters : null
+    };
+
+    try {
+        const url = templateId ? `/api/report-templates/${templateId}` : '/api/report-templates';
+        const method = templateId ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            Toast.success(templateId ? 'Template updated successfully' : 'Template created successfully', 'Success');
+            bootstrap.Modal.getInstance(document.getElementById('templateModal')).hide();
+            loadTemplates();
+        } else {
+            Toast.error(result.message || 'Failed to save template', 'Error');
+        }
+    } catch (error) {
+        console.error('Error saving template:', error);
+        Toast.error('Failed to save template', 'Error');
+    }
+}
+
+async function deleteTemplate(id) {
+    if (!confirm('Are you sure you want to delete this template?')) return;
+
+    try {
+        const response = await fetch(`/api/report-templates/${id}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            Toast.success('Template deleted successfully', 'Success');
+            loadTemplates();
+        } else {
+            Toast.error('Failed to delete template', 'Error');
+        }
+    } catch (error) {
+        console.error('Error deleting template:', error);
+        Toast.error('Failed to delete template', 'Error');
+    }
+}
+
+async function toggleFavorite(id) {
+    try {
+        const response = await fetch(`/api/report-templates/${id}/toggle-favorite`, {
+            method: 'POST'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            loadTemplates();
+        }
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+    }
+}
+
+async function useTemplate(id) {
+    try {
+        // Mark as used
+        await fetch(`/api/report-templates/${id}/use`, {
+            method: 'POST'
+        });
+
+        const template = templates.find(t => t.id === id);
+        if (!template) return;
+
+        Toast.success('Generating report from template...', 'Report Generation');
+
+        // Calculate date range
+        let startDate, endDate;
+        const today = new Date();
+
+        switch (template.date_range_type) {
+            case 'last_7_days':
+                endDate = today;
+                startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                break;
+            case 'last_30_days':
+                endDate = today;
+                startDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+                break;
+            case 'last_90_days':
+                endDate = today;
+                startDate = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
+                break;
+            case 'this_month':
+                startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                endDate = today;
+                break;
+            case 'last_month':
+                startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                break;
+            case 'this_year':
+                startDate = new Date(today.getFullYear(), 0, 1);
+                endDate = today;
+                break;
+            default:
+                // For custom, use last 30 days as default
+                endDate = today;
+                startDate = new Date(today.getTime() - (template.custom_days || 30) * 24 * 60 * 60 * 1000);
+        }
+
+        const start = startDate.toISOString().split('T')[0];
+        const end = endDate.toISOString().split('T')[0];
+
+        // Generate export URL
+        let exportUrl;
+        if (template.default_export_format === 'excel') {
+            exportUrl = `/reports/excel/entries?start=${start}&end=${end}&report_type=${template.report_type}`;
+        } else {
+            exportUrl = `/reports/pdf/financial?start=${start}&end=${end}&report_type=${template.report_type}`;
+        }
+
+        // Trigger download
+        window.location.href = exportUrl;
+
+        // Reload templates to update use count
+        setTimeout(() => loadTemplates(), 1000);
+    } catch (error) {
+        console.error('Error using template:', error);
+        Toast.error('Failed to generate report', 'Error');
+    }
+}
+
+function toggleCustomDays() {
+    const dateRangeType = document.getElementById('date-range-type').value;
+    const customDaysContainer = document.getElementById('custom-days-container');
+
+    if (dateRangeType === 'custom') {
+        customDaysContainer.style.display = 'block';
+    } else {
+        customDaysContainer.style.display = 'none';
+    }
+}
+
+function formatReportType(type) {
+    const types = {
+        'expense': 'Expenses',
+        'income': 'Income',
+        'comprehensive': 'Comprehensive'
+    };
+    return types[type] || type;
+}
+
+function formatDateRange(range) {
+    const ranges = {
+        'custom': 'Custom',
+        'last_7_days': 'Last 7 Days',
+        'last_30_days': 'Last 30 Days',
+        'last_90_days': 'Last 90 Days',
+        'this_month': 'This Month',
+        'last_month': 'Last Month',
+        'this_year': 'This Year'
+    };
+    return ranges[range] || range;
+}
+
+function formatRelativeTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+
+{% endblock %}

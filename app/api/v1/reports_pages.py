@@ -255,6 +255,19 @@ async def annual_reports_page(
         })
 
 
+@router.get("/settings", response_class=HTMLResponse)
+async def report_settings_page(
+    request: Request,
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Report settings page for managing report templates"""
+    return render(request, "reports/settings.html", {
+        "user": user,
+        "request": request
+    })
+
+
 @router.get("/api/historical")
 async def list_historical_reports(
     report_type: str = None,
