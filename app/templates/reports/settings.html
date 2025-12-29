@@ -600,7 +600,7 @@ async function saveTemplate() {
     };
 
     try {
-        const url = templateId ? `/api/report-templates/${templateId}` : '/api/report-templates';
+        const url = templateId ? `/api/report-templates/${templateId}/` : '/api/report-templates/';
         const method = templateId ? 'PUT' : 'POST';
 
         const response = await fetch(url, {
@@ -630,7 +630,7 @@ async function deleteTemplate(id) {
     if (!confirm('Are you sure you want to delete this template?')) return;
 
     try {
-        const response = await fetch(`/api/report-templates/${id}`, {
+        const response = await fetch(`/api/report-templates/${id}/`, {
             method: 'DELETE'
         });
 
@@ -650,7 +650,7 @@ async function deleteTemplate(id) {
 
 async function toggleFavorite(id) {
     try {
-        const response = await fetch(`/api/report-templates/${id}/toggle-favorite`, {
+        const response = await fetch(`/api/report-templates/${id}/toggle-favorite/`, {
             method: 'POST'
         });
 
@@ -667,7 +667,7 @@ async function toggleFavorite(id) {
 async function useTemplate(id) {
     try {
         // Mark as used
-        await fetch(`/api/report-templates/${id}/use`, {
+        await fetch(`/api/report-templates/${id}/use/`, {
             method: 'POST'
         });
 
