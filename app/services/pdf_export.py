@@ -161,7 +161,63 @@ class PDFExportService:
         
         story.append(summary_table)
         story.append(Spacer(1, 20))
-        
+
+        # Detailed transaction listing
+        if entries:
+            story.append(Paragraph("Transaction Details", heading_style))
+
+            # Prepare transaction data
+            transaction_data = [["Date", "Category", "Description", "Amount"]]
+            running_total = 0
+
+            for entry in entries:
+                converted_amount = await self.currency_service.convert_amount(
+                    entry.amount, entry.currency_code, user_currency
+                )
+
+                # Apply sign based on entry type
+                if entry.type.lower() == "expense":
+                    amount_value = -converted_amount
+                else:
+                    amount_value = converted_amount
+
+                running_total += amount_value
+
+                transaction_data.append([
+                    entry.date.strftime('%Y-%m-%d'),
+                    entry.category.name,
+                    entry.description or "-",
+                    f"{user_currency} {abs(converted_amount):,.2f}"
+                ])
+
+            # Add total row
+            transaction_data.append([
+                "", "", "Total:",
+                f"{user_currency} {abs(running_total):,.2f}"
+            ])
+
+            # Create table with adjusted column widths
+            transaction_table = Table(transaction_data, colWidths=[1*inch, 1.2*inch, 2*inch, 1.3*inch])
+            transaction_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),  # Right align amounts
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BACKGROUND', (0, 1), (-1, -2), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                # Style for total row
+                ('BACKGROUND', (0, -1), (-1, -1), colors.lightblue),
+                ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, -1), (-1, -1), 10),
+            ]))
+
+            story.append(transaction_table)
+            story.append(Spacer(1, 20))
+
         # Category breakdown
         if category_totals:
             story.append(Paragraph("Category Breakdown", heading_style))
