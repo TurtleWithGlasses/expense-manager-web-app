@@ -18,6 +18,7 @@ from app.deps import current_user
 from app.services.recurring_payment_service import RecurringPaymentService
 from app.models.recurring_payment import RecurrenceFrequency
 from app.models.user import User
+from app.services.report_scheduler import report_scheduler
 
 router = APIRouter(prefix="/api/v1/recurring-payments", tags=["Recurring Payments"])
 
@@ -378,3 +379,126 @@ def get_payment_summary(
     """
     service = RecurringPaymentService(db)
     return service.get_payment_summary(user.id)
+
+
+# ==================== TESTING ENDPOINT ====================
+
+@router.post("/test/process-auto-add")
+async def test_process_auto_add(
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    **TESTING ONLY** - Manually trigger the auto-add to expenses job
+
+    This endpoint allows you to test the auto-add functionality without waiting
+    for the scheduled job to run at 1:00 AM.
+
+    It will:
+    1. Find all active payments with auto_add_to_expenses enabled
+    2. Check if they're due today
+    3. Create expense entries for due payments
+    4. Return detailed results of what was processed
+
+    Use this to verify the auto-add feature is working correctly.
+    """
+    try:
+        # Import what we need
+        from datetime import date as date_cls
+        from app.models.recurring_payment import RecurringPayment
+        from app.models.entry import Entry
+
+        today = date_cls.today()
+
+        # Get all active recurring payments with auto-add enabled
+        payments = db.query(RecurringPayment).filter(
+            RecurringPayment.user_id == user.id,  # Only process current user's payments
+            RecurringPayment.is_active == True,
+            RecurringPayment.auto_add_to_expenses == True
+        ).all()
+
+        results = {
+            "today": today.isoformat(),
+            "total_auto_add_enabled": len(payments),
+            "processed": [],
+            "skipped": [],
+            "errors": []
+        }
+
+        for payment in payments:
+            try:
+                # Use the scheduler's helper method to check if payment is due
+                is_due = report_scheduler._is_payment_due_today(payment, today)
+
+                payment_info = {
+                    "id": payment.id,
+                    "name": payment.name,
+                    "amount": float(payment.amount),
+                    "currency": payment.currency_code,
+                    "frequency": payment.frequency.value,
+                    "due_day": payment.due_day,
+                    "is_due_today": is_due
+                }
+
+                if is_due:
+                    # Check if already added today (avoid duplicates)
+                    existing_entry = db.query(Entry).filter(
+                        Entry.user_id == payment.user_id,
+                        Entry.category_id == payment.category_id,
+                        Entry.date == today,
+                        Entry.amount == payment.amount,
+                        Entry.type == "expense",
+                        Entry.description.like(f"%{payment.name}%")
+                    ).first()
+
+                    if not existing_entry:
+                        # Create expense entry
+                        new_entry = Entry(
+                            user_id=payment.user_id,
+                            category_id=payment.category_id,
+                            type="expense",
+                            amount=payment.amount,
+                            currency_code=payment.currency_code,
+                            date=today,
+                            description=f"{payment.name} (Auto-added)"
+                        )
+
+                        db.add(new_entry)
+                        db.commit()
+                        db.refresh(new_entry)
+
+                        payment_info["action"] = "created"
+                        payment_info["entry_id"] = new_entry.id
+                        payment_info["description"] = new_entry.description
+                        results["processed"].append(payment_info)
+                    else:
+                        payment_info["action"] = "already_exists"
+                        payment_info["existing_entry_id"] = existing_entry.id
+                        results["skipped"].append(payment_info)
+                else:
+                    payment_info["action"] = "not_due_today"
+                    payment_info["reason"] = f"Payment not due today (due_day: {payment.due_day}, frequency: {payment.frequency.value})"
+                    results["skipped"].append(payment_info)
+
+            except Exception as e:
+                error_info = {
+                    "id": payment.id,
+                    "name": payment.name,
+                    "error": str(e)
+                }
+                results["errors"].append(error_info)
+                db.rollback()
+
+        results["summary"] = {
+            "created": len(results["processed"]),
+            "skipped": len(results["skipped"]),
+            "errors": len(results["errors"])
+        }
+
+        return results
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing auto-add: {str(e)}"
+        )
