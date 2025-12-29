@@ -43,6 +43,16 @@
 - ✅ XP rewards for goal creation and completion
 - **Commits:** 0cf2f14, 7c076e7, 6a5f9ef, 9096874, 87075fc
 
+**Auto-Add to Expenses for Recurring Bills** - **Complete** (December 29, 2025)
+- ✅ Auto-add checkbox in Bills & Subscriptions UI
+- ✅ Scheduled job (daily at 1 AM) to process due payments
+- ✅ Automatic expense entry creation on due dates
+- ✅ Smart duplicate prevention
+- ✅ Support for all recurrence frequencies (weekly, biweekly, monthly, quarterly, annually)
+- ✅ Manual test endpoint for verification
+- ✅ Comprehensive testing documentation
+- **Commits:** 8c8d919, a85876a
+
 ### 🚧 Currently In Progress
 
 **Phase 2.1: Advanced Custom Reports** - **In Progress** (December 2025)
