@@ -724,7 +724,7 @@ async function useTemplate(id) {
 
         // Add category filter if specified
         if (template.category_id) {
-            exportUrl += `&category_id=${template.category_id}`;
+            exportUrl += `&category=${template.category_id}`;
         }
 
         // Trigger download
