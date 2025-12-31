@@ -136,9 +136,13 @@ class AchievementNotificationSystem {
         return new Promise((resolve) => {
             const container = document.getElementById('achievement-toast-container');
             if (!container) {
+                console.warn('Achievement toast container not found');
                 resolve();
                 return;
             }
+
+            // Debug: Log achievement data
+            console.log('Showing achievement notification:', achievement);
 
             // Create toast element
             const toastId = `achievement-toast-${achievement.id}`;
