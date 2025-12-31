@@ -66,27 +66,14 @@ class AchievementNotificationSystem {
             if (!data.success || !data.achievements) return;
 
             // Filter for newly unlocked achievements (is_new flag)
-            const newAchievements = data.achievements.filter(achievement =>
-                achievement.is_new === true
-            );
+            const newAchievements = data.achievements.filter(ua => ua.is_new === true);
 
             if (newAchievements.length > 0) {
-                // Add to notification queue
-                newAchievements.forEach(userAchievement => {
-                    // Flatten the nested structure for easier access
-                    const flattenedAchievement = {
-                        id: userAchievement.id,
-                        name: userAchievement.achievement.name,
-                        description: userAchievement.achievement.description,
-                        tier: userAchievement.achievement.tier,
-                        icon: userAchievement.achievement.icon_name,
-                        points: userAchievement.achievement.points,
-                        category: userAchievement.achievement.category,
-                        badge_id: null, // Would need to check badge relationship
-                        is_new: userAchievement.is_new,
-                        earned_at: userAchievement.earned_at
-                    };
-                    this.queueNotification(flattenedAchievement);
+                console.log('Found new achievements:', newAchievements);
+
+                // Add to notification queue (pass complete object)
+                newAchievements.forEach(ua => {
+                    this.queueNotification(ua);
                 });
 
                 // Process the queue
@@ -132,7 +119,7 @@ class AchievementNotificationSystem {
     /**
      * Show achievement notification toast
      */
-    async showAchievementNotification(achievement) {
+    async showAchievementNotification(userAchievement) {
         return new Promise((resolve) => {
             const container = document.getElementById('achievement-toast-container');
             if (!container) {
@@ -142,11 +129,13 @@ class AchievementNotificationSystem {
             }
 
             // Debug: Log achievement data
-            console.log('Showing achievement notification:', achievement);
+            console.log('Showing achievement notification:');
+            console.log('- User Achievement:', userAchievement);
+            console.log('- Nested Achievement:', userAchievement.achievement);
 
             // Create toast element
-            const toastId = `achievement-toast-${achievement.id}`;
-            const toastEl = this.createToastElement(toastId, achievement);
+            const toastId = `achievement-toast-${userAchievement.id}`;
+            const toastEl = this.createToastElement(toastId, userAchievement);
             container.appendChild(toastEl);
 
             // Initialize Bootstrap toast
@@ -175,7 +164,7 @@ class AchievementNotificationSystem {
     /**
      * Create toast HTML element
      */
-    createToastElement(toastId, achievement) {
+    createToastElement(toastId, userAchievement) {
         const toast = document.createElement('div');
         toast.id = toastId;
         toast.className = 'toast achievement-toast';
@@ -183,30 +172,37 @@ class AchievementNotificationSystem {
         toast.setAttribute('aria-live', 'assertive');
         toast.setAttribute('aria-atomic', 'true');
 
-        // Get tier color
-        const tierColor = this.getTierColor(achievement.tier);
-        const tierIcon = this.getTierIcon(achievement.tier);
+        // Access nested achievement data safely
+        const ach = userAchievement.achievement || {};
+        const tier = ach.tier || 'bronze';
+        const name = ach.name || 'Achievement Unlocked';
+        const description = ach.description || 'Congratulations!';
+        const icon = ach.icon_name || '🏆';
+        const points = ach.points || 0;
+
+        // Get tier color and icon
+        const tierColor = this.getTierColor(tier);
+        const tierIcon = this.getTierIcon(tier);
 
         toast.innerHTML = `
             <div class="toast-header" style="background: linear-gradient(135deg, ${tierColor}15 0%, ${tierColor}05 100%);">
                 <i class="bi ${tierIcon} me-2" style="color: ${tierColor}; font-size: 1.2rem;"></i>
                 <strong class="me-auto">Achievement Unlocked!</strong>
-                <small class="badge" style="background-color: ${tierColor}; color: white; text-transform: capitalize;">${achievement.tier || 'Bronze'}</small>
+                <small class="badge" style="background-color: ${tierColor}; color: white; text-transform: capitalize;">${tier}</small>
                 <button type="button" class="btn-close ms-2" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
             <div class="toast-body">
                 <div class="d-flex align-items-start gap-3">
                     <div class="achievement-icon" style="font-size: 2.5rem; line-height: 1;">
-                        ${achievement.icon || '🏆'}
+                        ${icon}
                     </div>
                     <div class="flex-grow-1">
-                        <h6 class="mb-1 fw-bold">${achievement.name || 'Achievement'}</h6>
-                        <p class="mb-2 small">${achievement.description || 'Congratulations on your achievement!'}</p>
+                        <h6 class="mb-1 fw-bold">${name}</h6>
+                        <p class="mb-2 small">${description}</p>
                         <div class="d-flex gap-2 align-items-center flex-wrap">
                             <span class="badge" style="background-color: ${tierColor}; color: white; font-size: 0.75rem; padding: 0.35rem 0.65rem;">
-                                <i class="bi bi-star-fill me-1"></i>+${achievement.points || 0} XP
+                                <i class="bi bi-star-fill me-1"></i>+${points} XP
                             </span>
-                            ${achievement.badge_id ? '<span class="badge bg-secondary"><i class="bi bi-award me-1"></i>Badge Earned</span>' : ''}
                         </div>
                     </div>
                 </div>
@@ -291,22 +287,11 @@ class AchievementNotificationSystem {
             const data = await response.json();
 
             if (data.newly_unlocked && data.newly_unlocked.length > 0) {
-                // Add newly unlocked achievements to queue
-                data.newly_unlocked.forEach(userAchievement => {
-                    // Flatten the nested structure
-                    const flattenedAchievement = {
-                        id: userAchievement.id,
-                        name: userAchievement.achievement.name,
-                        description: userAchievement.achievement.description,
-                        tier: userAchievement.achievement.tier,
-                        icon: userAchievement.achievement.icon_name,
-                        points: userAchievement.achievement.points,
-                        category: userAchievement.achievement.category,
-                        badge_id: null,
-                        is_new: userAchievement.is_new,
-                        earned_at: userAchievement.earned_at
-                    };
-                    this.queueNotification(flattenedAchievement);
+                console.log('Newly unlocked achievements:', data.newly_unlocked);
+
+                // Add newly unlocked achievements to queue (pass complete object)
+                data.newly_unlocked.forEach(ua => {
+                    this.queueNotification(ua);
                 });
 
                 // Process the queue

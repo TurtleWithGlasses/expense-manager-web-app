@@ -248,10 +248,13 @@ async def get_recent_achievements(
     - limit: Number of achievements to return (default: 10, max: 50)
     """
     from app.models.achievement import UserAchievement
+    from sqlalchemy.orm import joinedload
 
     limit = min(limit, 50)  # Cap at 50
 
-    user_achievements = db.query(UserAchievement).filter(
+    user_achievements = db.query(UserAchievement).options(
+        joinedload(UserAchievement.achievement)
+    ).filter(
         UserAchievement.user_id == user.id
     ).order_by(
         UserAchievement.earned_at.desc()
@@ -259,7 +262,7 @@ async def get_recent_achievements(
 
     return JSONResponse({
         'success': True,
-        'achievements': [ua.to_dict() for ua in user_achievements],
+        'achievements': [ua.to_dict(include_achievement=True) for ua in user_achievements],
         'total': len(user_achievements)
     })
 
