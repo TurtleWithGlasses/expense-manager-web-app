@@ -66,3 +66,4 @@ class User(Base):
     achievements = relationship("UserAchievement", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
     badges = relationship("UserBadge", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
     user_challenges = relationship("UserChallenge", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
+    health_scores = relationship("FinancialHealthScore", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)

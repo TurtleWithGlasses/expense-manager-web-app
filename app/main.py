@@ -40,6 +40,7 @@ from app.models.financial_goal import FinancialGoal, GoalProgressLog
 from app.models.recurring_payment import RecurringPayment, PaymentReminder
 from app.models.payment_history import PaymentOccurrence, PaymentLinkSuggestion  # Phase 29
 from app.models.achievement import Achievement, UserAchievement, Badge, UserBadge  # Phase 1
+from app.models.financial_health_score import FinancialHealthScore  # Phase 1.2
 
 app = FastAPI(title="Expense Manager Web")
 

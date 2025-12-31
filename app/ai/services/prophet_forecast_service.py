@@ -242,15 +242,34 @@ class ProphetForecastService:
                     'message': 'Need at least 14 days of historical data'
                 }
 
-            # Initialize and train Prophet model
-            model = Prophet(
-                daily_seasonality=False,
-                weekly_seasonality=True,
-                yearly_seasonality=True if len(daily_spending) >= 365 else False,
-                seasonality_mode='multiplicative',
-                changepoint_prior_scale=0.05,  # Flexibility of trend
-                interval_width=0.95  # 95% confidence intervals
-            )
+            # Initialize and train Prophet model - try multiple backends
+            model = None
+            for backend in ['PYSTAN', 'CMDSTANPY']:
+                try:
+                    print(f"Attempting to initialize Prophet with backend: {backend}")
+                    model = Prophet(
+                        daily_seasonality=False,
+                        weekly_seasonality=True,
+                        yearly_seasonality=True if len(daily_spending) >= 365 else False,
+                        seasonality_mode='multiplicative',
+                        changepoint_prior_scale=0.05,  # Flexibility of trend
+                        interval_width=0.95,  # 95% confidence intervals
+                        stan_backend=backend
+                    )
+                    print(f"✓ Successfully initialized Prophet with backend: {backend}")
+                    break
+                except Exception as e:
+                    print(f"✗ Failed with backend {backend}: {str(e)[:100]}")
+                    continue
+
+            if model is None:
+                raise Exception(
+                    "Failed to initialize Prophet with any available backend.\n"
+                    "To fix this issue, install one of the following:\n"
+                    "1. For PYSTAN (recommended): pip install Cython && pip install pystan\n"
+                    "2. For CMDSTANPY: pip install cmdstanpy\n"
+                    "See https://facebook.github.io/prophet/docs/installation.html for more details."
+                )
 
             # Add monthly seasonality
             model.add_seasonality(
@@ -433,14 +452,30 @@ class ProphetForecastService:
                     'message': f'Need at least 8 weeks of data for {category.name}'
                 }
 
-            # Train Prophet model
-            model = Prophet(
-                daily_seasonality=False,
-                weekly_seasonality=False,
-                yearly_seasonality=False,
-                changepoint_prior_scale=0.1,
-                interval_width=0.80  # 80% confidence for category-level
-            )
+            # Train Prophet model - try multiple backends
+            model = None
+            for backend in ['PYSTAN', 'CMDSTANPY']:
+                try:
+                    model = Prophet(
+                        daily_seasonality=False,
+                        weekly_seasonality=False,
+                        yearly_seasonality=False,
+                        changepoint_prior_scale=0.1,
+                        interval_width=0.80,  # 80% confidence for category-level
+                        stan_backend=backend
+                    )
+                    break
+                except Exception:
+                    continue
+
+            if model is None:
+                raise Exception(
+                    "Failed to initialize Prophet with any available backend.\n"
+                    "To fix this issue, install one of the following:\n"
+                    "1. For PYSTAN (recommended): pip install Cython && pip install pystan\n"
+                    "2. For CMDSTANPY: pip install cmdstanpy\n"
+                    "See https://facebook.github.io/prophet/docs/installation.html for more details."
+                )
 
             model.fit(weekly_spending)
 
@@ -543,12 +578,28 @@ class ProphetForecastService:
 
             daily_spending = df.groupby('ds')['y'].sum().reset_index()
 
-            # Train model with seasonal components
-            model = Prophet(
-                weekly_seasonality=True,
-                yearly_seasonality=True if len(daily_spending) >= 180 else False,
-                seasonality_mode='multiplicative'
-            )
+            # Train model with seasonal components - try multiple backends
+            model = None
+            for backend in ['PYSTAN', 'CMDSTANPY']:
+                try:
+                    model = Prophet(
+                        weekly_seasonality=True,
+                        yearly_seasonality=True if len(daily_spending) >= 180 else False,
+                        seasonality_mode='multiplicative',
+                        stan_backend=backend
+                    )
+                    break
+                except Exception:
+                    continue
+
+            if model is None:
+                raise Exception(
+                    "Failed to initialize Prophet with any available backend.\n"
+                    "To fix this issue, install one of the following:\n"
+                    "1. For PYSTAN (recommended): pip install Cython && pip install pystan\n"
+                    "2. For CMDSTANPY: pip install cmdstanpy\n"
+                    "See https://facebook.github.io/prophet/docs/installation.html for more details."
+                )
 
             model.add_seasonality(name='monthly', period=30.5, fourier_order=5)
             model.fit(daily_spending)
