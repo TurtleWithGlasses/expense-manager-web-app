@@ -59,7 +59,7 @@ class AchievementNotificationSystem {
      */
     async checkForNewAchievements() {
         try {
-            const response = await fetch('/api/achievements/?include_locked=false');
+            const response = await fetch('/api/achievements/recent?limit=5');
             if (!response.ok) return;
 
             const data = await response.json();
@@ -67,13 +67,26 @@ class AchievementNotificationSystem {
 
             // Filter for newly unlocked achievements (is_new flag)
             const newAchievements = data.achievements.filter(achievement =>
-                achievement.is_unlocked && achievement.is_new
+                achievement.is_new === true
             );
 
             if (newAchievements.length > 0) {
                 // Add to notification queue
-                newAchievements.forEach(achievement => {
-                    this.queueNotification(achievement);
+                newAchievements.forEach(userAchievement => {
+                    // Flatten the nested structure for easier access
+                    const flattenedAchievement = {
+                        id: userAchievement.id,
+                        name: userAchievement.achievement.name,
+                        description: userAchievement.achievement.description,
+                        tier: userAchievement.achievement.tier,
+                        icon: userAchievement.achievement.icon_name,
+                        points: userAchievement.achievement.points,
+                        category: userAchievement.achievement.category,
+                        badge_id: null, // Would need to check badge relationship
+                        is_new: userAchievement.is_new,
+                        earned_at: userAchievement.earned_at
+                    };
+                    this.queueNotification(flattenedAchievement);
                 });
 
                 // Process the queue
@@ -275,8 +288,21 @@ class AchievementNotificationSystem {
 
             if (data.newly_unlocked && data.newly_unlocked.length > 0) {
                 // Add newly unlocked achievements to queue
-                data.newly_unlocked.forEach(achievement => {
-                    this.queueNotification(achievement);
+                data.newly_unlocked.forEach(userAchievement => {
+                    // Flatten the nested structure
+                    const flattenedAchievement = {
+                        id: userAchievement.id,
+                        name: userAchievement.achievement.name,
+                        description: userAchievement.achievement.description,
+                        tier: userAchievement.achievement.tier,
+                        icon: userAchievement.achievement.icon_name,
+                        points: userAchievement.achievement.points,
+                        category: userAchievement.achievement.category,
+                        badge_id: null,
+                        is_new: userAchievement.is_new,
+                        earned_at: userAchievement.earned_at
+                    };
+                    this.queueNotification(flattenedAchievement);
                 });
 
                 // Process the queue
