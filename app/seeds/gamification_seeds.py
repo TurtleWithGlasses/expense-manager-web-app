@@ -34,6 +34,7 @@ from app.models.historical_report import HistoricalReport
 from app.models.achievement import Achievement, Badge, UserAchievement, UserBadge
 from app.models.challenge import Challenge, UserChallenge
 from app.models.user_feedback import UserFeedback
+from app.models.financial_health_score import FinancialHealthScore  # Phase 1.2
 
 
 def seed_achievements(db: Session):
