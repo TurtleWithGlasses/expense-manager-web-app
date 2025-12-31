@@ -183,6 +183,7 @@ def get_recurring_payment(
         "days_until_due": (next_due - date.today()).days if next_due else None,
         "is_active": payment.is_active,
         "remind_days_before": payment.remind_days_before,
+        "auto_add_to_expenses": payment.auto_add_to_expenses,
         "created_at": payment.created_at.isoformat(),
         "updated_at": payment.updated_at.isoformat()
     }

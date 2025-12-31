@@ -204,6 +204,7 @@
             <th>Category</th>
             <th class="text-end">Amount</th>
             <th class="text-center">Frequency</th>
+            <th class="text-center">Auto-Add</th>
             <th>Next Due</th>
             <th class="text-center">Status</th>
             <th class="text-center">Actions</th>
@@ -228,6 +229,13 @@
               <span class="badge bg-info">{{ payment.frequency|capitalize }}</span>
               <br>
               <small class="text-muted">Due day: {{ payment.due_day }}</small>
+            </td>
+            <td class="text-center">
+              {% if payment.auto_add_to_expenses %}
+              <i class="bi bi-check-circle-fill text-success" style="font-size: 1.2rem;" title="Automatically added to expenses"></i>
+              {% else %}
+              <span class="text-muted">—</span>
+              {% endif %}
             </td>
             <td>
               {% if payment.next_due_date %}
@@ -673,6 +681,7 @@ async function editPayment(paymentId) {
     document.getElementById('edit_due_day').value = payment.due_day;
     document.getElementById('edit_end_date').value = payment.end_date || '';
     document.getElementById('edit_remind_days_before').value = payment.remind_days_before;
+    document.getElementById('edit_auto_add_to_expenses').checked = payment.auto_add_to_expenses || false;
 
     // Update the due day label based on frequency
     updateEditDueDayLabel();

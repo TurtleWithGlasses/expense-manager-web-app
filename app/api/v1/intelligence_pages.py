@@ -167,7 +167,8 @@ def bills_subscriptions_page(
             'category_name': payment.category.name if payment.category else 'Uncategorized',
             'next_due_date': next_due.isoformat() if next_due else None,
             'days_until_due': (next_due - date.today()).days if next_due else None,
-            'is_active': payment.is_active
+            'is_active': payment.is_active,
+            'auto_add_to_expenses': payment.auto_add_to_expenses
         })
 
     currency_ctx = _get_currency_helpers(db, user.id)
