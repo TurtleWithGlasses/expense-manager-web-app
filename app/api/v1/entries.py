@@ -428,6 +428,36 @@ async def update_entry_endpoint(
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
 
+    # Check and unlock achievements (entry update may affect achievement progress)
+    try:
+        newly_unlocked = AchievementService.check_and_unlock_achievements(db, user.id)
+        if newly_unlocked:
+            print(f"Unlocked {len(newly_unlocked)} achievement(s) from entry update!")
+            # Award XP for achievements
+            for achievement in newly_unlocked:
+                try:
+                    level_service = LevelService(db)
+                    level_service.award_achievement_xp(user.id)
+                except Exception as e:
+                    print(f"Failed to award achievement XP: {e}")
+    except Exception as e:
+        print(f"Failed to check achievements: {e}")
+
+    # Check and award badges
+    try:
+        newly_earned_badges = BadgeService.check_and_award_badges(db, user.id)
+        if newly_earned_badges:
+            print(f"Earned {len(newly_earned_badges)} badge(s) from entry update!")
+            # Award XP for badges
+            for badge in newly_earned_badges:
+                try:
+                    level_service = LevelService(db)
+                    level_service.award_badge_xp(user.id)
+                except Exception as e:
+                    print(f"Failed to award badge XP: {e}")
+    except Exception as e:
+        print(f"Failed to check badges: {e}")
+
     # Invalidate forecast cache (spending data changed)
     cache = get_cache()
     cache.invalidate_user_cache(user.id)

@@ -1,0 +1,352 @@
+/**
+ * Achievement System Styles - Phase 3
+ * Styles for achievement notifications and dashboard
+ */
+
+/* Achievement Toast Notifications */
+.achievement-toast {
+    min-width: 350px;
+    max-width: 400px;
+    animation: slideInRight 0.5s ease-out;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.achievement-toast .toast-header {
+    padding: 12px 16px;
+    font-weight: 600;
+}
+
+.achievement-toast .toast-body {
+    padding: 16px;
+}
+
+.achievement-toast .achievement-icon {
+    animation: bounceIn 0.6s ease-out;
+}
+
+/* Dark theme support for toasts */
+[data-theme="dark"] .achievement-toast {
+    background-color: #2d3748;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .achievement-toast .toast-header {
+    background-color: #1a202c;
+    color: #e2e8f0;
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .achievement-toast .btn-close {
+    filter: invert(1);
+}
+
+/* Animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Achievement Dashboard - Additional Styles */
+.achievement-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.achievement-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.achievement-card.locked {
+    opacity: 0.6;
+    filter: grayscale(0.5);
+}
+
+.achievement-card.unlocked {
+    border: 2px solid var(--bs-success);
+    animation: pulse 2s infinite;
+}
+
+.achievement-card.new-unlock {
+    animation: pulse 1s ease-in-out 3;
+    box-shadow: 0 0 20px rgba(25, 135, 84, 0.4);
+}
+
+/* Achievement Progress Bar */
+.achievement-progress {
+    height: 8px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.achievement-progress-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+[data-theme="dark"] .achievement-progress {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Achievement Icon Styling */
+.achievement-icon-large {
+    font-size: 3.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Tier Badges */
+.tier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tier-badge.bronze {
+    background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
+    color: white;
+}
+
+.tier-badge.silver {
+    background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%);
+    color: #333;
+}
+
+.tier-badge.gold {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #333;
+}
+
+.tier-badge.platinum {
+    background: linear-gradient(135deg, #E5E4E2 0%, #B8B8B8 100%);
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Level and XP Display */
+.level-display {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.xp-progress-container {
+    position: relative;
+    height: 24px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.xp-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.xp-progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    to {
+        left: 100%;
+    }
+}
+
+.xp-progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #333;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .xp-progress-container {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .xp-progress-text {
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Leaderboard Styling */
+.leaderboard-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.leaderboard-rank.rank-1 {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #333;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+.leaderboard-rank.rank-2 {
+    background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%);
+    color: #333;
+    box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+}
+
+.leaderboard-rank.rank-3 {
+    background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+}
+
+.leaderboard-rank:not(.rank-1):not(.rank-2):not(.rank-3) {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #666;
+}
+
+[data-theme="dark"] .leaderboard-rank:not(.rank-1):not(.rank-2):not(.rank-3) {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #aaa;
+}
+
+/* Badge Display */
+.badge-item {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.badge-item:hover {
+    transform: scale(1.05);
+}
+
+.badge-item.equipped::after {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    background-color: #10b981;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .achievement-toast {
+        min-width: 300px;
+        max-width: 340px;
+    }
+
+    .achievement-icon-large {
+        font-size: 2.5rem;
+    }
+
+    .level-display {
+        font-size: 1.5rem;
+    }
+}
+
+/* Loading States */
+.achievement-loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+[data-theme="dark"] .achievement-loading {
+    border-color: rgba(255, 255, 255, 0.1);
+    border-top-color: #667eea;
+}
+
+/* New Badge Indicator */
+.new-indicator {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 12px;
+    height: 12px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    border: 2px solid white;
+    animation: pulse 2s infinite;
+}
+
+[data-theme="dark"] .new-indicator {
+    border-color: #1a202c;
+}

@@ -12,6 +12,8 @@ from app.models.user import User
 from app.models.financial_goal import GoalType, GoalStatus
 from app.services.goal_service import GoalService
 from app.services.gamification.level_service import LevelService
+from app.services.gamification.achievement_service import AchievementService
+from app.services.gamification.badge_service import BadgeService
 
 
 router = APIRouter(prefix="/api/goals", tags=["Goals"])
@@ -239,6 +241,36 @@ async def update_goal_progress(
             level_service.award_goal_completed_xp(user.id)
         except Exception as e:
             print(f"Failed to award XP for goal completion: {e}")
+
+        # Check and unlock achievements
+        try:
+            newly_unlocked = AchievementService.check_and_unlock_achievements(db, user.id)
+            if newly_unlocked:
+                print(f"Unlocked {len(newly_unlocked)} achievement(s) from goal completion!")
+                # Award XP for achievements
+                for achievement in newly_unlocked:
+                    try:
+                        level_service = LevelService(db)
+                        level_service.award_achievement_xp(user.id)
+                    except Exception as e:
+                        print(f"Failed to award achievement XP: {e}")
+        except Exception as e:
+            print(f"Failed to check achievements: {e}")
+
+        # Check and award badges
+        try:
+            newly_earned_badges = BadgeService.check_and_award_badges(db, user.id)
+            if newly_earned_badges:
+                print(f"Earned {len(newly_earned_badges)} badge(s) from goal completion!")
+                # Award XP for badges
+                for badge in newly_earned_badges:
+                    try:
+                        level_service = LevelService(db)
+                        level_service.award_badge_xp(user.id)
+                    except Exception as e:
+                        print(f"Failed to award badge XP: {e}")
+        except Exception as e:
+            print(f"Failed to check badges: {e}")
 
     return JSONResponse({
         'success': True,
