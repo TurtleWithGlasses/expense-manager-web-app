@@ -3,6 +3,233 @@
  * Styles for achievement notifications and dashboard
  */
 
+/* Achievement Notification Bell */
+.notification-bell-container {
+    position: relative;
+    display: inline-block;
+}
+
+.notification-bell-btn {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.notification-bell-btn:hover {
+    transform: scale(1.1);
+}
+
+.notification-bell-btn.has-notifications {
+    animation: bellRing 2s ease-in-out infinite;
+}
+
+@keyframes bellRing {
+    0%, 100% { transform: rotate(0deg); }
+    10%, 30% { transform: rotate(-10deg); }
+    20%, 40% { transform: rotate(10deg); }
+}
+
+.notification-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background-color: #ef4444;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    min-width: 18px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Achievement Notifications Dropdown */
+.achievement-notifications-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 380px;
+    max-height: 500px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    overflow: hidden;
+    animation: dropdownSlideIn 0.3s ease-out;
+}
+
+@keyframes dropdownSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+[data-theme="dark"] .achievement-notifications-dropdown {
+    background-color: #1a202c;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+.achievement-notifications-dropdown .dropdown-header {
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+[data-theme="dark"] .achievement-notifications-dropdown .dropdown-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.achievement-notifications-dropdown .dropdown-header h6 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a202c;
+}
+
+[data-theme="dark"] .achievement-notifications-dropdown .dropdown-header h6 {
+    color: #e2e8f0;
+}
+
+.achievement-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.achievement-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.achievement-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.achievement-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+[data-theme="dark"] .achievement-list::-webkit-scrollbar-track {
+    background: #2d3748;
+}
+
+[data-theme="dark"] .achievement-list::-webkit-scrollbar-thumb {
+    background: #4a5568;
+}
+
+.achievement-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    gap: 12px;
+    align-items: start;
+}
+
+.achievement-item:hover {
+    background-color: #f7fafc;
+}
+
+.achievement-item.unread {
+    background-color: #eff6ff;
+}
+
+[data-theme="dark"] .achievement-item {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .achievement-item:hover {
+    background-color: #2d3748;
+}
+
+[data-theme="dark"] .achievement-item.unread {
+    background-color: #2c3e50;
+}
+
+.achievement-item-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.achievement-item-content {
+    flex-grow: 1;
+}
+
+.achievement-item-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 4px;
+}
+
+[data-theme="dark"] .achievement-item-title {
+    color: #e2e8f0;
+}
+
+.achievement-item-description {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 6px;
+}
+
+[data-theme="dark"] .achievement-item-description {
+    color: #a0aec0;
+}
+
+.achievement-item-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.achievement-item-xp {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+}
+
+.achievement-item-time {
+    font-size: 0.7rem;
+    color: #9ca3af;
+}
+
+.achievement-notifications-dropdown .dropdown-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+[data-theme="dark"] .achievement-notifications-dropdown .dropdown-footer {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.achievement-notifications-dropdown .btn-link {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    cursor: pointer;
+    font-size: 0.875rem;
+    text-decoration: none;
+    padding: 0;
+}
+
+.achievement-notifications-dropdown .btn-link:hover {
+    text-decoration: underline;
+}
+
+[data-theme="dark"] .achievement-notifications-dropdown .btn-link {
+    color: #60a5fa;
+}
+
 /* Achievement Toast Notifications */
 .achievement-toast {
     min-width: 380px;
