@@ -162,6 +162,39 @@ class AchievementNotificationSystem {
     }
 
     /**
+     * Convert icon name to emoji
+     */
+    getIconEmoji(iconName) {
+        const iconMap = {
+            'trophy': '🏆',
+            'fire': '🔥',
+            'star': '⭐',
+            'piggy-bank': '🐷',
+            'dollar': '💵',
+            'ban': '🚫',
+            'scissors': '✂️',
+            'crown': '👑',
+            'bird': '🐦',
+            'sunrise': '🌅',
+            'calendar-weekend': '📅',
+            'graph-up': '📈',
+            'shield-check': '🛡️',
+            'graph-up-arrow': '📊',
+            'check-circle': '✅',
+            'award': '🏅',
+            'x-circle': '❌',
+            'wallet': '👛',
+            'house': '🏠',
+            'flag': '🚩',
+            'clock': '⏰',
+            'graph': '📉',
+            'diagram': '📋',
+            'download': '⬇️'
+        };
+        return iconMap[iconName] || '🏆'; // Default to trophy
+    }
+
+    /**
      * Create toast HTML element
      */
     createToastElement(toastId, userAchievement) {
@@ -177,7 +210,7 @@ class AchievementNotificationSystem {
         const tier = ach.tier || 'bronze';
         const name = ach.name || 'Achievement Unlocked';
         const description = ach.description || 'Congratulations!';
-        const icon = ach.icon_name || '🏆';
+        const icon = this.getIconEmoji(ach.icon_name);
         const points = ach.points || 0;
 
         // Get tier color and icon

@@ -128,11 +128,44 @@ class AchievementNotificationCenter {
     }
 
     /**
+     * Convert icon name to emoji
+     */
+    getIconEmoji(iconName) {
+        const iconMap = {
+            'trophy': '🏆',
+            'fire': '🔥',
+            'star': '⭐',
+            'piggy-bank': '🐷',
+            'dollar': '💵',
+            'ban': '🚫',
+            'scissors': '✂️',
+            'crown': '👑',
+            'bird': '🐦',
+            'sunrise': '🌅',
+            'calendar-weekend': '📅',
+            'graph-up': '📈',
+            'shield-check': '🛡️',
+            'graph-up-arrow': '📊',
+            'check-circle': '✅',
+            'award': '🏅',
+            'x-circle': '❌',
+            'wallet': '👛',
+            'house': '🏠',
+            'flag': '🚩',
+            'clock': '⏰',
+            'graph': '📉',
+            'diagram': '📋',
+            'download': '⬇️'
+        };
+        return iconMap[iconName] || '🏆'; // Default to trophy
+    }
+
+    /**
      * Create achievement item HTML
      */
     createAchievementItem(userAchievement) {
         const ach = userAchievement.achievement || {};
-        const icon = ach.icon_name || '🏆';
+        const icon = this.getIconEmoji(ach.icon_name);
         const name = ach.name || 'Achievement';
         const description = ach.description || 'Unlocked';
         const points = ach.points || 0;
