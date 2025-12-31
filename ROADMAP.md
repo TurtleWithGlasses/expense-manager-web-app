@@ -1,16 +1,34 @@
 # 🗺️ BudgetPulse Development Roadmap
 ## Advanced Analytics & Gamification Implementation Plan
 
-**Version:** 3.2
-**Last Updated:** 2025-12-29
+**Version:** 3.3
+**Last Updated:** 2025-12-31
 **Timeline:** 16 weeks (4 months)
-**Status:** Phase 2.1 In Progress 🚧 | Phase 4 & 5 Complete ✅
+**Status:** Phase 1 Complete ✅ | Phase 2.1 In Progress 🚧 | Phase 4 & 5 Complete ✅
 
 ---
 
 ## 🎉 Recent Completion Status
 
 ### ✅ Completed Phases
+
+**Phase 1: Foundation & Infrastructure** - **100% Complete** (December 31, 2025)
+- ✅ Achievement System Persistence
+  - AchievementService with comprehensive unlock logic
+  - Support for 7 criteria types (entry_count, daily_streak, no_spend_days, savings_rate, goal_completion, budget_discipline, category_usage)
+  - 17 default achievements with XP rewards and icons
+  - Achievement progress tracking and "NEW" badge system
+- ✅ Financial Health Score Algorithm
+  - FinancialHealthScore model with 6 component scores (0-100 each)
+  - Database migration for financial_health_scores table
+  - Health score API endpoints (current, history, recommendations, comparison)
+  - 0-100 scoring system with historical tracking
+- ✅ Chart.js Integration
+  - Interactive category pie chart (doughnut chart)
+  - Daily trend line chart with time-based x-axis
+  - Category bar chart for comparisons
+  - Responsive design with tooltips and legends
+- **Commits:** 9119e2a, 3be9203
 
 **Phase 4: Advanced ML & Predictions** - **100% Complete** (December 2025)
 - ✅ Prophet forecasting with seasonal patterns
@@ -43,7 +61,7 @@
 - ✅ XP rewards for goal creation and completion
 - **Commits:** 0cf2f14, 7c076e7, 6a5f9ef, 9096874, 87075fc
 
-**Auto-Add to Expenses for Recurring Bills** - **Complete** (December 29, 2025)
+**Auto-Add to Expenses for Recurring Bills** - **Complete** (December 31, 2025)
 - ✅ Auto-add checkbox in Bills & Subscriptions UI
 - ✅ Scheduled job (daily at 1 AM) to process due payments
 - ✅ Automatic expense entry creation on due dates
@@ -51,7 +69,11 @@
 - ✅ Support for all recurrence frequencies (weekly, biweekly, monthly, quarterly, annually)
 - ✅ Manual test endpoint for verification
 - ✅ Comprehensive testing documentation
-- **Commits:** 8c8d919, a85876a
+- ✅ AUTO-ADD visibility column in Bills & Subscriptions table
+  - Green checkmark icon for enabled subscriptions
+  - Clear visual indicator for auto-add status
+  - Integrated with edit modal for easy status updates
+- **Commits:** 8c8d919, a85876a, 17d3495
 
 ### 🚧 Currently In Progress
 
@@ -75,12 +97,6 @@
 - Progress tracking and rewards
 - Challenge templates (models exist at `app/models/challenge.py`)
 
-**Phase 3.3: Financial Health Score** - **Deferred**
-- 0-100 score based on savings rate, budget adherence, debt ratio
-- Component breakdown with visualizations
-- Historical trends
-- Personalized recommendations
-
 ---
 
 ## 📊 Executive Summary
@@ -90,7 +106,7 @@ This roadmap outlines the implementation plan for two major feature sets:
 1. **Advanced Analytics** - Custom reports, interactive visualizations, ML-driven predictions
 2. **Gamification** - Achievements, badges, savings challenges, financial health scoring
 
-**Current State:** 78% complete - Phase 4 & 5 done, Phase 2.1 saveable templates complete
+**Current State:** 82% complete - Phase 1, 4 & 5 done, Phase 2.1 saveable templates complete
 **Target State:** Production-ready analytics platform with engagement features
 
 ---
@@ -115,14 +131,14 @@ This roadmap outlines the implementation plan for two major feature sets:
 
 | Phase | Status | Priority | Duration | Completion |
 |-------|--------|----------|----------|------------|
-| **Phase 1: Foundation & Infrastructure** | 🟢 Mostly Done | 🔴 Critical | 3 weeks | ~85% |
+| **Phase 1: Foundation & Infrastructure** | ✅ Complete | 🔴 Critical | 3 weeks | **100%** ✅ |
 | **Phase 2: Advanced Analytics** | 🚧 In Progress | 🟠 High | 4 weeks | ~65% |
 | **Phase 3: Gamification System** | 🟡 Partial | 🟡 Medium | 3 weeks | ~50% |
 | **Phase 4: Advanced ML & Predictions** | ✅ Complete | 🟡 Medium-Low | 4 weeks | **100%** ✅ |
 | **Phase 5: Polish & Testing** | ✅ Complete | 🟠 High | 2 weeks | **100%** ✅ |
 | **Financial Goals** | ✅ Complete | 🟢 Medium | 2 weeks | **100%** ✅ |
 
-**Overall Progress: ~78% Complete**
+**Overall Progress: ~82% Complete**
 
 ---
 
