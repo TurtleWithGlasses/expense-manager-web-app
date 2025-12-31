@@ -188,25 +188,25 @@ class AchievementNotificationSystem {
         const tierIcon = this.getTierIcon(achievement.tier);
 
         toast.innerHTML = `
-            <div class="toast-header" style="background: linear-gradient(135deg, ${tierColor}22 0%, ${tierColor}11 100%); border-bottom: 2px solid ${tierColor};">
+            <div class="toast-header" style="background: linear-gradient(135deg, ${tierColor}15 0%, ${tierColor}05 100%);">
                 <i class="bi ${tierIcon} me-2" style="color: ${tierColor}; font-size: 1.2rem;"></i>
                 <strong class="me-auto">Achievement Unlocked!</strong>
-                <small class="text-muted">${achievement.tier}</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                <small class="badge" style="background-color: ${tierColor}; color: white; text-transform: capitalize;">${achievement.tier || 'Bronze'}</small>
+                <button type="button" class="btn-close ms-2" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
             <div class="toast-body">
-                <div class="d-flex align-items-center">
-                    <div class="achievement-icon me-3" style="font-size: 2.5rem;">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="achievement-icon" style="font-size: 2.5rem; line-height: 1;">
                         ${achievement.icon || '🏆'}
                     </div>
                     <div class="flex-grow-1">
-                        <h6 class="mb-1 fw-bold">${achievement.name}</h6>
-                        <p class="mb-2 small text-muted">${achievement.description}</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="badge" style="background-color: ${tierColor};">
-                                +${achievement.points} XP
+                        <h6 class="mb-1 fw-bold">${achievement.name || 'Achievement'}</h6>
+                        <p class="mb-2 small">${achievement.description || 'Congratulations on your achievement!'}</p>
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <span class="badge" style="background-color: ${tierColor}; color: white; font-size: 0.75rem; padding: 0.35rem 0.65rem;">
+                                <i class="bi bi-star-fill me-1"></i>+${achievement.points || 0} XP
                             </span>
-                            ${achievement.badge_id ? '<span class="badge bg-secondary"><i class="bi bi-award"></i> Badge Earned</span>' : ''}
+                            ${achievement.badge_id ? '<span class="badge bg-secondary"><i class="bi bi-award me-1"></i>Badge Earned</span>' : ''}
                         </div>
                     </div>
                 </div>
