@@ -166,11 +166,24 @@
     font-size: 0.9rem;
     font-weight: 600;
     color: #1a202c;
-    margin-bottom: 4px;
+    margin-bottom: 0;
+    flex-grow: 1;
 }
 
 [data-theme="dark"] .achievement-item-title {
     color: #e2e8f0;
+}
+
+.tier-mini-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .achievement-item-description {

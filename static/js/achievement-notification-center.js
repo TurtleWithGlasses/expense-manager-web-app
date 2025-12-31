@@ -141,16 +141,22 @@ class AchievementNotificationCenter {
         const earnedAt = userAchievement.earned_at ? this.timeAgo(userAchievement.earned_at) : 'Just now';
 
         const tierColor = this.getTierColor(tier);
+        const tierEmoji = this.getTierEmoji(tier);
 
         return `
             <div class="achievement-item ${isNew ? 'unread' : ''}" data-achievement-id="${userAchievement.id}">
                 <div class="achievement-item-icon">${icon}</div>
                 <div class="achievement-item-content">
-                    <div class="achievement-item-title">${name}</div>
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div class="achievement-item-title">${name}</div>
+                        <span class="tier-mini-badge" style="background-color: ${tierColor};" title="${tier}">
+                            ${tierEmoji}
+                        </span>
+                    </div>
                     <div class="achievement-item-description">${description}</div>
                     <div class="achievement-item-meta">
                         <span class="achievement-item-xp" style="background-color: ${tierColor};">
-                            +${points} XP
+                            <i class="bi bi-star-fill" style="font-size: 0.7rem;"></i> +${points} XP
                         </span>
                         <span class="achievement-item-time">${earnedAt}</span>
                     </div>
@@ -220,11 +226,24 @@ class AchievementNotificationCenter {
     getTierColor(tier) {
         const colors = {
             'bronze': '#CD7F32',
-            'silver': '#C0C0C0',
-            'gold': '#FFD700',
-            'platinum': '#E5E4E2'
+            'silver': '#9CA3AF',  // Darker silver for better visibility
+            'gold': '#EAB308',     // Slightly darker gold
+            'platinum': '#8B5CF6'  // Purple for platinum
         };
-        return colors[tier.toLowerCase()] || '#CD7F32';
+        return colors[tier?.toLowerCase()] || '#CD7F32';
+    }
+
+    /**
+     * Get tier emoji
+     */
+    getTierEmoji(tier) {
+        const emojis = {
+            'bronze': '🥉',
+            'silver': '🥈',
+            'gold': '🥇',
+            'platinum': '💎'
+        };
+        return emojis[tier?.toLowerCase()] || '🥉';
     }
 
     /**
