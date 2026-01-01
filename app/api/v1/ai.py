@@ -59,12 +59,16 @@ async def update_ai_settings(
     preferences.learn_from_feedback = learn_from_feedback
     preferences.retrain_frequency_days = retrain_frequency_days
     preferences.share_anonymized_data = share_anonymized_data
-    
+
     db.commit()
-    
+
+    # Get model status for template
+    model_status = ai_service.get_model_status(user.id)
+
     return render(request, "settings/ai_settings.html", {
         "user": user,
         "preferences": preferences,
+        "model_status": model_status,
         "message": "AI settings updated successfully!"
     })
 
