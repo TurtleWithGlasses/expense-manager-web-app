@@ -477,11 +477,13 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 function emailAnnualReport() {
+    const year = {{ current_year }};
     fetch('/reports/annual/email', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({ year: year })
     })
     .then(response => response.json())
     .then(data => {

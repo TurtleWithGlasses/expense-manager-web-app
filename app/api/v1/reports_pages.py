@@ -329,34 +329,35 @@ async def email_monthly_report(
 
 @router.post("/annual/email")
 async def email_annual_report(
+    request: dict,
     user=Depends(current_user),
     db: Session = Depends(get_db)
 ):
-    """Email current annual report"""
+    """Email annual report for specified year"""
     try:
         from app.services.email import email_service
         from app.services.metrics import range_summary_multi_currency
         from datetime import date
-        
-        # Get current year data
-        current_year = date.today().year
-        year_start = date(current_year, 1, 1)
-        year_end = date(current_year, 12, 31)
-        
+
+        # Get year from request, default to current year if not provided
+        report_year = request.get('year', date.today().year)
+        year_start = date(report_year, 1, 1)
+        year_end = date(report_year, 12, 31)
+
         # Get user's currency
         from app.models.user_preferences import UserPreferences
         user_prefs = db.query(UserPreferences).filter(UserPreferences.user_id == user.id).first()
         user_currency = user_prefs.currency_code if user_prefs and user_prefs.currency_code else 'USD'
-        
+
         # Generate basic annual summary
         annual_summary = await range_summary_multi_currency(db, user.id, year_start, year_end, user_currency)
-        
+
         # Create a basic annual report structure
         annual_report = {
             'period': {
                 'start': year_start.isoformat(),
                 'end': year_end.isoformat(),
-                'year': current_year
+                'year': report_year
             },
             'currency': user_currency,
             'summary': annual_summary,
