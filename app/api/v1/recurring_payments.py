@@ -508,3 +508,80 @@ async def test_process_auto_add(
             status_code=500,
             detail=f"Error processing auto-add: {str(e)}"
         )
+
+
+@router.post("/test/fix-currency")
+async def fix_currency_codes(
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    **TESTING ONLY** - Fix currency codes for auto-added entries and recurring payments
+
+    This endpoint will:
+    1. Update all recurring payments to use your currency preference
+    2. Update all auto-added expense entries to use your currency preference
+    3. Return summary of what was fixed
+    """
+    try:
+        from sqlalchemy import text
+
+        user_currency = user.preferences.currency_code if user.preferences else 'USD'
+
+        # Fix recurring payments
+        payments_result = db.execute(text("""
+            UPDATE recurring_payments
+            SET currency_code = :currency
+            WHERE user_id = :user_id
+            AND currency_code != :currency
+        """), {"currency": user_currency, "user_id": user.id})
+
+        payments_updated = payments_result.rowcount
+
+        # Fix auto-added entries (those with "Auto-added" in description)
+        entries_auto_result = db.execute(text("""
+            UPDATE entries
+            SET currency_code = :currency
+            WHERE user_id = :user_id
+            AND description LIKE '%(Auto-added)%'
+            AND currency_code != :currency
+        """), {"currency": user_currency, "user_id": user.id})
+
+        entries_auto_updated = entries_auto_result.rowcount
+
+        # Also fix entries that match recurring payment names and amounts
+        # This catches auto-added entries even if description format was different
+        entries_matching_result = db.execute(text("""
+            UPDATE entries
+            SET currency_code = :currency
+            WHERE user_id = :user_id
+            AND currency_code != :currency
+            AND EXISTS (
+                SELECT 1
+                FROM recurring_payments rp
+                WHERE rp.user_id = entries.user_id
+                AND rp.amount = entries.amount
+                AND entries.description LIKE '%' || rp.name || '%'
+            )
+        """), {"currency": user_currency, "user_id": user.id})
+
+        entries_matching_updated = entries_matching_result.rowcount
+
+        db.commit()
+
+        return {
+            "success": True,
+            "user_currency": user_currency,
+            "payments_updated": payments_updated,
+            "entries_auto_added_updated": entries_auto_updated,
+            "entries_matching_payments_updated": entries_matching_updated,
+            "total_entries_updated": entries_auto_updated + entries_matching_updated,
+            "message": f"Updated {payments_updated} recurring payments and {entries_auto_updated + entries_matching_updated} entries to {user_currency}"
+        }
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fixing currency codes: {str(e)}"
+        )
