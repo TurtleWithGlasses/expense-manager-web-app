@@ -77,6 +77,11 @@ def create_recurring_payment(
             detail=f"Invalid frequency. Must be one of: {[f.name for f in RecurrenceFrequency]}"
         )
 
+    # Use user's currency preference if currency_code is default USD
+    currency_code = payment_data.currency_code
+    if currency_code == "USD" and user.preferences:
+        currency_code = user.preferences.currency_code
+
     payment = service.create_recurring_payment(
         user_id=user.id,
         category_id=payment_data.category_id,
@@ -86,7 +91,7 @@ def create_recurring_payment(
         due_day=payment_data.due_day,
         start_date=payment_data.start_date,
         description=payment_data.description,
-        currency_code=payment_data.currency_code,
+        currency_code=currency_code,
         end_date=payment_data.end_date,
         remind_days_before=payment_data.remind_days_before,
         auto_add_to_expenses=payment_data.auto_add_to_expenses
