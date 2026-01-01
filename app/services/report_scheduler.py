@@ -65,6 +65,15 @@ class ReportScheduler:
             replace_existing=True
         )
 
+        # Schedule automatic ML model retraining - Every day at 2 AM
+        self.scheduler.add_job(
+            self.auto_retrain_models,
+            CronTrigger(hour=2, minute=0),
+            id='auto_retrain_models',
+            name='Automatic ML Model Retraining',
+            replace_existing=True
+        )
+
         self.scheduler.start()
         self.is_started = True
         print("📅 Report scheduler started successfully")
@@ -389,6 +398,68 @@ class ReportScheduler:
                    today.day == payment.due_day)
 
         return False
+
+    async def auto_retrain_models(self):
+        """
+        Automatically retrain ML models for users based on their preferences
+
+        This job runs daily at 2 AM and checks each user's model to see if it needs
+        retraining based on:
+        1. User's retrain_frequency_days preference
+        2. Amount of new data since last training
+        """
+        print("🤖 Starting automatic model retraining check...")
+
+        db = SessionLocal()
+        try:
+            from app.services.ai_service import AICategorizationService
+            from app.models.ai_model import AIModel
+
+            # Get all users who have trained models
+            ai_models = db.query(AIModel).all()
+
+            retrained_count = 0
+            skipped_count = 0
+
+            for ai_model in ai_models:
+                try:
+                    ai_service = AICategorizationService(db)
+
+                    # Get model status to check if retraining is needed
+                    status = ai_service.get_model_status(ai_model.user_id)
+
+                    if status.get('needs_retraining', False):
+                        user = db.query(User).filter(User.id == ai_model.user_id).first()
+                        if not user:
+                            continue
+
+                        print(f"🔄 Retraining model for user {user.email}...")
+
+                        # Trigger retraining
+                        result = ai_service.retrain_model(ai_model.user_id)
+
+                        if result['success']:
+                            retrained_count += 1
+                            accuracy = result['results']['accuracy']
+                            samples = result['results']['training_samples']
+                            print(f"  ✅ Success! Accuracy: {accuracy*100:.1f}%, Samples: {samples}")
+                        else:
+                            print(f"  ❌ Failed: {result.get('message', 'Unknown error')}")
+                    else:
+                        skipped_count += 1
+
+                except Exception as e:
+                    print(f"  ❌ Error processing model for user {ai_model.user_id}: {e}")
+                    continue
+
+            print(f"🎯 Automatic retraining completed: {retrained_count} retrained, {skipped_count} skipped")
+
+        except Exception as e:
+            print(f"❌ Error in auto_retrain_models: {e}")
+            import traceback
+            traceback.print_exc()
+        finally:
+            db.close()
 
 
 # Global scheduler instance

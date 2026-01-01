@@ -465,22 +465,26 @@ class AICategorizationService:
         }
     
     def _needs_retraining(self, ai_model: AIModel, stats: Dict) -> bool:
-        """Check if model needs retraining"""
+        """Check if model needs retraining based on user preferences and data changes"""
         if not ai_model or not ai_model.last_trained:
             return True
-        
-        # Check if it's been more than 7 days since last training
+
+        # Get user's retrain frequency preference
+        preferences = self.get_user_ai_preferences(ai_model.user_id)
+        retrain_frequency_days = preferences.retrain_frequency_days if preferences else 7
+
+        # Check if it's been longer than user's preferred frequency since last training
         days_since_training = (datetime.utcnow() - ai_model.last_trained).days
-        if days_since_training > 7:
+        if days_since_training >= retrain_frequency_days:
             return True
-        
-        # Check if there's significantly more data now
+
+        # Check if there's significantly more data now (20% increase triggers retraining)
         current_data_count = stats['total_categorized']
         trained_data_count = ai_model.training_data_count
-        
+
         if current_data_count > trained_data_count * 1.2:  # 20% more data
             return True
-        
+
         return False
     
     def _time_ago(self, dt: datetime) -> str:
