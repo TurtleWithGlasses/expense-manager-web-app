@@ -390,6 +390,18 @@ class HealthScoreService:
             for r in rows
         ]
 
+    @staticmethod
+    def _json_safe(obj):
+        """Recursively convert Decimal/non-JSON-serialisable types to float/str."""
+        from decimal import Decimal
+        if isinstance(obj, dict):
+            return {k: HealthScoreService._json_safe(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [HealthScoreService._json_safe(v) for v in obj]
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return obj
+
     def save_score(self, user_id: int, score_data: Dict) -> None:
         """Persist today's calculated score (upsert)."""
         from app.models.financial_health_score import FinancialHealthScore
@@ -406,14 +418,17 @@ class HealthScoreService:
         )
 
         components = score_data["components"]
+        calc_data = self._json_safe({"components": components, "calculated_at": score_data["calculated_at"]})
+        recs_data = self._json_safe({"items": score_data["recommendations"]})
+
         if row:
             row.score = int(score_data["total_score"])
             row.savings_rate_score = int(components["savings_rate"]["score"])
             row.expense_consistency_score = int(components["spending_consistency"]["score"])
             row.budget_adherence_score = int(components["budget_adherence"]["score"])
             row.goal_progress_score = int(components["goal_progress"]["score"])
-            row.calculation_data = {"components": components, "calculated_at": score_data["calculated_at"]}
-            row.recommendations = {"items": score_data["recommendations"]}
+            row.calculation_data = calc_data
+            row.recommendations = recs_data
         else:
             row = FinancialHealthScore(
                 user_id=user_id,
@@ -423,8 +438,8 @@ class HealthScoreService:
                 expense_consistency_score=int(components["spending_consistency"]["score"]),
                 budget_adherence_score=int(components["budget_adherence"]["score"]),
                 goal_progress_score=int(components["goal_progress"]["score"]),
-                calculation_data={"components": components, "calculated_at": score_data["calculated_at"]},
-                recommendations={"items": score_data["recommendations"]},
+                calculation_data=calc_data,
+                recommendations=recs_data,
             )
             self.db.add(row)
         self.db.commit()
