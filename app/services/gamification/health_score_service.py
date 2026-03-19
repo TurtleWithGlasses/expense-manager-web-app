@@ -44,14 +44,14 @@ class HealthScoreService:
         income_score = self._calculate_income_stability_score(user_id, three_months_ago, now)
         tracking_score = self._calculate_tracking_consistency_score(user_id, current_month_start, now)
 
-        # Weighted total
+        # Weighted total (cast to float to handle Decimal from PostgreSQL numeric columns)
         total_score = (
-            savings_score['score'] * 0.25 +
-            budget_score['score'] * 0.20 +
-            goal_score['score'] * 0.20 +
-            consistency_score['score'] * 0.15 +
-            income_score['score'] * 0.10 +
-            tracking_score['score'] * 0.10
+            float(savings_score['score']) * 0.25 +
+            float(budget_score['score']) * 0.20 +
+            float(goal_score['score']) * 0.20 +
+            float(consistency_score['score']) * 0.15 +
+            float(income_score['score']) * 0.10 +
+            float(tracking_score['score']) * 0.10
         )
 
         # Determine overall rating
