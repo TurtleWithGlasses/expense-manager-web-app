@@ -23,6 +23,7 @@ async def health_score_page(
 
     service = HealthScoreService(db)
     score_data = service.calculate_health_score(user.id)
+    score_data = HealthScoreService._json_safe(score_data)  # convert Decimals for Jinja2 tojson
     service.save_score(user.id, score_data)
     history = service.get_score_history(user.id, months=6)
     trends = service.get_score_trends(user.id)
