@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     SESSION_MAX_AGE_SECONDS: int = 60 * 60 * 24 * 30
     ENV: str = "development"  # Default to development
     RESEND_API_KEY: str = ""  # Set via environment variable
+    SENTRY_DSN: str = ""  # Set via environment variable – get from https://sentry.io
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.1  # 10 % of transactions traced in production
 
     # CORS Configuration
     # Comma-separated list of allowed origins for CORS

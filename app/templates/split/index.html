@@ -1,0 +1,669 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="split-page">
+
+  <!-- ── Page Header ─────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <h1 class="h1">
+      <i class="bi bi-people" aria-hidden="true"></i>
+      Split Expenses
+    </h1>
+    <p class="subtitle">Track shared expenses and see who owes whom</p>
+  </div>
+
+  <!-- ── Action Bar ──────────────────────────────────────────────────── -->
+  <div class="actions-bar">
+    <button class="btn primary" onclick="openNewSplitModal()">
+      <i class="bi bi-plus-circle"></i> New Split
+    </button>
+    <button class="btn ghost" onclick="openContactsModal()">
+      <i class="bi bi-person-plus"></i> Manage Contacts
+    </button>
+    <button class="btn ghost" onclick="refreshPage()">
+      <i class="bi bi-arrow-clockwise"></i> Refresh
+    </button>
+  </div>
+
+  <!-- ── Balance Summary Cards ───────────────────────────────────────── -->
+  <div class="stats-grid" id="balance-cards">
+    <div class="stat-card">
+      <div class="stat-icon" style="color: var(--success)"><i class="bi bi-arrow-down-circle"></i></div>
+      <div class="stat-value" id="total-owed-to-you">{{ user_currency.symbol }}0.00</div>
+      <div class="stat-label">You are owed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color: var(--danger)"><i class="bi bi-arrow-up-circle"></i></div>
+      <div class="stat-value" id="total-you-owe">{{ user_currency.symbol }}0.00</div>
+      <div class="stat-label">You owe</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color: var(--primary)"><i class="bi bi-receipt-cutoff"></i></div>
+      <div class="stat-value" id="total-splits">{{ splits | length }}</div>
+      <div class="stat-label">Total splits</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color: var(--warning)"><i class="bi bi-hourglass-split"></i></div>
+      <div class="stat-value" id="open-splits">{{ splits | selectattr('status', 'eq', 'open') | list | length }}</div>
+      <div class="stat-label">Open splits</div>
+    </div>
+  </div>
+
+  <!-- ── Who Owes Whom ───────────────────────────────────────────────── -->
+  <div class="section-card" id="balances-section">
+    <div class="section-header">
+      <h2><i class="bi bi-bar-chart-line"></i> Balances</h2>
+    </div>
+    <div id="balances-list">
+      {% if balances.contacts %}
+        {% for b in balances.contacts %}
+        <div class="balance-row {% if b.net > 0 %}balance-positive{% elif b.net < 0 %}balance-negative{% else %}balance-zero{% endif %}">
+          <div class="balance-name">
+            <i class="bi bi-person-circle"></i>
+            <span>{{ b.contact_name }}</span>
+          </div>
+          <div class="balance-amounts">
+            {% if b.net > 0 %}
+              <span class="badge-success">Owes you {{ user_currency.symbol }}{{ "%.2f"|format(b.net) }}</span>
+            {% elif b.net < 0 %}
+              <span class="badge-danger">You owe {{ user_currency.symbol }}{{ "%.2f"|format(b.net | abs) }}</span>
+            {% else %}
+              <span class="badge-neutral">Settled up</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-inline">
+          <i class="bi bi-check2-circle"></i>
+          <span>All settled up — no outstanding balances.</span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Filter Tabs ─────────────────────────────────────────────────── -->
+  <div class="filter-tabs" role="tablist">
+    <button class="filter-tab active" onclick="filterSplits('all', event)" role="tab">All</button>
+    <button class="filter-tab" onclick="filterSplits('open', event)" role="tab">Open</button>
+    <button class="filter-tab" onclick="filterSplits('settled', event)" role="tab">Settled</button>
+  </div>
+
+  <!-- ── Split List ──────────────────────────────────────────────────── -->
+  <div id="splits-list">
+    {% if splits %}
+      {% for split in splits %}
+      <div class="split-card" data-status="{{ split.status }}" data-id="{{ split.id }}">
+        <div class="split-card-header">
+          <div class="split-title-row">
+            <h3 class="split-title">{{ split.title }}</h3>
+            <span class="split-status-badge status-{{ split.status }}">
+              {{ split.status | capitalize }}
+            </span>
+          </div>
+          <div class="split-meta">
+            <span><i class="bi bi-calendar3"></i> {{ split.date }}</span>
+            <span><i class="bi bi-cash-stack"></i> {{ split.currency_code }} {{ "%.2f"|format(split.total_amount) }}</span>
+            {% if split.notes %}
+            <span class="split-notes"><i class="bi bi-chat-left-text"></i> {{ split.notes }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="participants-list">
+          {% for p in split.participants %}
+          <div class="participant-row {% if p.is_settled %}participant-settled{% endif %}" id="participant-{{ p.id }}">
+            <div class="participant-info">
+              {% if p.is_payer %}
+                <i class="bi bi-cash-coin text-success" title="Paid"></i>
+              {% else %}
+                <i class="bi bi-person" title="Owes share"></i>
+              {% endif %}
+              <span class="participant-name">{{ p.name }}</span>
+              {% if p.is_payer %}<span class="payer-tag">paid</span>{% endif %}
+            </div>
+            <div class="participant-amount">
+              <span class="amount {% if p.is_payer %}amount-paid{% endif %}">
+                {{ split.currency_code }} {{ "%.2f"|format(p.amount) }}
+              </span>
+              {% if not p.is_payer %}
+                {% if p.is_settled %}
+                  <span class="settled-badge"><i class="bi bi-check-circle-fill"></i> Settled</span>
+                  <button class="btn-sm ghost" onclick="unsettleParticipant({{ split.id }}, {{ p.id }})" title="Mark as unsettled">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                  </button>
+                {% else %}
+                  <button class="btn-sm primary" onclick="settleParticipant({{ split.id }}, {{ p.id }})">
+                    <i class="bi bi-check-lg"></i> Settle
+                  </button>
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="split-card-footer">
+          <button class="btn-link danger" onclick="deleteSplit({{ split.id }}, '{{ split.title | e }}')">
+            <i class="bi bi-trash"></i> Delete
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state" id="empty-state">
+        <i class="bi bi-people" style="font-size:4rem;opacity:.3;"></i>
+        <h3>No split expenses yet</h3>
+        <p>Create your first split to track shared costs with friends.</p>
+        <button class="btn primary" onclick="openNewSplitModal()">
+          <i class="bi bi-plus-circle"></i> Create Split
+        </button>
+      </div>
+    {% endif %}
+  </div>
+
+</div><!-- /.split-page -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     NEW SPLIT MODAL
+══════════════════════════════════════════════════════════════════════ -->
+<div id="new-split-modal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="split-modal-title">
+  <div class="modal-content modal-lg">
+    <div class="modal-header">
+      <h2 id="split-modal-title"><i class="bi bi-receipt-cutoff"></i> New Split Expense</h2>
+      <button class="btn-close" onclick="closeNewSplitModal()" aria-label="Close">&times;</button>
+    </div>
+
+    <form id="new-split-form" onsubmit="submitNewSplit(event)">
+      <div class="form-group">
+        <label for="split-title">Title *</label>
+        <input type="text" id="split-title" class="form-control" placeholder="e.g. Dinner at Mario's" required maxlength="200">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="split-amount">Total Amount *</label>
+          <input type="number" id="split-amount" class="form-control" placeholder="0.00" step="0.01" min="0.01" required>
+        </div>
+        <div class="form-group">
+          <label for="split-currency">Currency</label>
+          <input type="text" id="split-currency" class="form-control" value="{{ user_currency_code }}" maxlength="3" style="text-transform:uppercase;">
+        </div>
+        <div class="form-group">
+          <label for="split-date">Date *</label>
+          <input type="date" id="split-date" class="form-control" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="split-notes">Notes</label>
+        <textarea id="split-notes" class="form-control" rows="2" placeholder="Optional notes…"></textarea>
+      </div>
+
+      <!-- Participants -->
+      <div class="participants-section">
+        <div class="section-sub-header">
+          <h3>Participants</h3>
+          <button type="button" class="btn-sm ghost" onclick="addParticipantRow()">
+            <i class="bi bi-plus"></i> Add person
+          </button>
+        </div>
+        <p class="hint">Mark one person as <strong>Payer</strong> (who paid the bill). Others owe their share.</p>
+        <div id="participants-container">
+          <!-- rows injected by JS -->
+        </div>
+        <div class="split-summary" id="split-summary" style="display:none;">
+          <span>Participants total: <strong id="participants-total">0.00</strong></span>
+          <span id="split-warning" class="text-danger" style="display:none;">⚠ Amounts don't match total</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn ghost" onclick="closeNewSplitModal()">Cancel</button>
+        <button type="submit" class="btn primary" id="create-split-btn">
+          <i class="bi bi-check-lg"></i> Create Split
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     CONTACTS MODAL
+══════════════════════════════════════════════════════════════════════ -->
+<div id="contacts-modal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="contacts-modal-title">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="contacts-modal-title"><i class="bi bi-people"></i> Contacts</h2>
+      <button class="btn-close" onclick="closeContactsModal()" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="add-contact-form">
+      <div class="form-row">
+        <div class="form-group" style="flex:2;">
+          <label for="contact-name">Name *</label>
+          <input type="text" id="contact-name" class="form-control" placeholder="Friend's name" maxlength="150">
+        </div>
+        <div class="form-group" style="flex:2;">
+          <label for="contact-email">Email</label>
+          <input type="email" id="contact-email" class="form-control" placeholder="optional@email.com">
+        </div>
+        <div class="form-group" style="flex:1;align-self:flex-end;">
+          <button type="button" class="btn primary" onclick="addContact()" style="width:100%;">
+            <i class="bi bi-plus-circle"></i> Add
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="contacts-list-modal">
+      <div class="loading-state"><div class="spinner"></div></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="closeContactsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal backdrop -->
+<div id="modal-backdrop" class="modal-backdrop" style="display:none;" onclick="closeAllModals()"></div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     STYLES
+══════════════════════════════════════════════════════════════════════ -->
+<style>
+.split-page { max-width: 900px; margin: 0 auto; padding: 1rem; }
+.section-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+.section-header h2 { font-size:1.1rem; margin:0; display:flex; align-items:center; gap:.5rem; }
+
+/* Balance rows */
+.balance-row { display:flex; align-items:center; justify-content:space-between; padding:.6rem .75rem; border-radius:8px; margin-bottom:.4rem; }
+.balance-positive { background: rgba(16,185,129,.1); }
+.balance-negative { background: rgba(239,68,68,.1); }
+.balance-zero { background: var(--surface-secondary, rgba(128,128,128,.08)); }
+.balance-name { display:flex; align-items:center; gap:.5rem; font-weight:500; }
+.badge-success { background:rgba(16,185,129,.15); color:#10b981; padding:.2rem .7rem; border-radius:999px; font-size:.82rem; font-weight:600; }
+.badge-danger { background:rgba(239,68,68,.15); color:#ef4444; padding:.2rem .7rem; border-radius:999px; font-size:.82rem; font-weight:600; }
+.badge-neutral { background:rgba(100,116,139,.1); color:var(--text-muted); padding:.2rem .7rem; border-radius:999px; font-size:.82rem; }
+.empty-inline { display:flex; align-items:center; gap:.75rem; color:var(--text-muted); padding:.5rem 0; }
+
+/* Split cards */
+.split-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; transition: box-shadow .2s; }
+.split-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+.split-card-header { margin-bottom: 1rem; }
+.split-title-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .4rem; }
+.split-title { font-size: 1.05rem; font-weight: 600; margin: 0; }
+.split-status-badge { font-size: .75rem; font-weight: 600; padding: .2rem .6rem; border-radius: 999px; text-transform: capitalize; }
+.status-open { background: rgba(245,158,11,.15); color: #f59e0b; }
+.status-settled { background: rgba(16,185,129,.15); color: #10b981; }
+.split-meta { display: flex; flex-wrap: wrap; gap: .75rem; color: var(--text-muted); font-size: .85rem; }
+.split-notes { font-style: italic; }
+
+/* Participants */
+.participants-list { display: flex; flex-direction: column; gap: .4rem; margin-bottom: .75rem; }
+.participant-row { display: flex; align-items: center; justify-content: space-between; padding: .45rem .6rem; border-radius: 8px; background: var(--surface-secondary, rgba(128,128,128,.06)); }
+.participant-settled { opacity: .65; }
+.participant-info { display: flex; align-items: center; gap: .5rem; }
+.participant-name { font-weight: 500; }
+.payer-tag { background: rgba(99,102,241,.15); color: #6366f1; font-size: .72rem; font-weight:600; padding: .1rem .45rem; border-radius: 999px; }
+.participant-amount { display: flex; align-items: center; gap: .5rem; }
+.amount { font-weight: 600; }
+.amount-paid { color: #10b981; }
+.settled-badge { color: #10b981; font-size: .8rem; display:flex; align-items:center; gap:.25rem; }
+.btn-sm { padding: .25rem .55rem; border-radius: 6px; font-size: .8rem; cursor: pointer; border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); transition: background .15s; }
+.btn-sm.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn-sm.primary:hover { opacity: .88; }
+.btn-sm.ghost:hover { background: var(--surface-secondary, rgba(128,128,128,.08)); }
+.split-card-footer { display: flex; justify-content: flex-end; gap: .5rem; padding-top: .5rem; border-top: 1px solid var(--border-color); margin-top: .5rem; }
+.btn-link { background: none; border: none; cursor: pointer; font-size: .85rem; display:flex; align-items:center; gap:.3rem; padding: .2rem .5rem; border-radius: 6px; }
+.btn-link.danger { color: var(--danger, #ef4444); }
+.btn-link.danger:hover { background: rgba(239,68,68,.08); }
+.text-success { color: #10b981; }
+
+/* New split modal – participants */
+.participants-section { margin: 1rem 0; }
+.section-sub-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.4rem; }
+.section-sub-header h3 { font-size:1rem; margin:0; }
+.hint { color:var(--text-muted); font-size:.83rem; margin-bottom:.6rem; }
+.participant-form-row { display:flex; align-items:center; gap:.5rem; margin-bottom:.4rem; flex-wrap:wrap; }
+.participant-form-row input[type=text] { flex:2; }
+.participant-form-row input[type=number] { flex:1; min-width:80px; }
+.participant-form-row select { flex:1.5; }
+.participant-form-row .remove-btn { background:none; border:none; color:var(--danger,#ef4444); cursor:pointer; font-size:1.1rem; padding:.1rem .3rem; }
+.split-summary { display:flex; align-items:center; gap:1rem; padding:.5rem .75rem; background:var(--surface-secondary,rgba(128,128,128,.06)); border-radius:8px; font-size:.85rem; margin-top:.5rem; }
+
+/* Contacts modal */
+.add-contact-form { background:var(--surface-secondary,rgba(128,128,128,.06)); border-radius:8px; padding:.75rem; margin-bottom:1rem; }
+.contact-item { display:flex; align-items:center; justify-content:space-between; padding:.5rem .75rem; border-radius:8px; border-bottom:1px solid var(--border-color); }
+.contact-item:last-child { border-bottom:none; }
+.contact-item-info { display:flex; flex-direction:column; }
+.contact-item-name { font-weight:500; }
+.contact-item-email { font-size:.82rem; color:var(--text-muted); }
+
+/* Misc */
+.modal-lg { max-width: 680px; }
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:900; }
+.modal { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:1000; padding:1rem; }
+.modal-content { background:var(--card-bg); border-radius:14px; padding:1.5rem; width:100%; max-width:520px; max-height:90vh; overflow-y:auto; position:relative; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+.modal-header h2 { font-size:1.2rem; margin:0; display:flex; align-items:center; gap:.5rem; }
+.modal-footer { display:flex; justify-content:flex-end; gap:.75rem; margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border-color); }
+.btn-close { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted); line-height:1; }
+.form-row { display:flex; gap:.75rem; flex-wrap:wrap; }
+.form-row .form-group { flex:1; min-width:120px; }
+.form-control { width:100%; padding:.45rem .65rem; border:1px solid var(--border-color); border-radius:8px; background:var(--input-bg,var(--card-bg)); color:var(--text-primary); font-size:.9rem; box-sizing:border-box; }
+.form-control:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(99,102,241,.15); }
+.form-group label { display:block; font-size:.85rem; font-weight:500; margin-bottom:.3rem; color:var(--text-secondary,var(--text-primary)); }
+.form-group { margin-bottom:.85rem; }
+</style>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════════════════ -->
+<script>
+const USER_CURRENCY = "{{ user_currency_code }}";
+const CURRENCY_SYMBOL = "{{ user_currency.symbol }}";
+
+// ── Server-side contacts (used to populate participant dropdowns) ──────
+let contacts = {{ contacts | tojson }};
+
+// ── Utilities ──────────────────────────────────────────────────────────
+function fmt(amount) {
+  return CURRENCY_SYMBOL + parseFloat(amount).toFixed(2);
+}
+
+function refreshPage() {
+  window.location.reload();
+}
+
+// ── Modals ─────────────────────────────────────────────────────────────
+function showBackdrop() {
+  document.getElementById('modal-backdrop').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function hideBackdrop() {
+  document.getElementById('modal-backdrop').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function closeAllModals() {
+  document.getElementById('new-split-modal').style.display = 'none';
+  document.getElementById('contacts-modal').style.display = 'none';
+  hideBackdrop();
+}
+
+// ── New Split Modal ────────────────────────────────────────────────────
+function openNewSplitModal() {
+  document.getElementById('new-split-modal').style.display = 'flex';
+  showBackdrop();
+  // Set today's date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('split-date').value = today;
+  // Reset participants
+  document.getElementById('participants-container').innerHTML = '';
+  participantCount = 0;
+  addParticipantRow(true);  // "You" as payer
+}
+function closeNewSplitModal() {
+  document.getElementById('new-split-modal').style.display = 'none';
+  hideBackdrop();
+  document.getElementById('new-split-form').reset();
+  document.getElementById('participants-container').innerHTML = '';
+  participantCount = 0;
+}
+
+// ── Participant rows ───────────────────────────────────────────────────
+let participantCount = 0;
+
+function buildContactOptions(selectedId) {
+  let opts = '<option value="">— no contact —</option>';
+  contacts.forEach(c => {
+    const sel = c.id == selectedId ? 'selected' : '';
+    opts += `<option value="${c.id}" ${sel}>${c.name}</option>`;
+  });
+  return opts;
+}
+
+function addParticipantRow(isYou = false) {
+  participantCount++;
+  const idx = participantCount;
+  const container = document.getElementById('participants-container');
+  const div = document.createElement('div');
+  div.className = 'participant-form-row';
+  div.id = `p-row-${idx}`;
+
+  const nameVal = isYou ? 'You' : '';
+  const isPayer = isYou ? 'checked' : '';
+  const contactSel = isYou ? '<em style="color:var(--text-muted);font-size:.8rem;">— that\'s you —</em>' : `<select class="form-control p-contact" data-idx="${idx}" title="Link to contact">${buildContactOptions('')}</select>`;
+
+  div.innerHTML = `
+    <input type="text" class="form-control p-name" data-idx="${idx}" placeholder="Name" value="${nameVal}" required maxlength="150" ${isYou ? 'readonly' : ''}>
+    ${contactSel}
+    <input type="number" class="form-control p-amount" data-idx="${idx}" placeholder="Amount" step="0.01" min="0" oninput="updateSplitSummary()">
+    <label style="display:flex;align-items:center;gap:.25rem;white-space:nowrap;font-size:.83rem;cursor:pointer;">
+      <input type="checkbox" class="p-payer" data-idx="${idx}" ${isPayer} onchange="handlePayerChange(${idx})"> Payer
+    </label>
+    ${isYou ? '' : `<button type="button" class="remove-btn" onclick="removeParticipantRow(${idx})" aria-label="Remove">×</button>`}
+  `;
+  container.appendChild(div);
+  updateSplitSummary();
+}
+
+function removeParticipantRow(idx) {
+  const row = document.getElementById(`p-row-${idx}`);
+  if (row) row.remove();
+  updateSplitSummary();
+}
+
+function handlePayerChange(idx) {
+  // Only one payer allowed
+  document.querySelectorAll('.p-payer').forEach(cb => {
+    if (parseInt(cb.dataset.idx) !== idx) cb.checked = false;
+  });
+}
+
+function updateSplitSummary() {
+  const total = parseFloat(document.getElementById('split-amount').value) || 0;
+  let sum = 0;
+  document.querySelectorAll('.p-amount').forEach(input => {
+    sum += parseFloat(input.value) || 0;
+  });
+  const summaryEl = document.getElementById('split-summary');
+  const totalEl = document.getElementById('participants-total');
+  const warnEl = document.getElementById('split-warning');
+  summaryEl.style.display = 'flex';
+  totalEl.textContent = sum.toFixed(2);
+  const diff = Math.abs(sum - total);
+  warnEl.style.display = (total > 0 && diff > 0.01) ? 'inline' : 'none';
+}
+
+async function submitNewSplit(event) {
+  event.preventDefault();
+  const btn = document.getElementById('create-split-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving…';
+
+  const participants = [];
+  document.querySelectorAll('.participant-form-row').forEach(row => {
+    const idx = row.id.replace('p-row-', '');
+    const name = row.querySelector(`.p-name`);
+    const amount = row.querySelector(`.p-amount`);
+    const isPayer = row.querySelector(`.p-payer`);
+    const contactSel = row.querySelector(`.p-contact`);
+    if (name && amount && parseFloat(amount.value) > 0) {
+      participants.push({
+        name: name.value.trim(),
+        amount: parseFloat(amount.value),
+        is_payer: isPayer ? isPayer.checked : false,
+        contact_id: contactSel ? (parseInt(contactSel.value) || null) : null,
+      });
+    }
+  });
+
+  if (!participants.some(p => p.is_payer)) {
+    alert('Please mark one participant as the payer.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check-lg"></i> Create Split';
+    return;
+  }
+
+  const payload = {
+    title: document.getElementById('split-title').value.trim(),
+    total_amount: parseFloat(document.getElementById('split-amount').value),
+    currency_code: document.getElementById('split-currency').value.trim().toUpperCase() || USER_CURRENCY,
+    date: document.getElementById('split-date').value,
+    notes: document.getElementById('split-notes').value.trim() || null,
+    participants,
+  };
+
+  try {
+    const res = await fetch('/api/split/expenses', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Failed to create split');
+    closeNewSplitModal();
+    window.location.reload();
+  } catch (err) {
+    alert('Error: ' + err.message);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check-lg"></i> Create Split';
+  }
+}
+
+// ── Settle / Unsettle ──────────────────────────────────────────────────
+async function settleParticipant(splitId, participantId) {
+  try {
+    const res = await fetch(`/api/split/expenses/${splitId}/participants/${participantId}/settle`, {method:'POST'});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error');
+    window.location.reload();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function unsettleParticipant(splitId, participantId) {
+  try {
+    const res = await fetch(`/api/split/expenses/${splitId}/participants/${participantId}/unsettle`, {method:'POST'});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error');
+    window.location.reload();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// ── Delete split ───────────────────────────────────────────────────────
+async function deleteSplit(splitId, title) {
+  if (!confirm(`Delete split "${title}"? This cannot be undone.`)) return;
+  try {
+    const res = await fetch(`/api/split/expenses/${splitId}`, {method:'DELETE'});
+    if (!res.ok) throw new Error('Failed to delete');
+    window.location.reload();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// ── Filter tabs ────────────────────────────────────────────────────────
+function filterSplits(status, event) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  if (event) event.target.classList.add('active');
+  document.querySelectorAll('.split-card').forEach(card => {
+    if (status === 'all' || card.dataset.status === status) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// ── Contacts modal ─────────────────────────────────────────────────────
+function openContactsModal() {
+  document.getElementById('contacts-modal').style.display = 'flex';
+  showBackdrop();
+  renderContactsList();
+}
+function closeContactsModal() {
+  document.getElementById('contacts-modal').style.display = 'none';
+  hideBackdrop();
+  document.getElementById('contact-name').value = '';
+  document.getElementById('contact-email').value = '';
+}
+
+function renderContactsList() {
+  const el = document.getElementById('contacts-list-modal');
+  if (!contacts.length) {
+    el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem;">No contacts yet.</p>';
+    return;
+  }
+  el.innerHTML = contacts.map(c => `
+    <div class="contact-item" id="contact-item-${c.id}">
+      <div class="contact-item-info">
+        <span class="contact-item-name"><i class="bi bi-person-circle"></i> ${c.name}</span>
+        ${c.email ? `<span class="contact-item-email">${c.email}</span>` : ''}
+      </div>
+      <button class="btn-sm ghost" onclick="deleteContact(${c.id}, '${c.name.replace(/'/g,"\\'")}')">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+async function addContact() {
+  const name = document.getElementById('contact-name').value.trim();
+  const email = document.getElementById('contact-email').value.trim();
+  if (!name) { alert('Please enter a name.'); return; }
+  try {
+    const res = await fetch('/api/split/contacts', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, email: email || null}),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error');
+    contacts.push(data);
+    document.getElementById('contact-name').value = '';
+    document.getElementById('contact-email').value = '';
+    renderContactsList();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function deleteContact(contactId, name) {
+  if (!confirm(`Remove contact "${name}"?`)) return;
+  try {
+    const res = await fetch(`/api/split/contacts/${contactId}`, {method:'DELETE'});
+    if (!res.ok) throw new Error('Failed');
+    contacts = contacts.filter(c => c.id !== contactId);
+    renderContactsList();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Load balances via API to get fresh amounts
+  fetch('/api/split/balances')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('total-owed-to-you').textContent =
+        CURRENCY_SYMBOL + parseFloat(data.total_you_are_owed).toFixed(2);
+      document.getElementById('total-you-owe').textContent =
+        CURRENCY_SYMBOL + parseFloat(data.total_you_owe).toFixed(2);
+    })
+    .catch(() => {});
+});
+</script>
+
+{% endblock %}

@@ -360,17 +360,95 @@ class HealthScoreService:
         return recommendations
 
     def get_score_history(self, user_id: int, months: int = 6) -> List[Dict]:
-        """Get historical health scores (placeholder for future implementation)"""
-        # This would require storing historical scores in a database table
-        # For now, return empty list
-        return []
+        """Get historical health scores from DB, most recent first."""
+        from app.models.financial_health_score import FinancialHealthScore
+        from sqlalchemy import desc
+        from datetime import date, timedelta
+
+        cutoff = date.today() - timedelta(days=months * 30)
+        rows = (
+            self.db.query(FinancialHealthScore)
+            .filter(
+                FinancialHealthScore.user_id == user_id,
+                FinancialHealthScore.score_date >= cutoff,
+            )
+            .order_by(desc(FinancialHealthScore.score_date))
+            .all()
+        )
+        return [
+            {
+                "date": r.score_date.isoformat(),
+                "score": r.score,
+                "grade": r.get_grade(),
+                "components": {
+                    "savings_rate": r.savings_rate_score,
+                    "expense_consistency": r.expense_consistency_score,
+                    "budget_adherence": r.budget_adherence_score,
+                    "goal_progress": r.goal_progress_score,
+                },
+            }
+            for r in rows
+        ]
+
+    def save_score(self, user_id: int, score_data: Dict) -> None:
+        """Persist today's calculated score (upsert)."""
+        from app.models.financial_health_score import FinancialHealthScore
+        from datetime import date
+
+        today = date.today()
+        row = (
+            self.db.query(FinancialHealthScore)
+            .filter(
+                FinancialHealthScore.user_id == user_id,
+                FinancialHealthScore.score_date == today,
+            )
+            .first()
+        )
+
+        components = score_data["components"]
+        if row:
+            row.score = int(score_data["total_score"])
+            row.savings_rate_score = int(components["savings_rate"]["score"])
+            row.expense_consistency_score = int(components["spending_consistency"]["score"])
+            row.budget_adherence_score = int(components["budget_adherence"]["score"])
+            row.goal_progress_score = int(components["goal_progress"]["score"])
+            row.calculation_data = {"components": components, "calculated_at": score_data["calculated_at"]}
+            row.recommendations = {"items": score_data["recommendations"]}
+        else:
+            row = FinancialHealthScore(
+                user_id=user_id,
+                score=int(score_data["total_score"]),
+                score_date=today,
+                savings_rate_score=int(components["savings_rate"]["score"]),
+                expense_consistency_score=int(components["spending_consistency"]["score"]),
+                budget_adherence_score=int(components["budget_adherence"]["score"]),
+                goal_progress_score=int(components["goal_progress"]["score"]),
+                calculation_data={"components": components, "calculated_at": score_data["calculated_at"]},
+                recommendations={"items": score_data["recommendations"]},
+            )
+            self.db.add(row)
+        self.db.commit()
 
     def get_score_trends(self, user_id: int) -> Dict:
-        """Get trends in health score components (placeholder)"""
-        # Future implementation: track changes over time
+        """Derive trend from stored history."""
+        history = self.get_score_history(user_id, months=3)
+        if len(history) < 2:
+            return {"trend": "stable", "change_from_last_month": 0, "improving_areas": [], "declining_areas": []}
+
+        latest = history[0]["score"]
+        oldest = history[-1]["score"]
+        delta = latest - oldest
+
+        if delta > 5:
+            trend = "improving"
+        elif delta < -5:
+            trend = "declining"
+        else:
+            trend = "stable"
+
         return {
-            'trend': 'stable',
-            'change_from_last_month': 0,
-            'improving_areas': [],
-            'declining_areas': []
+            "trend": trend,
+            "change_from_last_month": delta,
+            "improving_areas": [],
+            "declining_areas": [],
         }

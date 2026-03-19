@@ -185,6 +185,73 @@ def delete_user_account_admin(
     })
 
 
+@router.post("/test-email")
+async def test_email(
+    admin: User = Depends(admin_user),
+):
+    """Send a test email to verify email configuration is working."""
+    from app.services.email import email_service
+    from app.core.config import settings
+
+    config_info = {
+        "smtp_server": settings.SMTP_SERVER,
+        "smtp_port": settings.SMTP_PORT,
+        "smtp_username": settings.SMTP_USERNAME,
+        "from_email": settings.FROM_EMAIL,
+        "has_smtp_password": bool(settings.SMTP_PASSWORD),
+        "has_resend_key": bool(settings.RESEND_API_KEY),
+        "using_resend": bool(settings.RESEND_API_KEY),
+    }
+
+    success = await email_service.send_email(
+        to_email=admin.email,
+        subject="Budget Pulse – Email Configuration Test",
+        html_content=f"""
+        <p>This is a test email from Budget Pulse.</p>
+        <p>Your email configuration is working correctly!</p>
+        <p>Sent to: {admin.email}</p>
+        <p>Method: {'Resend API' if settings.RESEND_API_KEY else 'SMTP'}</p>
+        """,
+        text_content="Budget Pulse email configuration test – working correctly.",
+    )
+
+    return JSONResponse({
+        "success": success,
+        "sent_to": admin.email,
+        "config": config_info,
+        "message": "Test email sent successfully" if success else "Failed to send test email – check server logs",
+    })
+
+
+@router.get("/email-config")
+def email_config_status(
+    admin: User = Depends(admin_user),
+):
+    """Get current email configuration status (no secrets exposed)."""
+    from app.core.config import settings
+
+    smtp_configured = bool(settings.SMTP_USERNAME and settings.SMTP_PASSWORD)
+    resend_configured = bool(settings.RESEND_API_KEY)
+
+    return JSONResponse({
+        "smtp": {
+            "configured": smtp_configured,
+            "server": settings.SMTP_SERVER,
+            "port": settings.SMTP_PORT,
+            "username": settings.SMTP_USERNAME,
+            "from_email": settings.FROM_EMAIL,
+            "password_set": bool(settings.SMTP_PASSWORD),
+        },
+        "resend": {
+            "configured": resend_configured,
+            "from_email": settings.RESEND_FROM_EMAIL,
+            "key_prefix": settings.RESEND_API_KEY[:8] + "…" if settings.RESEND_API_KEY else None,
+        },
+        "active_method": "resend" if resend_configured else ("smtp" if smtp_configured else "none"),
+        "ready": smtp_configured or resend_configured,
+    })
+
+
 @router.post("/users/{user_id}/resend-verification")
 def resend_verification_admin(
     user_id: int,

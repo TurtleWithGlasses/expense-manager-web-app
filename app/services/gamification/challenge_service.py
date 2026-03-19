@@ -104,7 +104,7 @@ class ChallengeService:
 
         user_challenge.current_progress = new_progress
         user_challenge.progress_percentage = min(
-            (new_progress / user_challenge.target_progress * 100),
+            (new_progress / float(user_challenge.target_progress) * 100),
             100
         )
         user_challenge.last_progress_update = datetime.utcnow()
@@ -305,6 +305,17 @@ class ChallengeService:
 
         if not dates_with_entries:
             return 0
+
+        # Normalise to date objects (SQLite returns strings, PostgreSQL returns date)
+        from datetime import date as _date
+        def _to_date(v):
+            if isinstance(v, str):
+                return _date.fromisoformat(v)
+            if isinstance(v, datetime):
+                return v.date()
+            return v
+
+        dates_with_entries = [_to_date(d) for d in dates_with_entries]
 
         # Count consecutive days from most recent
         streak = 1

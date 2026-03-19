@@ -67,3 +67,7 @@ class User(Base):
     badges = relationship("UserBadge", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
     user_challenges = relationship("UserChallenge", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
     health_scores = relationship("FinancialHealthScore", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
+
+    # Split expense relationships - Phase 31
+    split_contacts = relationship("SplitContact", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)
+    split_expenses = relationship("SplitExpense", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)

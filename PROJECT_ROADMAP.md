@@ -1,8 +1,8 @@
 # Expense Manager Web App - Project Blueprint & Roadmap
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
-**Version:** 1.0 (Production)
-**Last Updated:** November 26, 2025
+**Version:** 2.0 (Production)
+**Last Updated:** March 19, 2026
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -25,23 +25,27 @@
 Budget Pulse is a comprehensive expense management application featuring AI-powered categorization, predictive analytics, and financial goal tracking. The application supports multi-currency transactions, automated reporting, and personalized financial insights.
 
 **Current State:**
-- **Status:** ✅ Production Ready (Railway) + Mobile API Ready + Budget Intelligence
-- **Features:** 45+ fully implemented features
-- **AI/ML:** 8 advanced AI features operational (categorization, predictions, anomalies, insights, budget intelligence)
-- **Intelligence:** Smart budgets, bill reminders, subscription tracking, duplicate detection
+- **Status:** ✅ Production Ready (Railway) + Mobile API Ready + Gamification + Advanced ML
+- **Features:** 70+ fully implemented features
+- **AI/ML:** 12+ advanced AI features operational (categorization, predictions, anomalies, insights, budget intelligence, Prophet forecasting, scenario planning, health score, auto-retraining, spending insights)
+- **Gamification:** Full achievement system (50+ achievements), badges, XP/levels, leaderboard, savings challenges (8 default), Financial Health Score dashboard UI at `/health-score` (0–100 gauge, radar chart, 6-month history), notification bell center
+- **Intelligence:** Smart budgets, bill reminders, subscription tracking, duplicate detection, auto-add to expenses
 - **Security:** Rate limiting, security headers, JWT authentication, CORS configuration
-- **Performance:** Database indexes (100x faster queries), pagination, sorting
+- **Performance:** Database indexes (100x faster queries), Redis caching (35,000x faster forecasts), pagination, sorting
 - **Migration System:** Self-healing with auto-stamping
-- **UI/UX:** Consistent design with dark/light theme support
+- **UI/UX:** Consistent design with dark/light theme support, PWA installable, voice commands, receipt scanner, split expenses, savings challenges
 - **Logging:** Structured logging with request tracing (ASGI middleware)
-- **Testing:** 64 unit tests + 89 integration tests (100% pass rate), zero deprecation warnings
-- **Mobile Ready:** RESTful JSON APIs, JWT auth, CORS enabled
-- **Users:** Ready for production use (web + mobile) with intelligent insights
-- **Last Update:** November 26, 2025 - Phase 29 & 30: Payment History, Analytics & Improvements complete
+- **Testing:** 64 unit tests + 89 integration tests + 17 E2E tests (100% pass rate), comprehensive test suite
+- **Mobile Ready:** RESTful JSON APIs, JWT auth, CORS enabled, PWA (installable)
+- **Users:** Ready for production use (web + mobile) with gamification and advanced AI
+- **Last Update:** March 19, 2026 – Phase 31 (Split Expenses), Phase 32 (Voice Commands + Receipt OCR), Phase 3.2 (Savings Challenges), Phase 34 (Health Score UI), Sentry, test coverage, PWA screenshots all complete
 
 ---
 
 ## ✅ Completed Phases
+
+> **Quick Index of all completed phases:**
+> Phase 1-4 (Auth/Core) | Phase 5-7 (Entries) | Phase 8 (Categories) | Phase 9-10 (Multi-Currency) | Phase 11-12 (Dashboard) | Phase 13 (Reports) | Phase 14 (AI Categorization) | Phase 15 (Predictive Analytics) | Phase 16 (Anomaly/Insights) | Phase 17 (Goals) | Phase 18 (Auto Reports) | Phase 19 (Theme) | Phase 20 (Profile/Avatar) | Phase 21 (Deployment) | Phase 22 (Security) | Phase 23 (Testing) | Phase 24 (JWT/REST API) | Phase 25 (Performance) | Phase 25 Alt (PWA) | Phase 26 (Calendar) | Phase 27 (Annual Reports) | Phase 28 (Budget Intelligence) | Phase 29 (Payment History) | Phase 30 (Payment Analytics) | Phase 31 (Split Expenses) | Phase 32A (Voice Commands) | Phase 32B (Receipt Scanning OCR) | Phase 3.2 (Savings Challenges) | Phase 33 (Admin/Help/Feedback) | Phase 34 (Achievement System + Health Score UI) | Phase 35 (Report Templates) | Phase 36 (Gamification Frontend) | Phase 37 (Prophet ML + Scenarios) | Phase 38 (Redis Caching) | Phase 39 (Auto-Add Bills) | Phase 40 (ML Auto-Retraining + AI Insights)
 
 ### **Phase 1-4: Core Foundation** (Completed)
 **Duration:** Initial Development
@@ -501,7 +505,7 @@ Budget Pulse is a comprehensive expense management application featuring AI-powe
    - Adds X-Request-ID header to responses for debugging
 
 **Remaining Work:**
-- ⏳ Add error monitoring (Sentry integration) - Optional
+- ✅ Sentry error monitoring integrated (activate by setting SENTRY_DSN in Railway)
 
 **Files Modified:**
 - `app/core/config.py` - Secrets removed
@@ -650,7 +654,7 @@ All user data is now properly deleted when account is deleted:
 - **Features Implemented:** 40+
 - **Security Score:** A (Rate limiting, security headers, no hardcoded secrets)
 - **Code Quality:** Well-organized, modular
-- **Test Coverage:** 0% (Phase 23 priority)
+- **Test Coverage:** 35 test files, 11,200+ lines (unit, integration, e2e, performance)
 
 ### **What's Working** ✅
 ✅ Application starts successfully
@@ -672,13 +676,32 @@ All user data is now properly deleted when account is deleted:
 ✅ Avatar upload and profile management working
 ✅ Account deletion with proper CASCADE configuration
 ✅ All user data properly deleted when account is deleted
+✅ Structured logging with request tracing (Phase 22)
+✅ 150+ automated tests passing at 100% rate (Phase 23)
+✅ Gamification system live (achievements, badges, XP, leaderboard, health score)
+✅ Achievement notification bell center in header
+✅ Prophet-based ML forecasting with scenario planning
+✅ Redis caching (35,000x faster forecast retrieval)
+✅ Auto-add to expenses for recurring bills
+✅ Saveable report templates with scheduling
+✅ Voice commands (Part A – Web Speech API)
+✅ Automatic ML model retraining (user-controlled frequency)
+✅ AI spending insights modal
+✅ Split Expense Tracking (Phase 31A – contacts, splits, settlements, balance view at `/split`)
+✅ Voice Commands (Phase 32A – Web Speech API, add/delete/query entries hands-free)
+✅ Receipt Scanning with OCR (Phase 32B – Tesseract pipeline, drag-and-drop UI at `/receipts/scan`)
+✅ Savings Challenges (Phase 3.2 – 8 default challenges, `/challenges` UI, progress auto-tracking)
+✅ Financial Health Score UI (Phase 34 – `/health-score`, animated gauge, radar chart, 6-month history, recommendations)
 
 ### **What Needs Attention** ⏳
-⏳ Implement structured logging
-⏳ Add automated tests (Phase 23)
-⏳ Set RESEND_API_KEY in Railway env vars
-⏳ Set SMTP_PASSWORD in Railway env vars
-⏳ Complete full production testing (TESTING_GUIDE.md)
+✅ Email credentials configured – SMTP verified working (Gmail App Password); Railway setup script at `scripts/set_railway_email_vars.sh`; admin endpoints: `POST /admin/test-email`, `GET /admin/email-config`
+✅ Phase 32 Part B: Receipt Scanning with OCR (Tesseract) – Complete March 2026: pytesseract+Pillow pipeline, drag-and-drop UI at `/receipts/scan`, pre-fill entry form from scan results
+✅ Phase 34: Financial Health Score UI – Complete March 2026: `app/templates/health_score.html`, `app/api/v1/health_score_pages.py`, score saved to DB on each visit, `get_score_history()` fixed (was placeholder)
+⏳ Phase 31 Part B: Shared Budgets (family/roommate budget sharing with permissions)
+✅ Savings Challenges (Phase 3.2 – Complete March 2026: 8 default challenges, /challenges UI, progress auto-tracking)
+✅ PWA screenshots replaced with real app mockups (1280×720 desktop dashboard, 750×1334 mobile entries) via `scripts/generate_pwa_screenshots.py`
+✅ Sentry integrated – `sentry-sdk[fastapi]==2.19.2`, `SENTRY_DSN` + `SENTRY_TRACES_SAMPLE_RATE` in config, auto-init on startup with FastAPI/SQLAlchemy/Logging integrations; set `SENTRY_DSN` in Railway to activate
+✅ Test coverage added – 47 new unit tests for split expenses (24) and savings challenges (23); fixed float/Decimal bug in challenge progress and SQLite date handling in streak calculation
 
 ---
 
@@ -714,9 +737,12 @@ All secrets have been removed from `app/core/config.py`:
 - `app/core/config.py:49` - SMTP_PASSWORD removed
 - `.env.example` - Added email configuration examples
 
-**Action Required:**
-- Set `RESEND_API_KEY` in Railway environment variables
-- Set `SMTP_PASSWORD` in Railway environment variables
+**Deployment Steps:**
+1. `railway login` (opens browser)
+2. `bash scripts/set_railway_email_vars.sh` (sets all SMTP vars in Railway)
+3. Verify via `POST /admin/test-email` or `GET /admin/email-config`
+- SMTP credentials verified working locally (Gmail App Password)
+- Optional: set `RESEND_API_KEY` in Railway for Resend API (preferred for production)
 
 ---
 
@@ -2892,7 +2918,7 @@ Implemented Budget Intelligence system with 4 core features using pattern analys
 
 **🔮 Future Enhancements (Not Implemented):**
 - Natural Language Entry Input (requires spaCy NLP)
-- Receipt Scanning with OCR (requires Tesseract)
+- ✅ Receipt Scanning with OCR (Tesseract) – Implemented Phase 32B
 - Spending Habit Scoring (gamification)
 - Financial Health Score (composite metrics)
 - Push notifications for reminders
@@ -3074,39 +3100,38 @@ Comprehensive payment analytics visualization system with trend analysis, reliab
 
 ### **Phase 31: Social & Collaboration** 👥
 **Priority:** LOW
-**Status:** Not Started
-**Estimated Time:** 12-15 hours
+**Status:** ✅ PARTIALLY COMPLETE (Split Expense Tracking ✅ Done | Shared Budgets ⏳ Not Started)
+**Completed:** March 2026
 
-**Features:**
-1. **Shared Budgets**
-   - Family/roommate budget sharing
-   - Permission management (view/edit)
-   - Shared categories and entries
+**Implemented Features:**
 
-2. **Split Expense Tracking**
-   - Track who owes whom
-   - Settle up functionality
-   - Group expense splitting
+1. **Split Expense Tracking** ✅
+   - Contact management (add/edit/delete people you split expenses with)
+   - Create split expenses with multiple participants and individual amounts
+   - Payer designation (mark who paid the expense)
+   - Settle/unsettle individual participants
+   - Auto-settle the payer; auto-mark split as settled when all participants settle
+   - Balance summary: who owes you, who you owe, net per contact
+   - Filter by status (All / Open / Settled)
+   - Link splits to existing expense entries (optional)
+   - Full CRUD API: `/api/split/contacts`, `/api/split/expenses`, `/api/split/balances`
+   - Settlement endpoints: `/api/split/expenses/{id}/participants/{id}/settle|unsettle`
+   - UI page at `/split` with responsive dark/light theme support
 
-3. **Budget Comparison**
-   - Anonymized community comparison
-   - See how you compare to similar users
-   - Category-wise benchmarking
+**Technical Implementation:**
+- Models: `SplitContact`, `SplitExpense`, `SplitParticipant` in `app/models/split_expense.py`
+- Service layer: `app/services/split_expense_service.py`
+- API router: `app/api/v1/split_expenses.py`
+- Template: `app/templates/split/index.html`
+- Alembic migration: `20260101_0001_add_split_expense_tables.py`
+- Nav link added in base.html Planning section
 
-4. **Accountant Sharing**
-   - Share reports with financial advisor
-   - Time-limited access tokens
-   - Read-only views
-
-5. **Export to Accounting Software**
-   - QuickBooks integration
-   - Xero integration
-   - CSV export in standard formats
-
-6. **Social Achievements**
-   - Milestones and badges
-   - Saving streak tracking
-   - Leaderboards (opt-in, anonymized)
+**Deferred Features (Not Started):**
+2. **Shared Budgets** — Family/roommate budget sharing with permission management
+3. **Budget Comparison** — Anonymized community benchmarking
+4. **Accountant Sharing** — Time-limited read-only access tokens
+5. **Export to Accounting Software** — QuickBooks/Xero integration
+6. **Social Achievements** — Leaderboards and saving streak tracking
 
 ---
 
@@ -3424,8 +3449,8 @@ Help Center
 
 ### **Phase 32: Voice Commands & Receipt Scanning** 🎙️📷
 **Priority:** MEDIUM-HIGH
-**Status:** Not Started
-**Estimated Time:** 15-20 hours
+**Status:** ✅ COMPLETE (Part A: Voice Commands ✅ Done | Part B: Receipt Scanning ✅ Done)
+**Estimated Time:** 15-20 hours | **Actual Time (Part A):** ~6 hours | **Date Completed (Part A):** December 2025 | **Date Completed (Part B):** March 2026
 
 **Overview:**
 Add hands-free voice command functionality and intelligent receipt scanning with OCR to make expense tracking faster and more convenient for users.
@@ -3833,6 +3858,270 @@ opencv-python==4.8.1 (optional, for advanced preprocessing)
 - Test OCR with various receipt formats
 - Mobile camera testing (iOS/Android)
 - Edge cases (poor lighting, blurry images)
+
+**✅ Part A: Voice Commands - COMPLETE (December 2025)**
+
+Implemented features:
+- Web Speech API integration in browser
+- NLP command parser (`app/services/voice_command_service.py`)
+- Supported commands: add expense/income, create category, get balance, list expenses
+- User's preferred currency used (not hardcoded USD)
+- Comprehensive help documentation and voice settings page
+- Opera browser support, voice activity detection, timeout handling
+- Debugging tools and diagnostics
+- Keyboard shortcut support
+- `app/api/v1/voice.py` – API endpoints for command processing
+- `static/js/voice-commands.js` – voice recognition frontend
+
+**✅ Part B: Receipt Scanning - COMPLETE (March 2026)**
+- `pytesseract==0.3.13` + `Pillow==10.4.0` for image preprocessing and OCR
+- `app/services/receipt_scanner_service.py` – Pillow preprocessing (greyscale, sharpen, contrast, binarise), Tesseract OCR, regex parsers for amount/date/merchant/line items, confidence scoring
+- `app/api/v1/receipts.py` – `GET /receipts/scan` (UI), `POST /receipts/scan` (OCR, 10 MB limit, MIME validation), `GET /receipts/scan/status` (Tesseract availability)
+- `app/templates/receipts/scan.html` – drag-and-drop + camera capture, image preview, extracted fields display, pre-filled entry form, raw OCR text collapsible, graceful degradation when Tesseract not installed
+- Nav link "Scan Receipt" added to sidebar
+
+---
+
+### **Phase 34: Achievement System & Gamification Foundation** 🏆
+**Priority:** MEDIUM
+**Status:** ✅ COMPLETE (UI added March 2026)
+**Completed:** December 31, 2025 | **UI Completed:** March 2026
+**Actual Time:** ~8 hours + ~2 hours UI
+
+**Overview:**
+Full gamification foundation including persistent achievement system, financial health score with dedicated dashboard UI, and Chart.js interactive visualizations.
+
+**✅ Completed Features:**
+
+1. **Achievement System Persistence**
+   - `AchievementService` with comprehensive unlock logic
+   - 50+ achievements across bronze/silver/gold/platinum tiers
+   - 7 criteria types: entry_count, daily_streak, no_spend_days, savings_rate, goal_completion, budget_discipline, category_usage
+   - Achievement progress tracking and "NEW" badge system
+   - XP rewards for each achievement unlock
+
+2. **Financial Health Score (0-100)**
+   - `FinancialHealthScore` model with 6 component scores; DB table: `financial_health_scores`
+   - 6 weighted components: savings rate (25%), budget adherence (20%), goal progress (20%), spending consistency (15%), income stability (10%), tracking consistency (10%)
+   - API endpoints at `/api/gamification/health-score` (current score, history, recommendations, comparison)
+   - **Dedicated UI at `/health-score`** — animated circular gauge, component breakdown progress bars, score history line chart, component radar chart, personalized recommendations
+   - Score auto-saved to DB on each page visit for historical tracking
+   - `get_score_history()` reads from `financial_health_scores` table (previously placeholder)
+   - Trend detection: improving / stable / declining based on 3-month history
+   - "Health Score" nav link added to sidebar
+
+3. **Chart.js Interactive Visualizations**
+   - Score history line chart (6-month trend with fill)
+   - Component radar chart (vs 75-point target reference line)
+   - Category doughnut, daily trend line, category bar, month-vs-month comparison charts via `/api/charts/*`
+   - Responsive design with dark/light theme support, tooltips and legends
+
+**Files:**
+- `app/models/achievement.py`, `app/models/challenge.py`, `app/models/financial_health_score.py`
+- `app/services/gamification/achievement_service.py`, `app/services/gamification/health_score_service.py`
+- `app/services/gamification/badge_service.py`
+- `app/api/v1/health_score_pages.py` (NEW – page route at `/health-score`)
+- `app/templates/health_score.html` (NEW – full dashboard UI)
+- `app/api/v1/health_score.py`, `app/api/v1/charts.py`
+
+---
+
+### **Phase 35: Advanced Custom Reports & Scheduling** 📋
+**Priority:** HIGH
+**Status:** ✅ COMPLETE
+**Completed:** December 31, 2025
+**Actual Time:** ~5 hours
+
+**Overview:**
+Saveable report templates with category filtering and automatic report scheduling via email.
+
+**✅ Completed Features:**
+
+1. **Saveable Report Templates**
+   - Full CRUD operations for templates
+   - Category-specific report filtering
+   - Favorite/starred templates
+   - Usage tracking and statistics
+   - Template management UI with dark theme support
+
+2. **Automated Report Scheduling**
+   - Weekly reports (Every Monday at 9 AM)
+   - Monthly reports (1st day of month at 9 AM)
+   - Custom schedule support (user-defined day/hour)
+   - Email delivery via professional HTML templates
+   - APScheduler background job integration
+   - Duplicate prevention and error handling
+
+**Files:**
+- `app/api/v1/report_templates.py`
+- Report scheduler integrated into existing `app/services/report_scheduler.py`
+
+---
+
+### **Phase 36: Full Gamification Frontend** 🎮
+**Priority:** MEDIUM
+**Status:** ✅ COMPLETE
+**Completed:** December 31, 2025
+**Actual Time:** ~10 hours
+
+**Overview:**
+Complete gamification UI with achievement notifications, leaderboard, badge system, XP/level progression, and challenge system.
+
+**✅ Completed Features:**
+
+1. **Achievement Notification Bell Center**
+   - Replaced toast notifications with a persistent notification bell in the header
+   - Real-time polling (30-second intervals) for new achievements
+   - Animated notification badge with unread count
+   - Dropdown panel listing recent unlocked achievements
+   - Auto-mark as viewed after display
+   - Tier-specific styling (bronze/silver/gold/platinum)
+
+2. **Achievements Page**
+   - Complete dashboard with stats, filters, and tabs
+   - Progress bars toward next achievement tier
+   - Badge equip/unequip functionality
+   - Leaderboard with user rankings
+   - XP progress bar with animated shimmer effect
+
+3. **XP & Level System**
+   - XP rewards on entry creation, goal creation/completion, achievement unlock
+   - User level calculation based on cumulative XP
+   - Level displayed on profile/achievements page
+
+4. **Challenge System**
+   - 50+ challenges across categories (saving, spending, tracking)
+   - Challenge templates with progress tracking
+   - Models at `app/models/challenge.py`
+
+5. **Automatic Achievement Checking**
+   - Achievement checks triggered on entry creation/update
+   - Achievement checks on goal completion
+   - Badge awarding on milestone achievements
+
+6. **Navigation Integration**
+   - Achievements link in Planning nav group
+   - Consistent dark/light theme across all gamification pages
+
+**CSS:** `static/css/achievements.css` with full animation suite
+
+---
+
+### **Phase 37: Advanced ML – Prophet Forecasting & Scenario Planning** 🔮
+**Priority:** MEDIUM
+**Status:** ✅ COMPLETE
+**Completed:** December 2025
+**Actual Time:** ~8 hours
+
+**Overview:**
+Prophet-based time series forecasting with seasonal patterns, multi-horizon projections, and interactive What-If scenario analysis.
+
+**✅ Completed Features:**
+
+1. **Prophet Forecasting**
+   - Facebook Prophet for seasonal time series forecasting
+   - Multi-horizon projections: 90, 180, 365 days
+   - Recurring bills/subscriptions integrated into forecasts
+   - Auto-generated forecast explanations
+   - Graceful fallback when Prophet not installed
+   - User currency support on forecast page
+   - cmdstanpy backend for Prophet
+
+2. **What-If Scenario Planning**
+   - Interactive scenario builder
+   - Adjustable income/expense variables
+   - Side-by-side scenario comparison
+   - `app/models/scenario.py` and `app/services/scenario_service.py`
+   - `app/api/v1/scenarios.py` and `app/api/v1/scenarios_pages.py`
+
+**Files:**
+- `app/models/forecast.py`, `app/models/scenario.py`
+- `app/services/scenario_service.py`
+- `app/api/v1/forecasts.py`, `app/api/v1/forecasts_pages.py`
+- `app/api/v1/scenarios.py`, `app/api/v1/scenarios_pages.py`
+
+---
+
+### **Phase 38: Performance Optimization – Redis Caching & Database Indexes** ⚡
+**Priority:** HIGH
+**Status:** ✅ COMPLETE
+**Completed:** December 2025
+**Actual Time:** ~4 hours
+
+**Overview:**
+Three-tier caching strategy (Redis → DB → Fresh), 7 composite database indexes, and a comprehensive test suite for the caching system.
+
+**✅ Completed Features:**
+
+1. **Redis Caching System**
+   - Three-tier strategy: Redis → Database → Fresh calculation
+   - Forecast retrieval: 3,500ms → 0.1ms (35,000x faster)
+   - `app/core/cache.py` – cache utilities
+
+2. **Database Optimization**
+   - 7 composite indexes added
+   - Database queries: 800ms → 120ms (6.7x faster)
+
+3. **Comprehensive Test Suite**
+   - 55 additional tests (unit, integration, performance, load)
+   - Cache GET: 0.098ms avg (20x better than target)
+   - Cache SET: 0.114ms avg (44x better than target)
+
+**Performance Achievements:**
+| Operation | Before | After | Improvement |
+|-----------|--------|-------|-------------|
+| Forecast retrieval | 3,500ms | 0.1ms | **35,000x** |
+| Database queries | 800ms | 120ms | **6.7x** |
+
+---
+
+### **Phase 39: Auto-Add to Expenses for Recurring Bills** 🔄
+**Priority:** HIGH
+**Status:** ✅ COMPLETE
+**Completed:** December 31, 2025
+**Actual Time:** ~3 hours
+
+**Overview:**
+Automatic expense entry creation for recurring bills on their due dates, with smart duplicate prevention.
+
+**✅ Completed Features:**
+- Auto-add checkbox in Bills & Subscriptions UI
+- Scheduled daily job (1 AM) to process due payments
+- Automatic expense entry creation on due dates
+- Smart duplicate prevention
+- Support for all recurrence frequencies (weekly, biweekly, monthly, quarterly, annually)
+- Manual test endpoint for verification
+- AUTO-ADD visibility column in Bills & Subscriptions table (green checkmark for enabled)
+
+**Files:** Integrated into `app/api/v1/recurring_payments.py` and scheduler
+
+---
+
+### **Phase 40: ML Model Auto-Retraining & AI Spending Insights** 🤖
+**Priority:** MEDIUM
+**Status:** ✅ COMPLETE
+**Completed:** March 2026
+**Actual Time:** ~4 hours
+
+**Overview:**
+User-controlled automatic ML model retraining frequency and an AI-powered spending insights modal with positioning fixes.
+
+**✅ Completed Features:**
+
+1. **Automatic ML Model Retraining**
+   - User-controlled retraining frequency (daily, weekly, monthly, manual only)
+   - Background retraining triggered automatically based on user preference
+   - `model_status` variable exposed in AI settings template
+   - AI settings page fully functional
+
+2. **AI Spending Insights**
+   - Modal for AI-generated spending insights
+   - Properly centered modal positioning
+   - Insights page with anomaly detection and pattern recommendations
+
+**Files:**
+- `app/api/v1/ai.py` – retraining endpoints
+- `app/templates/` – AI settings and insights templates
 
 ---
 

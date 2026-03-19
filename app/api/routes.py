@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, categories, entries, metrics, dashboard, ai, reports, weekly_reports, reports_pages, report_status, theme, profile, settings, insights_pages, goals, goals_pages, calendar_pages, budget_intelligence, intelligence_pages, recurring_payments, payment_history, payment_analytics_pages, admin, feedback, voice, help_pages, forecasts, forecasts_pages, scenarios, scenarios_pages, achievements, achievements_pages, charts, gamification, report_templates
+from app.api.v1 import auth, categories, entries, metrics, dashboard, ai, reports, weekly_reports, reports_pages, report_status, theme, profile, settings, insights_pages, goals, goals_pages, calendar_pages, budget_intelligence, intelligence_pages, recurring_payments, payment_history, payment_analytics_pages, admin, feedback, voice, help_pages, forecasts, forecasts_pages, scenarios, scenarios_pages, achievements, achievements_pages, charts, gamification, report_templates, split_expenses, challenges_pages, receipts, health_score_pages
 from app.api.v1 import entries_rest, categories_rest, dashboard_rest, auth_rest
 from app.api.currency import router as currency_router
 
@@ -41,6 +41,10 @@ api_router.include_router(achievements.router)  # Phase 1 - Gamification: Achiev
 api_router.include_router(achievements_pages.router)  # Phase 3 - Achievements UI Pages
 api_router.include_router(charts.router)  # Phase 1 - Interactive Chart Configuration
 api_router.include_router(gamification.router)  # Phase 3 - Full Gamification: Leaderboards, Challenges, Health Score
+api_router.include_router(split_expenses.router)  # Phase 31 - Split Expense Tracking
+api_router.include_router(challenges_pages.router)  # Phase 3.2 - Savings Challenges UI
+api_router.include_router(receipts.router)  # Phase 32B - Receipt Scanning with OCR
+api_router.include_router(health_score_pages.router)  # Phase 34 - Financial Health Score UI
 
 # REST API endpoints (JSON-only, for mobile/external clients)
 api_router.include_router(auth_rest.router)

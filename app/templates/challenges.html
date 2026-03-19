@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .challenge-card {
+    border-radius: 12px;
+    padding: 1.25rem;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .challenge-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--shadow-color, rgba(0,0,0,0.1));
+  }
+
+  .challenge-card.joined {
+    border-color: var(--primary);
+  }
+
+  .challenge-card.completed-card {
+    border-color: var(--success);
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(34,197,94,0.05) 100%);
+  }
+
+  .challenge-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  .challenge-card h5 {
+    color: var(--text);
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+  }
+
+  .challenge-card p.desc {
+    color: var(--text-muted);
+    font-size: 0.83rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .difficulty-dots {
+    display: flex;
+    gap: 3px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .dot.filled {
+    background: var(--primary);
+  }
+
+  .progress-bar-track {
+    background: var(--border);
+    border-radius: 6px;
+    height: 8px;
+    overflow: hidden;
+    margin: 0.4rem 0;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--primary) 0%, #60a5fa 100%);
+    transition: width 0.4s ease;
+  }
+
+  .progress-bar-fill.complete {
+    background: linear-gradient(90deg, var(--success) 0%, #34d399 100%);
+  }
+
+  .type-badge {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .type-weekly { background: rgba(59,130,246,0.15); color: #3b82f6; }
+  .type-monthly { background: rgba(16,185,129,0.15); color: #10b981; }
+  .type-one_time { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .type-seasonal { background: rgba(236,72,153,0.15); color: #ec4899; }
+
+  .stats-hero {
+    background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stats-hero h6 { color: rgba(255,255,255,0.8); font-size: 0.8rem; margin-bottom: 0.25rem; }
+  .stats-hero .stat-value { font-size: 2rem; font-weight: 700; }
+
+  .tab-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0;
+  }
+
+  .tab-btn {
+    padding: 0.5rem 1.1rem;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+
+  .reward-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(245,158,11,0.12);
+    color: #f59e0b;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: 8px;
+  }
+
+  .featured-ribbon {
+    position: absolute;
+    top: 12px;
+    right: -1px;
+    background: var(--primary);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.6rem 0.15rem 0.8rem;
+    border-radius: 4px 0 0 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+  }
+
+  .empty-state i { font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1rem; }
+</style>
+
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h2 class="fw-bold mb-0" style="color:var(--text)">
+        <i class="bi bi-trophy me-2" style="color:var(--primary)"></i>Savings Challenges
+      </h2>
+      <p class="text-muted mb-0" style="font-size:0.9rem">Join challenges, track progress, earn XP rewards</p>
+    </div>
+  </div>
+
+  <!-- Stats hero -->
+  <div class="stats-hero" id="statsHero" style="display:none">
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <h6>Joined</h6>
+        <div class="stat-value" id="statJoined">0</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <h6>In Progress</h6>
+        <div class="stat-value" id="statInProgress">0</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <h6>Completed</h6>
+        <div class="stat-value" id="statCompleted">0</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <h6>Completion Rate</h6>
+        <div class="stat-value" id="statRate">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('available')">Available</button>
+    <button class="tab-btn" onclick="switchTab('my')">My Challenges</button>
+  </div>
+
+  <!-- Available Challenges Tab -->
+  <div id="tabAvailable">
+    <div id="availableGrid" class="row g-3">
+      <div class="col-12 text-center py-4">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span class="ms-2 text-muted">Loading challenges…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Challenges Tab -->
+  <div id="tabMy" style="display:none">
+    <div id="myGrid" class="row g-3">
+      <div class="col-12 text-center py-4">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span class="ms-2 text-muted">Loading your challenges…</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toastContainer" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem"></div>
+
+<script>
+const ICON_MAP = {
+  'moon-stars': '🌙',
+  'pencil-square': '✏️',
+  'piggy-bank': '🐷',
+  'ban': '🚫',
+  'fire': '🔥',
+  'trophy': '🏆',
+  'bar-chart': '📊',
+  'calendar-check': '📅',
+};
+
+function getIcon(name) {
+  return ICON_MAP[name] || '⭐';
+}
+
+function difficultyDots(level) {
+  let html = '<div class="difficulty-dots">';
+  for (let i = 1; i <= 5; i++) {
+    html += `<div class="dot ${i <= level ? 'filled' : ''}"></div>`;
+  }
+  return html + '</div>';
+}
+
+function typeBadge(type) {
+  const labels = { weekly: 'Weekly', monthly: 'Monthly', one_time: 'One-Time', seasonal: 'Seasonal' };
+  return `<span class="type-badge type-${type}">${labels[type] || type}</span>`;
+}
+
+// Track which challenges user has joined (challenge_id -> user_challenge)
+let myMap = {};
+
+async function loadAvailable() {
+  const [avail, mine] = await Promise.all([
+    fetch('/api/gamification/challenges').then(r => r.json()),
+    fetch('/api/gamification/challenges/my-challenges').then(r => r.json())
+  ]);
+
+  // Build map of joined challenges
+  myMap = {};
+  if (mine.success) {
+    mine.challenges.forEach(uc => { myMap[uc.challenge_id] = uc; });
+  }
+
+  const grid = document.getElementById('availableGrid');
+  if (!avail.success || avail.challenges.length === 0) {
+    grid.innerHTML = `<div class="col-12"><div class="empty-state"><i class="bi bi-trophy"></i><p>No active challenges right now.<br>Check back soon!</p></div></div>`;
+    return;
+  }
+
+  grid.innerHTML = avail.challenges.map(c => {
+    const uc = myMap[c.id];
+    const isJoined = !!uc;
+    const isCompleted = uc && uc.status === 'completed';
+    const pct = uc ? Math.min(uc.progress_percentage, 100).toFixed(0) : 0;
+
+    return `
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="challenge-card ${isCompleted ? 'completed-card' : isJoined ? 'joined' : ''}">
+        ${c.is_featured ? '<div class="featured-ribbon">Featured</div>' : ''}
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div class="challenge-icon" style="background:${c.color_hex}22">
+            <span>${getIcon(c.icon_name)}</span>
+          </div>
+          <div class="flex-grow-1 min-width-0">
+            <h5>${escHtml(c.name)}</h5>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+              ${typeBadge(c.challenge_type)}
+              ${difficultyDots(c.difficulty_level)}
+            </div>
+          </div>
+        </div>
+        <p class="desc">${escHtml(c.description)}</p>
+
+        ${isJoined ? `
+          <div class="mb-2">
+            <div class="d-flex justify-content-between" style="font-size:0.8rem;color:var(--text-muted)">
+              <span>${isCompleted ? '✅ Completed!' : 'Progress'}</span>
+              <span>${pct}%</span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill ${isCompleted ? 'complete' : ''}" style="width:${pct}%"></div>
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="d-flex align-items-center justify-content-between mt-2 gap-2">
+          <span class="reward-pill"><span>⚡</span>${c.xp_reward} XP</span>
+          <span style="font-size:0.78rem;color:var(--text-muted)">${c.participant_count} joined</span>
+          ${isCompleted && !uc.rewards_claimed
+            ? `<button class="btn btn-sm btn-success" onclick="claimRewards(${c.id}, this)">Claim Reward</button>`
+            : isJoined
+            ? `<span class="badge bg-primary">Joined</span>`
+            : `<button class="btn btn-sm btn-primary" onclick="joinChallenge(${c.id}, this)">Join</button>`
+          }
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadMyChallenges() {
+  const mine = await fetch('/api/gamification/challenges/my-challenges?include_completed=true').then(r => r.json());
+  const grid = document.getElementById('myGrid');
+
+  if (!mine.success || mine.challenges.length === 0) {
+    grid.innerHTML = `<div class="col-12"><div class="empty-state"><i class="bi bi-flag"></i><p>You haven't joined any challenges yet.<br>Switch to the <strong>Available</strong> tab to get started!</p></div></div>`;
+    return;
+  }
+
+  grid.innerHTML = mine.challenges.map(uc => {
+    const pct = Math.min(uc.progress_percentage, 100).toFixed(0);
+    const isCompleted = uc.status === 'completed';
+    const statusLabel = { not_started: 'Not Started', in_progress: 'In Progress', completed: '✅ Completed', failed: 'Failed' };
+
+    return `
+    <div class="col-12 col-md-6">
+      <div class="challenge-card ${isCompleted ? 'completed-card' : 'joined'}">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h5>${escHtml(uc.challenge_name)}</h5>
+          <span class="badge ${isCompleted ? 'bg-success' : 'bg-primary'}">${statusLabel[uc.status] || uc.status}</span>
+        </div>
+        <div class="mb-1" style="font-size:0.8rem;color:var(--text-muted)">
+          Joined ${formatDate(uc.joined_at)}
+          ${uc.completed_at ? ' · Completed ' + formatDate(uc.completed_at) : ''}
+        </div>
+        <div class="d-flex justify-content-between" style="font-size:0.8rem;color:var(--text-muted)">
+          <span>Progress</span>
+          <span>${parseFloat(uc.current_progress).toFixed(1)} / ${parseFloat(uc.target_progress).toFixed(1)} (${pct}%)</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill ${isCompleted ? 'complete' : ''}" style="width:${pct}%"></div>
+        </div>
+        ${isCompleted && !uc.rewards_claimed
+          ? `<div class="mt-2"><button class="btn btn-sm btn-success w-100" onclick="claimRewards(${uc.challenge_id}, this)">🎁 Claim Reward</button></div>`
+          : isCompleted
+          ? `<div class="mt-2 text-center" style="font-size:0.8rem;color:var(--success)">✅ Rewards already claimed</div>`
+          : ''
+        }
+      </div>
+    </div>`;
+  }).join('');
+
+  // Load and show stats
+  const stats = await fetch('/api/gamification/challenges/stats').then(r => r.json());
+  if (stats.success) {
+    const s = stats.stats;
+    document.getElementById('statJoined').textContent = s.total_joined;
+    document.getElementById('statInProgress').textContent = s.in_progress;
+    document.getElementById('statCompleted').textContent = s.completed;
+    document.getElementById('statRate').textContent = s.completion_rate.toFixed(0) + '%';
+    if (s.total_joined > 0) document.getElementById('statsHero').style.display = '';
+  }
+}
+
+async function joinChallenge(challengeId, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Joining…';
+  try {
+    const r = await fetch(`/api/gamification/challenges/${challengeId}/join`, { method: 'POST' });
+    const data = await r.json();
+    if (data.success) {
+      showToast('Challenge joined! Progress tracking has started. 🚀', 'success');
+      await loadAvailable();
+    } else {
+      showToast(data.detail || 'Failed to join challenge', 'danger');
+      btn.disabled = false;
+      btn.textContent = 'Join';
+    }
+  } catch {
+    showToast('Network error', 'danger');
+    btn.disabled = false;
+    btn.textContent = 'Join';
+  }
+}
+
+async function claimRewards(challengeId, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Claiming…';
+  try {
+    const r = await fetch(`/api/gamification/challenges/${challengeId}/claim-rewards`, { method: 'POST' });
+    const data = await r.json();
+    if (data.success) {
+      showToast(`🎉 Rewards claimed! +${data.rewards.xp_reward} XP earned!`, 'success');
+      await loadAvailable();
+      await loadMyChallenges();
+    } else {
+      showToast(data.detail || 'Failed to claim rewards', 'danger');
+      btn.disabled = false;
+      btn.textContent = 'Claim Reward';
+    }
+  } catch {
+    showToast('Network error', 'danger');
+    btn.disabled = false;
+    btn.textContent = 'Claim Reward';
+  }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && tab === 'available') || (i === 1 && tab === 'my'));
+  });
+  document.getElementById('tabAvailable').style.display = tab === 'available' ? '' : 'none';
+  document.getElementById('tabMy').style.display = tab === 'my' ? '' : 'none';
+
+  if (tab === 'my') loadMyChallenges();
+}
+
+function showToast(msg, type = 'success') {
+  const id = 'toast_' + Date.now();
+  const el = document.createElement('div');
+  el.id = id;
+  el.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:320px;font-size:0.88rem;color:var(--text);display:flex;align-items:center;gap:0.5rem;animation:slideIn 0.2s ease';
+  const accent = type === 'success' ? '#10b981' : '#ef4444';
+  el.innerHTML = `<span style="width:4px;height:100%;min-height:20px;background:${accent};border-radius:2px;flex-shrink:0"></span><span>${msg}</span>`;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Init
+loadAvailable();
+</script>
+
+<style>
+@keyframes slideIn {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+</style>
+{% endblock %}

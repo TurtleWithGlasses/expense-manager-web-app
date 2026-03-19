@@ -29,6 +29,35 @@ from app.services.user_preferences import user_preferences_service
 setup_logging()
 logger = get_logger(__name__)
 
+# Sentry error monitoring (production only – skipped when SENTRY_DSN is not set)
+def _init_sentry():
+    try:
+        from app.core.config import settings as _s
+        if not _s.SENTRY_DSN:
+            return
+        import sentry_sdk
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+        from sentry_sdk.integrations.logging import LoggingIntegration
+        import logging as _logging
+
+        sentry_sdk.init(
+            dsn=_s.SENTRY_DSN,
+            environment=_s.ENV,
+            traces_sample_rate=_s.SENTRY_TRACES_SAMPLE_RATE,
+            integrations=[
+                FastApiIntegration(transaction_style="endpoint"),
+                SqlalchemyIntegration(),
+                LoggingIntegration(level=_logging.INFO, event_level=_logging.ERROR),
+            ],
+            send_default_pii=False,  # Do not send personally identifiable information
+        )
+        logger.info("Sentry initialized (env=%s, sample_rate=%.0f%%)", _s.ENV, _s.SENTRY_TRACES_SAMPLE_RATE * 100)
+    except Exception as exc:
+        logger.warning("Sentry init skipped: %s", exc)
+
+_init_sentry()
+
 # Import all models to ensure they are registered with SQLAlchemy
 from app.models.user import User
 from app.models.category import Category
@@ -41,6 +70,7 @@ from app.models.recurring_payment import RecurringPayment, PaymentReminder
 from app.models.payment_history import PaymentOccurrence, PaymentLinkSuggestion  # Phase 29
 from app.models.achievement import Achievement, UserAchievement, Badge, UserBadge  # Phase 1
 from app.models.financial_health_score import FinancialHealthScore  # Phase 1.2
+from app.models.split_expense import SplitContact, SplitExpense, SplitParticipant  # Phase 31
 
 app = FastAPI(title="Expense Manager Web")
 

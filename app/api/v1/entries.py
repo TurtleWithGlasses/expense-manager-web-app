@@ -18,6 +18,7 @@ from app.services.user_preferences import user_preferences_service
 from app.services.gamification.level_service import LevelService
 from app.services.gamification.achievement_service import AchievementService
 from app.services.gamification.badge_service import BadgeService
+from app.services.gamification.challenge_service import ChallengeService
 from app.templates import render
 from app.core.cache import get_cache
 
@@ -247,6 +248,13 @@ async def add(
     except Exception as e:
         print(f"Failed to check badges: {e}")
 
+    # Update challenge progress
+    try:
+        challenge_service = ChallengeService(db)
+        challenge_service.check_and_update_all_user_challenges(user.id)
+    except Exception as e:
+        print(f"Failed to update challenge progress: {e}")
+
     # Invalidate forecast cache (spending data changed)
     cache = get_cache()
     cache.invalidate_user_cache(user.id)
@@ -457,6 +465,13 @@ async def update_entry_endpoint(
                     print(f"Failed to award badge XP: {e}")
     except Exception as e:
         print(f"Failed to check badges: {e}")
+
+    # Update challenge progress
+    try:
+        challenge_service = ChallengeService(db)
+        challenge_service.check_and_update_all_user_challenges(user.id)
+    except Exception as e:
+        print(f"Failed to update challenge progress: {e}")
 
     # Invalidate forecast cache (spending data changed)
     cache = get_cache()

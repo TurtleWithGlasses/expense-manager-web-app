@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: var(--surface);
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--primary);
+    background: rgba(59,130,246,0.05);
+  }
+  .upload-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .preview-img {
+    max-height: 320px;
+    max-width: 100%;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    display: block;
+    margin: 0 auto;
+  }
+  .result-card {
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    padding: 1.25rem;
+  }
+  .result-card.success { border-color: var(--success); }
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .field-row:last-child { border-bottom: none; }
+  .field-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    min-width: 90px;
+  }
+  .field-val { color: var(--text); font-size: 0.95rem; font-weight: 500; }
+  .confidence-badge {
+    padding: 0.2rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .conf-high   { background: rgba(16,185,129,0.15); color: #10b981; }
+  .conf-medium { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .conf-low    { background: rgba(239,68,68,0.15);  color: #ef4444; }
+  .raw-text {
+    font-family: monospace;
+    font-size: 0.78rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    color: var(--text-muted);
+  }
+  .step-badge {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .ocr-unavailable {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.4);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+  }
+  #scanBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+</style>
+
+<div class="container py-4" style="max-width:860px">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <div>
+      <h2 class="fw-bold mb-0" style="color:var(--text)">
+        <i class="bi bi-receipt-cutoff me-2" style="color:var(--primary)"></i>Receipt Scanner
+      </h2>
+      <p class="text-muted mb-0" style="font-size:0.9rem">
+        Upload a photo of your receipt – OCR extracts the total, date and merchant automatically
+      </p>
+    </div>
+    <a href="/entries" class="btn btn-outline-secondary btn-sm ms-auto">
+      <i class="bi bi-arrow-left me-1"></i>Entries
+    </a>
+  </div>
+
+  {% if not ocr_available %}
+  <div class="ocr-unavailable mb-4">
+    <div class="d-flex gap-2 align-items-start">
+      <i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b;font-size:1.2rem;flex-shrink:0;margin-top:2px"></i>
+      <div>
+        <strong style="color:var(--text)">Tesseract OCR not installed on this server</strong>
+        <p class="mb-1 mt-1" style="font-size:0.85rem;color:var(--text-muted)">
+          Receipt scanning requires the Tesseract binary. The upload form is disabled until it is installed.
+        </p>
+        <code style="font-size:0.8rem;color:var(--text-muted)">
+          Linux / Railway: <strong>apt-get install tesseract-ocr</strong><br>
+          Windows: <a href="https://github.com/UB-Mannheim/tesseract/wiki" target="_blank" rel="noopener">UB-Mannheim installer</a>
+        </code>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+
+    <!-- Left: upload -->
+    <div class="col-12 col-lg-5">
+
+      <!-- How it works -->
+      <div class="mb-3 p-3" style="background:var(--surface);border-radius:12px;border:1px solid var(--border)">
+        <p class="fw-semibold mb-2" style="font-size:0.85rem;color:var(--text)">How it works</p>
+        <div class="d-flex flex-column gap-2">
+          {% for step, txt in [("1","Upload or take a photo of your receipt"),("2","OCR extracts amount, date and merchant"),("3","Review the result and add it as an entry")] %}
+          <div class="d-flex align-items-center gap-2">
+            <span class="step-badge">{{ step }}</span>
+            <span style="font-size:0.82rem;color:var(--text-muted)">{{ txt }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Drop zone -->
+      <div class="upload-zone mb-3" id="dropZone" {% if not ocr_available %}style="pointer-events:none;opacity:0.5"{% endif %}>
+        <input type="file" id="fileInput" accept="image/*" capture="environment" {% if not ocr_available %}disabled{% endif %}>
+        <i class="bi bi-cloud-arrow-up" style="font-size:2.5rem;color:var(--primary);display:block;margin-bottom:0.5rem"></i>
+        <p class="fw-semibold mb-1" style="color:var(--text)">Drop image here or click to browse</p>
+        <p class="mb-0" style="font-size:0.8rem;color:var(--text-muted)">JPEG · PNG · WebP · BMP · TIFF · max 10 MB</p>
+        <p class="mt-2 mb-0" style="font-size:0.78rem;color:var(--primary)">
+          <i class="bi bi-camera me-1"></i>On mobile – opens camera directly
+        </p>
+      </div>
+
+      <!-- Preview -->
+      <div id="previewWrap" style="display:none" class="mb-3">
+        <img id="previewImg" class="preview-img" alt="Receipt preview">
+      </div>
+
+      <button id="scanBtn" class="btn btn-primary w-100" onclick="doScan()" disabled>
+        <i class="bi bi-search me-2"></i>Scan Receipt
+      </button>
+      <div id="scanStatus" class="mt-2 text-center" style="font-size:0.85rem;color:var(--text-muted)"></div>
+    </div>
+
+    <!-- Right: results + pre-filled form -->
+    <div class="col-12 col-lg-7">
+
+      <!-- Placeholder -->
+      <div id="placeholder" style="padding:3rem 1rem;text-align:center;color:var(--text-muted)">
+        <i class="bi bi-receipt" style="font-size:3rem;opacity:0.25;display:block;margin-bottom:0.75rem"></i>
+        <p>Upload a receipt to see extracted data here</p>
+      </div>
+
+      <!-- Scan results (hidden until scan) -->
+      <div id="resultWrap" style="display:none">
+
+        <!-- Extracted fields -->
+        <div class="result-card mb-3" id="resultCard">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="fw-semibold" style="color:var(--text)">Extracted Data</span>
+            <span id="confidenceBadge" class="confidence-badge"></span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Total</span>
+            <span class="field-val" id="rAmount">–</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Date</span>
+            <span class="field-val" id="rDate">–</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Merchant</span>
+            <span class="field-val" id="rMerchant">–</span>
+          </div>
+        </div>
+
+        <!-- Line items (if any) -->
+        <div id="lineItemsWrap" class="mb-3" style="display:none">
+          <p class="fw-semibold mb-2" style="font-size:0.85rem;color:var(--text)">Line Items</p>
+          <div id="lineItemsList" style="font-size:0.82rem;color:var(--text-muted)"></div>
+        </div>
+
+        <!-- Pre-filled add entry form -->
+        <div class="result-card success mb-3">
+          <p class="fw-semibold mb-3" style="color:var(--text)">
+            <i class="bi bi-plus-circle me-1" style="color:var(--success)"></i>Add as Expense Entry
+          </p>
+          <form id="entryForm" action="/entries/create" method="post">
+            <input type="hidden" name="type" value="expense">
+            <input type="hidden" name="currency_code" value="{{ user_currency_code }}">
+
+            <div class="row g-2 mb-2">
+              <div class="col-6">
+                <label class="form-label small" style="color:var(--text-muted)">Amount ({{ user_currency_code }})</label>
+                <input type="number" name="amount" id="fAmount" step="0.01" min="0.01"
+                       class="form-control" placeholder="0.00" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label small" style="color:var(--text-muted)">Date</label>
+                <input type="date" name="date_str" id="fDate" class="form-control" required>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label small" style="color:var(--text-muted)">Category</label>
+              <select name="category_id" class="form-select">
+                <option value="">(No category)</option>
+                {% for c in categories %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small" style="color:var(--text-muted)">Note</label>
+              <input type="text" name="note" id="fNote" class="form-control"
+                     placeholder="e.g. Starbucks coffee">
+            </div>
+
+            <button type="submit" class="btn btn-success w-100">
+              <i class="bi bi-plus-circle me-1"></i>Add Entry
+            </button>
+          </form>
+        </div>
+
+        <!-- Raw OCR text (collapsed) -->
+        <details>
+          <summary style="cursor:pointer;font-size:0.82rem;color:var(--text-muted);margin-bottom:0.5rem">
+            <i class="bi bi-code me-1"></i>Raw OCR text
+          </summary>
+          <div class="raw-text" id="rawText"></div>
+        </details>
+
+      </div><!-- /resultWrap -->
+    </div><!-- /col -->
+  </div><!-- /row -->
+</div>
+
+<!-- Toast container -->
+<div id="toastContainer" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem"></div>
+
+<script>
+let selectedFile = null;
+
+const fileInput  = document.getElementById('fileInput');
+const dropZone   = document.getElementById('dropZone');
+const previewImg = document.getElementById('previewImg');
+const previewWrap= document.getElementById('previewWrap');
+const scanBtn    = document.getElementById('scanBtn');
+const scanStatus = document.getElementById('scanStatus');
+
+// ── file selection ──────────────────────────────────────────────────────────
+fileInput.addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (f) selectFile(f);
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) selectFile(f);
+});
+
+function selectFile(f) {
+  selectedFile = f;
+  const url = URL.createObjectURL(f);
+  previewImg.src = url;
+  previewWrap.style.display = '';
+  scanBtn.disabled = false;
+  document.getElementById('placeholder').style.display = 'none';
+  scanStatus.textContent = `Ready: ${f.name} (${(f.size/1024).toFixed(0)} KB)`;
+}
+
+// ── scan ────────────────────────────────────────────────────────────────────
+async function doScan() {
+  if (!selectedFile) return;
+
+  scanBtn.disabled = true;
+  scanBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Scanning…';
+  scanStatus.textContent = 'Running OCR – this may take a few seconds…';
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+
+  try {
+    const resp = await fetch('/receipts/scan', { method: 'POST', body: formData });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      showToast(data.detail || 'Scan failed', 'danger');
+      scanStatus.textContent = 'Scan failed – see error above.';
+      return;
+    }
+
+    renderResult(data);
+    showToast('Receipt scanned successfully!', 'success');
+    scanStatus.textContent = `Scan complete · confidence: ${data.confidence}`;
+
+  } catch(err) {
+    showToast('Network error – could not reach server', 'danger');
+    scanStatus.textContent = 'Network error.';
+  } finally {
+    scanBtn.disabled = false;
+    scanBtn.innerHTML = '<i class="bi bi-search me-2"></i>Scan Again';
+  }
+}
+
+// ── render result ───────────────────────────────────────────────────────────
+function renderResult(data) {
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('resultWrap').style.display = '';
+
+  // Confidence badge
+  const badge = document.getElementById('confidenceBadge');
+  badge.textContent = data.confidence;
+  badge.className = 'confidence-badge conf-' + data.confidence;
+
+  // Extracted fields display
+  const fmtAmt = data.total_amount != null
+    ? '{{ user_currency.symbol }}' + parseFloat(data.total_amount).toFixed(2)
+    : '– (not found)';
+  document.getElementById('rAmount').textContent = fmtAmt;
+  document.getElementById('rDate').textContent   = data.date     || '– (not found)';
+  document.getElementById('rMerchant').textContent = data.merchant || '– (not found)';
+
+  // Pre-fill the entry form
+  if (data.total_amount != null)
+    document.getElementById('fAmount').value = parseFloat(data.total_amount).toFixed(2);
+  if (data.date)
+    document.getElementById('fDate').value = data.date;
+  if (data.merchant)
+    document.getElementById('fNote').value = data.merchant;
+
+  // Set today as fallback date
+  if (!data.date)
+    document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+
+  // Line items
+  const liWrap = document.getElementById('lineItemsWrap');
+  const liList = document.getElementById('lineItemsList');
+  if (data.line_items && data.line_items.length > 0) {
+    liWrap.style.display = '';
+    liList.innerHTML = data.line_items.map(item =>
+      `<div class="d-flex justify-content-between py-1 border-bottom" style="border-color:var(--border)!important">
+        <span>${escHtml(item.description)}</span>
+        <span style="color:var(--danger)">{{ user_currency.symbol }}${parseFloat(item.amount).toFixed(2)}</span>
+      </div>`
+    ).join('');
+  } else {
+    liWrap.style.display = 'none';
+  }
+
+  // Raw text
+  document.getElementById('rawText').textContent = data.raw_text || '(empty)';
+}
+
+// ── helpers ─────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const el = document.createElement('div');
+  const accent = type === 'success' ? '#10b981' : '#ef4444';
+  el.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:320px;font-size:.88rem;color:var(--text);display:flex;align-items:center;gap:.5rem;animation:slideIn .2s ease';
+  el.innerHTML = `<span style="width:4px;height:100%;min-height:20px;background:${accent};border-radius:2px;flex-shrink:0"></span><span>${msg}</span>`;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+
+<style>
+@keyframes slideIn {
+  from { transform: translateX(20px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+</style>
+{% endblock %}

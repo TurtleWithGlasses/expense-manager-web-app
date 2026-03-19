@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  /* ── Gauge ── */
+  .gauge-wrap {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 1.5rem;
+  }
+  .gauge-svg { width: 200px; height: 200px; transform: rotate(-90deg); }
+  .gauge-bg   { fill: none; stroke: var(--border); stroke-width: 14; }
+  .gauge-fill {
+    fill: none;
+    stroke-width: 14;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+  }
+  .gauge-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .gauge-score  { font-size: 3rem; font-weight: 800; line-height: 1; color: var(--text); }
+  .gauge-label  { font-size: .8rem; color: var(--text-muted); letter-spacing: .05em; text-transform: uppercase; }
+
+  /* rating badges */
+  .badge-excellent { background: linear-gradient(135deg,#22c55e,#16a34a); color:#fff; }
+  .badge-good      { background: linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; }
+  .badge-fair      { background: linear-gradient(135deg,#f59e0b,#d97706); color:#fff; }
+  .badge-poor      { background: linear-gradient(135deg,#ef4444,#dc2626); color:#fff; }
+
+  /* component row */
+  .component-row { margin-bottom: 1.1rem; }
+  .component-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: .85rem;
+    margin-bottom: .3rem;
+    color: var(--text);
+  }
+  .comp-score-pill {
+    font-size: .75rem;
+    font-weight: 600;
+    padding: .1rem .5rem;
+    border-radius: 9999px;
+    background: var(--surface-alt, var(--surface));
+    border: 1px solid var(--border);
+  }
+  .progress { height: 8px; border-radius: 9999px; background: var(--border); }
+  .progress-bar { border-radius: 9999px; transition: width 1.1s ease; }
+
+  /* trend chip */
+  .trend-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .8rem;
+    font-weight: 600;
+    padding: .25rem .65rem;
+    border-radius: 9999px;
+  }
+  .trend-improving { background: rgba(34,197,94,.15); color: #16a34a; }
+  .trend-declining { background: rgba(239,68,68,.15);  color: #dc2626; }
+  .trend-stable    { background: rgba(59,130,246,.15); color: #2563eb; }
+
+  /* recommendation cards */
+  .rec-item {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: .6rem;
+    font-size: .88rem;
+    color: var(--text);
+  }
+  .rec-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: .05rem; }
+
+  /* history chart area */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+  .chart-title {
+    font-weight: 600;
+    font-size: .95rem;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+  canvas { max-width: 100%; }
+</style>
+
+<div class="container py-4">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center gap-2 mb-4">
+    <i class="bi bi-heart-pulse fs-4 text-danger"></i>
+    <h4 class="mb-0 fw-bold" style="color:var(--text)">Financial Health Score</h4>
+    {% set trend = trends.trend %}
+    <span class="trend-chip trend-{{ trend }} ms-2">
+      {% if trend == 'improving' %}<i class="bi bi-arrow-up-short"></i> Improving
+      {% elif trend == 'declining' %}<i class="bi bi-arrow-down-short"></i> Declining
+      {% else %}<i class="bi bi-dash"></i> Stable{% endif %}
+    </span>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ── LEFT COLUMN: gauge + components ── -->
+    <div class="col-lg-5">
+
+      <!-- Score card -->
+      <div class="chart-card text-center mb-4">
+        {% set score = score_data.total_score | int %}
+        {% set rating = score_data.rating %}
+
+        <!-- Gauge -->
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 200 200">
+            <circle class="gauge-bg"   cx="100" cy="100" r="86"/>
+            <circle class="gauge-fill" cx="100" cy="100" r="86"
+              id="gaugeFill"
+              stroke="{% if score >= 90 %}#22c55e{% elif score >= 75 %}#3b82f6{% elif score >= 60 %}#f59e0b{% else %}#ef4444{% endif %}"
+              stroke-dasharray="{{ (2 * 3.14159 * 86) | round(2) }}"
+              stroke-dashoffset="{{ (2 * 3.14159 * 86) | round(2) }}"
+              data-target="{{ ((1 - score / 100) * 2 * 3.14159 * 86) | round(2) }}"/>
+          </svg>
+          <div class="gauge-center">
+            <span class="gauge-score">{{ score }}</span>
+            <span class="gauge-label">out of 100</span>
+          </div>
+        </div>
+
+        <!-- Rating badge -->
+        <span class="badge badge-{{ rating | lower }} fs-6 px-3 py-2 mb-3">
+          {{ rating }}
+        </span>
+
+        <!-- Quick stats row -->
+        <div class="row g-2 text-start mt-1">
+          {% set c = score_data.components %}
+          <div class="col-6">
+            <div style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em">Savings Rate</div>
+            <div style="font-weight:700;font-size:.95rem;color:var(--text)">
+              {% if c.savings_rate.savings_rate is defined %}{{ c.savings_rate.savings_rate }}%{% else %}N/A{% endif %}
+            </div>
+          </div>
+          <div class="col-6">
+            <div style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em">Tracking Rate</div>
+            <div style="font-weight:700;font-size:.95rem;color:var(--text)">
+              {% if c.tracking_consistency.tracking_rate is defined %}{{ c.tracking_consistency.tracking_rate }}%{% else %}N/A{% endif %}
+            </div>
+          </div>
+          <div class="col-6">
+            <div style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em">Budgets on Track</div>
+            <div style="font-weight:700;font-size:.95rem;color:var(--text)">
+              {% if c.budget_adherence.within_budget is defined %}{{ c.budget_adherence.within_budget }}/{{ c.budget_adherence.total_budgets }}{% else %}—{% endif %}
+            </div>
+          </div>
+          <div class="col-6">
+            <div style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em">Active Goals</div>
+            <div style="font-weight:700;font-size:.95rem;color:var(--text)">
+              {% if c.goal_progress.active_goals is defined %}{{ c.goal_progress.active_goals }}{% else %}0{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Component breakdown -->
+      <div class="chart-card">
+        <div class="chart-title">Score Breakdown</div>
+
+        {% set comps = [
+          ('savings_rate',        'Savings Rate',        25, score_data.components.savings_rate.score),
+          ('budget_adherence',    'Budget Adherence',    20, score_data.components.budget_adherence.score),
+          ('goal_progress',       'Goal Progress',       20, score_data.components.goal_progress.score),
+          ('spending_consistency','Spending Consistency',15, score_data.components.spending_consistency.score),
+          ('income_stability',    'Income Stability',    10, score_data.components.income_stability.score),
+          ('tracking_consistency','Tracking Consistency',10, score_data.components.tracking_consistency.score),
+        ] %}
+
+        {% for key, label, weight, comp_score in comps %}
+          {% set cs = comp_score | int %}
+          {% if cs >= 75 %}{% set bar_color = '#22c55e' %}
+          {% elif cs >= 50 %}{% set bar_color = '#3b82f6' %}
+          {% elif cs >= 25 %}{% set bar_color = '#f59e0b' %}
+          {% else %}{% set bar_color = '#ef4444' %}{% endif %}
+
+          <div class="component-row">
+            <div class="component-label">
+              <span>{{ label }} <span style="font-size:.7rem;color:var(--text-muted)">({{ weight }}%)</span></span>
+              <span class="comp-score-pill">{{ cs }}</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar comp-bar"
+                style="width:0%; background:{{ bar_color }}"
+                data-width="{{ cs }}%">
+              </div>
+            </div>
+            {% set detail = score_data.components[key].detail if score_data.components[key].detail is defined else '' %}
+            {% if detail %}
+              <div style="font-size:.7rem;color:var(--text-muted);margin-top:.2rem">{{ detail }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+
+    </div><!-- /left -->
+
+    <!-- ── RIGHT COLUMN: charts + recommendations ── -->
+    <div class="col-lg-7">
+
+      <!-- Score history chart -->
+      <div class="chart-card mb-4">
+        <div class="chart-title">
+          <i class="bi bi-graph-up me-1"></i>Score History (last 6 months)
+        </div>
+        {% if history | length > 1 %}
+          <canvas id="historyChart" height="180"></canvas>
+        {% else %}
+          <div class="text-center py-4" style="color:var(--text-muted)">
+            <i class="bi bi-clock-history fs-2 mb-2 d-block"></i>
+            <div>Visit daily to build your score history.</div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Component radar chart -->
+      <div class="chart-card mb-4">
+        <div class="chart-title">
+          <i class="bi bi-diagram-3 me-1"></i>Component Radar
+        </div>
+        <canvas id="radarChart" height="260"></canvas>
+      </div>
+
+      <!-- Recommendations -->
+      <div class="chart-card">
+        <div class="chart-title">
+          <i class="bi bi-lightbulb me-1 text-warning"></i>Recommendations
+        </div>
+        {% for rec in score_data.recommendations %}
+          <div class="rec-item">
+            <span class="rec-icon">
+              {% if '💰' in rec %}💰
+              {% elif '📊' in rec %}📊
+              {% elif '🎯' in rec %}🎯
+              {% elif '📈' in rec %}📈
+              {% elif '💵' in rec %}💵
+              {% elif '📝' in rec %}📝
+              {% elif '✨' in rec %}✨
+              {% else %}💡{% endif %}
+            </span>
+            <span>{{ rec | replace('💰','') | replace('📊','') | replace('🎯','') | replace('📈','') | replace('💵','') | replace('📝','') | replace('✨','') | trim }}</span>
+          </div>
+        {% endfor %}
+
+        <div class="mt-3 d-flex gap-2 flex-wrap">
+          <a href="/goals" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-bullseye me-1"></i>Manage Goals
+          </a>
+          <a href="/insights" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-bar-chart me-1"></i>View Insights
+          </a>
+        </div>
+      </div>
+
+    </div><!-- /right -->
+  </div><!-- /row -->
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ── Animate gauge ──
+  const gaugeFill = document.getElementById('gaugeFill');
+  if (gaugeFill) {
+    requestAnimationFrame(() => {
+      gaugeFill.style.strokeDashoffset = gaugeFill.dataset.target;
+    });
+  }
+
+  // ── Animate component bars ──
+  document.querySelectorAll('.comp-bar').forEach(bar => {
+    requestAnimationFrame(() => { bar.style.width = bar.dataset.width; });
+  });
+
+  // ── Shared chart theme ──
+  const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark'
+    || document.body.classList.contains('dark-mode')
+    || window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  const textColor  = isDark ? '#e2e8f0' : '#1e293b';
+  const gridColor  = isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)';
+  const tooltipBg  = isDark ? '#1e293b' : '#ffffff';
+  const tooltipFg  = isDark ? '#e2e8f0' : '#1e293b';
+
+  Chart.defaults.color = textColor;
+  Chart.defaults.borderColor = gridColor;
+
+  // ── Score history line chart ──
+  {% if history | length > 1 %}
+  const historyData = {{ history | tojson }};
+  const histLabels  = historyData.map(h => h.date).reverse();
+  const histScores  = historyData.map(h => h.score).reverse();
+
+  new Chart(document.getElementById('historyChart'), {
+    type: 'line',
+    data: {
+      labels: histLabels,
+      datasets: [{
+        label: 'Health Score',
+        data: histScores,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,.15)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#3b82f6',
+        pointRadius: 4,
+        tension: 0.35,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: tooltipBg,
+          titleColor: tooltipFg,
+          bodyColor: tooltipFg,
+          borderColor: gridColor,
+          borderWidth: 1,
+          callbacks: {
+            title: items => items[0].label,
+            label: item => ` Score: ${item.raw}`,
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: textColor, maxTicksLimit: 8 } },
+        y: {
+          min: 0, max: 100,
+          grid: { color: gridColor },
+          ticks: { color: textColor, stepSize: 20 },
+        }
+      }
+    }
+  });
+  {% endif %}
+
+  // ── Component radar chart ──
+  const components = {{ score_data.components | tojson }};
+  const radarLabels = [
+    'Savings Rate', 'Budget\nAdherence', 'Goal\nProgress',
+    'Spending\nConsistency', 'Income\nStability', 'Tracking\nConsistency'
+  ];
+  const radarScores = [
+    components.savings_rate?.score ?? 0,
+    components.budget_adherence?.score ?? 0,
+    components.goal_progress?.score ?? 0,
+    components.spending_consistency?.score ?? 0,
+    components.income_stability?.score ?? 0,
+    components.tracking_consistency?.score ?? 0,
+  ];
+
+  new Chart(document.getElementById('radarChart'), {
+    type: 'radar',
+    data: {
+      labels: radarLabels,
+      datasets: [{
+        label: 'Your Score',
+        data: radarScores,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,.2)',
+        pointBackgroundColor: '#3b82f6',
+        pointRadius: 4,
+        borderWidth: 2,
+      }, {
+        label: 'Target (75)',
+        data: [75, 75, 75, 75, 75, 75],
+        borderColor: 'rgba(34,197,94,.5)',
+        backgroundColor: 'rgba(34,197,94,.05)',
+        borderDash: [5, 5],
+        pointRadius: 0,
+        borderWidth: 1.5,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: textColor, boxWidth: 12, padding: 16 }
+        },
+        tooltip: {
+          backgroundColor: tooltipBg,
+          titleColor: tooltipFg,
+          bodyColor: tooltipFg,
+          borderColor: gridColor,
+          borderWidth: 1,
+        }
+      },
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: {
+            color: textColor,
+            backdropColor: 'transparent',
+            stepSize: 25,
+          },
+          grid: { color: gridColor },
+          pointLabels: { color: textColor, font: { size: 11 } },
+          angleLines: { color: gridColor },
+        }
+      }
+    }
+  });
+
+})();
+</script>
+
+{% endblock %}
