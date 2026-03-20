@@ -398,8 +398,11 @@
                 </div>
 
                 <div class="col-lg-4">
+                    <!-- ML Model Status + AI Features side by side -->
+                    <div class="row g-3 mb-4">
+                    <div class="col-6">
                     <!-- ML Model Status Card -->
-                    <div class="card shadow-sm mb-4">
+                    <div class="card shadow-sm h-100">
                         <div class="card-header {% if model_status.has_model %}bg-success{% else %}bg-warning{% endif %} text-white">
                             <h6 class="card-title mb-0">
                                 <i class="bi bi-cpu me-2"></i>
@@ -490,8 +493,10 @@
                         </div>
                     </div>
 
+                    </div><!-- /col-6 ML -->
+                    <div class="col-6">
                     <!-- AI Status Card -->
-                    <div class="card shadow-sm mb-4">
+                    <div class="card shadow-sm h-100">
                         <div class="card-header bg-success text-white">
                             <h6 class="card-title mb-0">
                                 <i class="bi bi-robot me-2"></i>
@@ -525,6 +530,8 @@
                             </div>
                         </div>
                     </div>
+                    </div><!-- /col-6 AI -->
+                    </div><!-- /row g-3 -->
 
                     <!-- Quick Actions -->
                     <div class="card shadow-sm">
