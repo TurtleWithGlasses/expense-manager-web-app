@@ -57,7 +57,7 @@
             {% endif %}
 
             <div class="row">
-                <div class="col-lg-8">
+                <div class="col-12">
                     <div class="card shadow-sm">
                         <div class="card-header bg-primary text-white">
                             <h5 class="card-title mb-0">
@@ -396,11 +396,11 @@
                         </div>
                     </div>
                 </div>
+            </div><!-- /form row -->
 
-                <div class="col-lg-4">
-                    <!-- ML Model Status + AI Features side by side -->
-                    <div class="row g-3 mb-4">
-                    <div class="col-6">
+            <!-- Status Cards Row -->
+            <div class="row g-3 mt-3">
+                <div class="col-md-4">
                     <!-- ML Model Status Card -->
                     <div class="card shadow-sm h-100">
                         <div class="card-header {% if model_status.has_model %}bg-success{% else %}bg-warning{% endif %} text-white">
@@ -493,8 +493,8 @@
                         </div>
                     </div>
 
-                    </div><!-- /col-6 ML -->
-                    <div class="col-6">
+                </div><!-- /col-md-4 ML -->
+                <div class="col-md-4">
                     <!-- AI Status Card -->
                     <div class="card shadow-sm h-100">
                         <div class="card-header bg-success text-white">
@@ -530,9 +530,8 @@
                             </div>
                         </div>
                     </div>
-                    </div><!-- /col-6 AI -->
-                    </div><!-- /row g-3 -->
-
+                </div><!-- /col-md-4 AI -->
+                <div class="col-md-4">
                     <!-- Quick Actions -->
                     <div class="card shadow-sm">
                         <div class="card-header bg-info text-white">
