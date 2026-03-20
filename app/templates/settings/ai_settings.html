@@ -399,10 +399,10 @@
             </div><!-- /form row -->
 
             <!-- Status Cards Row -->
-            <div class="row g-3 mt-3">
-                <div class="col-md-4">
+            <div style="display:flex;gap:1rem;margin-top:1rem;align-items:flex-start;flex-wrap:wrap;">
+                <div style="flex:1;min-width:260px;">
                     <!-- ML Model Status Card -->
-                    <div class="card shadow-sm h-100">
+                    <div class="card shadow-sm">
                         <div class="card-header {% if model_status.has_model %}bg-success{% else %}bg-warning{% endif %} text-white">
                             <h6 class="card-title mb-0">
                                 <i class="bi bi-cpu me-2"></i>
@@ -493,10 +493,10 @@
                         </div>
                     </div>
 
-                </div><!-- /col-md-4 ML -->
-                <div class="col-md-4">
+                </div>
+                <div style="flex:1;min-width:260px;">
                     <!-- AI Status Card -->
-                    <div class="card shadow-sm h-100">
+                    <div class="card shadow-sm">
                         <div class="card-header bg-success text-white">
                             <h6 class="card-title mb-0">
                                 <i class="bi bi-robot me-2"></i>
@@ -530,8 +530,8 @@
                             </div>
                         </div>
                     </div>
-                </div><!-- /col-md-4 AI -->
-                <div class="col-md-4">
+                </div>
+                <div style="flex:1;min-width:260px;">
                     <!-- Quick Actions -->
                     <div class="card shadow-sm">
                         <div class="card-header bg-info text-white">
