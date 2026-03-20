@@ -315,13 +315,15 @@
                                                 <label for="retrain_frequency_days" class="form-label text-white">
                                                     Retrain Frequency (days)
                                                 </label>
-                                                <select class="form-select" id="retrain_frequency_days" name="retrain_frequency_days">
+                                                <select class="form-select" id="retrain_frequency_days" name="retrain_frequency_days" onchange="updateRetrainScheduleInfo()">
+                                                    <option value="0" {% if preferences.retrain_frequency_days == 0 %}selected{% endif %}>Manual only (disable auto-retrain)</option>
                                                     <option value="1" {% if preferences.retrain_frequency_days == 1 %}selected{% endif %}>Daily</option>
                                                     <option value="3" {% if preferences.retrain_frequency_days == 3 %}selected{% endif %}>Every 3 days</option>
                                                     <option value="7" {% if preferences.retrain_frequency_days == 7 %}selected{% endif %}>Weekly</option>
                                                     <option value="14" {% if preferences.retrain_frequency_days == 14 %}selected{% endif %}>Bi-weekly</option>
                                                     <option value="30" {% if preferences.retrain_frequency_days == 30 %}selected{% endif %}>Monthly</option>
                                                 </select>
+                                                <div id="retrain-schedule-info" class="mt-2"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -627,6 +629,24 @@
 </div>
 
 <script>
+const MODEL_LAST_TRAINED_AGO = "{{ model_status.last_trained_ago if model_status.has_model else '' }}";
+
+function updateRetrainScheduleInfo() {
+    const select = document.getElementById('retrain_frequency_days');
+    const info = document.getElementById('retrain-schedule-info');
+    const days = parseInt(select.value);
+    if (days === 0) {
+        info.innerHTML = '<small class="text-warning"><i class="bi bi-pause-circle me-1"></i>Auto-retraining disabled — use <strong>Retrain Model</strong> manually.</small>';
+    } else {
+        const labels = {1:'daily',3:'every 3 days',7:'weekly',14:'bi-weekly',30:'monthly'};
+        const label = labels[days] || `every ${days} days`;
+        const nextNote = MODEL_LAST_TRAINED_AGO
+            ? `<span class="text-muted ms-2">(last trained ${MODEL_LAST_TRAINED_AGO})</span>`
+            : '';
+        info.innerHTML = `<small class="text-success"><i class="bi bi-arrow-repeat me-1"></i>Model will auto-retrain <strong>${label}</strong>.${nextNote}</small>`;
+    }
+}
+
 function updateConfidenceDisplay(slider, displayId) {
     const display = document.getElementById(displayId);
     const value = Math.round(slider.value * 100);
@@ -720,87 +740,117 @@ function getAISuggestion() {
 }
 
 function viewInsights() {
-    // Show the insights modal
     const modal = new bootstrap.Modal(document.getElementById('insightsModal'));
     modal.show();
-    
-    // Fetch and display AI insights
-    fetch('/ai/insights')
-        .then(response => response.json())
-        .then(data => {
-            const contentDiv = document.getElementById('insightsContent');
-            
-            if (data.success && data.insights) {
-                let html = '<div class="row">';
-                
-                if (data.insights.top_spending_category) {
-                    const category = data.insights.top_spending_category;
-                    html += `
-                        <div class="col-md-6 mb-3">
-                            <div class="card border-primary">
-                                <div class="card-header bg-primary text-white">
-                                    <h6 class="mb-0"><i class="bi bi-trophy me-2"></i>Top Spending Category</h6>
-                                </div>
-                                <div class="card-body bg-white">
-                                    <h5 class="text-primary">${category.name}</h5>
-                                    <p class="mb-1 text-dark"><strong>Amount:</strong> ${category.amount.toFixed(2)}</p>
-                                    <p class="mb-0 text-dark"><strong>Percentage:</strong> ${category.percentage.toFixed(1)}%</p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                if (data.insights.daily_average) {
-                    html += `
-                        <div class="col-md-6 mb-3">
-                            <div class="card border-info">
-                                <div class="card-header bg-info text-white">
-                                    <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Daily Average</h6>
-                                </div>
-                                <div class="card-body bg-white">
-                                    <h5 class="text-info">${data.insights.daily_average.toFixed(2)}</h5>
-                                    <p class="mb-0 text-dark">Average daily spending</p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                html += '</div>';
-                
-                if (!data.insights.top_spending_category && !data.insights.daily_average) {
-                    html = `
-                        <div class="text-center text-muted">
-                            <i class="bi bi-info-circle fs-1"></i>
-                            <h5 class="mt-3 text-dark">No Insights Available</h5>
-                            <p class="text-dark">Add some transactions to get AI insights about your spending patterns.</p>
-                        </div>
-                    `;
-                }
-                
-                contentDiv.innerHTML = html;
-            } else {
-                contentDiv.innerHTML = `
-                    <div class="text-center text-muted">
-                        <i class="bi bi-exclamation-triangle fs-1"></i>
-                        <h5 class="mt-3 text-dark">Unable to Load Insights</h5>
-                        <p class="text-dark">There was an error loading your spending insights. Please try again later.</p>
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            const contentDiv = document.getElementById('insightsContent');
-            contentDiv.innerHTML = `
-                <div class="text-center text-danger">
-                    <i class="bi bi-x-circle fs-1"></i>
-                    <h5 class="mt-3 text-dark">Error Loading Insights</h5>
-                    <p class="text-dark">There was an error loading your spending insights. Please try again later.</p>
+    loadComprehensiveInsightsIntoModal('insightsContent');
+}
+
+async function loadComprehensiveInsightsIntoModal(containerId) {
+    const contentDiv = document.getElementById(containerId);
+    contentDiv.innerHTML = `<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Loading AI insights...</p></div>`;
+
+    try {
+        const [healthRes, patternsRes, oppsRes, recsRes, alertsRes] = await Promise.all([
+            fetch('/ai/insights/budget-health'),
+            fetch('/ai/insights/spending-patterns'),
+            fetch('/ai/insights/saving-opportunities'),
+            fetch('/ai/insights/recommendations'),
+            fetch('/ai/insights/alerts')
+        ]);
+        const [health, patterns, opps, recs, alerts] = await Promise.all([
+            healthRes.json(), patternsRes.json(), oppsRes.json(), recsRes.json(), alertsRes.json()
+        ]);
+
+        let html = '';
+
+        // Budget health score banner
+        if (health.success && health.budget_health) {
+            const bh = health.budget_health;
+            const color = bh.status === 'excellent' ? '#86efac' : bh.status === 'good' ? '#93c5fd' : bh.status === 'fair' ? '#fbbf24' : '#fca5a5';
+            html += `
+            <div class="p-3 mb-3 rounded" style="background:rgba(77,163,255,0.08);border:1px solid rgba(77,163,255,0.25);">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <div class="text-muted small">Budget Health Score</div>
+                  <div style="font-size:2.5rem;font-weight:bold;color:${color};line-height:1.1">${bh.health_score.toFixed(0)}<small style="font-size:1rem;">/100</small></div>
+                  <div class="small mt-1">${bh.status_message}</div>
                 </div>
-            `;
-        });
+                <div class="text-end">
+                  <div class="small text-muted">Savings Rate</div>
+                  <div style="font-size:1.4rem;font-weight:bold;color:#4da3ff">${bh.current_savings_rate.toFixed(1)}%</div>
+                  <div class="small text-muted">Expense change</div>
+                  <div class="small" style="color:${bh.expense_change_percentage > 0 ? '#fca5a5' : '#86efac'}">${bh.expense_change_percentage > 0 ? '+' : ''}${bh.expense_change_percentage.toFixed(1)}% vs last month</div>
+                </div>
+              </div>
+            </div>`;
+        }
+
+        // Alerts
+        if (alerts.success && alerts.alerts && alerts.alerts.length > 0) {
+            html += `<div class="mb-3">`;
+            alerts.alerts.slice(0, 2).forEach(a => {
+                const cls = a.severity === 'high' ? 'danger' : a.severity === 'medium' ? 'warning' : 'info';
+                html += `<div class="alert alert-${cls} py-2 mb-2"><strong><i class="bi bi-exclamation-triangle me-1"></i>${a.title}:</strong> ${a.message}</div>`;
+            });
+            html += `</div>`;
+        }
+
+        // Two-column grid: patterns + opportunities
+        html += `<div class="row g-3 mb-3">`;
+
+        // Spending patterns
+        if (patterns.success && patterns.patterns && !patterns.patterns.message) {
+            const p = patterns.patterns;
+            html += `
+            <div class="col-md-6">
+              <div class="p-3 rounded h-100" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);">
+                <div class="small fw-bold text-primary mb-2"><i class="bi bi-graph-up me-1"></i>Spending Patterns</div>
+                <div class="small mb-1">Most active day: <strong>${p.most_active_day}</strong></div>
+                <div class="small mb-1">Avg daily spend: <strong>${p.avg_daily_spending.toLocaleString()}</strong></div>
+                <div class="small mb-1">Total transactions: <strong>${p.total_transactions}</strong></div>
+                <div class="small">Largest: <strong>${p.largest_transaction.toLocaleString()}</strong></div>
+              </div>
+            </div>`;
+        }
+
+        // Top saving opportunity
+        if (opps.success && opps.opportunities && opps.opportunities.length > 0) {
+            const top = opps.opportunities[0];
+            html += `
+            <div class="col-md-6">
+              <div class="p-3 rounded h-100" style="background:rgba(134,239,172,0.06);border:1px solid rgba(134,239,172,0.2);">
+                <div class="small fw-bold mb-2" style="color:#86efac"><i class="bi bi-piggy-bank me-1"></i>Top Saving Opportunity</div>
+                <div class="small fw-bold mb-1">${top.category}</div>
+                <div class="small text-muted mb-1">${top.recommendation}</div>
+                ${top.potential_saving ? `<div class="small" style="color:#86efac">Save ~<strong>${top.potential_saving.toLocaleString()}</strong>/month</div>` : ''}
+              </div>
+            </div>`;
+        }
+
+        html += `</div>`;
+
+        // Recommendations
+        if (recs.success && recs.recommendations && recs.recommendations.length > 0) {
+            html += `<div class="small fw-bold text-primary mb-2"><i class="bi bi-clipboard-check me-1"></i>Top Recommendations</div>`;
+            recs.recommendations.slice(0, 3).forEach(r => {
+                const cls = r.priority === 'high' ? '#fca5a5' : r.priority === 'medium' ? '#fbbf24' : '#93c5fd';
+                html += `
+                <div class="p-2 mb-2 rounded" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);">
+                  <div class="small fw-bold" style="color:${cls}">${r.title}</div>
+                  <div class="small text-muted">${r.description}</div>
+                </div>`;
+            });
+        }
+
+        if (!html) {
+            html = `<div class="text-center text-muted py-4"><i class="bi bi-info-circle fs-1"></i><p class="mt-3">Add more transactions to unlock AI insights.</p></div>`;
+        }
+
+        contentDiv.innerHTML = html;
+    } catch (err) {
+        console.error('Error loading insights:', err);
+        contentDiv.innerHTML = `<div class="text-center text-danger py-4"><i class="bi bi-x-circle fs-1"></i><p class="mt-3">Error loading insights. Please try again.</p></div>`;
+    }
 }
 
 function trainModel() {
@@ -911,6 +961,11 @@ function resetAIModel() {
         alert('AI model reset feature coming soon!');
     }
 }
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateRetrainScheduleInfo();
+});
 </script>
 
         </div>

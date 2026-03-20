@@ -498,6 +498,161 @@
     document.addEventListener('DOMContentLoaded', applyGlobalDisplayPreferences);
   </script>
 
+  <!-- AI Insights Floating Button + Modal - Phase 40 -->
+  {% if user is defined and user %}
+  <button id="ai-insights-fab" onclick="openGlobalAIInsights()" title="AI Spending Insights"
+    style="position:fixed;bottom:5.5rem;right:1.25rem;z-index:1040;width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#4da3ff,#7c3aed);color:#fff;font-size:1.25rem;box-shadow:0 4px 14px rgba(77,163,255,0.4);display:flex;align-items:center;justify-content:center;transition:transform 0.2s,box-shadow 0.2s;"
+    onmouseenter="this.style.transform='scale(1.1)';this.style.boxShadow='0 6px 20px rgba(77,163,255,0.55)'"
+    onmouseleave="this.style.transform='scale(1)';this.style.boxShadow='0 4px 14px rgba(77,163,255,0.4)'">
+    <i class="bi bi-lightbulb-fill"></i>
+  </button>
+
+  <!-- Global AI Insights Modal -->
+  <div class="modal fade" id="globalAIInsightsModal" tabindex="-1" aria-labelledby="globalAIInsightsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content" style="background:var(--surface,#1a1a2e);border:1px solid rgba(77,163,255,0.25);">
+        <div class="modal-header" style="background:linear-gradient(135deg,rgba(77,163,255,0.15),rgba(124,58,237,0.15));border-bottom:1px solid rgba(77,163,255,0.2);">
+          <h5 class="modal-title" id="globalAIInsightsLabel" style="color:#4da3ff;">
+            <i class="bi bi-lightbulb-fill me-2"></i>AI Spending Insights
+          </h5>
+          <div class="ms-auto d-flex gap-2 align-items-center">
+            <a href="/insights" class="btn btn-sm btn-outline-primary" style="font-size:0.75rem;">Full Report</a>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="modal-body" id="globalAIInsightsContent" style="color:var(--text,#e2e8f0);">
+          <div class="text-center py-4">
+            <div class="spinner-border" style="color:#4da3ff;" role="status"></div>
+            <p class="mt-2" style="color:#999;">Loading AI insights...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  let _aiInsightsLoaded = false;
+
+  function openGlobalAIInsights() {
+    const modal = new bootstrap.Modal(document.getElementById('globalAIInsightsModal'));
+    modal.show();
+    if (!_aiInsightsLoaded) {
+      _aiInsightsLoaded = true;
+      _loadGlobalAIInsights();
+    }
+  }
+
+  // Reset loaded flag when modal is hidden so it reloads on next open
+  document.getElementById('globalAIInsightsModal').addEventListener('hidden.bs.modal', function() {
+    _aiInsightsLoaded = false;
+  });
+
+  async function _loadGlobalAIInsights() {
+    const container = document.getElementById('globalAIInsightsContent');
+    try {
+      const [healthRes, patternsRes, oppsRes, recsRes, alertsRes] = await Promise.all([
+        fetch('/ai/insights/budget-health'),
+        fetch('/ai/insights/spending-patterns'),
+        fetch('/ai/insights/saving-opportunities'),
+        fetch('/ai/insights/recommendations'),
+        fetch('/ai/insights/alerts')
+      ]);
+      const [health, patterns, opps, recs, alerts] = await Promise.all([
+        healthRes.json(), patternsRes.json(), oppsRes.json(), recsRes.json(), alertsRes.json()
+      ]);
+
+      let html = '';
+
+      // Budget health score
+      if (health.success && health.budget_health) {
+        const bh = health.budget_health;
+        const color = bh.status === 'excellent' ? '#86efac' : bh.status === 'good' ? '#93c5fd' : bh.status === 'fair' ? '#fbbf24' : '#fca5a5';
+        html += `
+        <div class="p-3 mb-3 rounded" style="background:rgba(77,163,255,0.08);border:1px solid rgba(77,163,255,0.2);">
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div>
+              <div style="font-size:0.75rem;color:#999;">Budget Health</div>
+              <div style="font-size:2.5rem;font-weight:bold;color:${color};line-height:1.1">${bh.health_score.toFixed(0)}<small style="font-size:1rem;color:#999;">/100</small></div>
+              <div style="font-size:0.85rem;">${bh.status_message}</div>
+            </div>
+            <div class="ms-auto text-end">
+              <div style="font-size:0.75rem;color:#999;">Savings Rate</div>
+              <div style="font-size:1.4rem;font-weight:bold;color:#4da3ff;">${bh.current_savings_rate.toFixed(1)}%</div>
+              <div style="font-size:0.75rem;color:${bh.expense_change_percentage > 0 ? '#fca5a5' : '#86efac'};">${bh.expense_change_percentage > 0 ? '+' : ''}${bh.expense_change_percentage.toFixed(1)}% expenses vs last month</div>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      // Alerts
+      if (alerts.success && alerts.alerts && alerts.alerts.length > 0) {
+        alerts.alerts.slice(0, 2).forEach(a => {
+          const bg = a.severity === 'high' ? 'rgba(255,99,71,0.15)' : a.severity === 'medium' ? 'rgba(255,193,7,0.12)' : 'rgba(13,110,253,0.12)';
+          const bc = a.severity === 'high' ? 'rgba(255,99,71,0.35)' : a.severity === 'medium' ? 'rgba(255,193,7,0.35)' : 'rgba(13,110,253,0.35)';
+          const tc = a.severity === 'high' ? '#fca5a5' : a.severity === 'medium' ? '#fbbf24' : '#93c5fd';
+          html += `<div class="mb-2 p-2 rounded" style="background:${bg};border:1px solid ${bc};color:${tc};font-size:0.85rem;"><strong>${a.title}:</strong> ${a.message}</div>`;
+        });
+      }
+
+      html += `<div class="row g-3 mb-3">`;
+
+      // Spending patterns
+      if (patterns.success && patterns.patterns && !patterns.patterns.message) {
+        const p = patterns.patterns;
+        html += `
+        <div class="col-md-6">
+          <div class="p-3 rounded h-100" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);">
+            <div style="font-size:0.8rem;font-weight:600;color:#4da3ff;margin-bottom:0.5rem;"><i class="bi bi-graph-up me-1"></i>Spending Patterns</div>
+            <div style="font-size:0.85rem;margin-bottom:0.3rem;">Most active: <strong>${p.most_active_day}</strong></div>
+            <div style="font-size:0.85rem;margin-bottom:0.3rem;">Daily avg: <strong>${p.avg_daily_spending.toLocaleString()}</strong></div>
+            <div style="font-size:0.85rem;margin-bottom:0.3rem;">Transactions: <strong>${p.total_transactions}</strong></div>
+            <div style="font-size:0.85rem;">Largest: <strong>${p.largest_transaction.toLocaleString()}</strong></div>
+          </div>
+        </div>`;
+      }
+
+      // Top saving opportunity
+      if (opps.success && opps.opportunities && opps.opportunities.length > 0) {
+        const top = opps.opportunities[0];
+        html += `
+        <div class="col-md-6">
+          <div class="p-3 rounded h-100" style="background:rgba(134,239,172,0.06);border:1px solid rgba(134,239,172,0.2);">
+            <div style="font-size:0.8rem;font-weight:600;color:#86efac;margin-bottom:0.5rem;"><i class="bi bi-piggy-bank me-1"></i>Top Saving Opportunity</div>
+            <div style="font-size:0.85rem;font-weight:600;margin-bottom:0.3rem;">${top.category}</div>
+            <div style="font-size:0.82rem;color:#aaa;margin-bottom:0.3rem;">${top.recommendation}</div>
+            ${top.potential_saving ? `<div style="font-size:0.85rem;color:#86efac;">Save ~<strong>${top.potential_saving.toLocaleString()}</strong>/month</div>` : ''}
+          </div>
+        </div>`;
+      }
+
+      html += `</div>`;
+
+      // Recommendations
+      if (recs.success && recs.recommendations && recs.recommendations.length > 0) {
+        html += `<div style="font-size:0.8rem;font-weight:600;color:#4da3ff;margin-bottom:0.5rem;"><i class="bi bi-clipboard-check me-1"></i>Top Recommendations</div>`;
+        recs.recommendations.slice(0, 3).forEach(r => {
+          const tc = r.priority === 'high' ? '#fca5a5' : r.priority === 'medium' ? '#fbbf24' : '#93c5fd';
+          html += `
+          <div class="p-2 mb-2 rounded" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);">
+            <div style="font-size:0.85rem;font-weight:600;color:${tc};">${r.title}</div>
+            <div style="font-size:0.8rem;color:#aaa;">${r.description}</div>
+          </div>`;
+        });
+      }
+
+      if (!html) {
+        html = `<div class="text-center py-4" style="color:#999;"><i class="bi bi-info-circle" style="font-size:2rem;"></i><p class="mt-3">Add more transactions to unlock AI insights.</p></div>`;
+      }
+
+      container.innerHTML = html;
+    } catch (err) {
+      console.error('AI insights error:', err);
+      container.innerHTML = `<div class="text-center py-4" style="color:#fca5a5;"><i class="bi bi-x-circle" style="font-size:2rem;"></i><p class="mt-3">Error loading insights. Please try again.</p></div>`;
+    }
+  }
+  </script>
+  {% endif %}
+
   <!-- PWA Installation & Service Worker - Phase 25 Alt -->
   <script src="/static/js/pwa-install.js?v=1"></script>
 

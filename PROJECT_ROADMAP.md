@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 2.0 (Production)
-**Last Updated:** March 20, 2026 (Phase 35 + Phase 37 enhanced)
+**Last Updated:** March 20, 2026 (Phase 35 + Phase 37 + Phase 40 enhanced)
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -4117,29 +4117,40 @@ Automatic expense entry creation for recurring bills on their due dates, with sm
 
 ### **Phase 40: ML Model Auto-Retraining & AI Spending Insights** 🤖
 **Priority:** MEDIUM
-**Status:** ✅ COMPLETE
+**Status:** ✅ COMPLETE (Enhanced March 2026)
 **Completed:** March 2026
 **Actual Time:** ~4 hours
 
 **Overview:**
-User-controlled automatic ML model retraining frequency and an AI-powered spending insights modal with positioning fixes.
+User-controlled automatic ML model retraining frequency with "Manual only" option and live schedule indicator, plus a comprehensive AI spending insights modal accessible globally from any page via a floating action button.
 
 **✅ Completed Features:**
 
-1. **Automatic ML Model Retraining**
-   - User-controlled retraining frequency (daily, weekly, monthly, manual only)
-   - Background retraining triggered automatically based on user preference
-   - `model_status` variable exposed in AI settings template
-   - AI settings page fully functional
+1. **Auto-Retraining Frequency Control (Enhanced)**
+   - "Manual only (disable auto-retrain)" option added to retrain_frequency_days dropdown (value=0)
+   - Live schedule info text below dropdown: shows frequency label + last trained date, or "Auto-retraining disabled" warning
+   - `updateRetrainScheduleInfo()` called on page load and on dropdown change
+   - Backend already saves `retrain_frequency_days` including 0 via `POST /ai/settings`
 
-2. **AI Spending Insights**
-   - Modal for AI-generated spending insights
-   - Properly centered modal positioning
-   - Insights page with anomaly detection and pattern recommendations
+2. **Global AI Spending Insights Modal (New)**
+   - Floating action button (lightbulb icon, gradient blue-purple) fixed at bottom-right of every authenticated page
+   - Clicking opens a comprehensive modal with 5 parallel API calls:
+     - `/ai/insights/budget-health` → health score banner with savings rate + expense change %
+     - `/ai/insights/alerts` → top 2 alerts with severity colour coding
+     - `/ai/insights/spending-patterns` → most active day, avg daily spend, transaction count
+     - `/ai/insights/saving-opportunities` → top saving opportunity with potential monthly saving
+     - `/ai/insights/recommendations` → top 3 prioritised recommendations
+   - "Full Report" link to `/insights` from modal header
+   - Modal reloads insights on each open (fresh data)
+   - Fully dark-theme styled matching app design
+
+3. **Enhanced viewInsights() in AI Settings**
+   - The existing AI Settings insights modal now also uses the 5-endpoint comprehensive load
+   - Replaced basic top-category/daily-avg view with full health score, alerts, patterns, opportunities, recommendations
 
 **Files:**
-- `app/api/v1/ai.py` – retraining endpoints
-- `app/templates/` – AI settings and insights templates
+- `app/templates/settings/ai_settings.html` – Manual option, schedule indicator, enhanced insights modal JS
+- `app/templates/base.html` – Global FAB button + comprehensive insights modal + JS
 
 ---
 
