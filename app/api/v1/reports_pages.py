@@ -327,6 +327,117 @@ async def email_monthly_report(
     return {"success": True, "message": "Monthly report email sent successfully"}
 
 
+@router.get("/api/schedule")
+async def get_report_schedule(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user's automated report schedule preferences"""
+    from app.models.weekly_report import UserReportPreferences
+
+    prefs = db.query(UserReportPreferences).filter(
+        UserReportPreferences.user_id == user.id
+    ).first()
+
+    defaults = {
+        "frequency": "weekly",
+        "send_email": True,
+        "show_on_dashboard": True,
+        "email_day_of_week": 0,
+        "email_hour": 9,
+        "include_achievements": True,
+        "include_recommendations": True,
+        "include_anomalies": True,
+        "include_category_breakdown": True,
+        "notify_on_high_spending": True,
+        "notify_on_anomalies": True,
+        "high_spending_threshold": 500.0,
+    }
+
+    if not prefs:
+        return JSONResponse({"success": True, "schedule": defaults})
+
+    return JSONResponse({
+        "success": True,
+        "schedule": {
+            "frequency": prefs.frequency,
+            "send_email": prefs.send_email,
+            "show_on_dashboard": prefs.show_on_dashboard,
+            "email_day_of_week": prefs.email_day_of_week,
+            "email_hour": prefs.email_hour,
+            "include_achievements": prefs.include_achievements,
+            "include_recommendations": prefs.include_recommendations,
+            "include_anomalies": prefs.include_anomalies,
+            "include_category_breakdown": prefs.include_category_breakdown,
+            "notify_on_high_spending": prefs.notify_on_high_spending,
+            "notify_on_anomalies": prefs.notify_on_anomalies,
+            "high_spending_threshold": float(prefs.high_spending_threshold),
+        }
+    })
+
+
+@router.put("/api/schedule")
+async def update_report_schedule(
+    request: Request,
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Update user's automated report schedule preferences"""
+    from app.models.weekly_report import UserReportPreferences
+    from datetime import datetime as _dt
+
+    body = await request.json()
+
+    prefs = db.query(UserReportPreferences).filter(
+        UserReportPreferences.user_id == user.id
+    ).first()
+
+    if not prefs:
+        prefs = UserReportPreferences(user_id=user.id)
+        db.add(prefs)
+
+    allowed = [
+        "frequency", "send_email", "show_on_dashboard",
+        "email_day_of_week", "email_hour",
+        "include_achievements", "include_recommendations",
+        "include_anomalies", "include_category_breakdown",
+        "notify_on_high_spending", "notify_on_anomalies",
+        "high_spending_threshold",
+    ]
+    for field in allowed:
+        if field in body:
+            setattr(prefs, field, body[field])
+
+    prefs.updated_at = _dt.utcnow()
+    db.commit()
+
+    return JSONResponse({"success": True, "message": "Schedule saved successfully"})
+
+
+@router.post("/api/schedule/test")
+async def send_test_report(
+    user=Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """Send a test report email immediately"""
+    from app.services.email import email_service
+    from app.services.weekly_report_service import WeeklyReportService
+
+    try:
+        report_service = WeeklyReportService(db)
+        report = report_service.generate_weekly_report(user.id, show_income=True)
+
+        await email_service.send_weekly_report_email(
+            user.email,
+            user.full_name or "User",
+            report
+        )
+
+        return JSONResponse({"success": True, "message": f"Test report sent to {user.email}"})
+    except Exception as e:
+        return JSONResponse({"success": False, "message": f"Failed: {str(e)}"}, status_code=500)
+
+
 @router.post("/annual/email")
 async def email_annual_report(
     request: dict,

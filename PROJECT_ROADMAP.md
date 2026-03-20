@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 2.0 (Production)
-**Last Updated:** March 20, 2026
+**Last Updated:** March 20, 2026 (Phase 35 + Phase 37 enhanced)
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -3928,33 +3928,44 @@ Full gamification foundation including persistent achievement system, financial 
 
 ### **Phase 35: Advanced Custom Reports & Scheduling** 📋
 **Priority:** HIGH
-**Status:** ✅ COMPLETE
-**Completed:** December 31, 2025
-**Actual Time:** ~5 hours
+**Status:** ✅ COMPLETE (Enhanced March 2026)
+**Completed:** December 31, 2025 | **Enhanced:** March 20, 2026
+**Actual Time:** ~5 hours (+ 2 hours for March 2026 enhancements)
 
 **Overview:**
-Saveable report templates with category filtering and automatic report scheduling via email.
+Saveable report templates with multi-category filtering, automated report scheduling via email, and a full scheduling configuration UI.
 
 **✅ Completed Features:**
 
-1. **Saveable Report Templates**
+1. **Saveable Report Templates (Enhanced March 2026)**
    - Full CRUD operations for templates
-   - Category-specific report filtering
+   - **Multi-category filtering** — template modal now accepts multiple categories via multi-select; stored in `filters.categories[]`; all selected categories passed to export URLs
    - Favorite/starred templates
    - Usage tracking and statistics
    - Template management UI with dark theme support
 
-2. **Automated Report Scheduling**
+2. **Automated Report Scheduling (Enhanced March 2026)**
    - Weekly reports (Every Monday at 9 AM)
    - Monthly reports (1st day of month at 9 AM)
-   - Custom schedule support (user-defined day/hour)
+   - Biweekly and custom schedule support (user-defined day/hour)
    - Email delivery via professional HTML templates
    - APScheduler background job integration
+   - **Schedule Configuration UI** — `Report Scheduling` panel on the settings page:
+     - Frequency selector (disabled / weekly / biweekly / monthly)
+     - Email delivery toggle + show-on-dashboard toggle
+     - Day of week + time-of-day selectors
+     - Content preferences (achievements, recommendations, anomalies, category breakdown)
+     - High-spending alert threshold
+     - "Save Schedule" and "Send Test Report" buttons
+   - **Schedule REST API** — `GET /reports/api/schedule`, `PUT /reports/api/schedule`, `POST /reports/api/schedule/test`
    - Duplicate prevention and error handling
 
 **Files:**
-- `app/api/v1/report_templates.py`
-- Report scheduler integrated into existing `app/services/report_scheduler.py`
+- `app/api/v1/report_templates.py` — template CRUD
+- `app/api/v1/reports_pages.py` — schedule API endpoints (GET/PUT/test added)
+- `app/templates/reports/settings.html` — scheduling UI + multi-category template modal
+- `app/services/report_scheduler.py` — background APScheduler jobs
+- `app/models/weekly_report.py` — `UserReportPreferences` model
 
 ---
 
