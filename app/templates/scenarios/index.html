@@ -534,6 +534,18 @@
                 </div>
             </div>
 
+            <!-- Forecast Impact (Prophet) -->
+            <div id="forecastImpactSection" style="display:none; margin-top:2rem;">
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:1.5rem;">
+                    <div style="font-size:1.1rem; font-weight:600; color:var(--text); margin-bottom:1rem;">
+                        <i class="bi bi-graph-up-arrow"></i> Prophet Forecast Impact (90 days)
+                    </div>
+                    <div id="forecastImpactBody">
+                        <p class="text-muted small">Loading Prophet forecast…</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Action Buttons -->
             <div class="d-flex gap-2 mt-3">
                 <button type="button" class="btn btn-primary" onclick="calculateScenario()">
@@ -814,6 +826,7 @@ async function calculateScenario() {
         if (result.success) {
             currentScenarioData = result.scenario;
             displayPreview(result.scenario);
+            loadForecastImpact(result.scenario);
             document.getElementById('saveScenarioBtn').style.display = 'inline-block';
         } else {
             alert('Error: ' + result.error);
@@ -1021,6 +1034,11 @@ function resetBuilder() {
     if (scenarioChart) {
         scenarioChart.destroy();
         scenarioChart = null;
+    }
+    document.getElementById('forecastImpactSection').style.display = 'none';
+    if (forecastImpactChart) {
+        forecastImpactChart.destroy();
+        forecastImpactChart = null;
     }
 }
 
@@ -1261,6 +1279,110 @@ async function toggleFavorite(scenarioId, event) {
         }
     } catch (error) {
         console.error('Error toggling favorite:', error);
+    }
+}
+
+// ── Prophet Forecast Impact ───────────────────────────────────────────────────
+
+let forecastImpactChart = null;
+
+async function loadForecastImpact(scenario) {
+    const section = document.getElementById('forecastImpactSection');
+    const body = document.getElementById('forecastImpactBody');
+    section.style.display = 'block';
+    body.innerHTML = '<p class="text-muted small"><span class="spinner-border spinner-border-sm me-1"></span>Fetching Prophet forecast…</p>';
+
+    try {
+        const res = await fetch('/api/v1/forecasts/spending/total?days_ahead=90');
+        const data = await res.json();
+
+        if (!data.success) {
+            body.innerHTML = `<p class="text-muted small">${data.message || 'Forecast not available (need 30+ days of data)'}</p>`;
+            return;
+        }
+
+        const outcome = scenario.projected_outcome || {};
+        const forecast = data.forecast || [];
+        const totalWithout = data.summary.total_predicted || 0;
+
+        // Calculate monthly savings from this scenario
+        const monthlySavings = outcome.monthly_savings || outcome.monthly_increase || 0;
+        const dailyAdjustment = monthlySavings / 30;
+
+        // For spending reduction: lower the daily forecast; income increase doesn't reduce spending
+        const isExpenseReduction = scenario.scenario_type === 'spending_reduction' || scenario.scenario_type === 'category_adjustment';
+        const adjustedForecast = forecast.map(d => Math.max(0, d.predicted - (isExpenseReduction ? dailyAdjustment : 0)));
+        const totalWith = adjustedForecast.reduce((s, v) => s + v, 0);
+        const saving = totalWithout - totalWith;
+
+        const fmt = v => '$' + Math.round(v).toLocaleString();
+
+        // Stats
+        let statsHTML = `
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
+                <div class="preview-stat">
+                    <div class="preview-stat-label">Without Scenario</div>
+                    <div class="preview-stat-value">${fmt(totalWithout)}</div>
+                </div>
+                <div class="preview-stat">
+                    <div class="preview-stat-label">With Scenario</div>
+                    <div class="preview-stat-value positive">${fmt(totalWith)}</div>
+                </div>
+                <div class="preview-stat">
+                    <div class="preview-stat-label">90-Day Saving</div>
+                    <div class="preview-stat-value ${saving >= 0 ? 'positive' : 'negative'}">${saving >= 0 ? '-' : '+'}${fmt(Math.abs(saving))}</div>
+                </div>
+                <div class="preview-stat">
+                    <div class="preview-stat-label">Daily Adjustment</div>
+                    <div class="preview-stat-value">${fmt(dailyAdjustment)}/day</div>
+                </div>
+            </div>
+            <canvas id="forecastImpactChart" height="80"></canvas>`;
+
+        body.innerHTML = statsHTML;
+
+        if (forecastImpactChart) forecastImpactChart.destroy();
+        forecastImpactChart = new Chart(document.getElementById('forecastImpactChart'), {
+            type: 'line',
+            data: {
+                labels: forecast.map(d => d.date),
+                datasets: [
+                    {
+                        label: 'Without scenario',
+                        data: forecast.map(d => d.predicted),
+                        borderColor: 'rgba(239,68,68,0.7)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'With scenario',
+                        data: adjustedForecast,
+                        borderColor: 'rgb(16,185,129)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.3,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: true, position: 'bottom' },
+                    tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } }
+                },
+                scales: {
+                    x: { ticks: { maxTicksLimit: 8, maxRotation: 0 } },
+                    y: { beginAtZero: true, ticks: { callback: v => fmt(v) } }
+                }
+            }
+        });
+
+    } catch (err) {
+        body.innerHTML = '<p class="text-muted small">Could not load forecast impact.</p>';
     }
 }
 

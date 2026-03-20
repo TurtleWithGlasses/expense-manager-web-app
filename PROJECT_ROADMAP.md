@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 2.0 (Production)
-**Last Updated:** March 19, 2026
+**Last Updated:** March 20, 2026
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -4009,27 +4009,31 @@ Complete gamification UI with achievement notifications, leaderboard, badge syst
 
 ### **Phase 37: Advanced ML – Prophet Forecasting & Scenario Planning** 🔮
 **Priority:** MEDIUM
-**Status:** ✅ COMPLETE
-**Completed:** December 2025
-**Actual Time:** ~8 hours
+**Status:** ✅ COMPLETE (Enhanced March 2026)
+**Completed:** December 2025 | **Enhanced:** March 20, 2026
+**Actual Time:** ~8 hours (+ 2 hours for March 2026 enhancements)
 
 **Overview:**
-Prophet-based time series forecasting with seasonal patterns, multi-horizon projections, and interactive What-If scenario analysis.
+Prophet-based time series forecasting with seasonal patterns, multi-horizon projections (90/180/365 days), category-level forecasting, and interactive What-If scenario analysis with Prophet forecast impact overlay.
 
 **✅ Completed Features:**
 
-1. **Prophet Forecasting**
+1. **Prophet Forecasting (Enhanced March 2026)**
    - Facebook Prophet for seasonal time series forecasting
-   - Multi-horizon projections: 90, 180, 365 days
+   - Multi-horizon projections: 30, 60, **90, 180, 365 days** (full 1-year horizon added)
+   - **Compare Horizons panel**: side-by-side 90/180/365 day summaries + combined line chart (parallel fetch)
+   - **Category Forecast section**: select any expense category → monthly bar chart with 80% confidence bands + historical avg vs predicted
+   - chartjs-adapter-date-fns for time-axis chart rendering
    - Recurring bills/subscriptions integrated into forecasts
    - Auto-generated forecast explanations
    - Graceful fallback when Prophet not installed
    - User currency support on forecast page
    - cmdstanpy backend for Prophet
 
-2. **What-If Scenario Planning**
-   - Interactive scenario builder
-   - Adjustable income/expense variables
+2. **What-If Scenario Planning (Enhanced March 2026)**
+   - Interactive scenario builder with 4 scenario types
+   - Adjustable income/expense variables via sliders
+   - **Prophet Forecast Impact panel**: after calculating a scenario, fetches the live 90-day Prophet forecast and overlays it with an adjusted "with scenario" line, showing 90-day saving
    - Side-by-side scenario comparison
    - `app/models/scenario.py` and `app/services/scenario_service.py`
    - `app/api/v1/scenarios.py` and `app/api/v1/scenarios_pages.py`
@@ -4037,8 +4041,11 @@ Prophet-based time series forecasting with seasonal patterns, multi-horizon proj
 **Files:**
 - `app/models/forecast.py`, `app/models/scenario.py`
 - `app/services/scenario_service.py`
+- `app/ai/services/prophet_forecast_service.py`
 - `app/api/v1/forecasts.py`, `app/api/v1/forecasts_pages.py`
 - `app/api/v1/scenarios.py`, `app/api/v1/scenarios_pages.py`
+- `app/templates/forecasts/index.html` — multi-horizon compare + category forecast
+- `app/templates/scenarios/index.html` — Prophet forecast impact overlay
 
 ---
 

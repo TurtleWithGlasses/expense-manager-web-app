@@ -5,6 +5,7 @@
 {% block head_extra %}
 <!-- Chart.js for forecast visualization -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <style>
   .forecast-card {
     background: var(--panel);
@@ -235,6 +236,7 @@
           <option value="60">2 Months (60 days)</option>
           <option value="90" selected>3 Months (90 days)</option>
           <option value="180">6 Months (180 days)</option>
+          <option value="365">1 Year (365 days)</option>
         </select>
       </div>
 
@@ -255,6 +257,61 @@
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- Multi-Horizon Comparison Section -->
+  <div class="forecast-card" id="horizonCompareCard">
+    <div class="forecast-header">
+      <div>
+        <div class="forecast-title"><i class="bi bi-bar-chart-steps"></i> Compare Horizons (90 / 180 / 365 days)</div>
+        <div class="forecast-subtitle">Side-by-side Prophet forecast summaries for all three horizons</div>
+      </div>
+      <button class="btn btn-outline-primary btn-sm" onclick="loadHorizonComparison()" id="compareHorizonBtn">
+        <i class="bi bi-magic"></i> Load Comparison
+      </button>
+    </div>
+
+    <div id="horizonCompareBody">
+      <p class="text-muted small mb-0">Click "Load Comparison" to fetch 90, 180 and 365-day forecasts simultaneously.</p>
+    </div>
+  </div>
+
+  <!-- Category Forecast Section -->
+  <div class="forecast-card" id="categoryForecastCard">
+    <div class="forecast-header">
+      <div>
+        <div class="forecast-title"><i class="bi bi-tags"></i> Category Forecast</div>
+        <div class="forecast-subtitle">Predict spending for a specific category over the next 1–12 months</div>
+      </div>
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-5">
+        <label for="catForecastSelect" class="form-label">Category</label>
+        <select id="catForecastSelect" class="form-select">
+          <option value="">Loading categories…</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label for="catForecastMonths" class="form-label">Months ahead</label>
+        <select id="catForecastMonths" class="form-select">
+          <option value="3">3 months</option>
+          <option value="6" selected>6 months</option>
+          <option value="9">9 months</option>
+          <option value="12">12 months</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label d-block">&nbsp;</label>
+        <button class="btn btn-primary w-100" onclick="generateCategoryForecast()">
+          <i class="bi bi-graph-up"></i> Forecast Category
+        </button>
+      </div>
+    </div>
+    <div id="catForecastResult" style="display:none;">
+      <div class="summary-grid" id="catForecastStats"></div>
+      <div class="chart-container"><canvas id="catForecastChart"></canvas></div>
+    </div>
+    <div id="catForecastError" class="text-danger small" style="display:none;"></div>
   </div>
 
   <!-- Loading State -->
@@ -831,9 +888,266 @@ function showError(message) {
   document.getElementById('errorMessage').textContent = message;
 }
 
+// ── Multi-Horizon Comparison ──────────────────────────────────────────────────
+
+async function loadHorizonComparison() {
+  const btn = document.getElementById('compareHorizonBtn');
+  const body = document.getElementById('horizonCompareBody');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Loading…';
+  body.innerHTML = '<p class="text-muted small">Fetching 90, 180 and 365-day forecasts…</p>';
+
+  try {
+    const [r90, r180, r365] = await Promise.all([
+      fetch('/api/v1/forecasts/spending/total?days_ahead=90').then(r => r.json()),
+      fetch('/api/v1/forecasts/spending/total?days_ahead=180').then(r => r.json()),
+      fetch('/api/v1/forecasts/spending/total?days_ahead=365').then(r => r.json())
+    ]);
+
+    // Update currency from first successful response
+    if (r90.currency) userCurrency = r90.currency;
+
+    const horizons = [
+      { label: '3 Months (90 days)', days: 90, data: r90 },
+      { label: '6 Months (180 days)', days: 180, data: r180 },
+      { label: '1 Year (365 days)', days: 365, data: r365 }
+    ];
+
+    let html = '<div class="row g-3 mb-4">';
+    horizons.forEach(h => {
+      const s = h.data.success ? h.data.summary : null;
+      const hasRec = s && s.total_recurring > 0;
+      const total = s ? (hasRec ? s.total_combined : s.total_predicted) : null;
+      const daily = s ? (hasRec ? s.avg_daily_combined : s.avg_daily_spending) : null;
+      const trend = s ? s.trend_direction : null;
+      const trendIcon = trend === 'increasing' ? '↑' : trend === 'decreasing' ? '↓' : '→';
+      const trendColor = trend === 'increasing' ? 'var(--red)' : trend === 'decreasing' ? 'var(--green)' : 'var(--blue)';
+
+      html += `
+        <div class="col-md-4">
+          <div class="summary-item" style="border-top: 3px solid var(--blue);">
+            <div class="summary-label" style="font-size:0.9rem; font-weight:600; margin-bottom:0.75rem;">${h.label}</div>
+            ${s ? `
+              <div class="d-flex justify-content-between mb-2">
+                <span class="summary-label">Total Forecast</span>
+                <strong>${formatCurrencyShort(total)}</strong>
+              </div>
+              <div class="d-flex justify-content-between mb-2">
+                <span class="summary-label">Daily Avg</span>
+                <strong>${formatCurrency(daily)}</strong>
+              </div>
+              ${hasRec ? `
+              <div class="d-flex justify-content-between mb-2">
+                <span class="summary-label">AI Predicted</span>
+                <span>${formatCurrencyShort(s.total_predicted)}</span>
+              </div>
+              <div class="d-flex justify-content-between mb-2">
+                <span class="summary-label">Scheduled Bills</span>
+                <span>${formatCurrencyShort(s.total_recurring)}</span>
+              </div>
+              ` : ''}
+              <div class="d-flex justify-content-between">
+                <span class="summary-label">Trend</span>
+                <strong style="color:${trendColor}">${trendIcon} ${trend || 'stable'} (${Math.abs(s.trend_change_percent || 0).toFixed(1)}%)</strong>
+              </div>
+            ` : `<p class="text-muted small mb-0">${h.data.message || 'Could not generate forecast'}</p>`}
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+
+    // Comparison line chart across all 3 horizons
+    const successData = horizons.filter(h => h.data.success && h.data.forecast);
+    if (successData.length > 0) {
+      html += '<canvas id="horizonCompareChart" height="100"></canvas>';
+    }
+
+    body.innerHTML = html;
+
+    // Render comparison chart if data available
+    if (successData.length > 0) {
+      const colors = ['rgb(77,163,255)', 'rgb(16,185,129)', 'rgb(251,191,36)'];
+      const datasets = successData.map((h, i) => ({
+        label: h.label,
+        data: h.data.forecast.map(d => ({ x: d.date, y: d.predicted })),
+        borderColor: colors[i],
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.3
+      }));
+
+      new Chart(document.getElementById('horizonCompareChart'), {
+        type: 'line',
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          parsing: false,
+          plugins: {
+            legend: { display: true, position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`
+              }
+            }
+          },
+          scales: {
+            x: { type: 'time', time: { unit: 'month' }, ticks: { maxTicksLimit: 12 } },
+            y: {
+              beginAtZero: true,
+              ticks: { callback: v => formatCurrencyShort(v) }
+            }
+          }
+        }
+      });
+    }
+
+  } catch (err) {
+    body.innerHTML = '<p class="text-danger small">Error loading horizon comparison. Please try again.</p>';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Reload';
+  }
+}
+
+// ── Category Forecast ─────────────────────────────────────────────────────────
+
+let catForecastChart = null;
+
+async function loadCategoryOptions() {
+  try {
+    const res = await fetch('/api/v1/categories');
+    const data = await res.json();
+    const select = document.getElementById('catForecastSelect');
+    select.innerHTML = '<option value="">Select a category…</option>';
+    (data.categories || [])
+      .filter(c => c.type === 'expense')
+      .forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.name;
+        select.appendChild(opt);
+      });
+  } catch (e) {
+    document.getElementById('catForecastSelect').innerHTML = '<option value="">Could not load categories</option>';
+  }
+}
+
+async function generateCategoryForecast() {
+  const catId = document.getElementById('catForecastSelect').value;
+  const months = document.getElementById('catForecastMonths').value;
+  const resultDiv = document.getElementById('catForecastResult');
+  const errorDiv = document.getElementById('catForecastError');
+
+  if (!catId) {
+    errorDiv.textContent = 'Please select a category.';
+    errorDiv.style.display = 'block';
+    return;
+  }
+  errorDiv.style.display = 'none';
+  resultDiv.style.display = 'none';
+
+  try {
+    const res = await fetch(`/api/v1/forecasts/spending/category/${catId}?months_ahead=${months}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      errorDiv.textContent = data.message || 'Category forecast failed';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    // Stats
+    const stats = document.getElementById('catForecastStats');
+    const histAvg = data.historical_monthly_avg || 0;
+    const forecasts = data.monthly_forecasts || [];
+    const forecastAvg = forecasts.length > 0
+      ? forecasts.reduce((s, f) => s + f.predicted_total, 0) / forecasts.length
+      : 0;
+    const diff = histAvg > 0 ? ((forecastAvg - histAvg) / histAvg) * 100 : 0;
+    const diffColor = diff > 0 ? 'var(--red)' : 'var(--green)';
+
+    stats.innerHTML = `
+      <div class="summary-item">
+        <div class="summary-label">Category</div>
+        <div class="summary-value" style="font-size:1.1rem;">${data.category}</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Historical Monthly Avg</div>
+        <div class="summary-value">${formatCurrency(histAvg)}</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Forecast Monthly Avg</div>
+        <div class="summary-value">${formatCurrency(forecastAvg)}</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Projected Change</div>
+        <div class="summary-value" style="color:${diffColor}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%</div>
+      </div>`;
+
+    // Chart
+    if (catForecastChart) catForecastChart.destroy();
+    const ctx = document.getElementById('catForecastChart').getContext('2d');
+    const labels = forecasts.map(f => f.month);
+    catForecastChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Predicted',
+            data: forecasts.map(f => f.predicted_total),
+            backgroundColor: 'rgba(16,185,129,0.7)',
+            borderColor: 'rgb(16,185,129)',
+            borderWidth: 1
+          },
+          {
+            label: 'Lower Bound (80%)',
+            data: forecasts.map(f => f.lower_bound),
+            backgroundColor: 'rgba(77,163,255,0.3)',
+            borderColor: 'rgba(77,163,255,0.6)',
+            borderWidth: 1
+          },
+          {
+            label: 'Upper Bound (80%)',
+            data: forecasts.map(f => f.upper_bound),
+            backgroundColor: 'rgba(239,68,68,0.2)',
+            borderColor: 'rgba(239,68,68,0.4)',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'bottom' },
+          tooltip: {
+            callbacks: { label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}` }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { callback: v => formatCurrencyShort(v) }
+          }
+        }
+      }
+    });
+
+    resultDiv.style.display = 'block';
+
+  } catch (err) {
+    errorDiv.textContent = 'Error generating category forecast. Please try again.';
+    errorDiv.style.display = 'block';
+  }
+}
+
 // Auto-generate forecast on page load
 window.addEventListener('DOMContentLoaded', function() {
-  // Don't auto-generate to save API calls
+  loadCategoryOptions();
+  // Don't auto-generate main forecast to save API calls
   // User can click "Generate Forecast" button
 });
 </script>
