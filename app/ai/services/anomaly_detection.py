@@ -309,7 +309,7 @@ class AnomalyDetectionService:
                 explanations.append("Significantly higher than your typical weekend spending")
 
         # ENHANCED: Month comparison
-        same_month = all_transactions[all_transactions['date'].dt.month == trans_date.month]
+        same_month = all_transactions[all_transactions['date'].apply(lambda d: d.month) == trans_date.month]
         if len(same_month) > 3:
             month_avg = same_month['amount'].mean()
             if amount > month_avg * 1.8:
