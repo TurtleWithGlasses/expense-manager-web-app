@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 2.0 (Production)
-**Last Updated:** March 20, 2026 (Phase 35 + Phase 37 + Phase 40 enhanced)
+**Last Updated:** March 22, 2026 (Phase 35 + Phase 37 + Phase 39 + Phase 40 + Phase 41 enhanced)
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -45,7 +45,7 @@ Budget Pulse is a comprehensive expense management application featuring AI-powe
 ## ✅ Completed Phases
 
 > **Quick Index of all completed phases:**
-> Phase 1-4 (Auth/Core) | Phase 5-7 (Entries) | Phase 8 (Categories) | Phase 9-10 (Multi-Currency) | Phase 11-12 (Dashboard) | Phase 13 (Reports) | Phase 14 (AI Categorization) | Phase 15 (Predictive Analytics) | Phase 16 (Anomaly/Insights) | Phase 17 (Goals) | Phase 18 (Auto Reports) | Phase 19 (Theme) | Phase 20 (Profile/Avatar) | Phase 21 (Deployment) | Phase 22 (Security) | Phase 23 (Testing) | Phase 24 (JWT/REST API) | Phase 25 (Performance) | Phase 25 Alt (PWA) | Phase 26 (Calendar) | Phase 27 (Annual Reports) | Phase 28 (Budget Intelligence) | Phase 29 (Payment History) | Phase 30 (Payment Analytics) | Phase 31 (Split Expenses) | Phase 32A (Voice Commands) | Phase 32B (Receipt Scanning OCR) | Phase 3.2 (Savings Challenges) | Phase 33 (Admin/Help/Feedback) | Phase 34 (Achievement System + Health Score UI) | Phase 35 (Report Templates) | Phase 36 (Gamification Frontend) | Phase 37 (Prophet ML + Scenarios) | Phase 38 (Redis Caching) | Phase 39 (Auto-Add Bills) | Phase 40 (ML Auto-Retraining + AI Insights)
+> Phase 1-4 (Auth/Core) | Phase 5-7 (Entries) | Phase 8 (Categories) | Phase 9-10 (Multi-Currency) | Phase 11-12 (Dashboard) | Phase 13 (Reports) | Phase 14 (AI Categorization) | Phase 15 (Predictive Analytics) | Phase 16 (Anomaly/Insights) | Phase 17 (Goals) | Phase 18 (Auto Reports) | Phase 19 (Theme) | Phase 20 (Profile/Avatar) | Phase 21 (Deployment) | Phase 22 (Security) | Phase 23 (Testing) | Phase 24 (JWT/REST API) | Phase 25 (Performance) | Phase 25 Alt (PWA) | Phase 26 (Calendar) | Phase 27 (Annual Reports) | Phase 28 (Budget Intelligence) | Phase 29 (Payment History) | Phase 30 (Payment Analytics) | Phase 31 (Split Expenses) | Phase 32A (Voice Commands) | Phase 32B (Receipt Scanning OCR) | Phase 3.2 (Savings Challenges) | Phase 33 (Admin/Help/Feedback) | Phase 34 (Achievement System + Health Score UI) | Phase 35 (Report Templates) | Phase 36 (Gamification Frontend) | Phase 37 (Prophet ML + Scenarios) | Phase 38 (Redis Caching) | Phase 39 (Auto-Add Bills) | Phase 40 (ML Auto-Retraining + AI Insights) | Phase 41 (Full Gamification Frontend)
 
 ### **Phase 1-4: Core Foundation** (Completed)
 **Duration:** Initial Development
@@ -4095,23 +4095,44 @@ Three-tier caching strategy (Redis → DB → Fresh), 7 composite database index
 
 ### **Phase 39: Auto-Add to Expenses for Recurring Bills** 🔄
 **Priority:** HIGH
-**Status:** ✅ COMPLETE
-**Completed:** December 31, 2025
-**Actual Time:** ~3 hours
+**Status:** ✅ COMPLETE (Enhanced March 22, 2026)
+**Completed:** December 31, 2025 → Enhanced March 22, 2026
+**Actual Time:** ~3 hours + ~2 hours enhancement
 
 **Overview:**
-Automatic expense entry creation for recurring bills on their due dates, with smart duplicate prevention.
+Automatic expense entry creation for recurring bills on their due dates, with robust PaymentOccurrence-based duplicate prevention, user-triggered "Run Now", and a live auto-add history table.
 
 **✅ Completed Features:**
-- Auto-add checkbox in Bills & Subscriptions UI
-- Scheduled daily job (1 AM) to process due payments
-- Automatic expense entry creation on due dates
-- Smart duplicate prevention
-- Support for all recurrence frequencies (weekly, biweekly, monthly, quarterly, annually)
-- Manual test endpoint for verification
-- AUTO-ADD visibility column in Bills & Subscriptions table (green checkmark for enabled)
 
-**Files:** Integrated into `app/api/v1/recurring_payments.py` and scheduler
+1. **Daily Scheduled Job (1 AM)**
+   - `process_recurring_payments()` in `ReportScheduler` runs every night at 1 AM
+   - Fetches all `RecurringPayment` rows where `is_active=True` and `auto_add_to_expenses=True`
+   - Calls `_is_payment_due_today()` for each frequency (weekly/biweekly/monthly/quarterly/annually)
+
+2. **Robust Duplicate Prevention (Enhanced)**
+   - Previously: fragile `description.like(f"%{name}%")` entry query
+   - Now: checks `PaymentOccurrence` table for `(recurring_payment_id, scheduled_date)` before creating any entry — guaranteed idempotency even if the job runs multiple times on the same day
+   - Creates a `PaymentOccurrence` record linked to the new `Entry` (`linked_entry_id`) on every successful auto-add
+
+3. **User-Triggered "Run Now" Endpoint**
+   - `POST /api/v1/recurring-payments/run-auto-add` — user-scoped (current user only), same logic as scheduler
+   - Returns structured result: `created[]`, `skipped[]`, `summary` with counts
+   - Also creates PaymentOccurrence records for idempotency
+
+4. **Auto-Add History API**
+   - `GET /api/v1/recurring-payments/auto-add-history?limit=50`
+   - Returns PaymentOccurrence rows that have a `linked_entry_id`, ordered by `scheduled_date DESC`
+   - Includes payment name, amount, entry link, and note (user-request vs scheduler)
+
+5. **Bills & Subscriptions UI (Enhanced)**
+   - "Auto-Add to Expenses" card with "Run Auto-Add Now" button and inline result display (created/skipped badges)
+   - Live "Auto-Add History" table showing last 30 auto-added entries with links to entries
+   - History loads on page load and refreshes after a successful run
+
+**Files:**
+- `app/services/report_scheduler.py` – Fixed `process_recurring_payments()` with PaymentOccurrence dedup + occurrence creation; added `PaymentOccurrence` import
+- `app/api/v1/recurring_payments.py` – Added `RecurringPayment`, `PaymentOccurrence`, `Entry` imports; new `POST /run-auto-add` and `GET /auto-add-history` endpoints
+- `app/templates/intelligence/bills_subscriptions.html` – Auto-Add card, Run Now button, history table, JS functions `runAutoAddNow()` and `loadAutoAddHistory()`
 
 ---
 
@@ -4151,6 +4172,56 @@ User-controlled automatic ML model retraining frequency with "Manual only" optio
 **Files:**
 - `app/templates/settings/ai_settings.html` – Manual option, schedule indicator, enhanced insights modal JS
 - `app/templates/base.html` – Global FAB button + comprehensive insights modal + JS
+
+---
+
+### **Phase 41: Full Gamification Frontend** 🏆
+**Priority:** HIGH
+**Status:** ✅ COMPLETE (March 2026)
+**Completed:** March 22, 2026
+**Actual Time:** ~3 hours
+
+**Overview:**
+Complete gamification UI overhaul — achievement notification bell center with live badge count and dropdown, enhanced achievements page with progress bars, tier summary, leaderboard XP bars, embedded challenges tab, and badge equip/unequip fully wired.
+
+**✅ Completed Features:**
+
+1. **Achievement Notification Bell Center**
+   - Fixed broken JS reference (`achievement-notification-center.js` → `achievement-notifications.js`)
+   - Bell badge shows live count of new (unread) achievements fetched on page load via `/api/achievements/recent`
+   - Dropdown lists recent new achievements with tier-coloured icons, points, and earned date
+   - "Mark all as read" button calls `/api/achievements/mark-viewed` and clears the badge
+   - Closes on outside click; CSS styles added to `base.html`
+
+2. **XP/Level System — Enhanced**
+   - Animated XP progress bar in stats hero on achievements page
+   - Rank name displayed below level number
+   - XP count formatted with `toLocaleString()` for readability
+
+3. **Tier Summary Row**
+   - Four coloured pills (Bronze/Silver/Gold/Platinum) below the hero showing unlocked count per tier
+   - Populated from `/api/achievements/stats`
+
+4. **Achievement Cards — Progress Bars**
+   - Locked achievements show a progress bar (0–100 %) from the API's `progress` field
+   - Tier filter dropdown added alongside category filter buttons
+   - Cards now 4-per-row on lg screens (was 3) using `col-lg-3`
+
+5. **Challenges Tab (inline)**
+   - New "Challenges" tab on achievements page shows up to 9 active challenges
+   - Joined challenges show progress bars; unjoined show Join button + XP reward
+   - "View All Challenges" link leads to `/challenges`
+
+6. **Leaderboard — Enhanced**
+   - XP bar per entry (relative to top scorer), rank medal colours (#1 gold / #2 silver / #3 bronze)
+   - Level badge shown next to username
+   - Toggle buttons to switch between XP leaderboard and Achievement-points leaderboard
+   - User rank + total players shown in sidebar card
+
+**Files:**
+- `app/templates/base.html` – Bell CSS added, JS reference fixed
+- `app/static/js/achievement-notifications.js` – Bell dropdown wiring (load, toggle, mark-read)
+- `app/templates/achievements.html` – Full rewrite: progress bars, tier pills, challenges tab, enhanced leaderboard
 
 ---
 

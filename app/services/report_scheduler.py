@@ -14,6 +14,7 @@ from app.services.email import email_service
 from app.models.weekly_report import UserReportPreferences, WeeklyReport
 from app.models.user import User
 from app.models.recurring_payment import RecurringPayment, RecurrenceFrequency
+from app.models.payment_history import PaymentOccurrence
 from app.models.entry import Entry
 
 
@@ -299,7 +300,11 @@ class ReportScheduler:
         return False
 
     async def process_recurring_payments(self):
-        """Process recurring payments and auto-add to expenses if due"""
+        """Process recurring payments and auto-add to expenses if due today.
+
+        Duplicate prevention: checks PaymentOccurrence for (recurring_payment_id, scheduled_date)
+        before creating a new entry so we never double-post the same bill on the same day.
+        """
         print(f"💰 Processing recurring payments at {datetime.now()}")
 
         db = SessionLocal()
@@ -313,45 +318,65 @@ class ReportScheduler:
             ).all()
 
             print(f"📋 Found {len(payments)} payments with auto-add enabled")
+            created = skipped = errors = 0
 
             for payment in payments:
                 try:
                     # Check if payment is due today
-                    if self._is_payment_due_today(payment, today):
-                        # Check if already added today (avoid duplicates)
-                        existing_entry = db.query(Entry).filter(
-                            Entry.user_id == payment.user_id,
-                            Entry.category_id == payment.category_id,
-                            Entry.date == today,
-                            Entry.amount == payment.amount,
-                            Entry.type == "expense",
-                            Entry.description.like(f"%{payment.name}%")
-                        ).first()
+                    if not self._is_payment_due_today(payment, today):
+                        continue
 
-                        if not existing_entry:
-                            # Create expense entry
-                            new_entry = Entry(
-                                user_id=payment.user_id,
-                                category_id=payment.category_id,
-                                type="expense",
-                                amount=payment.amount,
-                                currency_code=payment.currency_code,
-                                date=today,
-                                description=f"{payment.name} (Auto-added)"
-                            )
+                    # Duplicate check via PaymentOccurrence (source of truth)
+                    already_processed = db.query(PaymentOccurrence).filter(
+                        PaymentOccurrence.recurring_payment_id == payment.id,
+                        PaymentOccurrence.scheduled_date == today
+                    ).first()
 
-                            db.add(new_entry)
-                            db.commit()
+                    if already_processed:
+                        print(f"⏭️  Skipping '{payment.name}' - PaymentOccurrence already exists for {today}")
+                        skipped += 1
+                        continue
 
-                            print(f"✅ Auto-added expense for '{payment.name}' - {payment.currency_code} {payment.amount}")
-                        else:
-                            print(f"⏭️  Skipping '{payment.name}' - already added today")
+                    # Create the expense entry
+                    new_entry = Entry(
+                        user_id=payment.user_id,
+                        category_id=payment.category_id,
+                        type="expense",
+                        amount=payment.amount,
+                        currency_code=payment.currency_code,
+                        date=today,
+                        description=f"{payment.name} (Auto-added)"
+                    )
+                    db.add(new_entry)
+                    db.flush()  # Get new_entry.id before creating occurrence
+
+                    # Record the occurrence so we never re-process this bill today
+                    occurrence = PaymentOccurrence(
+                        user_id=payment.user_id,
+                        recurring_payment_id=payment.id,
+                        scheduled_date=today,
+                        actual_date=today,
+                        amount=payment.amount,
+                        currency_code=payment.currency_code,
+                        is_paid=True,
+                        linked_entry_id=new_entry.id,
+                        note="Auto-added by scheduler",
+                        created_at=datetime.utcnow(),
+                        updated_at=datetime.utcnow(),
+                        paid_at=datetime.utcnow()
+                    )
+                    db.add(occurrence)
+                    db.commit()
+
+                    print(f"✅ Auto-added '{payment.name}' — {payment.currency_code} {payment.amount} (entry #{new_entry.id})")
+                    created += 1
 
                 except Exception as e:
                     print(f"❌ Error processing payment '{payment.name}': {e}")
                     db.rollback()
+                    errors += 1
 
-            print(f"✅ Recurring payments processing completed")
+            print(f"✅ Recurring payments done: {created} created, {skipped} skipped, {errors} errors")
 
         except Exception as e:
             print(f"❌ Error in recurring payments job: {e}")

@@ -16,7 +16,9 @@ from typing import Optional, List
 from app.db.session import get_db
 from app.deps import current_user
 from app.services.recurring_payment_service import RecurringPaymentService
-from app.models.recurring_payment import RecurrenceFrequency
+from app.models.recurring_payment import RecurrenceFrequency, RecurringPayment
+from app.models.payment_history import PaymentOccurrence
+from app.models.entry import Entry
 from app.models.user import User
 from app.services.report_scheduler import report_scheduler
 
@@ -385,6 +387,166 @@ def get_payment_summary(
     """
     service = RecurringPaymentService(db)
     return service.get_payment_summary(user.id)
+
+
+# ==================== AUTO-ADD USER ENDPOINTS ====================
+
+@router.post("/run-auto-add")
+async def run_auto_add_now(
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Immediately run the auto-add job for the current user.
+
+    Finds all active recurring payments with auto_add_to_expenses=True that are
+    due today, creates expense entries for any that haven't been processed yet
+    (using PaymentOccurrence as the deduplication key), and returns a summary.
+    """
+    from datetime import date as date_cls, datetime as dt
+
+    today = date_cls.today()
+    service = RecurringPaymentService(db)
+
+    payments = db.query(RecurringPayment).filter(
+        RecurringPayment.user_id == user.id,
+        RecurringPayment.is_active == True,
+        RecurringPayment.auto_add_to_expenses == True
+    ).all()
+
+    created = []
+    skipped = []
+
+    for payment in payments:
+        is_due = report_scheduler._is_payment_due_today(payment, today)
+        next_due = service.calculate_next_due_date(payment)
+
+        info = {
+            "id": payment.id,
+            "name": payment.name,
+            "amount": float(payment.amount),
+            "currency_code": payment.currency_code,
+            "is_due_today": is_due,
+            "next_due_date": next_due.isoformat() if next_due else None,
+        }
+
+        if not is_due:
+            info["reason"] = "Not due today"
+            skipped.append(info)
+            continue
+
+        # Duplicate check via PaymentOccurrence
+        already = db.query(PaymentOccurrence).filter(
+            PaymentOccurrence.recurring_payment_id == payment.id,
+            PaymentOccurrence.scheduled_date == today
+        ).first()
+
+        if already:
+            info["reason"] = "Already processed today"
+            info["occurrence_id"] = already.id
+            skipped.append(info)
+            continue
+
+        try:
+            # Create expense entry
+            entry = Entry(
+                user_id=user.id,
+                category_id=payment.category_id,
+                type="expense",
+                amount=payment.amount,
+                currency_code=payment.currency_code,
+                date=today,
+                description=f"{payment.name} (Auto-added)"
+            )
+            db.add(entry)
+            db.flush()
+
+            # Record occurrence (deduplication anchor)
+            occ = PaymentOccurrence(
+                user_id=user.id,
+                recurring_payment_id=payment.id,
+                scheduled_date=today,
+                actual_date=today,
+                amount=payment.amount,
+                currency_code=payment.currency_code,
+                is_paid=True,
+                linked_entry_id=entry.id,
+                note="Auto-added by user request",
+                created_at=dt.utcnow(),
+                updated_at=dt.utcnow(),
+                paid_at=dt.utcnow()
+            )
+            db.add(occ)
+            db.commit()
+
+            info["entry_id"] = entry.id
+            info["description"] = entry.description
+            created.append(info)
+
+        except Exception as e:
+            db.rollback()
+            info["reason"] = str(e)
+            skipped.append(info)
+
+    return {
+        "success": True,
+        "date": today.isoformat(),
+        "created": created,
+        "skipped": skipped,
+        "summary": {
+            "created": len(created),
+            "skipped": len(skipped),
+        }
+    }
+
+
+@router.get("/auto-add-history")
+def get_auto_add_history(
+    limit: int = 50,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Return the history of entries that were auto-added via the scheduler or run-now.
+    Sourced from PaymentOccurrence records that have a linked_entry_id.
+    """
+    from sqlalchemy.orm import joinedload
+
+    occurrences = (
+        db.query(PaymentOccurrence)
+        .options(
+            joinedload(PaymentOccurrence.recurring_payment),
+            joinedload(PaymentOccurrence.linked_entry),
+        )
+        .filter(
+            PaymentOccurrence.user_id == user.id,
+            PaymentOccurrence.linked_entry_id.isnot(None),
+        )
+        .order_by(PaymentOccurrence.scheduled_date.desc())
+        .limit(limit)
+        .all()
+    )
+
+    history = []
+    for occ in occurrences:
+        rp = occ.recurring_payment
+        history.append({
+            "occurrence_id": occ.id,
+            "recurring_payment_id": occ.recurring_payment_id,
+            "payment_name": rp.name if rp else "Unknown",
+            "scheduled_date": occ.scheduled_date.isoformat(),
+            "amount": float(occ.amount),
+            "currency_code": occ.currency_code,
+            "entry_id": occ.linked_entry_id,
+            "note": occ.note,
+            "created_at": occ.created_at.isoformat() if occ.created_at else None,
+        })
+
+    return {
+        "success": True,
+        "history": history,
+        "total": len(history),
+    }
 
 
 # ==================== TESTING ENDPOINT ====================
