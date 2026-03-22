@@ -12,6 +12,7 @@ from app.ai.data.time_series_analyzer import TimeSeriesAnalyzer
 from app.ai.services.prediction_service import PredictionService
 from app.ai.services.anomaly_detection import AnomalyDetectionService
 from app.ai.services.financial_insights import FinancialInsightsService
+from app.core.cache import get_cache
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -534,13 +535,18 @@ async def get_spending_patterns(
         - Spending consistency
         - Monthly spending phase pattern
     """
+    cache = get_cache()
+    cache_key = cache._make_key('insights', user.id, 'spending_patterns')
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return JSONResponse(cached)
+
     insights_service = FinancialInsightsService(db)
     patterns = insights_service._analyze_spending_patterns(user.id)
 
-    return JSONResponse({
-        'success': True,
-        'patterns': patterns
-    })
+    result = {'success': True, 'patterns': patterns}
+    cache.set(cache_key, result, ttl=3600)
+    return JSONResponse(result)
 
 
 @router.get("/insights/saving-opportunities")
@@ -557,14 +563,18 @@ async def get_saving_opportunities(
         - Potential monthly savings
         - Prioritized recommendations
     """
+    cache = get_cache()
+    cache_key = cache._make_key('insights', user.id, 'saving_opportunities')
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return JSONResponse(cached)
+
     insights_service = FinancialInsightsService(db)
     opportunities = insights_service._identify_saving_opportunities(user.id)
 
-    return JSONResponse({
-        'success': True,
-        'opportunities': opportunities,
-        'total_opportunities': len(opportunities)
-    })
+    result = {'success': True, 'opportunities': opportunities, 'total_opportunities': len(opportunities)}
+    cache.set(cache_key, result, ttl=3600)
+    return JSONResponse(result)
 
 
 @router.get("/insights/budget-health")
@@ -582,13 +592,18 @@ async def get_budget_health(
         - Expense change percentage
         - Status message with recommendations
     """
+    cache = get_cache()
+    cache_key = cache._make_key('insights', user.id, 'budget_health')
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return JSONResponse(cached)
+
     insights_service = FinancialInsightsService(db)
     health = insights_service._assess_budget_health(user.id)
 
-    return JSONResponse({
-        'success': True,
-        'budget_health': health
-    })
+    result = {'success': True, 'budget_health': health}
+    cache.set(cache_key, result, ttl=3600)
+    return JSONResponse(result)
 
 
 @router.get("/insights/category-trends")
@@ -629,14 +644,18 @@ async def get_recommendations(
         - Potential impact assessment
         - Implementation suggestions
     """
+    cache = get_cache()
+    cache_key = cache._make_key('insights', user.id, 'recommendations')
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return JSONResponse(cached)
+
     insights_service = FinancialInsightsService(db)
     recommendations = insights_service._generate_recommendations(user.id)
 
-    return JSONResponse({
-        'success': True,
-        'recommendations': recommendations,
-        'total_recommendations': len(recommendations)
-    })
+    result = {'success': True, 'recommendations': recommendations, 'total_recommendations': len(recommendations)}
+    cache.set(cache_key, result, ttl=3600)
+    return JSONResponse(result)
 
 
 @router.get("/insights/achievements")
@@ -676,11 +695,15 @@ async def get_financial_alerts(
         - Actionable notifications
         - Severity-based prioritization
     """
+    cache = get_cache()
+    cache_key = cache._make_key('insights', user.id, 'alerts')
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return JSONResponse(cached)
+
     insights_service = FinancialInsightsService(db)
     alerts = insights_service._generate_alerts(user.id)
 
-    return JSONResponse({
-        'success': True,
-        'alerts': alerts,
-        'total_alerts': len(alerts)
-    })
+    result = {'success': True, 'alerts': alerts, 'total_alerts': len(alerts)}
+    cache.set(cache_key, result, ttl=3600)
+    return JSONResponse(result)

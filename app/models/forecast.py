@@ -2,7 +2,7 @@
 Forecast Model for storing Prophet forecasting results
 """
 
-from sqlalchemy import Column, Integer, String, Float, DateTime, JSON, ForeignKey, Boolean, Text
+from sqlalchemy import Column, Integer, String, Float, DateTime, JSON, ForeignKey, Boolean, Text, Index
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -16,6 +16,10 @@ class Forecast(Base):
     This avoids recomputing forecasts and allows tracking prediction accuracy
     """
     __tablename__ = "forecasts"
+    __table_args__ = (
+        # Composite index: active forecast lookup (Tier 2 DB cache hit path)
+        Index('ix_forecasts_user_type_active', 'user_id', 'forecast_type', 'is_active'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)

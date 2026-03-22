@@ -1,5 +1,5 @@
 from datetime import date
-from sqlalchemy import String, ForeignKey, Numeric, Date, Boolean, Integer
+from sqlalchemy import String, ForeignKey, Numeric, Date, Boolean, Integer, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
@@ -11,6 +11,12 @@ class EntryType:
 
 class Entry(Base):
     __tablename__ = "entries"
+    __table_args__ = (
+        # Composite indexes for the three most common multi-column query patterns
+        Index('ix_entries_user_date', 'user_id', 'date'),           # date-range queries per user
+        Index('ix_entries_user_type', 'user_id', 'type'),           # income/expense split per user
+        Index('ix_entries_user_category', 'user_id', 'category_id'), # category totals per user
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)  # Index for user filtering

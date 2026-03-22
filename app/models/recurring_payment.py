@@ -3,7 +3,7 @@ Recurring Payment model for user-managed bills & subscriptions
 """
 
 from datetime import datetime, date
-from sqlalchemy import String, ForeignKey, Numeric, Date, Boolean, Integer, Enum as SQLEnum
+from sqlalchemy import String, ForeignKey, Numeric, Date, Boolean, Integer, Enum as SQLEnum, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 import enum
@@ -30,6 +30,10 @@ class RecurringPayment(Base):
     AI only provides warnings about upcoming payments based on user-defined data.
     """
     __tablename__ = "recurring_payments"
+    __table_args__ = (
+        # Composite index: active recurring payments lookup per user
+        Index('ix_recurring_payments_user_active', 'user_id', 'is_active'),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)

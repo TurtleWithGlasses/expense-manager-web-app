@@ -1,6 +1,6 @@
 """Financial Goal Model - Phase 17"""
 from datetime import datetime
-from sqlalchemy import String, DateTime, Numeric, Enum as SQLEnum, Integer, Boolean, Text
+from sqlalchemy import String, DateTime, Numeric, Enum as SQLEnum, Integer, Boolean, Text, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
 import enum
@@ -28,6 +28,10 @@ class GoalStatus(str, enum.Enum):
 class FinancialGoal(Base):
     """Financial goals for users to track their financial objectives"""
     __tablename__ = "financial_goals"
+    __table_args__ = (
+        # Composite index: active goals dashboard query
+        Index('ix_financial_goals_user_status', 'user_id', 'status'),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)

@@ -8,7 +8,7 @@ Supports auto-linking with expense entries and payment history visualization.
 from datetime import datetime, date
 from decimal import Decimal
 from typing import Optional
-from sqlalchemy import ForeignKey, String, Numeric, Date, DateTime, Boolean, Integer, Text
+from sqlalchemy import ForeignKey, String, Numeric, Date, DateTime, Boolean, Integer, Text, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -25,6 +25,10 @@ class PaymentOccurrence(Base):
     - Link payments to actual expense entries
     """
     __tablename__ = "payment_occurrences"
+    __table_args__ = (
+        # Composite index: idempotency check in auto-add scheduler
+        Index('ix_payment_occurrences_payment_date', 'recurring_payment_id', 'scheduled_date'),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
