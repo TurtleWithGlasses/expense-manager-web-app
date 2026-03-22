@@ -19,11 +19,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Strip Windows CRLF line endings and make executable
-RUN sed -i 's/\r$//' start.sh && chmod +x start.sh
-
 ENV PYTHONUNBUFFERED=1
+ENV ENV=production
 
 EXPOSE 8080
 
-CMD ["/bin/bash", "start.sh"]
+CMD ["/bin/bash", "-c", "echo 'Running migrations...' && alembic upgrade head && echo 'Seeding data...' && python -m app.seeds.gamification_seeds && echo 'Starting server...' && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
