@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Install Tesseract OCR + required system libraries
+# Install Tesseract OCR + system libraries needed by numpy/scipy/PIL/sklearn
 RUN apt-get update && apt-get install -y --no-install-recommends \
         tesseract-ocr \
         tesseract-ocr-eng \
@@ -8,6 +8,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libsm6 \
         libxext6 \
         libxrender-dev \
+        libgomp1 \
+        libgfortran5 \
+        gcc \
+        g++ \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
