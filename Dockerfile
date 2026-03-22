@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.11
 
 # Install Tesseract OCR + system libraries needed by numpy/scipy/PIL/sklearn
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -8,10 +8,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libsm6 \
         libxext6 \
         libxrender-dev \
-        libgomp1 \
-        libgfortran5 \
-        gcc \
-        g++ \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -23,9 +19,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Make startup script executable
-RUN chmod +x start.sh
+# Strip Windows CRLF line endings and make executable
+RUN sed -i 's/\r$//' start.sh && chmod +x start.sh
+
+ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8080
 
-CMD ["./start.sh"]
+CMD ["/bin/bash", "start.sh"]
