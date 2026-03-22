@@ -1,0 +1,6 @@
+app.db
+*.pyc
+__pycache__/
+.env
+.git/
+.pytest_cache/
