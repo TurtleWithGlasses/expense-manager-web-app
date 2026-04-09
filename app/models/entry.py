@@ -42,3 +42,6 @@ class Entry(Base):
     # AI relationships
     ai_suggestions = relationship("AISuggestion", back_populates="entry", cascade="all, delete-orphan")
     ai_suggested_category = relationship("Category", foreign_keys=[ai_suggested_category_id])
+
+    # Receipt relationship - Phase A
+    receipt = relationship("Receipt", back_populates="entry", uselist=False, foreign_keys="Receipt.entry_id")

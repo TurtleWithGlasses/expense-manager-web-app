@@ -71,6 +71,7 @@ from app.models.payment_history import PaymentOccurrence, PaymentLinkSuggestion 
 from app.models.achievement import Achievement, UserAchievement, Badge, UserBadge  # Phase 1
 from app.models.financial_health_score import FinancialHealthScore  # Phase 1.2
 from app.models.split_expense import SplitContact, SplitExpense, SplitParticipant  # Phase 31
+from app.models.receipt import Receipt  # Phase A - Receipt Persistence
 
 app = FastAPI(title="Expense Manager Web")
 

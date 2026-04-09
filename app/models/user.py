@@ -71,3 +71,6 @@ class User(Base):
     # Split expense relationships - Phase 31
     split_contacts = relationship("SplitContact", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)
     split_expenses = relationship("SplitExpense", back_populates="owner", cascade="all, delete-orphan", passive_deletes=True)
+
+    # Receipt relationships - Phase A
+    receipts = relationship("Receipt", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)

@@ -107,9 +107,14 @@
         Upload a photo of your receipt – OCR extracts the total, date and merchant automatically
       </p>
     </div>
-    <a href="/entries" class="btn btn-outline-secondary btn-sm ms-auto">
-      <i class="bi bi-arrow-left me-1"></i>Entries
-    </a>
+    <div class="ms-auto d-flex gap-2">
+      <a href="/receipts/history" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-clock-history me-1"></i>History
+      </a>
+      <a href="/entries" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Entries
+      </a>
+    </div>
   </div>
 
   {% if not ocr_available %}
@@ -216,6 +221,7 @@
           <form id="entryForm" action="/entries/create" method="post">
             <input type="hidden" name="type" value="expense">
             <input type="hidden" name="currency_code" value="{{ user_currency_code }}">
+            <input type="hidden" name="receipt_id" id="fReceiptId" value="">
 
             <div class="row g-2 mb-2">
               <div class="col-6">
@@ -326,6 +332,9 @@ async function doScan() {
     renderResult(data);
     showToast('Receipt scanned successfully!', 'success');
     scanStatus.textContent = `Scan complete · confidence: ${data.confidence}`;
+    if (data.receipt_id) {
+      document.getElementById('fReceiptId').value = data.receipt_id;
+    }
 
   } catch(err) {
     showToast('Network error – could not reach server', 'danger');

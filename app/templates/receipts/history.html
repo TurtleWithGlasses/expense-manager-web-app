@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .receipt-card {
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 1rem 1.25rem;
+    transition: border-color 0.2s;
+  }
+  .receipt-card:hover { border-color: var(--primary); }
+  .receipt-thumb {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .receipt-thumb-placeholder {
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: 1.8rem;
+  }
+  .conf-badge {
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .conf-high   { background: rgba(16,185,129,0.15); color: #10b981; }
+  .conf-medium { background: rgba(245,158,11,0.15);  color: #f59e0b; }
+  .conf-low    { background: rgba(239,68,68,0.15);   color: #ef4444; }
+  .linked-badge {
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: rgba(59,130,246,0.12);
+    color: var(--primary);
+  }
+  .unlinked-badge {
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: rgba(156,163,175,0.15);
+    color: var(--text-muted);
+  }
+  .modal-img { max-width: 100%; border-radius: 10px; }
+</style>
+
+<div class="container py-4" style="max-width:860px">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <div>
+      <h2 class="fw-bold mb-0" style="color:var(--text)">
+        <i class="bi bi-clock-history me-2" style="color:var(--primary)"></i>Receipt History
+      </h2>
+      <p class="text-muted mb-0" style="font-size:0.9rem">
+        All scanned receipts · {{ receipts|length }} total
+      </p>
+    </div>
+    <div class="ms-auto d-flex gap-2">
+      <a href="/receipts/scan" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i>Scan New
+      </a>
+      <a href="/entries" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Entries
+      </a>
+    </div>
+  </div>
+
+  {% if not receipts %}
+  <div style="text-align:center;padding:4rem 1rem;color:var(--text-muted)">
+    <i class="bi bi-receipt" style="font-size:3.5rem;opacity:0.2;display:block;margin-bottom:1rem"></i>
+    <p class="mb-3">No receipts scanned yet.</p>
+    <a href="/receipts/scan" class="btn btn-primary">
+      <i class="bi bi-camera me-1"></i>Scan your first receipt
+    </a>
+  </div>
+  {% else %}
+
+  <div class="d-flex flex-column gap-3">
+    {% for r in receipts %}
+    <div class="receipt-card">
+      <div class="d-flex gap-3 align-items-start">
+
+        <!-- Thumbnail -->
+        {% if r.image_data %}
+        <img
+          src="data:image/jpeg;base64,{{ r.image_data }}"
+          class="receipt-thumb"
+          alt="Receipt"
+          style="cursor:pointer"
+          onclick="showImage('{{ r.id }}', '{{ r.image_data[:30] }}...')"
+          data-full="{{ r.image_data }}"
+          id="thumb-{{ r.id }}"
+        >
+        {% else %}
+        <div class="receipt-thumb-placeholder">
+          <i class="bi bi-receipt"></i>
+        </div>
+        {% endif %}
+
+        <!-- Details -->
+        <div class="flex-grow-1 min-width-0">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+            <span class="fw-semibold" style="color:var(--text);font-size:0.95rem">
+              {{ r.merchant or 'Unknown merchant' }}
+            </span>
+            {% if r.confidence %}
+            <span class="conf-badge conf-{{ r.confidence }}">{{ r.confidence }}</span>
+            {% endif %}
+            {% if r.entry_id %}
+            <a href="/entries" class="linked-badge text-decoration-none">
+              <i class="bi bi-link-45deg me-1"></i>Linked to entry #{{ r.entry_id }}
+            </a>
+            {% else %}
+            <span class="unlinked-badge">
+              <i class="bi bi-dash me-1"></i>Not linked
+            </span>
+            {% endif %}
+          </div>
+
+          <div class="d-flex flex-wrap gap-3" style="font-size:0.85rem;color:var(--text-muted)">
+            {% if r.amount %}
+            <span>
+              <i class="bi bi-currency-exchange me-1"></i>
+              <strong style="color:var(--text)">{{ user_currency.symbol }}{{ "%.2f"|format(r.amount|float) }}</strong>
+            </span>
+            {% endif %}
+            {% if r.receipt_date %}
+            <span>
+              <i class="bi bi-calendar3 me-1"></i>{{ r.receipt_date.strftime('%b %d, %Y') }}
+            </span>
+            {% endif %}
+            <span>
+              <i class="bi bi-clock me-1"></i>Scanned {{ r.created_at.strftime('%b %d, %Y at %H:%M') }}
+            </span>
+          </div>
+
+          <!-- Line items preview -->
+          {% set ext = r.extracted %}
+          {% if ext.get('line_items') %}
+          <div class="mt-2" style="font-size:0.78rem;color:var(--text-muted)">
+            {% for item in ext['line_items'][:3] %}
+            <span class="me-2">{{ item.description }} {{ user_currency.symbol }}{{ "%.2f"|format(item.amount) }}</span>
+            {% endfor %}
+            {% if ext['line_items']|length > 3 %}
+            <span>+{{ ext['line_items']|length - 3 }} more</span>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex flex-column gap-1 flex-shrink-0">
+          {% if r.image_data %}
+          <button
+            class="btn btn-outline-secondary btn-sm"
+            onclick="showFullImage('{{ r.id }}')"
+            title="View full image"
+          >
+            <i class="bi bi-zoom-in"></i>
+          </button>
+          {% endif %}
+          {% if not r.entry_id %}
+          <a href="/receipts/scan" class="btn btn-outline-primary btn-sm" title="Scan again">
+            <i class="bi bi-arrow-repeat"></i>
+          </a>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% endif %}
+</div>
+
+<!-- Image modal -->
+<div class="modal fade" id="imgModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="background:var(--surface);border:1px solid var(--border)">
+      <div class="modal-header" style="border-color:var(--border)">
+        <h6 class="modal-title" style="color:var(--text)">Receipt Image</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="modalImg" class="modal-img" alt="Receipt" src="">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showFullImage(id) {
+  const thumb = document.getElementById('thumb-' + id);
+  if (!thumb) return;
+  const b64 = thumb.getAttribute('data-full');
+  document.getElementById('modalImg').src = 'data:image/jpeg;base64,' + b64;
+  new bootstrap.Modal(document.getElementById('imgModal')).show();
+}
+</script>
+
+{% endblock %}

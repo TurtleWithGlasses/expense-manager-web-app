@@ -188,6 +188,7 @@ async def add(
     note: str | None = Form(None),
     date_str: str | None = Form(None),
     currency_code: str | None = Form(None),
+    receipt_id: int | None = Form(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
@@ -199,7 +200,7 @@ async def add(
     d = entries_service.parse_date(date_str) or _date.today()
 
     # Create entry
-    entries_service.create_entry(
+    entry = entries_service.create_entry(
         db,
         user_id=user.id,
         type=type,
@@ -209,6 +210,19 @@ async def add(
         note=note,
         currency_code=user_currency,
     )
+
+    # Link receipt if scan was performed before saving
+    if receipt_id:
+        try:
+            from app.models.receipt import Receipt
+            receipt = db.query(Receipt).filter(
+                Receipt.id == receipt_id, Receipt.user_id == user.id
+            ).first()
+            if receipt:
+                receipt.entry_id = entry.id
+                db.commit()
+        except Exception:
+            pass  # Receipt linking is best-effort; entry is already saved
 
     # Award XP for logging entry
     try:
