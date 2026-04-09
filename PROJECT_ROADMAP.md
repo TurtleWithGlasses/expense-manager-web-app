@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 2.0 (Production)
-**Last Updated:** March 22, 2026 (Phase 35 + Phase 37 + Phase 39 + Phase 40 + Phase 41 + Phase 42 enhanced)
+**Last Updated:** April 9, 2026 (Phase 35 + Phase 37 + Phase 39 + Phase 40 + Phase 41 + Phase 42 + Phase A receipt persistence)
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -4275,6 +4275,62 @@ Three-pillar performance and quality upgrade: Redis caching extended to all 5 AI
 - `app/api/v1/ai.py` — Added `get_cache` import; 5 insight endpoints now cache results
 - `tests/unit/test_db_indexes.py` — 33 new tests (index existence, column order, query plan)
 - `tests/integration/test_ai_insights_caching.py` — 19 new tests (cache behaviour, TTL, invalidation)
+
+---
+
+### **Phase A: Receipt Persistence** 🧾
+**Priority:** HIGH
+**Status:** ✅ COMPLETE (April 9, 2026)
+**Completed:** April 9, 2026
+**Actual Time:** ~1.5 hours
+
+**Overview:**
+Persistent storage layer for receipt scans. Every scanned receipt is now saved to the database immediately, linked to the entry the user creates, and viewable in a dedicated history page.
+
+**✅ Completed Features:**
+
+1. **Receipt DB Model**
+   - `receipts` table: `id`, `user_id`, `entry_id` (nullable FK to entries), `image_data` (base64 TEXT), `ocr_text`, `extracted_data` (JSON string), `confidence`, `merchant`, `amount`, `receipt_date`, `created_at`
+   - `entry_id` is set `NULL` until the user saves the entry; linking happens atomically on form submit
+   - ORM relationships wired: `User.receipts`, `Entry.receipt` (one-to-one), `Receipt.user`, `Receipt.entry`
+
+2. **Alembic Migration** (`20260322_0001`)
+   - Creates `receipts` table with PostgreSQL `IF NOT EXISTS` safety
+   - Adds indexes on `user_id` and `entry_id` for fast per-user queries
+
+3. **POST /receipts/scan — saves receipt on every scan**
+   - After OCR, the image (base64), raw OCR text, extracted JSON, confidence, merchant, amount and date are persisted immediately
+   - Returns `receipt_id` in the JSON response alongside existing scan fields
+
+4. **POST /entries/create — links receipt to entry**
+   - Accepts optional `receipt_id` form field (ignored if absent — fully backwards-compatible)
+   - After entry creation, sets `receipt.entry_id = entry.id` and commits
+
+5. **GET /receipts/history — full history page**
+   - Lists all scanned receipts newest-first (up to 100)
+   - Shows thumbnail, merchant, confidence badge, amount, receipt date, scan date
+   - "Linked to entry #N" vs "Not linked" badge per receipt
+   - Click-to-enlarge modal for full receipt image
+   - "Scan New" shortcut button
+
+6. **Scan page improvements**
+   - History button added to scan page header
+   - Hidden `receipt_id` field auto-populated from scan response before form submit
+
+**Files:**
+- `app/models/receipt.py` — new `Receipt` SQLAlchemy model
+- `app/models/user.py` — added `receipts` relationship
+- `app/models/entry.py` — added `receipt` relationship
+- `alembic/versions/20260322_0001_add_receipts_table.py` — migration
+- `app/main.py` — registered `Receipt` model for `Base.metadata.create_all`
+- `app/api/v1/receipts.py` — updated `POST /scan`, added `GET /history`
+- `app/api/v1/entries.py` — added optional `receipt_id` param to `POST /create`
+- `app/templates/receipts/scan.html` — hidden `receipt_id` field + History button
+- `app/templates/receipts/history.html` — new receipt history page
+
+**Remaining receipt scan phases:**
+- Phase B: AI category suggestion from merchant name
+- Phase C: Duplicate detection (same amount + date already exists)
 
 ---
 
