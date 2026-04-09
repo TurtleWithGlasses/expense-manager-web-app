@@ -36,6 +36,7 @@ from app.models.challenge import Challenge, UserChallenge
 from app.models.user_feedback import UserFeedback
 from app.models.financial_health_score import FinancialHealthScore  # Phase 1.2
 from app.models.split_expense import SplitContact, SplitExpense, SplitParticipant  # Phase 31
+from app.models.receipt import Receipt  # Phase A
 
 
 def seed_achievements(db: Session):
