@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 2.0 (Production)
-**Last Updated:** April 9, 2026 (Phase 35 + Phase 37 + Phase 39 + Phase 40 + Phase 41 + Phase 42 + Phase A receipt persistence)
+**Last Updated:** April 9, 2026 (Phase 35 + Phase 37 + Phase 39 + Phase 40 + Phase 41 + Phase 42 + Phase A receipt persistence + Phase B smarter OCR parsing)
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -4329,7 +4329,65 @@ Persistent storage layer for receipt scans. Every scanned receipt is now saved t
 - `app/templates/receipts/history.html` — new receipt history page
 
 **Remaining receipt scan phases:**
-- Phase B: AI category suggestion from merchant name
+- Phase C: Duplicate detection (same amount + date already exists)
+
+---
+
+### **Phase B: Smarter OCR Parsing** 🔍
+**Priority:** HIGH
+**Status:** ✅ COMPLETE (April 9, 2026)
+**Completed:** April 9, 2026
+**Actual Time:** ~1 hour
+
+**Overview:**
+Rewrote the receipt scanner parser and image preprocessor to fix the two main production failures: `amount=None` and `merchant=". > Se"` (OCR noise leaking through).
+
+**Root Causes Fixed:**
+
+1. **`amount=None`** — keyword regex was too strict (required exact word "total" with adjacent currency symbol). Receipts without currency symbols or with keyword variants like "AMT DUE", "BALANCE", "TO PAY" returned nothing.
+
+2. **`merchant=". > Se"`** — `skip_patterns` filtered keywords but not OCR noise. Lines with a low ratio of alphabetic characters (e.g. `. > Se`) were passed through as valid merchant names.
+
+**✅ Improvements:**
+
+1. **Amount parser — 4-priority cascade**
+   - Priority 1: labelled total (broadened keyword list: `total due`, `amount due`, `balance due`, `net total`, `amt due`, `to pay`, `payable`, `charge`, `subtotal`, `payment due` — ~15 variants)
+   - Priority 2: currency-symbol prefix (`$`, `€`, `£`, `₺`, etc.) → returns the largest match
+   - Priority 3: amount + currency code suffix (`USD`, `EUR`, `TRY`, `GBP`, etc.)
+   - Priority 4: bottom-third of receipt fallback — scans last 33% of lines for the largest bare `\d+.\d{2}` pattern (totals almost always appear near the end)
+   - European number format support: `1.234,56` and `12,50` both correctly normalised
+
+2. **Merchant parser — alpha-ratio filter**
+   - New `_alpha_ratio()` check: lines where fewer than 45% of characters are alphabetic are rejected
+   - Eliminates OCR noise like `. > Se`, `| --`, `## 44`, etc.
+   - Expanded skip-keywords: `thank you`, `welcome`, `open \d` (opening hours), `page \d`
+   - Now inspects first 10 lines instead of 8
+
+3. **Image preprocessing — 7-step pipeline (was 4)**
+   - Step 1: upscale to 1800px longest side (was 1200px)
+   - Step 2: greyscale
+   - Step 3: `ImageOps.autocontrast(cutoff=2)` — normalises histogram regardless of lighting
+   - Step 4: `MedianFilter(3)` — denoises before sharpening (new)
+   - Step 5: double sharpen (`SHARPEN` × 2, was × 1)
+   - Step 6: contrast boost 2.5× (was 2×)
+   - Step 7: adaptive binarisation — threshold = `clamp(mean_luminance, 100, 180)` instead of fixed 128; works correctly on both overexposed and underexposed photos
+
+4. **Tesseract config — dual PSM mode**
+   - Runs both PSM 6 (uniform block) and PSM 4 (single-column variable font)
+   - Picks whichever produced more non-whitespace content
+   - Added `--oem 3` (best OCR engine mode, uses LSTM)
+
+5. **Date parser — new format**
+   - Added `DD.MM.YYYY` / `DD.MM.YY` patterns (common in Europe and Turkey)
+
+6. **Line item parser**
+   - Requires `\s{2,}` gap between description and price (reduces false positives)
+   - Uses `_normalise_amount` for consistent decimal handling
+
+**Files:**
+- `app/services/receipt_scanner_service.py` — complete rewrite of parsing and preprocessing
+
+**Remaining receipt scan phases:**
 - Phase C: Duplicate detection (same amount + date already exists)
 
 ---
