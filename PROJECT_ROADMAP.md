@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 2.0 (Production)
-**Last Updated:** April 10, 2026 (Phase 35 + Phase 37 + Phase 39 + Phase 40 + Phase 41 + Phase 42 + Phase A receipt persistence + Phase B smarter OCR parsing + Phase C AI category suggestion + Phase D duplicate detection)
+**Last Updated:** April 10, 2026 (Phase 35 + Phase 37 + Phase 39 + Phase 40 + Phase 41 + Phase 42 + Phase A receipt persistence + Phase B smarter OCR parsing + Phase C AI category suggestion + Phase D duplicate detection + Phase E merchant learning)
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -4447,6 +4447,43 @@ After OCR scan, automatically checks if a matching expense entry already exists 
 **Files:**
 - `app/api/v1/receipts.py` — duplicate query, `duplicates` in response
 - `app/templates/receipts/scan.html` — warning panel + dynamic submit button
+
+---
+
+### **Phase E — OCR Turkish Support + Merchant Learning** (Completed)
+**Status:** ✅ Complete
+
+**What it does:**
+Fixes Turkish receipt scanning (e.g. Defacto, Migros, Akbank POS receipts) and adds a self-improving category suggestion system where the app learns from each manual correction.
+
+**OCR fixes:**
+- Added Turkish total keywords: `tutar`, `toplam`, `ödenecek`, `ara toplam`, `genel toplam`
+- Fixed amount regex to handle thousands separators (`1.414,95` → `1414.95`)
+- Auto-detect Turkish Tesseract language (`tur+eng`) via `get_languages()`, falls back to `eng`
+- Added `tesseract-ocr-tur` to Dockerfile so Turkish language data is available on Railway
+
+**Merchant learning (`merchant_category_mappings` table):**
+- New DB table stores `user_id + merchant_key → category_id` with `use_count` and `last_used`
+- `merchant_key` is the normalised first 3 words of the merchant name (handles OCR variance)
+- Category suggester checks learned mappings **first**, before keyword inference
+- Shows green "Learned from you" badge (vs blue "AI suggested") when suggestion comes from learning
+- When user saves an entry from a receipt scan, the merchant→category mapping is saved/updated automatically
+- Corrected merchant name (if edited in the form) is also persisted back to the receipt record
+
+**Scan page UX:**
+- Added editable **Merchant** input field — user can see and correct the OCR-extracted merchant name
+- "Fill in manually" link shows the entry form with empty fields (no OCR required) for receipts Tesseract can't read
+- Manual entry mode always available as fallback
+
+**Files:**
+- `app/models/merchant_mapping.py` — new MerchantCategoryMapping model
+- `alembic/versions/20260410_0001_add_merchant_category_mappings.py` — migration
+- `app/services/receipt_scanner_service.py` — Turkish keywords, thousands-separator amount regex, language auto-detect
+- `app/services/category_suggester.py` — learned mapping lookup, `normalise_merchant_key()`
+- `app/api/v1/receipts.py` — pass db+user_id to suggest_category
+- `app/api/v1/entries.py` — save mapping + update receipt.merchant on entry create
+- `app/templates/receipts/scan.html` — merchant field, manual entry button, learned badge
+- `Dockerfile` — add `tesseract-ocr-tur`
 
 ---
 

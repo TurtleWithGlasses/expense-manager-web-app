@@ -74,3 +74,6 @@ class User(Base):
 
     # Receipt relationships - Phase A
     receipts = relationship("Receipt", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
+
+    # Merchant learning relationships - Phase E
+    merchant_mappings = relationship("MerchantCategoryMapping", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)

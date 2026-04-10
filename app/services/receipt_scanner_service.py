@@ -35,6 +35,7 @@ def _tesseract_available() -> bool:
 
 
 TESSERACT_AVAILABLE: bool | None = None  # lazily set on first call
+_TESSERACT_LANG: str | None = None       # lazily detected (tur+eng or eng)
 
 
 def _ocr_available() -> bool:
@@ -42,6 +43,22 @@ def _ocr_available() -> bool:
     if TESSERACT_AVAILABLE is None:
         TESSERACT_AVAILABLE = _tesseract_available()
     return TESSERACT_AVAILABLE
+
+
+def _get_ocr_lang() -> str:
+    """Return the best available Tesseract language string.
+    Prefers 'tur+eng' (handles Turkish receipts) and falls back to 'eng'."""
+    global _TESSERACT_LANG
+    if _TESSERACT_LANG is not None:
+        return _TESSERACT_LANG
+    try:
+        import pytesseract
+        available = pytesseract.get_languages(config="")
+        _TESSERACT_LANG = "tur+eng" if "tur" in available else "eng"
+    except Exception:
+        _TESSERACT_LANG = "eng"
+    logger.info("Tesseract language set to: %s", _TESSERACT_LANG)
+    return _TESSERACT_LANG
 
 
 # ---------------------------------------------------------------------------
@@ -108,9 +125,10 @@ def _extract_text(image_bytes: bytes) -> str:
 
     img = _preprocess(image_bytes)
 
+    lang = _get_ocr_lang()
     results = {}
     for psm in (6, 4):          # PSM 6 = uniform block; PSM 4 = single-column
-        cfg = f"--psm {psm} --oem 3 -l eng"
+        cfg = f"--psm {psm} --oem 3 -l {lang}"
         text = pytesseract.image_to_string(img, config=cfg)
         results[psm] = text
 
@@ -140,23 +158,30 @@ _TOTAL_KEYWORDS = (
     r"|pay\s+this\s+amount"
     r"|to\s+pay"
     r"|payable"
+    # Turkish keywords
+    r"|tutar"                   # Turkish: amount / total
+    r"|toplam"                  # Turkish: total
+    r"|[öo]denecek"             # Turkish: payable (with or without ö)
+    r"|ara\s*toplam"            # Turkish: subtotal
+    r"|genel\s*toplam"          # Turkish: grand total
 )
+
+# Amount capture group: handles thousands separators like 1.414,95 or 1,234.56
+_AMT = r"(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})"
 
 _AMOUNT_LABELLED = re.compile(
     r"(?:" + _TOTAL_KEYWORDS + r")"
     r"[\s:.*\-]+"                          # separator (colon, spaces, dots, dashes)
-    r"[£€$₺₩¥]?\s*(\d{1,6}[.,]\d{2})",
+    r"[£€$₺₩¥]?\s*" + _AMT,
     re.IGNORECASE,
 )
 
 # Pattern B – currency symbol immediately before amount
-_AMOUNT_CURRENCY_PREFIX = re.compile(
-    r"[£€$₺₩¥]\s*(\d{1,6}[.,]\d{2})\b"
-)
+_AMOUNT_CURRENCY_PREFIX = re.compile(r"[£€$₺₩¥]\s*" + _AMT)
 
 # Pattern C – amount followed by currency code
 _AMOUNT_CURRENCY_SUFFIX = re.compile(
-    r"\b(\d{1,6}[.,]\d{2})\s*(?:USD|EUR|GBP|TRY|JPY|CAD|AUD|TL|CHF)\b",
+    _AMT + r"\s*(?:USD|EUR|GBP|TRY|JPY|CAD|AUD|TL|CHF)\b",
     re.IGNORECASE,
 )
 

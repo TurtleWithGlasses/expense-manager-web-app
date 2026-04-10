@@ -4,6 +4,7 @@ FROM python:3.11
 RUN apt-get update && apt-get install -y --no-install-recommends \
         tesseract-ocr \
         tesseract-ocr-eng \
+        tesseract-ocr-tur \
         libglib2.0-0 \
         libsm6 \
         libxext6 \

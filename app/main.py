@@ -23,6 +23,7 @@ from app.db.session import get_db
 from app.db.base import Base
 from app.templates import render
 from app.models.entry import Entry
+from app.models.merchant_mapping import MerchantCategoryMapping  # Phase E
 from app.services.user_preferences import user_preferences_service
 
 # Initialize logging as early as possible

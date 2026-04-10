@@ -91,7 +91,7 @@ async def scan_receipt(
     # Phase C – suggest a category based on merchant name / OCR text
     from app.services.category_suggester import suggest_category
     categories = db.query(Category).filter(Category.user_id == user.id).order_by(Category.name).all()
-    suggestion = suggest_category(result.merchant, result.raw_text, categories)
+    suggestion = suggest_category(result.merchant, result.raw_text, categories, db=db, user_id=user.id)
 
     # Persist the receipt record immediately (entry_id linked later when user saves)
     image_b64 = base64.b64encode(image_bytes).decode("utf-8")

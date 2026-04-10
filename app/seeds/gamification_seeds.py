@@ -37,6 +37,7 @@ from app.models.user_feedback import UserFeedback
 from app.models.financial_health_score import FinancialHealthScore  # Phase 1.2
 from app.models.split_expense import SplitContact, SplitExpense, SplitParticipant  # Phase 31
 from app.models.receipt import Receipt  # Phase A
+from app.models.merchant_mapping import MerchantCategoryMapping  # Phase E
 
 
 def seed_achievements(db: Session):

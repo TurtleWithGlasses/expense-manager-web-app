@@ -189,6 +189,7 @@ async def add(
     date_str: str | None = Form(None),
     currency_code: str | None = Form(None),
     receipt_id: int | None = Form(None),
+    merchant_name: str | None = Form(None),
     user=Depends(current_user),
     db: Session = Depends(get_db),
 ):
@@ -211,15 +212,45 @@ async def add(
         currency_code=user_currency,
     )
 
-    # Link receipt if scan was performed before saving
+    # Link receipt + learn merchant→category mapping
     if receipt_id:
         try:
             from app.models.receipt import Receipt
+            from app.models.merchant_mapping import MerchantCategoryMapping
+            from app.services.category_suggester import normalise_merchant_key
+            from datetime import datetime as _dt
+
             receipt = db.query(Receipt).filter(
                 Receipt.id == receipt_id, Receipt.user_id == user.id
             ).first()
             if receipt:
                 receipt.entry_id = entry.id
+
+                # If user supplied a corrected merchant name, persist it
+                effective_merchant = merchant_name or receipt.merchant
+                if merchant_name and merchant_name.strip():
+                    receipt.merchant = merchant_name.strip()
+
+                # Save/update merchant→category learned mapping (Phase E)
+                if effective_merchant and category_id:
+                    mk = normalise_merchant_key(effective_merchant)
+                    existing = db.query(MerchantCategoryMapping).filter(
+                        MerchantCategoryMapping.user_id == user.id,
+                        MerchantCategoryMapping.merchant_key == mk,
+                    ).first()
+                    if existing:
+                        existing.category_id = category_id
+                        existing.use_count += 1
+                        existing.last_used = _dt.utcnow()
+                    else:
+                        db.add(MerchantCategoryMapping(
+                            user_id=user.id,
+                            merchant_key=mk,
+                            category_id=category_id,
+                            use_count=1,
+                            last_used=_dt.utcnow(),
+                        ))
+
                 db.commit()
         except Exception:
             pass  # Receipt linking is best-effort; entry is already saved
