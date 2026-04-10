@@ -1,4 +1,4 @@
-"""Receipt Scanning API – Phase 32 Part B + Phase A (persistence)"""
+"""Receipt Scanning API – Phase 32 Part B + Phase A (persistence) + Phase C (category suggestion)"""
 import base64
 import json
 from datetime import datetime
@@ -86,6 +86,11 @@ async def scan_receipt(
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"OCR processing failed: {exc}")
 
+    # Phase C – suggest a category based on merchant name / OCR text
+    from app.services.category_suggester import suggest_category
+    categories = db.query(Category).filter(Category.user_id == user.id).order_by(Category.name).all()
+    suggestion = suggest_category(result.merchant, result.raw_text, categories)
+
     # Persist the receipt record immediately (entry_id linked later when user saves)
     image_b64 = base64.b64encode(image_bytes).decode("utf-8")
     extracted_json = json.dumps({
@@ -93,6 +98,8 @@ async def scan_receipt(
         "date": result.scan_date.isoformat() if result.scan_date else None,
         "merchant": result.merchant,
         "line_items": result.line_items,
+        "suggested_category_id": suggestion["category_id"] if suggestion else None,
+        "suggested_category_name": suggestion["category_name"] if suggestion else None,
     })
 
     receipt = Receipt(
@@ -111,7 +118,11 @@ async def scan_receipt(
     db.commit()
     db.refresh(receipt)
 
-    return JSONResponse({"success": True, "receipt_id": receipt.id, **result.to_dict()})
+    response_data = {"success": True, "receipt_id": receipt.id, **result.to_dict()}
+    if suggestion:
+        response_data["suggested_category_id"]   = suggestion["category_id"]
+        response_data["suggested_category_name"] = suggestion["category_name"]
+    return JSONResponse(response_data)
 
 
 @router.get("/scan/status")

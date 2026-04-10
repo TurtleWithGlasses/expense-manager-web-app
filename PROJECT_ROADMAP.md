@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 2.0 (Production)
-**Last Updated:** April 9, 2026 (Phase 35 + Phase 37 + Phase 39 + Phase 40 + Phase 41 + Phase 42 + Phase A receipt persistence + Phase B smarter OCR parsing)
+**Last Updated:** April 10, 2026 (Phase 35 + Phase 37 + Phase 39 + Phase 40 + Phase 41 + Phase 42 + Phase A receipt persistence + Phase B smarter OCR parsing + Phase C AI category suggestion)
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -4387,8 +4387,44 @@ Rewrote the receipt scanner parser and image preprocessor to fix the two main pr
 **Files:**
 - `app/services/receipt_scanner_service.py` — complete rewrite of parsing and preprocessing
 
+---
+
+### **Phase C: AI Category Suggestion** 🤖
+**Priority:** MEDIUM
+**Status:** ✅ COMPLETE (April 10, 2026)
+**Completed:** April 10, 2026
+**Actual Time:** ~45 minutes
+
+**Overview:**
+After scanning a receipt, the app now automatically suggests the most relevant category from the user's own category list based on the merchant name and OCR text. No ML model required — pure keyword matching with fuzzy name resolution against the user's categories.
+
+**✅ Completed Features:**
+
+1. **`category_suggester.py` — keyword → category type → user category**
+   - `_KEYWORD_MAP`: 10 category types (`food`, `groceries`, `transport`, `shopping`, `health`, `entertainment`, `utilities`, `accommodation`, `education`, `personal care`) each with 15–30 merchant keywords (Starbucks, ALDI, Uber, Amazon, CVS, Netflix, etc.)
+   - `_SYNONYMS`: per-type list of words commonly found in user category names (e.g. `food` → `["food", "dining", "restaurant", "eat", "meal", ...]`)
+   - `_infer_type(merchant, ocr_text)`: checks merchant name (weight 2) then OCR snippet (weight 1), returns highest-score type
+   - `_match_user_category(type, user_categories)`: fuzzy-matches inferred type synonyms against the user's actual category names (longest substring match wins)
+   - `suggest_category(merchant, ocr_text, categories)` → `{category_id, category_name, matched_type}` or `None`
+
+2. **`POST /receipts/scan` — returns suggestion in response**
+   - Fetches user's categories from DB after OCR
+   - Calls `suggest_category()`, adds `suggested_category_id` and `suggested_category_name` to JSON response
+   - Suggestion also stored in `extracted_data` JSON for history page reference
+
+3. **Scan page — pre-selects category + badge**
+   - `renderResult()` sets the category `<select>` value to `suggested_category_id` if present
+   - Shows a blue "AI suggested" badge (with `bi-stars` icon) next to the Category label
+   - Badge disappears automatically if the user manually changes the selection
+   - User can always override — the suggestion is a starting point, not a lock
+
+**Files:**
+- `app/services/category_suggester.py` — new keyword-matching service
+- `app/api/v1/receipts.py` — calls suggester after OCR, adds suggestion to response
+- `app/templates/receipts/scan.html` — pre-selects category, shows AI badge
+
 **Remaining receipt scan phases:**
-- Phase C: Duplicate detection (same amount + date already exists)
+- Phase D: Duplicate detection (same amount + date already exists)
 
 ---
 
