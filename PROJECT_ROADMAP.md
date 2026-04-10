@@ -2,7 +2,7 @@
 
 **Project Name:** Budget Pulse - Expense Manager Web Application
 **Version:** 2.0 (Production)
-**Last Updated:** April 10, 2026 (Phase 35 + Phase 37 + Phase 39 + Phase 40 + Phase 41 + Phase 42 + Phase A receipt persistence + Phase B smarter OCR parsing + Phase C AI category suggestion)
+**Last Updated:** April 10, 2026 (Phase 35 + Phase 37 + Phase 39 + Phase 40 + Phase 41 + Phase 42 + Phase A receipt persistence + Phase B smarter OCR parsing + Phase C AI category suggestion + Phase D duplicate detection)
 **Production URL:** https://www.yourbudgetpulse.online
 **Repository:** https://github.com/TurtleWithGlasses/expense-manager-web-app
 
@@ -4423,8 +4423,30 @@ After scanning a receipt, the app now automatically suggests the most relevant c
 - `app/api/v1/receipts.py` — calls suggester after OCR, adds suggestion to response
 - `app/templates/receipts/scan.html` — pre-selects category, shows AI badge
 
-**Remaining receipt scan phases:**
-- Phase D: Duplicate detection (same amount + date already exists)
+---
+
+### **Phase D — Receipt Duplicate Detection** (Completed)
+**Status:** ✅ Complete
+
+**What it does:**
+After OCR scan, automatically checks if a matching expense entry already exists in the database (same amount ± 0.01 and date ± 1 day). If duplicates are found, the user sees an amber warning panel listing the conflicting entries and the submit button changes to "Add Anyway (possible duplicate)" to prevent accidental double-entry.
+
+**Implementation details:**
+
+1. **`POST /receipts/scan` — duplicate query**
+   - After OCR and receipt persistence, queries `entries` table for matching user expenses
+   - Filters: `user_id`, `type="expense"`, `date` within ±1 day, `abs(amount - scanned_amount) <= 0.01`
+   - Returns up to 5 matching entries as `duplicates` array in the JSON response
+
+2. **Scan page — duplicate warning UI**
+   - `renderResult()` checks `data.duplicates.length > 0`
+   - Shows amber warning block (`#duplicateWarn`) with a list of conflicting entries (date, amount, note, category)
+   - Submit button switches to amber "Add Anyway (possible duplicate)" style with triangle icon
+   - When no duplicates: warning hidden, button restored to normal green "Add Entry"
+
+**Files:**
+- `app/api/v1/receipts.py` — duplicate query, `duplicates` in response
+- `app/templates/receipts/scan.html` — warning panel + dynamic submit button
 
 ---
 

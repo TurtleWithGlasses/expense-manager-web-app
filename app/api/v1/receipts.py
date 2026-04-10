@@ -1,14 +1,16 @@
-"""Receipt Scanning API – Phase 32 Part B + Phase A (persistence) + Phase C (category suggestion)"""
+"""Receipt Scanning API – Phase 32B + Phase A (persistence) + Phase C (category) + Phase D (duplicate detection)"""
 import base64
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.deps import current_user
+from app.models.entry import Entry
 from app.models.user import User
 from app.models.category import Category
 from app.models.receipt import Receipt
@@ -118,10 +120,41 @@ async def scan_receipt(
     db.commit()
     db.refresh(receipt)
 
+    # Phase D – duplicate detection: look for entries with the same amount
+    # on the same date (±1 day window to handle timezone edge cases)
+    duplicates = []
+    if result.total_amount and result.scan_date:
+        amount_val = float(result.total_amount)
+        date_from  = result.scan_date - timedelta(days=1)
+        date_to    = result.scan_date + timedelta(days=1)
+        tolerance  = 0.01
+
+        dup_entries = (
+            db.query(Entry)
+            .filter(
+                Entry.user_id == user.id,
+                Entry.type    == "expense",
+                Entry.date    >= date_from,
+                Entry.date    <= date_to,
+                func.abs(Entry.amount - amount_val) <= tolerance,
+            )
+            .limit(5)
+            .all()
+        )
+        for e in dup_entries:
+            duplicates.append({
+                "entry_id": e.id,
+                "amount":   float(e.amount),
+                "date":     e.date.isoformat(),
+                "note":     e.note or "",
+                "category": e.category.name if e.category else "",
+            })
+
     response_data = {"success": True, "receipt_id": receipt.id, **result.to_dict()}
     if suggestion:
         response_data["suggested_category_id"]   = suggestion["category_id"]
         response_data["suggested_category_name"] = suggestion["category_name"]
+    response_data["duplicates"] = duplicates
     return JSONResponse(response_data)
 
 

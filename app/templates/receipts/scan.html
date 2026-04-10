@@ -207,6 +207,22 @@
           </div>
         </div>
 
+        <!-- Duplicate warning (hidden until scan finds matches) -->
+        <div id="duplicateWarn" style="display:none" class="mb-3">
+          <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.45);border-radius:10px;padding:0.9rem 1rem">
+            <div class="d-flex gap-2 align-items-start">
+              <i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b;font-size:1.1rem;flex-shrink:0;margin-top:2px"></i>
+              <div class="w-100">
+                <strong style="color:var(--text);font-size:0.88rem">Possible duplicate entry</strong>
+                <p class="mb-2 mt-1" style="font-size:0.8rem;color:var(--text-muted)">
+                  An expense with the same amount and date already exists. Check before saving.
+                </p>
+                <div id="duplicateList" style="font-size:0.8rem"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Line items (if any) -->
         <div id="lineItemsWrap" class="mb-3" style="display:none">
           <p class="fw-semibold mb-2" style="font-size:0.85rem;color:var(--text)">Line Items</p>
@@ -256,7 +272,7 @@
                      placeholder="e.g. Starbucks coffee">
             </div>
 
-            <button type="submit" class="btn btn-success w-100">
+            <button type="submit" id="submitEntryBtn" class="btn btn-success w-100">
               <i class="bi bi-plus-circle me-1"></i>Add Entry
             </button>
           </form>
@@ -409,6 +425,31 @@ function renderResult(data) {
     ).join('');
   } else {
     liWrap.style.display = 'none';
+  }
+
+  // Phase D – duplicate detection warning
+  const dupWarn = document.getElementById('duplicateWarn');
+  const dupList = document.getElementById('duplicateList');
+  const submitBtn = document.getElementById('submitEntryBtn');
+  if (data.duplicates && data.duplicates.length > 0) {
+    dupList.innerHTML = data.duplicates.map(d => {
+      const note = d.note ? ` — ${escHtml(d.note)}` : '';
+      const cat  = d.category ? `<span style="opacity:0.7">[${escHtml(d.category)}]</span> ` : '';
+      return `<div class="d-flex justify-content-between align-items-center py-1" style="border-bottom:1px solid rgba(245,158,11,0.2)">
+        <span>${cat}${escHtml(d.date)}${note}</span>
+        <span style="font-weight:600;color:#f59e0b">{{ user_currency.symbol }}${parseFloat(d.amount).toFixed(2)}</span>
+      </div>`;
+    }).join('');
+    dupWarn.style.display = '';
+    // Change submit button to amber "Add Anyway" warning state
+    submitBtn.className = 'btn w-100';
+    submitBtn.style.cssText = 'background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.6);color:#f59e0b;font-weight:600';
+    submitBtn.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Add Anyway (possible duplicate)';
+  } else {
+    dupWarn.style.display = 'none';
+    submitBtn.className = 'btn btn-success w-100';
+    submitBtn.style.cssText = '';
+    submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i>Add Entry';
   }
 
   // Raw text
