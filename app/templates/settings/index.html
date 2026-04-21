@@ -335,7 +335,11 @@
         </div>
         <div class="card-body">
           <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:1rem">
-            Connect your account to the <strong>@BudgetPulseBot</strong> Telegram bot to log expenses directly from Telegram — no need to open the web app.
+            {% if telegram_bot_username %}
+            Connect your account to the <a href="https://t.me/{{ telegram_bot_username }}" target="_blank" rel="noopener" style="font-weight:600">@{{ telegram_bot_username }}</a> Telegram bot to log expenses directly from Telegram — no need to open the web app.
+            {% else %}
+            Connect your account to the Budget Pulse Telegram bot to log expenses directly from Telegram — no need to open the web app.
+            {% endif %}
           </p>
 
           <!-- Not linked state -->
@@ -343,7 +347,11 @@
             <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem">
               <strong>How to connect:</strong><br>
               1. Click <em>Generate Link Code</em> below<br>
+              {% if telegram_bot_username %}
+              2. <a href="https://t.me/{{ telegram_bot_username }}" target="_blank" rel="noopener">Open the bot in Telegram</a> and send <code>/start</code><br>
+              {% else %}
               2. Open Telegram and start a chat with the bot<br>
+              {% endif %}
               3. Send <code>/link YOUR_CODE</code> to the bot
             </p>
             <div id="tgCodeBox" style="display:none;margin-bottom:0.75rem;padding:0.75rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-align:center">
@@ -351,9 +359,16 @@
               <span id="tgCodeValue" style="font-size:1.8rem;font-weight:700;letter-spacing:0.2em;color:var(--primary);font-family:monospace"></span>
               <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem">Send <code>/link <span class="tgCodeInline"></span></code> to the bot</p>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="generateTgCode()">
-              <i class="bi bi-key me-1"></i>Generate Link Code
-            </button>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+              <button class="btn btn-primary btn-sm" onclick="generateTgCode()">
+                <i class="bi bi-key me-1"></i>Generate Link Code
+              </button>
+              {% if telegram_bot_username %}
+              <a href="https://t.me/{{ telegram_bot_username }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-telegram me-1"></i>Open Bot
+              </a>
+              {% endif %}
+            </div>
           </div>
 
           <!-- Linked state -->

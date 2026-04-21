@@ -107,12 +107,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 "/help — All commands"
             )
         else:
+            from app.core.config import settings as app_settings
+            settings_url = f"{app_settings.BASE_URL}/settings"
             text = (
                 "👋 Welcome to *Budget Pulse*!\n\n"
-                "To get started, link your account:\n"
-                "1. Open the web app → *Settings*\n"
-                "2. Click *Generate Link Code*\n"
-                "3. Send: `/link YOUR_CODE`"
+                "To get started, link your web account:\n\n"
+                f"1️⃣ Open: {settings_url}\n"
+                "2️⃣ Scroll to *Telegram Bot* → tap *Generate Link Code*\n"
+                "3️⃣ Send me: `/link YOUR_CODE`\n\n"
+                "Once linked you can log expenses, check your balance, and more — all from Telegram."
             )
         await update.message.reply_text(text, parse_mode="Markdown")
     finally:
@@ -638,16 +641,37 @@ def get_application() -> Application | None:
     return _application
 
 
+_BOT_COMMANDS = [
+    ("add",     "Log a new income or expense"),
+    ("balance", "This month's income vs expenses"),
+    ("today",   "All entries from today"),
+    ("week",    "This week's spending by category"),
+    ("history", "Last 5 entries (use /history 10 for more)"),
+    ("undo",    "Remove the last entry you added (within 5 min)"),
+    ("link",    "Connect your Budget Pulse account"),
+    ("unlink",  "Disconnect your account"),
+    ("help",    "Show all available commands"),
+]
+
+
 async def setup_bot(token: str, webhook_url: str | None = None) -> None:
-    """Initialise the bot and optionally register the webhook with Telegram."""
+    """Initialise the bot, register commands, and optionally set the webhook."""
     global _application
     _application = create_application(token)
     await _application.initialize()
+
+    # Register commands so Telegram shows autocomplete for all users
+    from telegram import BotCommand
+    await _application.bot.set_my_commands(
+        [BotCommand(cmd, desc) for cmd, desc in _BOT_COMMANDS]
+    )
+    logger.info("Telegram bot commands registered (%d commands)", len(_BOT_COMMANDS))
+
     if webhook_url:
         await _application.bot.set_webhook(webhook_url)
         logger.info("Telegram webhook registered: %s", webhook_url)
     else:
-        logger.info("Telegram bot initialised (no webhook URL — polling mode or dev)")
+        logger.info("Telegram bot initialised (no webhook URL — dev/local mode)")
 
 
 async def teardown_bot() -> None:

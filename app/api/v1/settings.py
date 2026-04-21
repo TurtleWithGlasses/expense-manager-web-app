@@ -13,6 +13,7 @@ from app.models.category import Category
 from app.models.user_preferences import UserPreferences
 from app.models.weekly_report import UserReportPreferences
 from app.templates import render
+from app.core.config import settings as app_settings
 
 router = APIRouter()
 
@@ -52,6 +53,7 @@ async def settings_page(
         "entry_count": entry_count,
         "category_count": category_count,
         "days_active": days_active,
+        "telegram_bot_username": app_settings.TELEGRAM_BOT_USERNAME,
     })
 
 
