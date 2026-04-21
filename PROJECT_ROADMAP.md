@@ -4487,6 +4487,197 @@ Fixes Turkish receipt scanning (e.g. Defacto, Migros, Akbank POS receipts) and a
 
 ---
 
+## 🤖 Phase F — Telegram Bot Integration
+
+**Status:** 📋 Planned
+**Priority:** Medium
+**Estimated Time:** 8–12 hours across 4 sub-phases
+
+### Overview
+
+A Telegram bot that lets users log expenses directly from Telegram — no need to open the web app for quick entries. The bot connects to the existing database and reuses all existing services (categories, currency preferences, entry creation, gamification XP).
+
+**Bot username:** to be registered via [@BotFather](https://t.me/BotFather)
+
+---
+
+### Phase F-1 — Foundation & Account Linking
+**Estimated Time:** 2–3 hours
+**Status:** 📋 Not started
+
+**Goal:** Wire up the Telegram webhook inside FastAPI and allow users to link their Telegram account to their Budget Pulse account.
+
+**Tasks:**
+1. Add `python-telegram-bot` (async) to `requirements.txt`
+2. Add `TELEGRAM_BOT_TOKEN` to `app/core/config.py` and Railway environment variables
+3. Create `app/models/telegram_user.py` — new model:
+   - `id`, `user_id` (FK → users), `telegram_user_id` (unique bigint), `telegram_username`, `linked_at`
+4. Create alembic migration for `telegram_users` table
+5. Register model in `main.py` and `gamification_seeds.py`
+6. Create `app/api/v1/telegram.py` — webhook endpoint (`POST /telegram/webhook`)
+7. Register `/telegram` router in `app/api/routes.py`
+8. On startup, call Telegram's `setWebhook` API to point to `https://yourbudgetpulse.online/telegram/webhook`
+
+**Account linking flow:**
+- User opens **Settings** page in web app → sees "Connect Telegram" section
+- Clicks **Generate Link Code** → server creates a one-time 6-digit token (expires in 15 min), stores it in `telegram_link_tokens` table (or Redis)
+- User sends `/link 482910` to the bot
+- Bot finds the pending token, saves `telegram_user_id → user_id` mapping, confirms in chat
+- Settings page updates to show "Connected as @username ✅"
+- `/unlink` command disconnects the account
+
+**Deliverables:**
+- `app/models/telegram_user.py`
+- `app/api/v1/telegram.py` (webhook handler skeleton)
+- Account link/unlink flow in Settings page
+- `/start`, `/help`, `/link <code>`, `/unlink` commands working
+
+---
+
+### Phase F-2 — Core Entry Flow (Income / Expense)
+**Estimated Time:** 3–4 hours
+**Status:** 📋 Not started
+
+**Goal:** The main use case — log an income or expense in under 10 seconds via a guided conversation.
+
+**Conversation flow:**
+```
+User:  /add
+Bot:   💸 What type of entry?
+       [📈 Income]  [📉 Expense]
+
+User:  Expense
+Bot:   📂 Select category:
+       [🍔 Food]  [🚗 Transport]  [🛍 Shopping]
+       [🏥 Health]  [🏠 Utilities]  [➕ Other]
+       (pulled live from user's own categories)
+
+User:  Shopping
+Bot:   💰 Enter amount (TRY):
+
+User:  1414.95
+Bot:   ✅ Saved!
+       📉 Expense · 1,414.95 TRY
+       📂 Shopping · 📅 21 Apr 2026
+       /undo to remove it
+```
+
+**Implementation details:**
+- Use `ConversationHandler` from `python-telegram-bot` for multi-step state
+- Inline keyboard buttons for type and category selection (no typing required)
+- Date auto-set to today (UTC+3 for Turkish users, configurable)
+- Currency pulled from `user_preferences_service`
+- Entry created directly via `entries_service.create_entry()` — same function the web app uses
+- XP awarded via `LevelService.award_entry_xp()` — gamification carries over
+- `/undo` deletes the last entry created via Telegram (within 5 minutes)
+
+**Deliverables:**
+- Full `/add` conversation handler
+- Category inline keyboard from user's DB categories
+- `/undo` command
+- Entry appears immediately in web app entry list
+
+---
+
+### Phase F-3 — Quick View Commands
+**Estimated Time:** 2–3 hours
+**Status:** 📋 Not started
+
+**Goal:** Let users check their financial status without opening the web app.
+
+**Commands:**
+
+| Command | Response |
+|---|---|
+| `/balance` | Income vs expenses this month, net balance |
+| `/today` | All entries logged today |
+| `/week` | Spending summary for current week by category |
+| `/history [N]` | Last N entries (default 5) with edit/delete buttons |
+| `/budget` | Current month budget usage per category (if budgets set) |
+
+**Example `/balance` response:**
+```
+📊 April 2026
+
+📈 Income:     12,500.00 TRY
+📉 Expenses:    8,340.50 TRY
+💰 Net:        +4,159.50 TRY
+
+Top categories:
+  🛍 Shopping    3,200.00 (38%)
+  🍔 Food        2,100.00 (25%)
+  🚗 Transport     840.50 (10%)
+```
+
+**Deliverables:**
+- `/balance`, `/today`, `/week`, `/history`, `/budget` commands
+- Formatted message output with emoji indicators
+- Pagination for `/history` (inline prev/next buttons)
+
+---
+
+### Phase F-4 — Receipt Scanning via Telegram
+**Estimated Time:** 2–3 hours
+**Status:** 📋 Not started
+
+**Goal:** User sends a photo of a receipt directly to the Telegram bot — same OCR pipeline runs, bot asks the user to confirm or correct the extracted fields, then saves the entry.
+
+**Flow:**
+```
+User:  [sends photo of receipt]
+Bot:   🔍 Scanning receipt...
+
+Bot:   📋 I found:
+       💰 Amount: 1,414.95 TRY
+       📅 Date: 07 Mar 2026
+       🏪 Merchant: Defacto
+       📂 Category: 🛍 Shopping (learned from you)
+
+       [✅ Save as expense]  [✏️ Edit]  [❌ Cancel]
+
+User:  ✅ Save as expense
+Bot:   ✅ Saved! Expense · 1,414.95 TRY · Shopping
+```
+
+**Implementation details:**
+- `message.photo` handler in the Telegram webhook
+- Download photo bytes via Telegram's `getFile` API
+- Pass to existing `scan_receipt()` service (Phase B/E pipeline reused entirely)
+- Show extracted fields as a confirmation message with inline buttons
+- "Edit" triggers a follow-up conversation to correct amount/date/category
+- Receipt record saved and linked to the new entry (Phase A persistence reused)
+
+**Deliverables:**
+- Photo message handler
+- OCR result confirmation flow
+- Edit flow for each field
+- Full receipt persistence (same as web scan)
+
+---
+
+### Phase F — Summary
+
+| Sub-phase | Feature | Time | Status |
+|---|---|---|---|
+| F-1 | Webhook + account linking | 2–3h | 📋 Planned |
+| F-2 | Add entry conversation | 3–4h | 📋 Planned |
+| F-3 | Balance / history commands | 2–3h | 📋 Planned |
+| F-4 | Receipt scanning via photo | 2–3h | 📋 Planned |
+| **Total** | | **9–13h** | |
+
+**Dependencies:**
+- `TELEGRAM_BOT_TOKEN` env var (from @BotFather)
+- `python-telegram-bot>=20.0` (async version) added to requirements
+- Public HTTPS webhook URL (already have: `yourbudgetpulse.online`)
+
+**New files:**
+- `app/models/telegram_user.py`
+- `app/api/v1/telegram.py`
+- `app/services/telegram_bot.py` (conversation handlers)
+- `alembic/versions/YYYYMMDD_telegram_users.py`
+
+---
+
 ## 🏗️ Technical Architecture
 
 ### **Technology Stack**
