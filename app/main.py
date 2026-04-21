@@ -24,6 +24,7 @@ from app.db.base import Base
 from app.templates import render
 from app.models.entry import Entry
 from app.models.merchant_mapping import MerchantCategoryMapping  # Phase E
+from app.models.telegram_user import TelegramUser, TelegramLinkToken  # Phase F
 from app.services.user_preferences import user_preferences_service
 
 # Initialize logging as early as possible
@@ -232,6 +233,20 @@ async def startup_event():
             report_scheduler.start()
             logger.info(f"Report scheduler started (ENV: {settings.ENV})")
 
+        # Phase F – Telegram Bot
+        if settings.TELEGRAM_BOT_TOKEN:
+            try:
+                from app.services.telegram_bot import setup_bot
+                webhook_url = (
+                    f"{settings.BASE_URL}/telegram/webhook"
+                    if settings.ENV == "production"
+                    else None
+                )
+                await setup_bot(settings.TELEGRAM_BOT_TOKEN, webhook_url)
+                logger.info("Telegram bot started")
+            except Exception as tg_exc:
+                logger.warning("Telegram bot failed to start: %s", tg_exc)
+
     except Exception as e:
         logger.error(f"Database initialization failed: {e}", exc_info=True)
         # Don't raise the exception to allow the app to start
@@ -250,6 +265,13 @@ async def shutdown_event():
             logger.info("Report scheduler stopped")
         except Exception as e:
             logger.warning(f"Error stopping scheduler: {e}")
+
+    # Phase F – Telegram Bot
+    try:
+        from app.services.telegram_bot import teardown_bot
+        await teardown_bot()
+    except Exception:
+        pass
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="static"), name="static")

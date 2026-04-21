@@ -325,6 +325,53 @@
         </div>
       </div>
 
+      <!-- Telegram Bot Integration -->
+      <div class="card settings-card mt-4" id="telegramCard">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="bi bi-telegram"></i>
+            Telegram Bot
+          </h3>
+        </div>
+        <div class="card-body">
+          <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:1rem">
+            Connect your account to the <strong>@BudgetPulseBot</strong> Telegram bot to log expenses directly from Telegram — no need to open the web app.
+          </p>
+
+          <!-- Not linked state -->
+          <div id="tgNotLinked">
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem">
+              <strong>How to connect:</strong><br>
+              1. Click <em>Generate Link Code</em> below<br>
+              2. Open Telegram and start a chat with the bot<br>
+              3. Send <code>/link YOUR_CODE</code> to the bot
+            </p>
+            <div id="tgCodeBox" style="display:none;margin-bottom:0.75rem;padding:0.75rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-align:center">
+              <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.25rem">Your link code (valid for 15 minutes):</p>
+              <span id="tgCodeValue" style="font-size:1.8rem;font-weight:700;letter-spacing:0.2em;color:var(--primary);font-family:monospace"></span>
+              <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem">Send <code>/link <span class="tgCodeInline"></span></code> to the bot</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="generateTgCode()">
+              <i class="bi bi-key me-1"></i>Generate Link Code
+            </button>
+          </div>
+
+          <!-- Linked state -->
+          <div id="tgLinked" style="display:none">
+            <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.9rem;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;margin-bottom:0.75rem">
+              <i class="bi bi-check-circle-fill" style="color:#10b981;font-size:1.1rem"></i>
+              <div>
+                <div style="font-size:0.88rem;font-weight:600;color:var(--text)">Connected</div>
+                <div id="tgUsername" style="font-size:0.78rem;color:var(--text-muted)"></div>
+              </div>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm" onclick="unlinkTg()">
+              <i class="bi bi-x-circle me-1"></i>Disconnect Telegram
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Danger Zone -->
       <div class="card settings-card card-danger mt-4">
         <div class="card-header">
@@ -362,6 +409,48 @@
     </section>
   </div>
 </div>
+
+<script>
+// ── Telegram bot section ──────────────────────────────────────────────────────
+(async function initTelegramStatus() {
+  try {
+    const res = await fetch('/telegram/status');
+    const data = await res.json();
+    if (data.linked) {
+      document.getElementById('tgNotLinked').style.display = 'none';
+      document.getElementById('tgLinked').style.display = '';
+      const uname = data.telegram_username ? '@' + data.telegram_username : 'Telegram account';
+      document.getElementById('tgUsername').textContent = uname + ' · linked';
+    }
+  } catch (e) { /* silently ignore if endpoint unavailable */ }
+})();
+
+async function generateTgCode() {
+  try {
+    const res = await fetch('/telegram/generate-code', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) { alert(data.detail || 'Error generating code'); return; }
+    document.getElementById('tgCodeValue').textContent = data.code;
+    document.querySelectorAll('.tgCodeInline').forEach(el => el.textContent = data.code);
+    document.getElementById('tgCodeBox').style.display = '';
+  } catch (e) { alert('Network error'); }
+}
+
+async function unlinkTg() {
+  if (!confirm('Disconnect your Telegram account?')) return;
+  try {
+    const res = await fetch('/telegram/unlink', { method: 'POST' });
+    if (res.ok) {
+      document.getElementById('tgLinked').style.display = 'none';
+      document.getElementById('tgNotLinked').style.display = '';
+      document.getElementById('tgCodeBox').style.display = 'none';
+    } else {
+      const data = await res.json();
+      alert(data.detail || 'Error unlinking');
+    }
+  } catch (e) { alert('Network error'); }
+}
+</script>
 
 <style>
 /* Settings Page Styles */

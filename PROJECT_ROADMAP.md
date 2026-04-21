@@ -4503,7 +4503,7 @@ A Telegram bot that lets users log expenses directly from Telegram — no need t
 
 ### Phase F-1 — Foundation & Account Linking
 **Estimated Time:** 2–3 hours
-**Status:** 📋 Not started
+**Status:** ✅ Complete
 
 **Goal:** Wire up the Telegram webhook inside FastAPI and allow users to link their Telegram account to their Budget Pulse account.
 
@@ -4536,7 +4536,7 @@ A Telegram bot that lets users log expenses directly from Telegram — no need t
 
 ### Phase F-2 — Core Entry Flow (Income / Expense)
 **Estimated Time:** 3–4 hours
-**Status:** 📋 Not started
+**Status:** ✅ Complete
 
 **Goal:** The main use case — log an income or expense in under 10 seconds via a guided conversation.
 
@@ -4581,7 +4581,7 @@ Bot:   ✅ Saved!
 
 ### Phase F-3 — Quick View Commands
 **Estimated Time:** 2–3 hours
-**Status:** 📋 Not started
+**Status:** ✅ Complete
 
 **Goal:** Let users check their financial status without opening the web app.
 
@@ -4659,9 +4659,9 @@ Bot:   ✅ Saved! Expense · 1,414.95 TRY · Shopping
 
 | Sub-phase | Feature | Time | Status |
 |---|---|---|---|
-| F-1 | Webhook + account linking | 2–3h | 📋 Planned |
-| F-2 | Add entry conversation | 3–4h | 📋 Planned |
-| F-3 | Balance / history commands | 2–3h | 📋 Planned |
+| F-1 | Webhook + account linking | 2–3h | ✅ Complete |
+| F-2 | Add entry conversation | 3–4h | ✅ Complete |
+| F-3 | Balance / history commands | 2–3h | ✅ Complete |
 | F-4 | Receipt scanning via photo | 2–3h | 📋 Planned |
 | **Total** | | **9–13h** | |
 

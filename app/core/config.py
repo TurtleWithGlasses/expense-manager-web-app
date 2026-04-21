@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     ENV: str = "development"  # Default to development
     RESEND_API_KEY: str = ""  # Set via environment variable
     SENTRY_DSN: str = ""  # Set via environment variable – get from https://sentry.io
+    TELEGRAM_BOT_TOKEN: str = ""  # Set via Railway environment variable
     SENTRY_TRACES_SAMPLE_RATE: float = 0.1  # 10 % of transactions traced in production
 
     # CORS Configuration

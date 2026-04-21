@@ -77,3 +77,6 @@ class User(Base):
 
     # Merchant learning relationships - Phase E
     merchant_mappings = relationship("MerchantCategoryMapping", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
+
+    # Telegram bot relationship - Phase F
+    telegram_account = relationship("TelegramUser", back_populates="user", uselist=False, cascade="all, delete-orphan", passive_deletes=True)
