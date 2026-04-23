@@ -115,7 +115,8 @@
     }
 
     .nav-group:hover > .nav-group-label,
-    .nav-group.open > .nav-group-label {
+    .nav-group.open > .nav-group-label,
+    .nav-group.has-active > .nav-group-label {
       color: var(--blue, #4da3ff);
       border-bottom-color: var(--blue, #4da3ff);
     }
@@ -223,6 +224,119 @@
       .nav-group-items {
         min-width: 160px;
       }
+    }
+
+    /* ── Achievement Bell Dropdown ───────────────────────── */
+    .notification-badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      min-width: 18px;
+      height: 18px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      pointer-events: none;
+    }
+
+    .achievement-notifications-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: -8px;
+      width: 340px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .achievement-notifications-dropdown .dropdown-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .achievement-notifications-dropdown .btn-link {
+      background: none;
+      border: none;
+      color: var(--primary, #4da3ff);
+      font-size: 0.78rem;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .achievement-notifications-dropdown .achievement-list {
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .achievement-notifications-dropdown .notif-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    .achievement-notifications-dropdown .notif-item:last-child {
+      border-bottom: none;
+    }
+
+    .achievement-notifications-dropdown .notif-item:hover {
+      background: var(--table-hover-bg, rgba(255,255,255,0.05));
+    }
+
+    .achievement-notifications-dropdown .notif-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .achievement-notifications-dropdown .notif-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .achievement-notifications-dropdown .notif-sub {
+      font-size: 0.75rem;
+      color: var(--text-secondary, #9ca3af);
+    }
+
+    .achievement-notifications-dropdown .dropdown-footer {
+      padding: 0.6rem 1rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .achievement-notifications-dropdown .dropdown-footer a {
+      font-size: 0.82rem;
+      color: var(--primary, #4da3ff);
+      text-decoration: none;
+    }
+
+    .notification-bell-btn {
+      position: relative;
     }
   </style>
 </head>
@@ -348,7 +462,7 @@
     </div>
   </nav>
   <script>
-  // Mark active nav item and open its group on page load
+  // Mark active nav item and highlight its group label on page load
   (function() {
     const path = window.location.pathname;
     document.querySelectorAll('.nav-item').forEach(function(a) {
@@ -356,7 +470,7 @@
       if (href && href !== '/' && path.startsWith(href)) {
         a.classList.add('active');
         const group = a.closest('.nav-group');
-        if (group) group.classList.add('open');
+        if (group) group.classList.add('has-active');
       }
     });
 
@@ -681,6 +795,6 @@
   <script src="/static/js/voice-commands.js?v=1"></script>
 
   <!-- Achievement Notification Center - Phase 3 -->
-  <script src="/static/js/achievement-notification-center.js?v=1"></script>
+  <script src="/static/js/achievement-notifications.js?v=2"></script>
 </body>
 </html>
