@@ -4489,7 +4489,7 @@ Fixes Turkish receipt scanning (e.g. Defacto, Migros, Akbank POS receipts) and a
 
 ## 🤖 Phase F — Telegram Bot Integration
 
-**Status:** 📋 Planned
+**Status:** 🔄 In Progress (F-1, F-2, F-3, multi-user readiness complete — F-4 planned)
 **Priority:** Medium
 **Estimated Time:** 8–12 hours across 4 sub-phases
 
@@ -4497,7 +4497,9 @@ Fixes Turkish receipt scanning (e.g. Defacto, Migros, Akbank POS receipts) and a
 
 A Telegram bot that lets users log expenses directly from Telegram — no need to open the web app for quick entries. The bot connects to the existing database and reuses all existing services (categories, currency preferences, entry creation, gamification XP).
 
-**Bot username:** to be registered via [@BotFather](https://t.me/BotFather)
+**Bot:** [@My_Budget_Saver_Bot](https://t.me/My_Budget_Saver_Bot) (display name: BudgetPulse)
+**Token:** Set via `TELEGRAM_BOT_TOKEN` Railway environment variable
+**Bot username config:** Set via `TELEGRAM_BOT_USERNAME=My_Budget_Saver_Bot` Railway environment variable
 
 ---
 
@@ -4616,6 +4618,22 @@ Top categories:
 
 ---
 
+### Phase F-3b — Multi-User Readiness
+**Estimated Time:** 1 hour
+**Status:** ✅ Complete
+
+**Goal:** Make the bot discoverable and usable by any registered Budget Pulse user, not just the developer.
+
+**Tasks completed:**
+1. Added `TELEGRAM_BOT_USERNAME` to `app/core/config.py` — configurable via Railway env var
+2. Settings page now renders a dynamic `@My_Budget_Saver_Bot` clickable link (falls back to plain text if env var not set)
+3. Added **Open Bot** button (`t.me/My_Budget_Saver_Bot`) next to "Generate Link Code"
+4. `/start` onboarding message now includes the direct Settings URL so new users know exactly where to generate their link code
+5. Registered all 9 bot commands with Telegram via `set_my_commands()` on startup — users see the command menu automatically
+6. `TELEGRAM_BOT_TOKEN` confirmed set on Railway; `TELEGRAM_BOT_USERNAME=My_Budget_Saver_Bot` to be added
+
+---
+
 ### Phase F-4 — Receipt Scanning via Telegram
 **Estimated Time:** 2–3 hours
 **Status:** 📋 Not started
@@ -4662,8 +4680,9 @@ Bot:   ✅ Saved! Expense · 1,414.95 TRY · Shopping
 | F-1 | Webhook + account linking | 2–3h | ✅ Complete |
 | F-2 | Add entry conversation | 3–4h | ✅ Complete |
 | F-3 | Balance / history commands | 2–3h | ✅ Complete |
+| F-3b | Multi-user readiness | 1h | ✅ Complete |
 | F-4 | Receipt scanning via photo | 2–3h | 📋 Planned |
-| **Total** | | **9–13h** | |
+| **Total** | | **10–14h** | |
 
 **Dependencies:**
 - `TELEGRAM_BOT_TOKEN` env var (from @BotFather)
