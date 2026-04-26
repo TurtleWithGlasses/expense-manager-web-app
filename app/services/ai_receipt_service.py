@@ -26,7 +26,7 @@ Required structure:
   "total_amount": 12.50,
   "currency": "TRY",
   "date": "YYYY-MM-DD",
-  "line_items": [{"description": "item", "amount": 5.99}],
+  "line_items": [{"description": "item name", "qty": 1, "unit_price": 5.99, "amount": 5.99}],
   "confidence": "high"
 }
 
@@ -35,7 +35,11 @@ Rules:
 - Turkish receipts: "Tutar", "Toplam", "Ödenecek" all mean total.
 - currency: ISO code (TRY, USD, EUR, GBP …). Infer from ₺/$/€/£ symbols if no code printed.
 - date: YYYY-MM-DD format. null if not readable.
-- line_items: individual product lines only — skip tax, total, subtotal rows. Empty list if none.
+- line_items: individual product lines only — skip tax, total, subtotal, discount, tip rows.
+  - qty: quantity as a number (default 1 if not shown)
+  - unit_price: price per unit (same as amount if qty=1)
+  - amount: total for that line (qty × unit_price)
+  - Empty list [] if no individual items are legible.
 - confidence: "high" all fields clear / "medium" some unclear / "low" mostly unreadable.
 - Use null for any field you cannot read reliably."""
 
@@ -124,12 +128,31 @@ def scan_with_ai(image_bytes: bytes, api_key: str) -> dict:
     if confidence not in ("high", "medium", "low"):
         confidence = "medium"
 
+    # Normalise line items — ensure qty/unit_price/amount are numbers
+    raw_items = data.get("line_items") or []
+    line_items = []
+    for item in raw_items:
+        try:
+            amt = float(item.get("amount") or 0)
+            if amt <= 0:
+                continue
+            qty = float(item.get("qty") or 1) or 1
+            unit_price = float(item.get("unit_price") or amt / qty)
+            line_items.append({
+                "description": str(item.get("description") or "Item"),
+                "qty": qty,
+                "unit_price": round(unit_price, 2),
+                "amount": round(amt, 2),
+            })
+        except (TypeError, ValueError, ZeroDivisionError):
+            continue
+
     return {
         "merchant": data.get("merchant") or None,
         "total_amount": total_amount,
         "date": receipt_date,
         "currency": data.get("currency") or None,
-        "line_items": data.get("line_items") or [],
+        "line_items": line_items,
         "confidence": confidence,
         "raw_text": f"[AI Vision · {confidence} confidence]",
         "source": "ai",

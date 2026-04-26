@@ -1,10 +1,12 @@
-"""Receipt Scanning API – Phase 32B + Phase A (persistence) + Phase C (category) + Phase D (duplicate detection)"""
+"""Receipt Scanning API – Phase 32B + Phase A + Phase C + Phase D + Phase G"""
 import base64
 import json
 from datetime import datetime, timedelta
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -210,3 +212,68 @@ async def receipt_history(
         "user_currency": user_currency,
         "user_currency_code": user_currency_code,
     })
+
+
+# ── G-2: Split receipt into multiple entries ──────────────────────────────────
+
+class SplitItem(BaseModel):
+    description: str
+    amount: float
+    category_id: Optional[int] = None
+
+
+class SplitRequest(BaseModel):
+    receipt_id: Optional[int] = None
+    date: str                       # YYYY-MM-DD
+    currency_code: str
+    items: List[SplitItem]
+
+
+@router.post("/split")
+async def split_receipt(
+    body: SplitRequest,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Create one expense entry per line item."""
+    from app.models.entry import Entry
+    from datetime import date as date_type
+
+    if not body.items:
+        raise HTTPException(status_code=400, detail="No items provided.")
+
+    try:
+        entry_date = date_type.fromisoformat(body.date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+
+    created_ids = []
+    for item in body.items:
+        if item.amount <= 0:
+            continue
+        entry = Entry(
+            user_id=user.id,
+            type="expense",
+            amount=round(item.amount, 2),
+            note=item.description[:255],
+            date=entry_date,
+            currency_code=body.currency_code,
+            category_id=item.category_id or None,
+        )
+        db.add(entry)
+        db.flush()  # get id before commit
+        created_ids.append(entry.id)
+
+    if not created_ids:
+        raise HTTPException(status_code=400, detail="All items had zero or negative amounts.")
+
+    # Link receipt to first entry if provided
+    if body.receipt_id:
+        receipt = db.query(Receipt).filter(
+            Receipt.id == body.receipt_id, Receipt.user_id == user.id
+        ).first()
+        if receipt and receipt.entry_id is None:
+            receipt.entry_id = created_ids[0]
+
+    db.commit()
+    return JSONResponse({"created": len(created_ids), "entry_ids": created_ids})

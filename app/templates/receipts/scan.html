@@ -246,10 +246,22 @@
           </div>
         </div>
 
-        <!-- Line items (if any) -->
+        <!-- Line items (if any) — G-2 -->
         <div id="lineItemsWrap" class="mb-3" style="display:none">
-          <p class="fw-semibold mb-2" style="font-size:0.85rem;color:var(--text)">Line Items</p>
-          <div id="lineItemsList" style="font-size:0.82rem;color:var(--text-muted)"></div>
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="fw-semibold" style="font-size:0.85rem;color:var(--text)">
+              <i class="bi bi-list-ul me-1" style="color:var(--primary)"></i>Line Items
+              <span id="lineItemCount" style="font-size:0.75rem;color:var(--text-muted);font-weight:400"></span>
+            </span>
+            <button type="button" class="btn btn-sm" id="selectAllBtn"
+              style="font-size:0.72rem;padding:0.15rem 0.5rem;background:rgba(59,130,246,0.1);color:var(--primary);border:none"
+              onclick="toggleSelectAll()">Select all</button>
+          </div>
+          <div id="lineItemsList"></div>
+          <button type="button" class="btn btn-outline-primary w-100 mt-2 btn-sm" id="splitBtn" onclick="doSplit()" style="display:none">
+            <i class="bi bi-scissors me-1"></i>Add checked items as separate entries
+          </button>
+          <div id="splitStatus" class="mt-1 text-center" style="font-size:0.8rem;color:var(--text-muted)"></div>
         </div>
 
         <!-- Pre-filled add entry form -->
@@ -413,6 +425,7 @@ async function doScan() {
       return;
     }
 
+    _scanData = data;
     renderResult(data);
     const srcLabel = data.source === 'ai' ? 'AI Vision' : 'OCR';
     showToast('Receipt scanned successfully!', 'success');
@@ -489,19 +502,36 @@ function renderResult(data) {
     catBadge.style.display = 'none';
   }
 
-  // Line items
-  const liWrap = document.getElementById('lineItemsWrap');
-  const liList = document.getElementById('lineItemsList');
+  // Line items — G-2
+  const liWrap   = document.getElementById('lineItemsWrap');
+  const liList   = document.getElementById('lineItemsList');
+  const splitBtn = document.getElementById('splitBtn');
+  const liCount  = document.getElementById('lineItemCount');
   if (data.line_items && data.line_items.length > 0) {
     liWrap.style.display = '';
-    liList.innerHTML = data.line_items.map(item =>
-      `<div class="d-flex justify-content-between py-1 border-bottom" style="border-color:var(--border)!important">
-        <span>${escHtml(item.description)}</span>
-        <span style="color:var(--danger)">{{ user_currency.symbol }}${parseFloat(item.amount).toFixed(2)}</span>
-      </div>`
-    ).join('');
+    liCount.textContent = `(${data.line_items.length})`;
+    const catOptions = `<option value="">No category</option>` +
+      [{% for c in categories %}{id:{{c.id}},name:{{c.name|tojson}}}{% if not loop.last %},{% endif %}{% endfor %}]
+      .map(c => `<option value="${c.id}">${escHtml(c.name)}</option>`).join('');
+    liList.innerHTML = data.line_items.map((item, i) => {
+      const qty    = item.qty && item.qty !== 1 ? `<span style="color:var(--text-muted);margin-right:0.3rem">${item.qty}×</span>` : '';
+      const amtStr = parseFloat(item.amount).toFixed(2);
+      return `<div class="d-flex align-items-start gap-2 py-1" style="border-bottom:1px solid var(--border)">
+        <input type="checkbox" class="li-check form-check-input mt-1" data-idx="${i}" checked onchange="updateSplitBtn()">
+        <div style="flex:1;min-width:0">
+          <div class="d-flex justify-content-between align-items-center">
+            <span style="font-size:0.82rem;color:var(--text)">${qty}${escHtml(item.description)}</span>
+            <span style="font-size:0.82rem;font-weight:600;color:var(--danger);white-space:nowrap;margin-left:0.5rem">{{ user_currency.symbol }}${amtStr}</span>
+          </div>
+          <select class="form-select form-select-sm mt-1 li-cat" data-idx="${i}"
+            style="font-size:0.75rem;padding:0.15rem 0.4rem;height:auto">${catOptions}</select>
+        </div>
+      </div>`;
+    }).join('');
+    updateSplitBtn();
   } else {
     liWrap.style.display = 'none';
+    if (splitBtn) splitBtn.style.display = 'none';
   }
 
   // Phase D – duplicate detection warning
@@ -538,6 +568,74 @@ function showManualEntry() {
   renderResult({});
   document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('scanStatus').textContent = 'Manual entry mode – fill in the fields below.';
+}
+
+// ── line item split helpers — G-2 ───────────────────────────────────────────
+let _scanData = null;  // last successful scan result
+
+function updateSplitBtn() {
+  const checked = document.querySelectorAll('.li-check:checked');
+  const btn = document.getElementById('splitBtn');
+  if (!btn) return;
+  if (checked.length > 0) {
+    btn.style.display = '';
+    btn.textContent = `Add ${checked.length} item${checked.length > 1 ? 's' : ''} as separate entries`;
+    btn.innerHTML = `<i class="bi bi-scissors me-1"></i>Add ${checked.length} item${checked.length > 1 ? 's' : ''} as separate entries`;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+let _selectAll = true;
+function toggleSelectAll() {
+  const boxes = document.querySelectorAll('.li-check');
+  boxes.forEach(b => b.checked = _selectAll);
+  _selectAll = !_selectAll;
+  document.getElementById('selectAllBtn').textContent = _selectAll ? 'Select all' : 'Deselect all';
+  updateSplitBtn();
+}
+
+async function doSplit() {
+  if (!_scanData) return;
+  const date   = document.getElementById('fDate').value;
+  const currency = document.querySelector('input[name="currency_code"]')?.value || '{{ user_currency_code }}';
+  const receiptId = parseInt(document.getElementById('fReceiptId').value) || null;
+
+  const items = [];
+  document.querySelectorAll('.li-check:checked').forEach(cb => {
+    const idx = parseInt(cb.dataset.idx);
+    const item = _scanData.line_items[idx];
+    const catEl = document.querySelector(`.li-cat[data-idx="${idx}"]`);
+    items.push({
+      description: item.description,
+      amount: item.amount,
+      category_id: catEl && catEl.value ? parseInt(catEl.value) : null,
+    });
+  });
+
+  if (!items.length) return;
+
+  const btn = document.getElementById('splitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving…';
+
+  try {
+    const resp = await fetch('/receipts/split', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ receipt_id: receiptId, date, currency_code: currency, items }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { showToast(data.detail || 'Split failed', 'danger'); return; }
+    showToast(`${data.created} entr${data.created > 1 ? 'ies' : 'y'} created!`, 'success');
+    document.getElementById('splitStatus').textContent = `${data.created} separate entries saved.`;
+    btn.style.display = 'none';
+    document.getElementById('lineItemsList').querySelectorAll('.li-check').forEach(c => c.disabled = true);
+  } catch(e) {
+    showToast('Network error', 'danger');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
