@@ -43,6 +43,9 @@ apscheduler==3.10.4
 # Telegram Bot (Phase F)
 python-telegram-bot==21.3
 
+# AI Vision — receipt scanning (Phase G)
+anthropic==0.40.0
+
 # OCR – Receipt scanning (Phase 32 Part B)
 # Requires Tesseract binary: apt-get install tesseract-ocr (Railway/Linux) or https://github.com/UB-Mannheim/tesseract/wiki (Windows)
 pytesseract==0.3.13

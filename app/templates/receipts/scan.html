@@ -104,7 +104,14 @@
         <i class="bi bi-receipt-cutoff me-2" style="color:var(--primary)"></i>Receipt Scanner
       </h2>
       <p class="text-muted mb-0" style="font-size:0.9rem">
+        {% if ai_available %}
+        <span style="background:rgba(99,102,241,0.12);color:#818cf8;font-size:0.75rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:6px;margin-right:0.4rem">
+          <i class="bi bi-stars me-1"></i>AI Vision
+        </span>
+        Upload or take a photo — AI extracts total, date and merchant automatically
+        {% else %}
         Upload a photo of your receipt – OCR extracts the total, date and merchant automatically
+        {% endif %}
       </p>
     </div>
     <div class="ms-auto d-flex gap-2">
@@ -144,7 +151,12 @@
       <div class="mb-3 p-3" style="background:var(--surface);border-radius:12px;border:1px solid var(--border)">
         <p class="fw-semibold mb-2" style="font-size:0.85rem;color:var(--text)">How it works</p>
         <div class="d-flex flex-column gap-2">
-          {% for step, txt in [("1","Upload or take a photo of your receipt"),("2","OCR extracts amount, date and merchant"),("3","Review the result and add it as an entry")] %}
+          {% set steps = [
+            ("1", "Upload or take a photo of your receipt"),
+            ("2", "AI reads the total, date and merchant" if ai_available else "OCR extracts amount, date and merchant"),
+            ("3", "Review the result and add it as an entry")
+          ] %}
+          {% for step, txt in steps %}
           <div class="d-flex align-items-center gap-2">
             <span class="step-badge">{{ step }}</span>
             <span style="font-size:0.82rem;color:var(--text-muted)">{{ txt }}</span>
@@ -153,15 +165,23 @@
         </div>
       </div>
 
-      <!-- Drop zone -->
+      <!-- Drop zone (desktop: file picker only, no capture) -->
       <div class="upload-zone mb-3" id="dropZone" {% if not ocr_available %}style="pointer-events:none;opacity:0.5"{% endif %}>
-        <input type="file" id="fileInput" accept="image/*" capture="environment" {% if not ocr_available %}disabled{% endif %}>
+        <input type="file" id="fileInput" accept="image/*" {% if not ocr_available %}disabled{% endif %}>
         <i class="bi bi-cloud-arrow-up" style="font-size:2.5rem;color:var(--primary);display:block;margin-bottom:0.5rem"></i>
         <p class="fw-semibold mb-1" style="color:var(--text)">Drop image here or click to browse</p>
         <p class="mb-0" style="font-size:0.8rem;color:var(--text-muted)">JPEG · PNG · WebP · BMP · TIFF · max 10 MB</p>
-        <p class="mt-2 mb-0" style="font-size:0.78rem;color:var(--primary)">
-          <i class="bi bi-camera me-1"></i>On mobile – opens camera directly
-        </p>
+      </div>
+
+      <!-- Camera button (mobile: opens rear camera directly) -->
+      <div class="mb-3 d-flex gap-2">
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" {% if not ocr_available %}disabled{% endif %}>
+        <button type="button" class="btn btn-outline-primary btn-sm flex-fill" onclick="document.getElementById('cameraInput').click()" {% if not ocr_available %}disabled{% endif %}>
+          <i class="bi bi-camera me-1"></i>Take Photo
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="document.getElementById('fileInput').click()" {% if not ocr_available %}disabled{% endif %}>
+          <i class="bi bi-folder2-open me-1"></i>Choose File
+        </button>
       </div>
 
       <!-- Preview -->
@@ -170,7 +190,7 @@
       </div>
 
       <button id="scanBtn" class="btn btn-primary w-100" onclick="doScan()" disabled>
-        <i class="bi bi-search me-2"></i>Scan Receipt
+        <i class="bi bi-stars me-2"></i>{% if ai_available %}Scan with AI{% else %}Scan Receipt{% endif %}
       </button>
       <div id="scanStatus" class="mt-2 text-center" style="font-size:0.85rem;color:var(--text-muted)"></div>
       <button type="button" class="btn btn-link w-100 mt-1 p-0" style="font-size:0.8rem;color:var(--text-muted)" onclick="showManualEntry()">
@@ -305,19 +325,19 @@
 
 <script>
 let selectedFile = null;
+const AI_AVAILABLE = {{ 'true' if ai_available else 'false' }};
 
-const fileInput  = document.getElementById('fileInput');
-const dropZone   = document.getElementById('dropZone');
-const previewImg = document.getElementById('previewImg');
-const previewWrap= document.getElementById('previewWrap');
-const scanBtn    = document.getElementById('scanBtn');
-const scanStatus = document.getElementById('scanStatus');
+const fileInput   = document.getElementById('fileInput');
+const cameraInput = document.getElementById('cameraInput');
+const dropZone    = document.getElementById('dropZone');
+const previewImg  = document.getElementById('previewImg');
+const previewWrap = document.getElementById('previewWrap');
+const scanBtn     = document.getElementById('scanBtn');
+const scanStatus  = document.getElementById('scanStatus');
 
-// ── file selection ──────────────────────────────────────────────────────────
-fileInput.addEventListener('change', e => {
-  const f = e.target.files[0];
-  if (f) selectFile(f);
-});
+// ── file / camera selection ─────────────────────────────────────────────────
+fileInput.addEventListener('change', e => { if (e.target.files[0]) selectFile(e.target.files[0]); });
+cameraInput.addEventListener('change', e => { if (e.target.files[0]) selectFile(e.target.files[0]); });
 
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
@@ -338,16 +358,50 @@ function selectFile(f) {
   scanStatus.textContent = `Ready: ${f.name} (${(f.size/1024).toFixed(0)} KB)`;
 }
 
+// ── client-side image compression ───────────────────────────────────────────
+async function compressImage(file, maxPx = 1600, quality = 0.88) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (Math.max(width, height) > maxPx) {
+        const scale = maxPx / Math.max(width, height);
+        width  = Math.round(width  * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => resolve(blob || file), 'image/jpeg', quality);
+    };
+    img.onerror = () => resolve(file);
+    img.src = url;
+  });
+}
+
 // ── scan ────────────────────────────────────────────────────────────────────
 async function doScan() {
   if (!selectedFile) return;
 
   scanBtn.disabled = true;
-  scanBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Scanning…';
-  scanStatus.textContent = 'Running OCR – this may take a few seconds…';
+  const scanLabel = AI_AVAILABLE ? 'Analysing with AI…' : 'Running OCR…';
+  scanBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${scanLabel}`;
+  scanStatus.textContent = AI_AVAILABLE
+    ? 'Sending to AI Vision – usually 3–6 seconds…'
+    : 'Running OCR – this may take a few seconds…';
+
+  // Compress before upload (saves cost + latency)
+  const toUpload = await compressImage(selectedFile);
+  const origKB   = (selectedFile.size / 1024).toFixed(0);
+  const compKB   = (toUpload.size  / 1024).toFixed(0);
+  if (compKB < origKB) {
+    scanStatus.textContent += ` (compressed ${origKB}→${compKB} KB)`;
+  }
 
   const formData = new FormData();
-  formData.append('file', selectedFile);
+  formData.append('file', toUpload, 'receipt.jpg');
 
   try {
     const resp = await fetch('/receipts/scan', { method: 'POST', body: formData });
@@ -360,8 +414,9 @@ async function doScan() {
     }
 
     renderResult(data);
+    const srcLabel = data.source === 'ai' ? 'AI Vision' : 'OCR';
     showToast('Receipt scanned successfully!', 'success');
-    scanStatus.textContent = `Scan complete · confidence: ${data.confidence}`;
+    scanStatus.textContent = `${srcLabel} scan complete · confidence: ${data.confidence}`;
     if (data.receipt_id) {
       document.getElementById('fReceiptId').value = data.receipt_id;
     }
@@ -371,7 +426,9 @@ async function doScan() {
     scanStatus.textContent = 'Network error.';
   } finally {
     scanBtn.disabled = false;
-    scanBtn.innerHTML = '<i class="bi bi-search me-2"></i>Scan Again';
+    const icon = AI_AVAILABLE ? 'bi-stars' : 'bi-search';
+    const label = AI_AVAILABLE ? 'Scan with AI Again' : 'Scan Again';
+    scanBtn.innerHTML = `<i class="bi ${icon} me-2"></i>${label}`;
   }
 }
 

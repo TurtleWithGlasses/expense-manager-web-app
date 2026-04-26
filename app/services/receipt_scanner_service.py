@@ -397,6 +397,7 @@ class ScanResult:
         merchant: Optional[str],
         line_items: list[dict],
         confidence: str,
+        source: str = "ocr",
     ):
         self.raw_text = raw_text
         self.total_amount = total_amount
@@ -404,6 +405,7 @@ class ScanResult:
         self.merchant = merchant
         self.line_items = line_items
         self.confidence = confidence  # "high" | "medium" | "low"
+        self.source = source          # "ai" | "ocr"
 
     def to_dict(self) -> dict:
         return {
@@ -413,13 +415,55 @@ class ScanResult:
             "merchant": self.merchant,
             "line_items": self.line_items,
             "confidence": self.confidence,
+            "source": self.source,
         }
 
 
 def scan_receipt(image_bytes: bytes) -> ScanResult:
     """
-    Main entry point.  Raises RuntimeError if Tesseract is not installed.
+    Main entry point.  Tries AI vision first (if ANTHROPIC_API_KEY is set),
+    then falls back to Tesseract OCR.
     """
+    from app.core.config import settings
+
+    # ── AI Vision path ────────────────────────────────────────────────────────
+    if settings.ANTHROPIC_API_KEY:
+        try:
+            from app.services.ai_receipt_service import scan_with_ai
+            logger.info("Scanning receipt with AI Vision – %d bytes", len(image_bytes))
+            ai = scan_with_ai(image_bytes, settings.ANTHROPIC_API_KEY)
+
+            total_amount: Optional[Decimal] = None
+            if ai.get("total_amount") is not None:
+                try:
+                    total_amount = Decimal(str(ai["total_amount"]))
+                except InvalidOperation:
+                    pass
+
+            scan_date: Optional[date] = None
+            if ai.get("date"):
+                try:
+                    scan_date = date.fromisoformat(ai["date"])
+                except ValueError:
+                    pass
+
+            logger.info(
+                "AI scan complete – amount=%s date=%s merchant=%s confidence=%s items=%d",
+                total_amount, scan_date, ai.get("merchant"), ai.get("confidence"), len(ai.get("line_items", [])),
+            )
+            return ScanResult(
+                raw_text=ai.get("raw_text", "[AI Vision]"),
+                total_amount=total_amount,
+                scan_date=scan_date,
+                merchant=ai.get("merchant"),
+                line_items=ai.get("line_items", []),
+                confidence=ai.get("confidence", "medium"),
+                source="ai",
+            )
+        except Exception as exc:
+            logger.warning("AI receipt scan failed, falling back to Tesseract: %s", exc)
+
+    # ── Tesseract fallback ────────────────────────────────────────────────────
     if not _ocr_available():
         raise RuntimeError(
             "Tesseract OCR is not installed or not on PATH.  "
@@ -427,7 +471,7 @@ def scan_receipt(image_bytes: bytes) -> ScanResult:
             "or download from https://github.com/UB-Mannheim/tesseract/wiki  (Windows)."
         )
 
-    logger.info("Scanning receipt – %d bytes", len(image_bytes))
+    logger.info("Scanning receipt with Tesseract – %d bytes", len(image_bytes))
 
     raw_text = _extract_text(image_bytes)
     logger.debug("OCR raw text:\n%s", raw_text)
@@ -443,7 +487,7 @@ def scan_receipt(image_bytes: bytes) -> ScanResult:
     confidence = "high" if found == 3 else "medium" if found >= 1 else "low"
 
     logger.info(
-        "Scan complete – amount=%s date=%s merchant=%s confidence=%s items=%d",
+        "Tesseract scan complete – amount=%s date=%s merchant=%s confidence=%s items=%d",
         total_amount, scan_date, merchant, confidence, len(line_items),
     )
 
@@ -454,4 +498,5 @@ def scan_receipt(image_bytes: bytes) -> ScanResult:
         merchant=merchant,
         line_items=line_items,
         confidence=confidence,
+        source="ocr",
     )

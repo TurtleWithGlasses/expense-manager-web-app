@@ -36,10 +36,13 @@ async def receipt_scan_page(
 ):
     """Receipt scanning UI page."""
     from app.services.receipt_scanner_service import _ocr_available
+    from app.core.config import settings as app_settings
 
     user_currency_code = user_preferences_service.get_user_currency(db, user.id)
     user_currency = CURRENCIES.get(user_currency_code, CURRENCIES["USD"])
     categories = db.query(Category).filter(Category.user_id == user.id).order_by(Category.name).all()
+
+    ai_available = bool(app_settings.ANTHROPIC_API_KEY)
 
     return render(request, "receipts/scan.html", {
         "user": user,
@@ -47,7 +50,8 @@ async def receipt_scan_page(
         "user_currency": user_currency,
         "user_currency_code": user_currency_code,
         "categories": categories,
-        "ocr_available": _ocr_available(),
+        "ocr_available": _ocr_available() or ai_available,
+        "ai_available": ai_available,
     })
 
 

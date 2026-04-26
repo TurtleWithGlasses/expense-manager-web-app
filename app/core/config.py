@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     SENTRY_DSN: str = ""  # Set via environment variable – get from https://sentry.io
     TELEGRAM_BOT_TOKEN: str = ""     # Set via Railway environment variable
     TELEGRAM_BOT_USERNAME: str = ""  # e.g. "BudgetPulseBot" (without @)
+    ANTHROPIC_API_KEY: str = ""      # Set via Railway environment variable (Phase G)
     SENTRY_TRACES_SAMPLE_RATE: float = 0.1  # 10 % of transactions traced in production
 
     # CORS Configuration
