@@ -1,5 +1,5 @@
 """
-Telegram Bot Service — Phase F (F-1, F-2, F-3)
+Telegram Bot Service — Phase F (F-1 – F-3) + Phase G-4 (photo scanning)
 
 Commands:
   /start   — welcome + help
@@ -12,6 +12,9 @@ Commands:
   /week    — this week's spending by category
   /history — last N entries
   /cancel  — abort current conversation
+
+Photo:
+  Send any photo → AI scans it as a receipt and asks to confirm saving
 """
 from __future__ import annotations
 
@@ -99,7 +102,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if tg_user:
             text = (
                 "👋 Welcome back to *Budget Pulse*!\n\n"
-                "/add — Log income or expense\n"
+                "📷 *Send a photo* of a receipt to scan it instantly\n\n"
+                "/add — Log income or expense manually\n"
                 "/balance — This month's summary\n"
                 "/today — Today's entries\n"
                 "/week — This week's spending\n"
@@ -127,6 +131,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "*Budget Pulse — Commands*\n\n"
+        "📷 *Send a photo* of a receipt → AI scans it automatically\n\n"
         "/add — Log a new income or expense\n"
         "/undo — Remove the last entry you added (within 5 min)\n"
         "/balance — This month's income vs expenses\n"
@@ -632,6 +637,169 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         db.close()
 
 
+# ── G-4: Photo receipt scanning ──────────────────────────────────────────────
+
+async def photo_received(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """User sent a photo — download it, run AI scan, ask for confirmation."""
+    db = _db()
+    try:
+        tg_user = _get_tg_user(db, update.effective_user.id)
+        if not tg_user:
+            await update.message.reply_text(_not_linked_msg(), parse_mode="Markdown")
+            return
+
+        from app.core.config import settings
+        if not settings.ANTHROPIC_API_KEY:
+            await update.message.reply_text(
+                "📷 Receipt scanning via photo requires AI Vision, which is not enabled on this server.\n"
+                "Use the web app to scan receipts instead."
+            )
+            return
+
+        processing_msg = await update.message.reply_text(
+            "📷 *Scanning receipt…*\n_AI Vision is reading your photo_",
+            parse_mode="Markdown",
+        )
+
+        # Download largest available photo size
+        photo_file = await update.message.photo[-1].get_file()
+        image_bytes = bytes(await photo_file.download_as_bytearray())
+
+        from app.services.ai_receipt_service import scan_with_ai
+        try:
+            result = scan_with_ai(image_bytes, settings.ANTHROPIC_API_KEY)
+        except Exception as exc:
+            logger.warning("AI scan failed in bot photo handler: %s", exc)
+            await processing_msg.edit_text(
+                "❌ Could not read the receipt. Try a clearer, well-lit photo or use /add to log it manually."
+            )
+            return
+
+        amount = result.get("total_amount")
+        if not amount:
+            await processing_msg.edit_text(
+                "❌ Could not find a total amount in the receipt.\n"
+                "Try a clearer photo, or use /add to log it manually."
+            )
+            return
+
+        merchant = result.get("merchant") or "Unknown merchant"
+        date_str = result.get("date") or date.today().isoformat()
+        currency = _get_currency(db, tg_user.user_id)
+        s        = _sym(currency)
+
+        # Suggest category from merchant name
+        from app.models.category import Category
+        from app.services.category_suggester import suggest_category
+        cats = db.query(Category).filter(Category.user_id == tg_user.user_id).order_by(Category.name).all()
+        suggestion = suggest_category(merchant, "", cats, db=db, user_id=tg_user.user_id)
+        cat_id   = suggestion["category_id"]   if suggestion else None
+        cat_name = suggestion["category_name"] if suggestion else "No category"
+
+        # Store pending receipt for the confirm callback
+        context.user_data["pending_receipt"] = {
+            "merchant":      merchant,
+            "amount":        amount,
+            "date":          date_str,
+            "currency":      currency,
+            "category_id":   cat_id,
+            "category_name": cat_name,
+        }
+
+        conf      = result.get("confidence", "medium")
+        conf_icon = {"high": "🟢", "medium": "🟡", "low": "🔴"}.get(conf, "🟡")
+
+        try:
+            date_display = datetime.strptime(date_str, "%Y-%m-%d").date().strftime("%d %b %Y")
+        except ValueError:
+            date_display = date_str
+
+        text = (
+            f"📄 *Receipt Scanned* {conf_icon}\n\n"
+            f"🏪 *Merchant:* {merchant}\n"
+            f"💰 *Amount:*   {s}{float(amount):,.2f} {currency}\n"
+            f"📅 *Date:*     {date_display}\n"
+            f"📂 *Category:* {cat_name}\n\n"
+            f"Save this as an expense entry?"
+        )
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton("✅ Save", callback_data="receipt_save"),
+            InlineKeyboardButton("❌ Discard", callback_data="receipt_cancel"),
+        ]])
+        await processing_msg.edit_text(text, reply_markup=keyboard, parse_mode="Markdown")
+
+    finally:
+        db.close()
+
+
+async def receipt_save_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Save the pending scanned receipt as an expense entry."""
+    query = update.callback_query
+    await query.answer()
+
+    pending = context.user_data.get("pending_receipt")
+    if not pending:
+        await query.edit_message_text("⏱ Session expired. Send the photo again.")
+        return
+
+    db = _db()
+    try:
+        tg_user = _get_tg_user(db, update.effective_user.id)
+        if not tg_user:
+            await query.edit_message_text("Account not linked. Use /link.")
+            return
+
+        from app.services import entries as entries_service
+        from datetime import date as date_type
+        try:
+            entry_date = date_type.fromisoformat(pending["date"])
+        except (ValueError, KeyError):
+            entry_date = date_type.today()
+
+        entry = entries_service.create_entry(
+            db,
+            user_id=tg_user.user_id,
+            type="expense",
+            amount=float(pending["amount"]),
+            date=entry_date,
+            category_id=pending.get("category_id"),
+            note=pending.get("merchant", "Receipt")[:255],
+            currency_code=pending.get("currency", "USD"),
+        )
+
+        tg_user.last_entry_id = entry.id
+        tg_user.last_entry_at = datetime.utcnow()
+        db.commit()
+
+        try:
+            from app.services.gamification import LevelService
+            LevelService(db).award_entry_xp(tg_user.user_id)
+        except Exception:
+            pass
+
+        s = _sym(pending.get("currency", "USD"))
+        await query.edit_message_text(
+            f"✅ *Saved!*\n\n"
+            f"📉 Expense\n"
+            f"💰 {s}{float(pending['amount']):,.2f}\n"
+            f"📂 {pending.get('category_name', '–')}\n"
+            f"📅 {entry_date.strftime('%d %b %Y')}\n\n"
+            f"_Use /undo to remove it (within 5 min)_",
+            parse_mode="Markdown",
+        )
+        context.user_data.pop("pending_receipt", None)
+    finally:
+        db.close()
+
+
+async def receipt_cancel_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Discard the pending scanned receipt without saving."""
+    query = update.callback_query
+    await query.answer()
+    context.user_data.pop("pending_receipt", None)
+    await query.edit_message_text("❌ Receipt discarded.")
+
+
 # ── Application factory ───────────────────────────────────────────────────────
 
 _application: Application | None = None
@@ -706,5 +874,10 @@ def create_application(token: str) -> Application:
     application.add_handler(CommandHandler("week",    week_command))
     application.add_handler(CommandHandler("history", history_command))
     application.add_handler(conv_handler)
+
+    # G-4: photo receipt scanning (must be after conv_handler)
+    application.add_handler(MessageHandler(filters.PHOTO, photo_received))
+    application.add_handler(CallbackQueryHandler(receipt_save_callback,   pattern=r"^receipt_save$"))
+    application.add_handler(CallbackQueryHandler(receipt_cancel_callback, pattern=r"^receipt_cancel$"))
 
     return application

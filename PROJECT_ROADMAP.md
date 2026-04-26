@@ -4634,11 +4634,11 @@ Top categories:
 
 ---
 
-### Phase F-4 — Receipt Scanning via Telegram
+### Phase F-4 / G-4 — Receipt Scanning via Telegram
 **Estimated Time:** 2–3 hours
-**Status:** 📋 Not started
+**Status:** ✅ Complete
 
-**Goal:** User sends a photo of a receipt directly to the Telegram bot — same OCR pipeline runs, bot asks the user to confirm or correct the extracted fields, then saves the entry.
+**Goal:** User sends a photo of a receipt directly to the Telegram bot — AI Vision reads it, bot shows extracted fields and asks to confirm, then saves the entry.
 
 **Flow:**
 ```
@@ -4658,16 +4658,18 @@ Bot:   ✅ Saved! Expense · 1,414.95 TRY · Shopping
 ```
 
 **Implementation details:**
-- `message.photo` handler in the Telegram webhook
-- Download photo bytes via Telegram's `getFile` API
-- Pass to existing `scan_receipt()` service (Phase B/E pipeline reused entirely)
-- Show extracted fields as a confirmation message with inline buttons
-- "Edit" triggers a follow-up conversation to correct amount/date/category
-- Receipt record saved and linked to the new entry (Phase A persistence reused)
+- `MessageHandler(filters.PHOTO, photo_received)` registered in `create_application()`
+- Downloads largest photo via `photo[-1].get_file()` → `download_as_bytearray()`
+- Passes bytes to `ai_receipt_service.scan_with_ai()` (G-1 AI Vision pipeline)
+- Bot replies "Scanning…" immediately, then edits to show result + ✅ Save / ❌ Discard buttons
+- Category auto-suggested via `suggest_category()` (same as web app)
+- On ✅ Save: creates expense entry, awards XP, updates `last_entry_id` for /undo
+- Pending scan stored in `context.user_data["pending_receipt"]`, cleared on save/cancel
+- `/start` and `/help` updated to advertise photo scanning to linked users
 
 **Deliverables:**
-- Photo message handler
-- OCR result confirmation flow
+- `photo_received`, `receipt_save_callback`, `receipt_cancel_callback` handlers
+- AI scan result confirmation flow with inline buttons
 - Edit flow for each field
 - Full receipt persistence (same as web scan)
 
