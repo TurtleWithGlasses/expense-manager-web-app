@@ -4703,7 +4703,7 @@ Bot:   ✅ Saved! Expense · 1,414.95 TRY · Shopping
 
 ## 🤖 Phase G — AI Vision Receipt Scanning
 
-**Status:** 🔄 In Progress (G-1 → G-4 complete, G-5 in progress)
+**Status:** ✅ Complete (G-1 through G-5d all done)
 **Priority:** High
 **Estimated Time:** 20–26 hours across 5 sub-phases
 
@@ -4780,7 +4780,7 @@ Replaces the Tesseract OCR pipeline with Claude Haiku vision for dramatically be
 
 ### Phase G-5 — Bot Receipt Edit Flow & Category Learning
 **Estimated Time:** 4.5–6.5 hours
-**Status:** 🔄 In Progress (G-5a + G-5b complete, G-5c planned)
+**Status:** ✅ Complete (G-5a, G-5b, G-5c, G-5d all done)
 
 #### G-5a — Edit Flow in the Bot
 **Status:** ✅ Complete
@@ -4827,9 +4827,17 @@ photo_received — shows result
 When `category_id != original_cat_id` after edit, the save confirmation includes the learning note. No separate implementation needed.
 
 #### G-5d — Cross-Channel Learning Verification
-**Status:** ✅ Already works — no code needed
+**Status:** ✅ Complete
 
 Both web app (`entries.py`) and bot (`receipt_save_callback`) write to `merchant_category_mappings` filtered by `user_id`. `suggest_category()` checks learned mappings first in both contexts.
+
+Verified by `tests/unit/test_cross_channel_learning.py` (16 tests):
+- Web app saves → bot suggestion reads it (and vice versa)
+- User isolation: User A's mappings don't affect User B
+- `use_count` increments across channels
+- Deleted category (`SET NULL`) handled gracefully — falls through to keyword inference
+- OCR variants of the same merchant (different tail after 3-word key) resolve to the same mapping
+- Case and punctuation insensitivity confirmed
 
 ---
 
