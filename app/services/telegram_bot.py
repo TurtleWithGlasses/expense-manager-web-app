@@ -637,117 +637,151 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         db.close()
 
 
-# ── G-4: Photo receipt scanning ──────────────────────────────────────────────
+# ── G-4 / G-5a: Photo receipt scanning with full edit flow ───────────────────
 
-async def photo_received(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """User sent a photo — download it, run AI scan, ask for confirmation."""
+# Conversation states (10–15 so they don't clash with /add states 0–2)
+PHOTO_CONFIRM  = 10
+EDIT_MENU      = 11
+EDIT_CATEGORY  = 12
+EDIT_AMOUNT    = 13
+EDIT_DATE      = 14
+EDIT_MERCHANT  = 15
+
+
+def _receipt_result_text(pending: dict) -> str:
+    """Build the scan result message from the pending_receipt dict."""
+    currency  = pending.get("currency", "USD")
+    s         = _sym(currency)
+    amount    = pending.get("amount", 0)
+    date_str  = pending.get("date", "")
+    merchant  = pending.get("merchant", "Unknown")
+    cat_name  = pending.get("category_name", "No category")
+    conf_icon = pending.get("conf_icon", "🟡")
+    edited    = " _(edited)_" if pending.get("edited") else ""
+    try:
+        date_display = datetime.strptime(date_str, "%Y-%m-%d").date().strftime("%d %b %Y")
+    except (ValueError, TypeError):
+        date_display = date_str or "–"
+    return (
+        f"📄 *Receipt Scanned* {conf_icon}{edited}\n\n"
+        f"🏪 *Merchant:* {merchant}\n"
+        f"💰 *Amount:*   {s}{float(amount):,.2f} {currency}\n"
+        f"📅 *Date:*     {date_display}\n"
+        f"📂 *Category:* {cat_name}\n\n"
+        f"Confirm or edit before saving:"
+    )
+
+
+def _receipt_result_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton("✅ Save",    callback_data="receipt_save"),
+        InlineKeyboardButton("✏️ Edit",   callback_data="receipt_edit"),
+        InlineKeyboardButton("❌ Discard", callback_data="receipt_cancel"),
+    ]])
+
+
+# ── Entry point ───────────────────────────────────────────────────────────────
+
+async def photo_received(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """User sent a photo — download, AI-scan, show result with Save/Edit/Discard."""
     db = _db()
     try:
         tg_user = _get_tg_user(db, update.effective_user.id)
         if not tg_user:
             await update.message.reply_text(_not_linked_msg(), parse_mode="Markdown")
-            return
+            return ConversationHandler.END
 
         from app.core.config import settings
         if not settings.ANTHROPIC_API_KEY:
             await update.message.reply_text(
-                "📷 Receipt scanning via photo requires AI Vision, which is not enabled on this server.\n"
+                "📷 Receipt scanning requires AI Vision, which is not enabled on this server.\n"
                 "Use the web app to scan receipts instead."
             )
-            return
+            return ConversationHandler.END
 
         processing_msg = await update.message.reply_text(
             "📷 *Scanning receipt…*\n_AI Vision is reading your photo_",
             parse_mode="Markdown",
         )
+        # Store message reference so text-input states can edit it later
+        context.user_data["scan_msg_id"]  = processing_msg.message_id
+        context.user_data["scan_chat_id"] = processing_msg.chat.id
 
-        # Download largest available photo size
-        photo_file = await update.message.photo[-1].get_file()
+        photo_file  = await update.message.photo[-1].get_file()
         image_bytes = bytes(await photo_file.download_as_bytearray())
 
         from app.services.ai_receipt_service import scan_with_ai
         try:
             result = scan_with_ai(image_bytes, settings.ANTHROPIC_API_KEY)
         except Exception as exc:
-            logger.warning("AI scan failed in bot photo handler: %s", exc)
+            logger.warning("AI scan failed in bot: %s", exc)
             await processing_msg.edit_text(
-                "❌ Could not read the receipt. Try a clearer, well-lit photo or use /add to log it manually."
+                "❌ Could not read the receipt. Try a clearer, well-lit photo or use /add to log manually."
             )
-            return
+            return ConversationHandler.END
 
         amount = result.get("total_amount")
         if not amount:
             await processing_msg.edit_text(
-                "❌ Could not find a total amount in the receipt.\n"
-                "Try a clearer photo, or use /add to log it manually."
+                "❌ Could not find a total amount. Try a clearer photo or use /add."
             )
-            return
+            return ConversationHandler.END
 
         merchant = result.get("merchant") or "Unknown merchant"
         date_str = result.get("date") or date.today().isoformat()
         currency = _get_currency(db, tg_user.user_id)
-        s        = _sym(currency)
 
-        # Suggest category from merchant name
         from app.models.category import Category
         from app.services.category_suggester import suggest_category
-        cats = db.query(Category).filter(Category.user_id == tg_user.user_id).order_by(Category.name).all()
-        suggestion = suggest_category(merchant, "", cats, db=db, user_id=tg_user.user_id)
-        cat_id   = suggestion["category_id"]   if suggestion else None
-        cat_name = suggestion["category_name"] if suggestion else "No category"
+        cats = db.query(Category).filter(
+            Category.user_id == tg_user.user_id
+        ).order_by(Category.name).all()
+        suggestion   = suggest_category(merchant, "", cats, db=db, user_id=tg_user.user_id)
+        cat_id       = suggestion["category_id"]   if suggestion else None
+        cat_name     = suggestion["category_name"] if suggestion else "No category"
+        conf         = result.get("confidence", "medium")
+        conf_icon    = {"high": "🟢", "medium": "🟡", "low": "🔴"}.get(conf, "🟡")
 
-        # Store pending receipt for the confirm callback
         context.user_data["pending_receipt"] = {
-            "merchant":      merchant,
-            "amount":        amount,
-            "date":          date_str,
-            "currency":      currency,
-            "category_id":   cat_id,
-            "category_name": cat_name,
+            "merchant":        merchant,
+            "amount":          amount,
+            "date":            date_str,
+            "currency":        currency,
+            "category_id":     cat_id,
+            "category_name":   cat_name,
+            "conf_icon":       conf_icon,
+            "original_cat_id": cat_id,
+            "edited":          False,
         }
 
-        conf      = result.get("confidence", "medium")
-        conf_icon = {"high": "🟢", "medium": "🟡", "low": "🔴"}.get(conf, "🟡")
-
-        try:
-            date_display = datetime.strptime(date_str, "%Y-%m-%d").date().strftime("%d %b %Y")
-        except ValueError:
-            date_display = date_str
-
-        text = (
-            f"📄 *Receipt Scanned* {conf_icon}\n\n"
-            f"🏪 *Merchant:* {merchant}\n"
-            f"💰 *Amount:*   {s}{float(amount):,.2f} {currency}\n"
-            f"📅 *Date:*     {date_display}\n"
-            f"📂 *Category:* {cat_name}\n\n"
-            f"Save this as an expense entry?"
+        await processing_msg.edit_text(
+            _receipt_result_text(context.user_data["pending_receipt"]),
+            reply_markup=_receipt_result_keyboard(),
+            parse_mode="Markdown",
         )
-        keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton("✅ Save", callback_data="receipt_save"),
-            InlineKeyboardButton("❌ Discard", callback_data="receipt_cancel"),
-        ]])
-        await processing_msg.edit_text(text, reply_markup=keyboard, parse_mode="Markdown")
-
+        return PHOTO_CONFIRM
     finally:
         db.close()
 
 
-async def receipt_save_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Save the pending scanned receipt as an expense entry."""
+# ── PHOTO_CONFIRM state ───────────────────────────────────────────────────────
+
+async def receipt_save_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Save the pending receipt as an expense entry and learn merchant→category."""
     query = update.callback_query
     await query.answer()
 
     pending = context.user_data.get("pending_receipt")
     if not pending:
         await query.edit_message_text("⏱ Session expired. Send the photo again.")
-        return
+        return ConversationHandler.END
 
     db = _db()
     try:
         tg_user = _get_tg_user(db, update.effective_user.id)
         if not tg_user:
             await query.edit_message_text("Account not linked. Use /link.")
-            return
+            return ConversationHandler.END
 
         from app.services import entries as entries_service
         from datetime import date as date_type
@@ -766,10 +800,34 @@ async def receipt_save_callback(update: Update, context: ContextTypes.DEFAULT_TY
             note=pending.get("merchant", "Receipt")[:255],
             currency_code=pending.get("currency", "USD"),
         )
-
         tg_user.last_entry_id = entry.id
         tg_user.last_entry_at = datetime.utcnow()
         db.commit()
+
+        # G-5b: persist merchant→category mapping so future scans learn from this
+        if pending.get("category_id") and pending.get("merchant"):
+            try:
+                from app.services.category_suggester import normalise_merchant_key
+                from app.models.merchant_mapping import MerchantCategoryMapping
+                key = normalise_merchant_key(pending["merchant"])
+                existing = db.query(MerchantCategoryMapping).filter_by(
+                    user_id=tg_user.user_id, merchant_key=key
+                ).first()
+                if existing:
+                    existing.category_id = pending["category_id"]
+                    existing.use_count   = (existing.use_count or 0) + 1
+                    existing.last_used   = datetime.utcnow()
+                else:
+                    db.add(MerchantCategoryMapping(
+                        user_id=tg_user.user_id,
+                        merchant_key=key,
+                        category_id=pending["category_id"],
+                        use_count=1,
+                        last_used=datetime.utcnow(),
+                    ))
+                db.commit()
+            except Exception as exc:
+                logger.warning("Merchant mapping save failed: %s", exc)
 
         try:
             from app.services.gamification import LevelService
@@ -777,27 +835,277 @@ async def receipt_save_callback(update: Update, context: ContextTypes.DEFAULT_TY
         except Exception:
             pass
 
-        s = _sym(pending.get("currency", "USD"))
+        s         = _sym(pending.get("currency", "USD"))
+        cat_name  = pending.get("category_name", "–")
+        corrected = (
+            pending.get("edited") and
+            pending.get("category_id") != pending.get("original_cat_id")
+        )
+        learn_line = (
+            f"\n🧠 _Noted — I'll remember {pending.get('merchant', '')} → {cat_name} next time_"
+            if corrected else ""
+        )
+
         await query.edit_message_text(
             f"✅ *Saved!*\n\n"
             f"📉 Expense\n"
             f"💰 {s}{float(pending['amount']):,.2f}\n"
-            f"📂 {pending.get('category_name', '–')}\n"
-            f"📅 {entry_date.strftime('%d %b %Y')}\n\n"
+            f"📂 {cat_name}\n"
+            f"📅 {entry_date.strftime('%d %b %Y')}"
+            f"{learn_line}\n\n"
             f"_Use /undo to remove it (within 5 min)_",
             parse_mode="Markdown",
         )
-        context.user_data.pop("pending_receipt", None)
+        context.user_data.clear()
+        return ConversationHandler.END
     finally:
         db.close()
 
 
-async def receipt_cancel_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Discard the pending scanned receipt without saving."""
+async def receipt_edit_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Show the edit menu."""
     query = update.callback_query
     await query.answer()
-    context.user_data.pop("pending_receipt", None)
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📂 Category", callback_data="edit_category"),
+         InlineKeyboardButton("💰 Amount",   callback_data="edit_amount")],
+        [InlineKeyboardButton("📅 Date",     callback_data="edit_date"),
+         InlineKeyboardButton("🏪 Merchant", callback_data="edit_merchant")],
+        [InlineKeyboardButton("← Back",      callback_data="edit_done")],
+    ])
+    await query.edit_message_text(
+        "✏️ *Edit Receipt*\n\nWhat would you like to change?",
+        reply_markup=keyboard,
+        parse_mode="Markdown",
+    )
+    return EDIT_MENU
+
+
+async def receipt_cancel_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Discard the pending receipt."""
+    query = update.callback_query
+    await query.answer()
+    context.user_data.clear()
     await query.edit_message_text("❌ Receipt discarded.")
+    return ConversationHandler.END
+
+
+# ── EDIT_MENU state ───────────────────────────────────────────────────────────
+
+async def edit_back_to_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Return to the confirm view from any edit screen."""
+    query = update.callback_query
+    await query.answer()
+    pending = context.user_data.get("pending_receipt", {})
+    await query.edit_message_text(
+        _receipt_result_text(pending),
+        reply_markup=_receipt_result_keyboard(),
+        parse_mode="Markdown",
+    )
+    return PHOTO_CONFIRM
+
+
+async def edit_back_to_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Return to the edit menu from a sub-screen."""
+    return await receipt_edit_callback(update, context)
+
+
+# ── EDIT_CATEGORY state ───────────────────────────────────────────────────────
+
+async def edit_category_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Show the user's category list as inline buttons."""
+    query = update.callback_query
+    await query.answer()
+    db = _db()
+    try:
+        tg_user = _get_tg_user(db, update.effective_user.id)
+        if not tg_user:
+            await query.edit_message_text("Session expired. Send the photo again.")
+            return ConversationHandler.END
+        from app.models.category import Category
+        cats = db.query(Category).filter(
+            Category.user_id == tg_user.user_id
+        ).order_by(Category.name).all()
+        buttons: list[list[InlineKeyboardButton]] = []
+        row: list[InlineKeyboardButton] = []
+        for cat in cats:
+            row.append(InlineKeyboardButton(cat.name, callback_data=f"rcat_{cat.id}"))
+            if len(row) == 2:
+                buttons.append(row)
+                row = []
+        if row:
+            buttons.append(row)
+        buttons.append([InlineKeyboardButton("— No category —", callback_data="rcat_0")])
+        buttons.append([InlineKeyboardButton("← Back",          callback_data="edit_back_menu")])
+        await query.edit_message_text(
+            "📂 *Select Category*\n\nChoose from your categories:",
+            reply_markup=InlineKeyboardMarkup(buttons),
+            parse_mode="Markdown",
+        )
+        return EDIT_CATEGORY
+    finally:
+        db.close()
+
+
+async def category_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """User picked a category — update pending and return to confirm view."""
+    query = update.callback_query
+    await query.answer()
+    cat_raw = query.data.replace("rcat_", "")
+    cat_id  = int(cat_raw) if cat_raw != "0" else None
+    pending = context.user_data.get("pending_receipt", {})
+    if cat_id:
+        db = _db()
+        try:
+            from app.models.category import Category
+            cat = db.query(Category).filter(Category.id == cat_id).first()
+            pending["category_name"] = cat.name if cat else "Unknown"
+        finally:
+            db.close()
+    else:
+        pending["category_name"] = "No category"
+    pending["category_id"] = cat_id
+    pending["edited"] = True
+    context.user_data["pending_receipt"] = pending
+    await query.edit_message_text(
+        _receipt_result_text(pending),
+        reply_markup=_receipt_result_keyboard(),
+        parse_mode="Markdown",
+    )
+    return PHOTO_CONFIRM
+
+
+# ── EDIT_AMOUNT state ─────────────────────────────────────────────────────────
+
+async def edit_amount_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    pending  = context.user_data.get("pending_receipt", {})
+    currency = pending.get("currency", "USD")
+    s        = _sym(currency)
+    current  = pending.get("amount", 0)
+    await query.edit_message_text(
+        f"💰 *Edit Amount*\n\nCurrent: {s}{float(current):,.2f}\n\n"
+        f"Send the correct amount (e.g. `1414.95`):",
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("← Cancel", callback_data="edit_back_confirm")
+        ]]),
+        parse_mode="Markdown",
+    )
+    return EDIT_AMOUNT
+
+
+async def amount_edited(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    amount  = _parse_amount(update.message.text)
+    pending = context.user_data.get("pending_receipt", {})
+    if amount is None:
+        await update.message.reply_text(
+            "❌ Couldn't parse that. Send a number like `150` or `1414.95`.",
+            parse_mode="Markdown",
+        )
+        return EDIT_AMOUNT
+    pending["amount"] = float(amount)
+    pending["edited"] = True
+    context.user_data["pending_receipt"] = pending
+    await _edit_scan_message(context, pending)
+    try:
+        await update.message.delete()
+    except Exception:
+        pass
+    return PHOTO_CONFIRM
+
+
+# ── EDIT_DATE state ───────────────────────────────────────────────────────────
+
+async def edit_date_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query   = update.callback_query
+    await query.answer()
+    pending = context.user_data.get("pending_receipt", {})
+    current = pending.get("date", date.today().isoformat())
+    await query.edit_message_text(
+        f"📅 *Edit Date*\n\nCurrent: `{current}`\n\n"
+        f"Send the correct date as `YYYY-MM-DD` (e.g. `2026-04-15`):",
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("← Cancel", callback_data="edit_back_confirm")
+        ]]),
+        parse_mode="Markdown",
+    )
+    return EDIT_DATE
+
+
+async def date_edited(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    import re
+    text    = update.message.text.strip()
+    pending = context.user_data.get("pending_receipt", {})
+    if not re.match(r'^\d{4}-\d{2}-\d{2}$', text):
+        await update.message.reply_text(
+            "❌ Use format `YYYY-MM-DD` (e.g. `2026-04-15`).", parse_mode="Markdown"
+        )
+        return EDIT_DATE
+    try:
+        datetime.strptime(text, "%Y-%m-%d")
+    except ValueError:
+        await update.message.reply_text("❌ Invalid date. Try again.")
+        return EDIT_DATE
+    pending["date"]   = text
+    pending["edited"] = True
+    context.user_data["pending_receipt"] = pending
+    await _edit_scan_message(context, pending)
+    try:
+        await update.message.delete()
+    except Exception:
+        pass
+    return PHOTO_CONFIRM
+
+
+# ── EDIT_MERCHANT state ───────────────────────────────────────────────────────
+
+async def edit_merchant_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query   = update.callback_query
+    await query.answer()
+    pending = context.user_data.get("pending_receipt", {})
+    current = pending.get("merchant", "Unknown")
+    await query.edit_message_text(
+        f"🏪 *Edit Merchant*\n\nCurrent: {current}\n\nSend the correct merchant name:",
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("← Cancel", callback_data="edit_back_confirm")
+        ]]),
+        parse_mode="Markdown",
+    )
+    return EDIT_MERCHANT
+
+
+async def merchant_edited(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    text    = update.message.text.strip()[:100]
+    pending = context.user_data.get("pending_receipt", {})
+    if not text:
+        await update.message.reply_text("❌ Merchant name cannot be empty.")
+        return EDIT_MERCHANT
+    pending["merchant"] = text
+    pending["edited"]   = True
+    context.user_data["pending_receipt"] = pending
+    await _edit_scan_message(context, pending)
+    try:
+        await update.message.delete()
+    except Exception:
+        pass
+    return PHOTO_CONFIRM
+
+
+# ── Shared helper: edit the scan result message ───────────────────────────────
+
+async def _edit_scan_message(context: ContextTypes.DEFAULT_TYPE, pending: dict) -> None:
+    """Edit the original scan message back to the result+keyboard view."""
+    try:
+        await context.bot.edit_message_text(
+            chat_id=context.user_data["scan_chat_id"],
+            message_id=context.user_data["scan_msg_id"],
+            text=_receipt_result_text(pending),
+            reply_markup=_receipt_result_keyboard(),
+            parse_mode="Markdown",
+        )
+    except Exception as exc:
+        logger.warning("Could not edit scan message: %s", exc)
 
 
 # ── Application factory ───────────────────────────────────────────────────────
@@ -875,9 +1183,42 @@ def create_application(token: str) -> Application:
     application.add_handler(CommandHandler("history", history_command))
     application.add_handler(conv_handler)
 
-    # G-4: photo receipt scanning (must be after conv_handler)
-    application.add_handler(MessageHandler(filters.PHOTO, photo_received))
-    application.add_handler(CallbackQueryHandler(receipt_save_callback,   pattern=r"^receipt_save$"))
-    application.add_handler(CallbackQueryHandler(receipt_cancel_callback, pattern=r"^receipt_cancel$"))
+    # G-4 / G-5a: photo receipt scanning with full edit conversation
+    photo_conv_handler = ConversationHandler(
+        entry_points=[MessageHandler(filters.PHOTO, photo_received)],
+        states={
+            PHOTO_CONFIRM: [
+                CallbackQueryHandler(receipt_save_callback,   pattern=r"^receipt_save$"),
+                CallbackQueryHandler(receipt_edit_callback,   pattern=r"^receipt_edit$"),
+                CallbackQueryHandler(receipt_cancel_callback, pattern=r"^receipt_cancel$"),
+            ],
+            EDIT_MENU: [
+                CallbackQueryHandler(edit_category_menu,   pattern=r"^edit_category$"),
+                CallbackQueryHandler(edit_amount_prompt,   pattern=r"^edit_amount$"),
+                CallbackQueryHandler(edit_date_prompt,     pattern=r"^edit_date$"),
+                CallbackQueryHandler(edit_merchant_prompt, pattern=r"^edit_merchant$"),
+                CallbackQueryHandler(edit_back_to_confirm, pattern=r"^edit_done$"),
+            ],
+            EDIT_CATEGORY: [
+                CallbackQueryHandler(category_selected,  pattern=r"^rcat_"),
+                CallbackQueryHandler(edit_back_to_menu,  pattern=r"^edit_back_menu$"),
+            ],
+            EDIT_AMOUNT: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, amount_edited),
+                CallbackQueryHandler(edit_back_to_confirm, pattern=r"^edit_back_confirm$"),
+            ],
+            EDIT_DATE: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, date_edited),
+                CallbackQueryHandler(edit_back_to_confirm, pattern=r"^edit_back_confirm$"),
+            ],
+            EDIT_MERCHANT: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, merchant_edited),
+                CallbackQueryHandler(edit_back_to_confirm, pattern=r"^edit_back_confirm$"),
+            ],
+        },
+        fallbacks=[CommandHandler("cancel", cancel)],
+        allow_reentry=True,
+    )
+    application.add_handler(photo_conv_handler)
 
     return application

@@ -4489,7 +4489,7 @@ Fixes Turkish receipt scanning (e.g. Defacto, Migros, Akbank POS receipts) and a
 
 ## 🤖 Phase F — Telegram Bot Integration
 
-**Status:** 🔄 In Progress (F-1, F-2, F-3, multi-user readiness complete — F-4 planned)
+**Status:** ✅ Complete (F-1, F-2, F-3, F-3b, F-4 all done — photo scanning continued in Phase G)
 **Priority:** Medium
 **Estimated Time:** 8–12 hours across 4 sub-phases
 
@@ -4683,7 +4683,7 @@ Bot:   ✅ Saved! Expense · 1,414.95 TRY · Shopping
 | F-2 | Add entry conversation | 3–4h | ✅ Complete |
 | F-3 | Balance / history commands | 2–3h | ✅ Complete |
 | F-3b | Multi-user readiness | 1h | ✅ Complete |
-| F-4 | Receipt scanning via photo | 2–3h | 📋 Planned |
+| F-4 / G-4 | Receipt scanning via photo | 2–3h | ✅ Complete |
 | **Total** | | **10–14h** | |
 
 **Dependencies:**
@@ -4696,6 +4696,155 @@ Bot:   ✅ Saved! Expense · 1,414.95 TRY · Shopping
 - `app/api/v1/telegram.py`
 - `app/services/telegram_bot.py` (conversation handlers)
 - `alembic/versions/YYYYMMDD_telegram_users.py`
+
+---
+
+---
+
+## 🤖 Phase G — AI Vision Receipt Scanning
+
+**Status:** 🔄 In Progress (G-1 → G-4 complete, G-5 in progress)
+**Priority:** High
+**Estimated Time:** 20–26 hours across 5 sub-phases
+
+### Overview
+
+Replaces the Tesseract OCR pipeline with Claude Haiku vision for dramatically better receipt reading accuracy — especially for Turkish receipts, poor-quality photos, and unusual layouts. Extends to the Telegram bot with a full edit + learning flow.
+
+**Config:** `ANTHROPIC_API_KEY` — set via Railway environment variable
+**Model:** `claude-haiku-4-5-20251001` (vision capable, ~$0.001–$0.003 per receipt)
+**Fallback:** Tesseract OCR used automatically if API key is missing or AI call fails
+
+---
+
+### Phase G-1 — AI Vision Backend Service
+**Estimated Time:** 3–4 hours
+**Status:** ✅ Complete
+
+**Goal:** Replace fragile Tesseract regex extraction with Claude Haiku vision.
+
+**What was built:**
+- `app/services/ai_receipt_service.py` — sends image bytes to Claude Haiku vision, returns structured JSON: `{ merchant, total_amount, currency, date, line_items, confidence }`
+- `scan_receipt()` in `receipt_scanner_service.py` updated: tries AI first, falls back to Tesseract on failure or missing key
+- `ScanResult` gains `source="ai"|"ocr"` field returned in API response
+- `ANTHROPIC_API_KEY` added to `config.py`
+- `anthropic==0.40.0` added to `requirements.txt`
+
+---
+
+### Phase G-2 — Line Item Extraction
+**Estimated Time:** 2–3 hours
+**Status:** ✅ Complete
+
+**Goal:** Extract individual products from receipts, not just the total.
+
+**What was built:**
+- AI prompt updated to extract `qty`, `unit_price`, `amount` per line item
+- `ai_receipt_service` normalises and validates each item's qty/unit_price/amount
+- `POST /receipts/split` endpoint — creates one expense entry per checked item
+- Line items UI: checkbox per item, qty display, per-item category dropdown
+- "Add N items as separate entries" split button with live checked count
+- Select all / Deselect all toggle
+- `_scanData` stores last scan result so split can reference it
+
+---
+
+### Phase G-3 — Camera Capture & Compression
+**Estimated Time:** 2–3 hours
+**Status:** ✅ Complete
+
+**Goal:** Make the mobile camera experience first-class.
+
+**What was built:**
+- Separate **Take Photo** button (`capture="environment"`) and **Choose File** button — clearer UX than a single input
+- Client-side canvas compression before upload (max 1600px, JPEG 0.88) — reduces 4 MB phone photo to ~400 KB
+- Scan button, status text, and page header reflect AI Vision vs OCR mode
+- AI Vision badge shown in page header when API key is configured
+
+---
+
+### Phase G-4 — Telegram Bot Photo Scanning
+**Estimated Time:** 2–3 hours
+**Status:** ✅ Complete
+
+**Goal:** User sends a receipt photo to the bot — AI reads it, bot asks to confirm.
+
+**What was built:**
+- `MessageHandler(filters.PHOTO, photo_received)` — downloads photo, runs `scan_with_ai()`, shows result
+- Bot replies "Scanning…" immediately, edits to show result + ✅ Save / ❌ Discard
+- Category auto-suggested via `suggest_category()` (same as web app)
+- On save: creates expense entry, awards XP, updates `last_entry_id` for /undo
+- `/start` (linked users) and `/help` updated to advertise photo scanning
+
+---
+
+### Phase G-5 — Bot Receipt Edit Flow & Category Learning
+**Estimated Time:** 4.5–6.5 hours
+**Status:** 🔄 In Progress (G-5a + G-5b complete, G-5c planned)
+
+#### G-5a — Edit Flow in the Bot
+**Status:** ✅ Complete
+
+**Goal:** User can correct any field before saving — category, amount, date, merchant.
+
+**Conversation state machine:**
+```
+[Photo sent]
+     ↓
+photo_received — shows result
+  [✅ Save]  [✏️ Edit]  [❌ Discard]
+                ↓
+            edit menu
+  [📂 Category] [💰 Amount] [📅 Date] [🏪 Merchant] [← Back]
+        ↓             ↓          ↓           ↓
+   category list  type amount  type date  type name
+        ↓             ↓          ↓           ↓
+   ←──── back to updated result with [✅ Save] [✏️ Edit] [❌ Discard] ────→
+```
+
+**What was built:**
+- G-4 standalone handlers refactored into a `ConversationHandler` with 6 states: `PHOTO_CONFIRM (10)`, `EDIT_MENU (11)`, `EDIT_CATEGORY (12)`, `EDIT_AMOUNT (13)`, `EDIT_DATE (14)`, `EDIT_MERCHANT (15)`
+- `_receipt_result_text()` / `_receipt_result_keyboard()` helper functions — single source of truth for the result message
+- `scan_msg_id` / `scan_chat_id` stored in `context.user_data` so text-input states can edit the original message in place
+- Result message shows `_(edited)_` flag after any change
+- All edits return to `PHOTO_CONFIRM` state
+
+#### G-5b — Merchant→Category Learning on Bot Save
+**Status:** ✅ Complete
+
+**Goal:** Every bot save writes to `merchant_category_mappings` — the same table the web app uses — so corrections are learned immediately.
+
+**What was built:**
+- `receipt_save_callback` upserts `MerchantCategoryMapping(user_id, merchant_key, category_id)` after saving the entry
+- `normalise_merchant_key()` (Phase E) used for consistent key normalisation
+- If user corrected the category before saving, the corrected value is what gets learned
+- Save confirmation shows: _"🧠 Noted — I'll remember Koton → Clothing next time"_ when a correction was made
+- Cross-channel: learning from web app applies to bot, and vice versa (same table, same `user_id`)
+
+#### G-5c — Learning Confirmation Feedback
+**Status:** ✅ Complete (implemented as part of G-5b)
+
+When `category_id != original_cat_id` after edit, the save confirmation includes the learning note. No separate implementation needed.
+
+#### G-5d — Cross-Channel Learning Verification
+**Status:** ✅ Already works — no code needed
+
+Both web app (`entries.py`) and bot (`receipt_save_callback`) write to `merchant_category_mappings` filtered by `user_id`. `suggest_category()` checks learned mappings first in both contexts.
+
+---
+
+### Phase G — Summary
+
+| Sub-phase | Feature | Effort | Status |
+|---|---|---|---|
+| G-1 | Claude vision replaces Tesseract regex | 3–4h | ✅ Complete |
+| G-2 | Line item extraction + split entries | 2–3h | ✅ Complete |
+| G-3 | Mobile camera capture + compression | 2–3h | ✅ Complete |
+| G-4 | Telegram bot photo scanning | 2–3h | ✅ Complete |
+| G-5a | Bot edit flow (category/amount/date/merchant) | 3–4h | ✅ Complete |
+| G-5b | Merchant→category learning on bot save | 1–2h | ✅ Complete |
+| G-5c/d | Learning feedback + cross-channel | 0.5h | ✅ Complete |
+| **Total** | | **14–19h** | |
 
 ---
 
